@@ -10,6 +10,15 @@
 !.yarn/releases
 !.yarn/versions
 
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
 # testing
 /coverage
 
