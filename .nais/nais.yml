@@ -1,0 +1,51 @@
+apiVersion: 'nais.io/v1alpha1'
+kind: 'Application'
+metadata:
+  name: nav-epj
+  namespace: helseopplysninger
+  labels:
+    team: helseopplysninger
+spec:
+  image: {{image}}
+  port: 3000
+  replicas:
+    min: 1
+    max: 2
+  redis:
+    - instance: nav-epj
+      access: readwrite
+  observability:
+    autoInstrumentation:
+      enabled: true
+      runtime: nodejs
+    logging:
+      destinations:
+        - id: loki
+        - id: elastic
+  liveness:
+    path: /api/internal/is_alive
+  readiness:
+    path: /api/internal/is_ready
+  preStopHook:
+    http:
+      path: /api/internal/pre_stop
+  filesFrom:
+    - emptyDir:
+        medium: Memory
+      mountPath: /app/.next/cache
+  azure:
+    application:
+      enabled: true
+  accessPolicy:
+    inbound:
+      rules:
+        - application: nav-epj-wonderwall
+    outbound:
+      rules:
+        - application: nav-fhir-server
+  resources:
+    limits:
+      memory: 512Mi
+    requests:
+      cpu: 50m
+      memory: 256Mi

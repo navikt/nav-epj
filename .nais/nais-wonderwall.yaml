@@ -1,0 +1,59 @@
+apiVersion: 'nais.io/v1alpha1'
+kind: 'Application'
+metadata:
+  name: nav-epj-wonderwall
+  namespace: helseopplysninger
+  labels:
+    team: helseopplysninger
+spec:
+  image: ghcr.io/nais/wonderwall:latest
+  redis:
+    - instance: fhir
+      access: readwrite
+  ingresses:
+    - 'https://epj.ekstern.dev.nav.no'
+  accessPolicy:
+    outbound:
+      rules:
+        - application: nav-epj-auth-server
+  liveness:
+    path: /oauth2/ping
+    initialDelay: 5
+  readiness:
+    path: /oauth2/ping
+    initialDelay: 5
+  prometheus:
+    enabled: false
+  replicas:
+    min: 0
+    max: 0
+    cpuThresholdPercentage: 90
+  resources:
+    limits:
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+  env:
+    - name: WONDERWALL_OPENID_CLIENT_ID # TODO
+      value: '114949aa-d482-4fbd-9548-bc5fa26ddbd8' # TODO
+    - name: WONDERWALL_OPENID_SCOPES # TODO
+      value: profile,offline_access,helseid://scopes/identity/assurance_level,helseid://scopes/identity/pid,helseid://scopes/identity/security_level,helseid://scopes/hpr/hpr_number,helseid://scopes/identity/assurance_level,helseid://scopes/identity/network # TODO
+    - name: WONDERWALL_UPSTREAM_HOST # TODO
+      value: syk-inn # TODO
+    - name: WONDERWALL_INGRESS # TODO
+      value: https://www.ekstern.dev.nav.no/samarbeidspartner/sykmelding # TODO
+    - name: WONDERWALL_OPENID_WELL_KNOWN_URL # TODO
+      value: https://helseid-sts.test.nhn.no/.well-known/openid-configuration # TODO
+    - name: WONDERWALL_REDIS_URI # TODO
+      value: $(REDIS_URI_SYK_INN) # TODO
+    - name: WONDERWALL_REDIS_USERNAME # TODO
+      value: $(REDIS_USERNAME_SYK_INN) # TODO
+    - name: WONDERWALL_REDIS_PASSWORD # TODO
+      value: $(REDIS_PASSWORD_SYK_INN) # TODO
+    - name: WONDERWALL_BIND_ADDRESS # TODO
+      value: $(BIND_ADDRESS) # TODO
+    - name: WONDERWALL_AUTO_LOGIN # TODO
+      value: 'true' # TODO
+    - name: WONDERWALL_AUTO_LOGIN_IGNORE_PATHS # TODO
+      value: '/samarbeidspartner/sykmelding/fhir/**,/samarbeidspartner/sykmelding/api/**' # TODO
