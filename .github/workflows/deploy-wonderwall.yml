@@ -3,7 +3,7 @@ on:
   push:
     paths:
       - .github/workflows/deploy-wonderwall.yml
-      - nais/nais-wonderwall.yaml
+      - ../../nais/nais-wonderwall.yml
     branches:
       - main
 
@@ -22,4 +22,4 @@ jobs:
       - uses: nais/deploy/actions/deploy@v2
         env:
           CLUSTER: dev-gcp
-          RESOURCE: nais/nais-wonderwall.yaml
+          RESOURCE: nais/nais-wonderwall.yml
