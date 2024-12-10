@@ -55,6 +55,6 @@ spec:
     - name: WONDERWALL_BIND_ADDRESS # TODO
       value: $(BIND_ADDRESS) # TODO
     - name: WONDERWALL_AUTO_LOGIN # TODO
-      value: 'true' # TODO
+      value: 'false' # TODO
     - name: WONDERWALL_AUTO_LOGIN_IGNORE_PATHS # TODO
       value: '/samarbeidspartner/sykmelding/fhir/**,/samarbeidspartner/sykmelding/api/**' # TODO
