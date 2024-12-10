@@ -1,4 +1,5 @@
 import React from "react";
+import {cookies} from "next/headers";
 
 interface Patient {
   name: string;
@@ -17,10 +18,24 @@ const PatientPicker = async () => {
 
   return (
     <div className="flex flex-col gap-3">
-      <form className="flex flex-col gap-3">
+      <form className="flex flex-col gap-3" action={ async (formData: FormData) => {
+        "use server"
+
+        const rawFormData = {
+          patientId: formData.get("fnr")?.toString()
+        }
+
+        const cookieStore = await cookies();
+
+        if(typeof rawFormData.patientId !== "string") {
+          throw new Error("Patient ID is required!");
+        }
+
+        cookieStore.set("patient-id", rawFormData.patientId, { httpOnly: true, secure: true })
+      } }>
         <select defaultValue="" id="patientSelect" name="fnr" className="border rounded border-gray-300 bg-transparent p-2" required>
           <option value="" disabled>No patient selected</option>
-          { patients.map(p => <option key={p.id}>{p.name}</option>) }
+          { patients.map(p => <option key={p.id} value={p.id}>{p.name}</option>) }
         </select>
 
         <button type="submit"
