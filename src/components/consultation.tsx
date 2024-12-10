@@ -5,7 +5,7 @@ import { cookies } from 'next/headers'
 
 const Consultation = async () => {
     const cookieStore = await cookies()
-    const patientSet = cookieStore.get('patient-id')
+    const patientSet = cookieStore.get('patient-id')?.value
 
     if (patientSet) {
         return <PatientPicked />

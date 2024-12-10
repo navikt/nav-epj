@@ -9,11 +9,11 @@ interface App {
 
 const AppPicker = async () => {
     await new Promise((resolve) => {
-        setTimeout(resolve, 300) // Fake wait for API
+        setTimeout(resolve, 300) // TODO fake wait for API
     })
 
     const cookieStore = await cookies()
-    const patientId = cookieStore.get('patient-id')
+    const patientId = cookieStore.get('patient-id')?.value
 
     const apps: App[] = [
         {

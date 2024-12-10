@@ -1,6 +1,5 @@
 import React from 'react'
 import { cookies } from 'next/headers'
-import { revalidatePath } from 'next/cache'
 
 const PatientPicked = async () => {
     return (
@@ -17,7 +16,6 @@ const PatientPicked = async () => {
                     'use server'
                     const cookieStore = await cookies()
                     cookieStore.delete('patient-id')
-                    revalidatePath('/')
                 }}
             >
                 Close consultation
