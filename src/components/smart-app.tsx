@@ -1,6 +1,7 @@
 import React from 'react'
+import CloseApp from './smart-app-close-app'
 
-const SmartApp = async ({ url, appName }: { url: string; appName: string }) => {
+const SmartApp = ({ url, appName }: { url: string; appName: string }) => {
     return (
         <div className="flex h-full flex-col justify-center items-center">
             <iframe
@@ -9,15 +10,13 @@ const SmartApp = async ({ url, appName }: { url: string; appName: string }) => {
                 sandbox="allow-scripts allow-same-origin"
                 referrerPolicy="no-referrer"
                 loading="lazy"
-            >
-                <span className="loader"></span>
-            </iframe>
+            />
             <div className="h-10 w-full flex items-center justify-between">
                 <div className="py-2 px-4">
                     SMART App: <span>{appName}</span>
                 </div>
-                <div>
-                    <button className="py-2 px-4 hover:bg-gray-200">TODO Lukk app</button>
+                <div className="font-black">
+                    <CloseApp />
                 </div>
             </div>
         </div>

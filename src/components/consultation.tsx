@@ -8,9 +8,19 @@ const Consultation = async () => {
     const patientSet = cookieStore.get('patient-id')?.value
 
     if (patientSet) {
-        return <PatientPicked />
+        return (
+            <>
+                <h3 className="p-2 font-bold">Patient</h3>
+                <PatientPicked />
+            </>
+        )
     } else {
-        return <PatientPicker />
+        return (
+            <>
+                <h3 className="p-2 font-bold">Your patients</h3>
+                <PatientPicker />
+            </>
+        )
     }
 }
 
