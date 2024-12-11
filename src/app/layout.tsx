@@ -3,6 +3,7 @@ import './globals.css'
 import Header from '@/components/header'
 import Footer from '@/components/footer'
 import React from 'react'
+import { NuqsAdapter } from 'nuqs/adapters/next/app'
 
 export const metadata: Metadata = {
     title: 'NAV (fake) EPJ',
@@ -18,7 +19,7 @@ export default function RootLayout({
         <html lang="en">
             <body>
                 <Header />
-                {children}
+                <NuqsAdapter>{children}</NuqsAdapter>
                 <Footer />
             </body>
         </html>
