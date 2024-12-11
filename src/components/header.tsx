@@ -1,4 +1,5 @@
 import React from 'react'
+import {Heading} from "@navikt/ds-react";
 
 const Header = () => {
     return (
@@ -6,9 +7,7 @@ const Header = () => {
             <div className="p-4 flex">
                 <div className="text-3xl p-2 mr-2">🔥</div>
                 <div>
-                    <h1 className="text-xl">
-                        <span>Nav EPJs</span>
-                    </h1>
+                    <Heading level="1" size="medium">Nav EPJs</Heading>
                     <div className="text-xs">Et fake journalsystem med testdata fra Dolly</div>
                 </div>
             </div>

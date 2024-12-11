@@ -1,18 +1,7 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-:root {
-    --background: #ffffff;
-    --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-    :root {
-        --background: #0a0a0a;
-        --foreground: #ededed;
-    }
-}
+@import 'tailwindcss/base';
+@import '@navikt/ds-css';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
 
 html,
 body {
@@ -20,12 +9,9 @@ body {
 }
 
 body {
-    color: var(--foreground);
-    background: var(--background);
-    font-family: Arial, Helvetica, sans-serif;
     display: flex;
     flex-direction: column;
-    @apply bg-blue-900 text-white;
+    @apply bg-blue-700 text-white;
 }
 
 .loader {
