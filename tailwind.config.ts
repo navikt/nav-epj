@@ -5,5 +5,6 @@ import akselWind from '@navikt/ds-tailwind'
 export default {
     content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
     presets: [akselWind],
+    theme: {},
     plugins: [],
 } satisfies Config

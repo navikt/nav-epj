@@ -4,7 +4,6 @@ import { cookies } from 'next/headers'
 const PatientPicked = async () => {
     return (
         <div className="w-full h-full flex flex-col">
-            <h3 className="p-2 font-bold">Patient</h3>
             <div className="text-xs text-gray-200">Active consultation</div>
             <div>TODO FNR</div>
             <div className="text-xs text-gray-200">Name</div>
