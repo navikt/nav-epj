@@ -36,25 +36,25 @@ spec:
       cpu: 50m
       memory: 64Mi
   env:
+    - name: WONDERWALL_UPSTREAM_HOST
+      value: nav-epj
+    - name: WONDERWALL_INGRESS
+      value: https://epj.ekstern.dev.nav.no
+    - name: WONDERWALL_OPENID_WELL_KNOWN_URL
+      value: https://fhir.ekstern.dev.nav.no/.well-known/openid-configuration
     - name: WONDERWALL_OPENID_CLIENT_ID # TODO
       value: '114949aa-d482-4fbd-9548-bc5fa26ddbd8' # TODO
     - name: WONDERWALL_OPENID_SCOPES # TODO
       value: profile,offline_access,helseid://scopes/identity/assurance_level,helseid://scopes/identity/pid,helseid://scopes/identity/security_level,helseid://scopes/hpr/hpr_number,helseid://scopes/identity/assurance_level,helseid://scopes/identity/network # TODO
-    - name: WONDERWALL_UPSTREAM_HOST # TODO
-      value: syk-inn # TODO
-    - name: WONDERWALL_INGRESS # TODO
-      value: https://www.ekstern.dev.nav.no/samarbeidspartner/sykmelding # TODO
-    - name: WONDERWALL_OPENID_WELL_KNOWN_URL # TODO
-      value: https://helseid-sts.test.nhn.no/.well-known/openid-configuration # TODO
-    - name: WONDERWALL_REDIS_URI # TODO
-      value: $(REDIS_URI_SYK_INN) # TODO
-    - name: WONDERWALL_REDIS_USERNAME # TODO
-      value: $(REDIS_USERNAME_SYK_INN) # TODO
-    - name: WONDERWALL_REDIS_PASSWORD # TODO
-      value: $(REDIS_PASSWORD_SYK_INN) # TODO
-    - name: WONDERWALL_BIND_ADDRESS # TODO
-      value: $(BIND_ADDRESS) # TODO
-    - name: WONDERWALL_AUTO_LOGIN # TODO
+    - name: WONDERWALL_REDIS_URI
+      value: $(REDIS_URI_FHIR)
+    - name: WONDERWALL_REDIS_USERNAME
+      value: $(REDIS_USERNAME_FHIR)
+    - name: WONDERWALL_REDIS_PASSWORD
+      value: $(REDIS_PASSWORD_FHIR)
+    - name: WONDERWALL_BIND_ADDRESS
+      value: $(BIND_ADDRESS)
+    - name: WONDERWALL_AUTO_LOGIN
       value: 'false' # TODO
-    - name: WONDERWALL_AUTO_LOGIN_IGNORE_PATHS # TODO
-      value: '/samarbeidspartner/sykmelding/fhir/**,/samarbeidspartner/sykmelding/api/**' # TODO
+    - name: WONDERWALL_AUTO_LOGIN_IGNORE_PATHS
+      value: ''
