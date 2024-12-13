@@ -17,6 +17,8 @@ spec:
       rules:
         - application: nav-epj-auth-server
         - application: nav-epj
+      external: # TODO: Can be removed once we set up proper NAV auth server, this is just to get wonderwall to start
+        - host: helseid-sts.test.nhn.no
   liveness:
     path: /oauth2/ping
     initialDelay: 5
@@ -41,8 +43,8 @@ spec:
     - name: WONDERWALL_INGRESS
       value: https://epj.ekstern.dev.nav.no
     - name: WONDERWALL_OPENID_WELL_KNOWN_URL
-      value: https://fhir.ekstern.dev.nav.no/.well-known/openid-configuration
-    - name: WONDERWALL_OPENID_CLIENT_ID # TODO
+      value: https://helseid-sts.test.nhn.no/.well-known/openid-configuration # TODO
+    - name: WONDERWALL_OPENID_CLIENT_ID
       value: '114949aa-d482-4fbd-9548-bc5fa26ddbd8' # TODO
     - name: WONDERWALL_OPENID_SCOPES # TODO
       value: profile,offline_access,helseid://scopes/identity/assurance_level,helseid://scopes/identity/pid,helseid://scopes/identity/security_level,helseid://scopes/hpr/hpr_number,helseid://scopes/identity/assurance_level,helseid://scopes/identity/network # TODO
@@ -58,3 +60,6 @@ spec:
       value: 'false' # TODO
     - name: WONDERWALL_AUTO_LOGIN_IGNORE_PATHS
       value: ''
+      # Dummy value to get wonderwall to start without failing
+    - name: WONDERWALL_OPENID_CLIENT_JWK
+      value: '{"alg":"RS256","d":"ChLujyBjWlcF4mVm8Q9qmfgvF8mqgotCxYeVlp6KJNOsDbQNuhb-Dq8cLh9NwUA810EQgPm8zjBnREa_R_KCl5m7ji9ulyMoGMt_BvDcW752KE4OPOnEFcJRbWrAbzn-3fCEZdVoSulyW9g8zTaUL0FZCTY_vm4meJ382nlas9PZyJsAeFtLSQXQbpWPqEabouoLhvHSZERToYVli1tGHkK-cqfTQbp_-Z8wHJ_MsJMNTlNSTN6dnMkGjpoD99k8-9zWZc4flbKQpXArl1cjuLW6_LvH4bVGr4ll4_k4gzZBaAJaBgjgKLJhz0V-MwSyCMBWhVJt3aIjEtpQzh7KbQ","dp":"E4fWkAAj5A6a_YM9_SQeu6Dg3dfcZIGKjJ1MQl9lIZymPHrvLqbutR6B6WMbmdJaU6V91x7XPBGfwsHz3hFe9Qfmxr-ibIW0xVJkTnSXODr4L98QxXI9QeBB0AjNCQf6v65OmvZSMXfa4RlK7tSiwuXopMIlFkT8AcaQgxjxYkE","dq":"pLM-5r3WAhJjGF1hbwAWHz_mQK0ZUrN-0ZN9K9aPYBv0gyfmqJHP4syy9eqRuRC8T6FxCJ_TDTa5IQ9tScVtifxqGGRogKjdnb6M_c1AYqJ2D-84fmRSLKfEnS4iLLKr-wpLso01-ZsEzaS_EJb3rs9GUeoyvQAErnI0Cc2GDYE","e":"AQAB","ext":true,"key_ops":["sign"],"kty":"RSA","n":"n3QPVkcxqYaFc4s6LZbuzf-iBO5tonCMBzGvsplRymItCMFdF2J4e7qO9htCOLIx3S9QiKfJ1XmdDhEZXJMvRkm1femastqEABk3BfWhoCewCqXLkVPetP8NneO8PB-pb7dvOEhYzh6PVgJT3fTFl8pZ3wBWWrIPMgQ7wTH_w5KC_Qv4eL7tPRKvMzd5iWKkbm9bAVC0x3zCcYueSfXD8QW8V1le9rl3t6tC7IbvMoHVjFvcuhqF3xdtAVR8_PrSZxbw6N7KuxtrrtoTf7QKhEaYSfQoNBPjw4syLz0_vLDjDQcZwCvIU3TmlE5E_JzSI_6ZXa1oC8EUM3XgTuqZ_w","p":"0N-rcJKLND10JAUoyfJ1oRHmjA_NDJ0JR9jvRqts_hG02fMeepLwdjEWYyJMEfYlrnJcGULFossFh8IdaSimCE6yaIoTOSd9c-8GDRJIuT2CytSUkyzlb4Uqyk1pr1ULrtUmfIeRXqpKkTf6_foNA7RIojSMDHO6xJ6CExxCo90","q":"w23r8u7Ho1bKgaI7rpRX81i4gzRUPqZ-_DqBoN7BEbPb9EQf0RiWC_-B8LYsEV1kagnKzMJtX0RBqudyBsLaGgCJvLrjGeNdxM15AxaJRPteRLJRyY1G-b4T5dWT2dSCI9kr41dmX0zSgYcHqcetQ6qEdIHzISmJjzwUvwsMlYs","qi":"qIdSrsUFO7Ew1fckXj0bO4W6ISdclHimhcWnoROifAsCS72CAyyMZRjUK7vEzHTbOJYFEdgCNk6gW5wR9tOPtY_L-KVffvINjDeptC_UD8xN1NFMoGjYkFcU6wexo9COArqE3Ft8BxxqnE0pXxewFiqv_7Bobw_KPpRwmMe_B3Y"}'
