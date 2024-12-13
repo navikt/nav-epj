@@ -8,7 +8,7 @@ interface Patient {
 
 const PatientPicker = async () => {
     await new Promise((resolve) => {
-        setTimeout(resolve, 1500) // TODO fake wait for API
+        setTimeout(resolve, 129) // TODO fake wait for API
     })
 
     const patients: Patient[] = [
