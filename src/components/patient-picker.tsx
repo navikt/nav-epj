@@ -53,7 +53,7 @@ const PatientPicker = async () => {
                     ))}
                 </select>
 
-                <button type="submit" className="mt-3 p-2 bg-blue-400 text-black rounded hover:bg-blue-600">
+                <button type="submit" className="mt-3 p-2 bg-blue-400 text-white rounded hover:bg-blue-600">
                     Start consultation
                 </button>
             </form>

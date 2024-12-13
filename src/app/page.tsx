@@ -20,7 +20,7 @@ export default function Home() {
                     </Suspense>
                 </div>
             </div>
-            <div id="inner-frame" className="w-full h-full rounded-l-3xl bg-white text-black overflow-hidden">
+            <div id="inner-frame" className="w-full h-full rounded-l-3xl bg-white text-text-default overflow-hidden">
                 <Suspense fallback={<span className="loader"></span>}>
                     <Workspace />
                 </Suspense>

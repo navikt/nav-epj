@@ -11,7 +11,7 @@ const SmartApp = ({ url, appName }: { url: string; appName: string }) => {
                 referrerPolicy="no-referrer"
                 loading="lazy"
             />
-            <div className="h-10 w-full flex items-center justify-between">
+            <div className="h-10 w-full flex items-center justify-between border-t border-t-border-subtle">
                 <div className="py-2 px-4">
                     SMART App: <span>{appName}</span>
                 </div>
