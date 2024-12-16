@@ -29,6 +29,8 @@ export const configuredApps = [
     },
 ]
 
+const NAV_FHIR_URL = 'https://fhir.ekstern.dev.nav.no'
+
 type AvailableApps = (typeof configuredApps)[number]['clientId']
 
 export function useSelectedApp(): [App | null, (app: AvailableApps | null) => Promise<URLSearchParams>] {
@@ -38,4 +40,19 @@ export function useSelectedApp(): [App | null, (app: AvailableApps | null) => Pr
     const selectedApp = configuredApps.find((a) => a.clientId === app)
 
     return [selectedApp ?? null, setOnlyApplicableApp]
+}
+
+export function getLaunchURL(app: App | AvailableApps): string {
+    const selectedApp = typeof app === 'object' ? app : configuredApps.find((a) => a.clientId === app)
+
+    if (!selectedApp) {
+        throw new Error(`App with clientId ${app} not found`)
+    }
+
+    // This already has iss and launch params
+    if (app === 'syk-inn-demo') {
+        return selectedApp.url
+    }
+
+    return `${selectedApp.url}/launch?iss=${NAV_FHIR_URL}&launch=todo-better-launch-id`
 }

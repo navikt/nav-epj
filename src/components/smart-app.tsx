@@ -15,6 +15,12 @@ const SmartApp = ({ url, appName }: { url: string; appName: string }) => {
                 <div className="py-2 px-4">
                     SMART App: <span>{appName}</span>
                 </div>
+                {process.env.NODE_ENV !== 'production' && (
+                    <div className="text-xs text-text-subtle grow">
+                        <div>Debug launch URL</div>
+                        <pre>{url}</pre>
+                    </div>
+                )}
                 <div className="font-black">
                     <CloseApp />
                 </div>
