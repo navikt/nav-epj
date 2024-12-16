@@ -4,6 +4,7 @@ import Header from '@/components/header'
 import Footer from '@/components/footer'
 import React from 'react'
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
+import BaseGrid from '@/components/grid/base-grid'
 
 export const metadata: Metadata = {
     title: 'NAV (fake) EPJ',
@@ -18,9 +19,9 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body>
-                <Header />
-                <NuqsAdapter>{children}</NuqsAdapter>
-                <Footer />
+                <BaseGrid header={<Header />} footer={<Footer />}>
+                    <NuqsAdapter>{children}</NuqsAdapter>
+                </BaseGrid>
             </body>
         </html>
     )

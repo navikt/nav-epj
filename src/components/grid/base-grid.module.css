@@ -1,0 +1,34 @@
+#rootGrid {
+    display: grid;
+    grid-template-rows: 4rem 1fr 2rem; /* Header, content, footer */
+    grid-template-columns: auto 1fr; /* Sidebar, content */
+    grid-template-areas:
+        'grid-header grid-header'
+        'grid-sidebar grid-content'
+        'grid-footer grid-footer';
+    height: 100vh;
+    max-height: 100vh;
+}
+
+#rootGrid :global(#grid-header) {
+    grid-area: grid-header;
+
+    @apply h-16 max-h-16;
+}
+
+#rootGrid :global(#grid-sidebar) {
+    grid-area: grid-sidebar;
+    overflow: hidden;
+}
+
+#rootGrid :global(#grid-content) {
+    grid-area: grid-content;
+    background-color: white;
+    overflow: auto; /* Scroll if content overflows */
+}
+
+#rootGrid :global(#grid-footer) {
+    grid-area: grid-footer;
+
+    @apply h-4 max-h-4;
+}
