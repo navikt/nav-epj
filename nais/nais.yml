@@ -11,9 +11,9 @@ spec:
   replicas:
     min: 1
     max: 2
-  redis:
-    - instance: nav-epj
-      access: readwrite
+  # redis:
+  #   - instance: fhir
+  #     access: readwrite
   observability:
     autoInstrumentation:
       enabled: true
