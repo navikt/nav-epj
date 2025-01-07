@@ -43,9 +43,9 @@ spec:
     - name: WONDERWALL_INGRESS
       value: https://epj.ekstern.dev.nav.no
     - name: WONDERWALL_OPENID_WELL_KNOWN_URL
-      value: https://helseid-sts.test.nhn.no/.well-known/openid-configuration # TODO
+      value: https://auth-fhir.ekstern.dev.nav.no/.well-known/openid-configuration
     - name: WONDERWALL_OPENID_CLIENT_ID
-      value: '114949aa-d482-4fbd-9548-bc5fa26ddbd8' # TODO
+      value: syk-inn # kanskje TODO?
     - name: WONDERWALL_OPENID_SCOPES # TODO
       value: profile,offline_access,helseid://scopes/identity/assurance_level,helseid://scopes/identity/pid,helseid://scopes/identity/security_level,helseid://scopes/hpr/hpr_number,helseid://scopes/identity/assurance_level,helseid://scopes/identity/network # TODO
     - name: WONDERWALL_REDIS_URI
