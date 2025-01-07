@@ -17,8 +17,8 @@ spec:
       rules:
         - application: nav-epj-auth-server
         - application: nav-epj
-      external: # TODO: Can be removed once we set up proper NAV auth server, this is just to get wonderwall to start
-        - host: helseid-sts.test.nhn.no
+      external:
+        - host: auth-fhir.ekstern.dev.nav.no
   liveness:
     path: /oauth2/ping
     initialDelay: 5
