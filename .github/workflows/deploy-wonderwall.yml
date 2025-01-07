@@ -3,7 +3,7 @@ on:
   push:
     paths:
       - .github/workflows/deploy-wonderwall.yml
-      - ../../.nais/nais-wonderwall.yml
+      - .nais/nais-wonderwall.yml
     branches:
       - main
 
