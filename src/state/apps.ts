@@ -29,7 +29,11 @@ export const configuredApps = [
     },
 ]
 
-const NAV_FHIR_URL = 'https://fhir.ekstern.dev.nav.no'
+const NAV_FHIR_URL =
+    process.env.NODE_ENV === 'production'
+        ? 'https://fhir.ekstern.dev.nav.no'
+        : // When running in dev mode with docker composed wonderwall
+          'http://localhost:3005/fhir-mock'
 
 type AvailableApps = (typeof configuredApps)[number]['clientId']
 
