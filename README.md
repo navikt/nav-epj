@@ -8,7 +8,7 @@ Der ingen skulle tru
 
 (Use mise? `mise i` to install the required prerequisites)
 
-- [Node.js](https://nodejs.org/en/) v20 (LTS)
+- [Node.js](https://nodejs.org/en/) v22 (LTS)
 - [Yarn](https://yarnpkg.com/) (`corepack enable`)
 
 This project relies on a Github PAT with `package:read` available as `NPM_AUTH_TOKEN`-environment variable for
