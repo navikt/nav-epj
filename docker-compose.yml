@@ -1,25 +1,9 @@
+include:
+  - docker-compose-wonderwall.yml
 services:
-  redis:
-    image: redis:7
+  auth-server:
+    image: europe-north1-docker.pkg.dev/nais-management-233d/helseopplysninger/nav-epj-auth-server:latest
     ports:
-      - '6379:6379'
-  wonderwall:
-    image: ghcr.io/nais/wonderwall:latest
-    ports:
-      - '3005:3005'
-    command: >
-      --openid.client-id=nav-epj
-      --openid.client-secret=secret
-      --openid.well-known-url=http://localhost:9000/.well-known/openid-configuration
-      --ingress=http://localhost:3005
-      --bind-address=0.0.0.0:3005
-      --upstream-host=localhost:3000
-      --redis.uri=redis://redis:6379
-      --auto-login=true
-      --log-level=debug
-      --log-format=text
-    restart: on-failure
-    depends_on:
-      - redis
-    extra_hosts:
-      - localhost:host-gateway
+      - '9000:9000'
+    environment:
+      SPRING_PROFILES_ACTIVE: local
