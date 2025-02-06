@@ -7,7 +7,7 @@ const SmartApp = ({ url, appName }: { url: string; appName: string }) => {
             <iframe
                 className="w-full h-full rounded"
                 src={url}
-                sandbox="allow-scripts allow-same-origin"
+                sandbox="allow-scripts allow-same-origin allow-forms"
                 referrerPolicy="no-referrer"
                 loading="lazy"
             />
