@@ -10,9 +10,11 @@ const PatientPicked = () => {
     return (
         <div className="w-full h-full flex flex-col">
             <div className="text-xs text-gray-200">Active consultation</div>
-            <div>TODO FNR</div>
+            {/*TODO: Dette må komme fra en eller annen EPJ session*/}
+            <div>21037712323</div>
             <div className="text-xs text-gray-200">Name</div>
-            <div>TODO NAME</div>
+            {/*TODO: Dette må komme fra en eller annen EPJ session*/}
+            <div>Espen Eksempel</div>
 
             <button
                 className="mt-3 p-2 bg-red-500 text-white rounded hover:bg-red-600"

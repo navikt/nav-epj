@@ -19,8 +19,9 @@ const Header = () => {
                 </div>
             </div>
             <div className="p-2 text-right">
-                <div className="font-bold">TODO USER NAME</div>
-                <div className="text-sm text-gray-200">TODO HPR</div>
+                {/*TODO: Dette må komme fra en eller annen EPJ session*/}
+                <div className="font-bold">Magmar Koman</div>
+                <div className="text-sm text-gray-200">Nav EPJ v0.42</div>
             </div>
         </div>
     )

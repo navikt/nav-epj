@@ -12,6 +12,7 @@ const PatientPicker = async () => {
     })
 
     const patients: Patient[] = [
+        { name: 'Espen Eksempel', id: '21037712323' },
         { name: 'Ola Nordmann', id: '45847100951' },
         { name: 'Kari Karisdottir', id: '65927600603' },
     ]
