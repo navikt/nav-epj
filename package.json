@@ -2,6 +2,9 @@
     "name": "nav-epj",
     "version": "0.1.0",
     "private": true,
+    "engines": {
+        "node": "24"
+    },
     "scripts": {
         "dev": "next dev --turbopack | pino-pretty",
         "build": "next build",
@@ -48,5 +51,5 @@
             "next/core-web-vitals"
         ]
     },
-    "packageManager": "yarn@4.6.0"
+    "packageManager": "yarn@4.10.3"
 }
