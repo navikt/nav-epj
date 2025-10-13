@@ -36,9 +36,20 @@ jobs:
     outputs:
       image: ${{ steps.next-build.outputs.image }}
 
+  deploy-dev-main-warn:
+    # TODO: Remove this and to re-enable deployment
+    name: Deploy is disabled
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    needs: [build-dev, test-and-verify]
+    steps:
+      - run: |
+          echo "Deployment is disabled" >> $GITHUB_STEP_SUMMARY
+
   deploy-dev-main:
     name: Deploy main to dev
-    if: github.ref_name == 'main'
+    # TODO: and this && false
+    if: github.ref_name == 'main' && false
     environment:
       name: dev
       url: https://epj.ekstern.dev.nav.no
