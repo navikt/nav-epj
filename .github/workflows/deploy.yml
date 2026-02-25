@@ -1,8 +1,8 @@
 name: Build & Deploy
-on: push
-
-env:
-  APP: nav-epj
+on:
+  push:
+    branches:
+      - v2
 
 permissions:
   contents: read
@@ -10,56 +10,41 @@ permissions:
   packages: write
 
 jobs:
-  test-and-verify:
-    name: Test, lint and verify
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: navikt/tsm-workflows/actions/yarn@main
+      - uses: navikt/tsm-workflows/actions/gradle/build@main
+        id: build
         with:
-          READER_TOKEN: ${{ secrets.READER_TOKEN }}
-      - run: yarn lint
-      - run: yarn tsc
-      # - run: yarn test
-
-  build-dev:
-    name: Build for dev
-    runs-on: ubuntu-latest
-    steps:
-      - uses: navikt/tsm-workflows/actions/next/build@main
-        id: next-build
-        with:
-          app: ${{ env.APP }}
-          env: dev
-          team: 'helseopplysninger'
+          app: "nav-epj"
+          team: helseopplysninger
+          salsa: false
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     outputs:
-      image: ${{ steps.next-build.outputs.image }}
+      image: ${{ steps.build.outputs.image }}
+      digest: ${{ steps.build.outputs.digest }}
 
-  deploy-dev-main-warn:
-    # TODO: Remove this and to re-enable deployment
-    name: Deploy is disabled
-    if: github.ref_name == 'main'
+  sbom:
+    name: Upload SBOM for build
+    needs: build
     runs-on: ubuntu-latest
-    needs: [build-dev, test-and-verify]
     steps:
-      - run: |
-          echo "Deployment is disabled" >> $GITHUB_STEP_SUMMARY
+      - uses: navikt/tsm-workflows/actions/attest-sign@main
+        with:
+          image: ${{ needs.build.outputs.image }}
+          digest: ${{ needs.build.outputs.digest }}
+          team: helseopplysninger
 
-  deploy-dev-main:
-    name: Deploy main to dev
-    # TODO: and this && false
-    if: github.ref_name == 'main' && false
+  deploy-dev:
+    needs: build
+    runs-on: ubuntu-latest
     environment:
       name: dev
-      url: https://epj.ekstern.dev.nav.no
-    runs-on: ubuntu-latest
-    needs: [build-dev, test-and-verify]
+      url: https://epj.ansatt.dev.nav.no
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: nais/deploy/actions/deploy@v2
         env:
-          CLUSTER: dev-gcp
-          RESOURCE: .nais/nais.yml
-          VAR: image=${{ needs.build-dev.outputs.image }}
-          NAIS_DEPLOY_SUMMARY: false
+          CLUSTER: "dev-gcp"
+          RESOURCE: ".nais/nais.yaml"
+          WORKLOAD_IMAGE: ${{ needs.build.outputs.image }}

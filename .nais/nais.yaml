@@ -1,0 +1,53 @@
+apiVersion: 'nais.io/v1alpha1'
+kind: 'Application'
+metadata:
+  name: nav-epj
+  namespace: helseopplysninger
+  labels:
+    team: helseopplysninger
+spec:
+  port: 8080
+  replicas:
+    min: 1
+    max: 2
+  resources:
+    limits:
+      memory: 512Mi
+    requests:
+      cpu: 50m
+      memory: 256Mi
+
+  ingresses:
+    - 'https://epj.ansatt.dev.nav.no'
+  observability:
+    autoInstrumentation:
+      enabled: true
+      runtime: java
+
+  login:
+    provider: openid
+    enforce:
+      enabled: true
+      excludePaths:
+        - /auth/**
+        - /api/**
+
+  accessPolicy:
+    outbound:
+      external:
+        - host: 'helseid-sts.test.nhn.no'
+
+  liveness:
+    path: /internal/health/alive
+  readiness:
+    path: /internal/health/ready
+  preStopHook:
+    http:
+      path: /internal/shutdown
+  filesFrom:
+    - emptyDir:
+        medium: Memory
+      mountPath: /app/docs
+
+  envFrom:
+    - secret: login-config-nav-epj

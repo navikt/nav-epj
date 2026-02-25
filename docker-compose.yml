@@ -1,9 +1,0 @@
-include:
-  - docker-compose-wonderwall.yml
-services:
-  auth-server:
-    image: europe-north1-docker.pkg.dev/nais-management-233d/helseopplysninger/nav-epj-auth-server:latest
-    ports:
-      - '9000:9000'
-    environment:
-      SPRING_PROFILES_ACTIVE: local
