@@ -1,13 +1,12 @@
-FROM gcr.io/distroless/nodejs24-debian12@sha256:ffd856f109228f43ed5cbbca5f07e19944e5569e9b9564f1064a0b52c40f3cb0
+FROM gcr.io/distroless/java21-debian12@sha256:2bda49bc3f1dac94d4b8b2133545ab17f7be6c4216be8cea589d2d52660da308
 
 WORKDIR /app
 
-COPY next-logger.config.mjs /app/
-COPY .next/standalone /app/
-COPY public /app/public
+COPY build/libs/epj-all.jar app.jar
 
-EXPOSE 3000
+ENV JAVA_OPTS="-Dlogback.configurationFile=logback.xml"
+ENV TZ="Europe/Oslo"
 
-ENV NODE_ENV=production
+EXPOSE 8080
 
-CMD ["server.js"]
+CMD [ "app.jar" ]
