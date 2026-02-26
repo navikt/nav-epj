@@ -3,14 +3,19 @@ package no.nav.tsm.plugins
 import com.auth0.jwk.JwkProviderBuilder
 import com.auth0.jwt.JWT
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
+import io.ktor.server.response.*
 import no.nav.tsm.frontend.wonderwall.HelseIdPrincipal
 import no.nav.tsm.frontend.wonderwall.User
+import no.nav.tsm.utils.logger
 import java.net.URI
 
 fun Application.configureSecurity() {
+    val log = logger()
+
     if (developmentMode) {
         configureLocalDevelopmentSecurity()
         return
@@ -25,16 +30,22 @@ fun Application.configureSecurity() {
     authentication {
         jwt("wonderwall-helseid") {
             realm = "nav-epj"
-            verifier(jwkProvider, metadata.issuer.value) {
-                acceptLeeway(10)
-                withAudience(clientId)
-            }
+            verifier(jwkProvider, metadata.issuer.value)
             validate { credential ->
-                if (!credential.payload.audience.contains(clientId)) return@validate null
+                val idToken = request.headers["X-Wonderwall-Id-Token"]
+                if (idToken == null) {
+                    log.warn("Missing X-Wonderwall-Id-Token header")
+                    return@validate null
+                }
 
-                val idToken = request.headers["X-Wonderwall-Id-Token"] ?: return@validate null
-                val hpr =
-                    JWT.decode(idToken).getClaim("helseid://claims/hpr/hpr_number").asString() ?: return@validate null
+                val hpr = JWT.decode(idToken).getClaim("helseid://claims/hpr/hpr_number").asString()
+                if (hpr == null) {
+                    log.warn(
+                        "Missing hpr_number claim in id_token, available claims: {}",
+                        JWT.decode(idToken).claims.keys
+                    )
+                    return@validate null
+                }
 
                 HelseIdPrincipal(
                     user = User(hpr = hpr),
