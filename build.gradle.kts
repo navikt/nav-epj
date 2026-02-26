@@ -34,3 +34,12 @@ dependencies {
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
 }
+
+tasks.register<JavaExec>("runLocal") {
+    group = "application"
+    mainClass.set("io.ktor.server.netty.EngineMain")
+    classpath = sourceSets["main"].runtimeClasspath
+
+    args("-config=application-local.yaml")
+    jvmArgs("-Dio.ktor.development=true")
+}

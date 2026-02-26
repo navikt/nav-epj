@@ -1,25 +1,9 @@
 package no.nav.tsm.frontend.wonderwall
 
+import io.ktor.server.auth.jwt.JWTPrincipal
+
 data class User(
     val hpr: String,
 )
 
-sealed interface Wonderwall {
-    fun user(): User
-}
-
-class CloudWonderwall : Wonderwall {
-    override fun user(): User {
-        return User(
-            hpr = "12345678901",
-        )
-    }
-}
-
-class LocalWonderwall : Wonderwall {
-    override fun user(): User {
-        return User(
-            hpr = "12345678901",
-        )
-    }
-}
+data class HelseIdPrincipal(val user: User, val accessToken: JWTPrincipal)

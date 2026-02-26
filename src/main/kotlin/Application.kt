@@ -6,6 +6,7 @@ import no.nav.tsm.frontend.epjFrontendModule
 import no.nav.tsm.plugins.configureFrameworks
 import no.nav.tsm.plugins.configureOpenAPI
 import no.nav.tsm.plugins.configureMonitoring
+import no.nav.tsm.plugins.configureSecurity
 import no.nav.tsm.plugins.configureSerialization
 
 fun main(args: Array<String>) {
@@ -13,13 +14,14 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
+    // Global Ktor configuration
     configureSerialization()
     configureSecurity()
     configureFrameworks()
     configureMonitoring()
     configureOpenAPI()
 
+    // Different application modules
     epjFrontendModule()
     fhirAuthModule()
 }
-

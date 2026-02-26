@@ -5,7 +5,7 @@ ktor:
   deployment:
     port: 8080
 
-jwt:
-  domain: "https://jwt-provider-domain/"
-  audience: "jwt-audience"
-  realm: "ktor sample app"
+auth:
+  helseId:
+    wellKnownUrl: ${WONDERWALL_OPENID_WELL_KNOWN_URL}
+    clientId: ${WONDERWALL_OPENID_CLIENT_ID}
