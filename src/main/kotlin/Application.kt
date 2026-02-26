@@ -1,6 +1,7 @@
 package no.nav.tsm
 
 import io.ktor.server.application.*
+import no.nav.tsm.auth.fhirAuthModule
 import no.nav.tsm.plugins.configureFrameworks
 import no.nav.tsm.plugins.configureHTTP
 import no.nav.tsm.plugins.configureMonitoring
@@ -17,5 +18,7 @@ fun Application.module() {
     configureMonitoring()
     configureHTTP()
     configureRouting()
+
+    fhirAuthModule()
 }
 
