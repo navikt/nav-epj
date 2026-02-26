@@ -1,0 +1,82 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: #f5f5f5;
+    color: #222;
+}
+
+/* Header */
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    height: 60px;
+    background: #1e1e2e;
+    color: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-logo {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.header-nav a {
+    color: #ccc;
+    text-decoration: none;
+    margin-left: 1.5rem;
+    font-size: 0.95rem;
+}
+
+.header-nav a:hover {
+    color: #fff;
+}
+
+/* Layout */
+.layout {
+    display: flex;
+    flex: 1;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: #fff;
+    border-right: 1px solid #e0e0e0;
+    padding: 1rem 0;
+}
+
+.sidebar ul {
+    list-style: none;
+}
+
+.sidebar ul li a {
+    display: block;
+    padding: 0.6rem 1.5rem;
+    color: #444;
+    text-decoration: none;
+    font-size: 0.95rem;
+}
+
+.sidebar ul li a:hover {
+    background: #f0f0f0;
+    color: #000;
+}
+
+/* Main content */
+.content {
+    flex: 1;
+    padding: 2rem;
+}
