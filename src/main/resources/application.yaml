@@ -5,6 +5,11 @@ ktor:
   deployment:
     port: 8080
 
+database:
+  url: ${PGJDBCURL}
+  user: ${PGUSER}
+  password: ${PGPASSWORD}
+
 auth:
   helseId:
     wellKnownUrl: ${WONDERWALL_OPENID_WELL_KNOWN_URL}

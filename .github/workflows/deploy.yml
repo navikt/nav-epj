@@ -46,5 +46,5 @@ jobs:
       - uses: nais/deploy/actions/deploy@v2
         env:
           CLUSTER: "dev-gcp"
-          RESOURCE: .nais/nais.yaml,.nais/zalando.yaml
+          RESOURCE: .nais/zalando.yaml,.nais/nais.yaml
           WORKLOAD_IMAGE: ${{ needs.build.outputs.image }}

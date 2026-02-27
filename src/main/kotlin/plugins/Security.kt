@@ -21,7 +21,6 @@ fun Application.configureSecurity() {
     }
 
     val wellKnownUrl = environment.config.property("auth.helseId.wellKnownUrl").getString()
-    val clientId = environment.config.property("auth.helseId.clientId").getString()
 
     val metadata = OIDCProviderMetadata.parse(URI(wellKnownUrl).toURL().readText())
     val jwkProvider = JwkProviderBuilder(metadata.jwkSetURI.toURL()).build()

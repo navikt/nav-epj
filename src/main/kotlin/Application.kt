@@ -3,6 +3,7 @@ package no.nav.tsm
 import io.ktor.server.application.*
 import no.nav.tsm.auth.fhirAuthModule
 import no.nav.tsm.frontend.epjFrontendModule
+import no.nav.tsm.plugins.configureDatabases
 import no.nav.tsm.plugins.configureFrameworks
 import no.nav.tsm.plugins.configureOpenAPI
 import no.nav.tsm.plugins.configureMonitoring
@@ -20,6 +21,7 @@ fun Application.module() {
     configureFrameworks()
     configureMonitoring()
     configureOpenAPI()
+    configureDatabases()
 
     // Different application modules
     epjFrontendModule()
