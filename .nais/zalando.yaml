@@ -1,0 +1,12 @@
+apiVersion: data.nais.io/v1
+kind: Postgres
+metadata:
+  name: nav-epj-postgres
+  namespace: helseopplysinger
+spec:
+  cluster:
+    majorVersion: '17'
+    resources:
+      cpu: 250m
+      diskSize: 3Gi
+      memory: 256Mi
