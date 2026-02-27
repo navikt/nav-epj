@@ -1,82 +1,67 @@
-*, *::before, *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+
+#root-grid {
+    display: grid;
+    grid-template-rows: 4rem 1fr 2rem; /* Header, content, footer */
+    grid-template-columns: auto 1fr; /* Sidebar, content */
+    grid-template-areas:
+        'grid-header grid-header'
+        'grid-sidebar grid-content'
+        'grid-footer grid-footer';
+    height: 100vh;
+    max-height: 100vh;
 }
 
-body {
-    font-family: system-ui, sans-serif;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    background: #f5f5f5;
-    color: #222;
+#root-grid > #grid-header {
+    grid-area: grid-header;
+
+    height: 64px;
+    padding: 8px;
 }
 
-/* Header */
-header {
+#root-grid > #grid-sidebar {
+    grid-area: grid-sidebar;
+    overflow: hidden;
+}
+
+#root-grid > #grid-content {
+    grid-area: grid-content;
+    background-color: white;
+    overflow: auto; /* Scroll if content overflows */
+}
+
+#root-grid > #grid-footer {
+    grid-area: grid-footer;
+
+    padding: 0 8px;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 1.5rem;
-    height: 60px;
-    background: #1e1e2e;
-    color: #fff;
-    position: sticky;
-    top: 0;
-    z-index: 100;
 }
 
-.header-logo {
-    font-size: 1.2rem;
-    font-weight: 600;
-}
-
-.header-nav a {
-    color: #ccc;
-    text-decoration: none;
-    margin-left: 1.5rem;
-    font-size: 0.95rem;
-}
-
-.header-nav a:hover {
-    color: #fff;
-}
-
-/* Layout */
-.layout {
+#app-header {
     display: flex;
-    flex: 1;
+    align-items: center;
+    gap: 0.75rem;
+    height: 100%;
 }
 
-/* Sidebar */
-.sidebar {
-    width: 220px;
-    flex-shrink: 0;
-    background: #fff;
-    border-right: 1px solid #e0e0e0;
-    padding: 1rem 0;
+#app-header img {
+    height: 100%;
+    width: auto;
 }
 
-.sidebar ul {
-    list-style: none;
+#app-header span {
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.01em;
 }
 
-.sidebar ul li a {
-    display: block;
-    padding: 0.6rem 1.5rem;
-    color: #444;
-    text-decoration: none;
-    font-size: 0.95rem;
+.patient-picker {
+    padding: 4px;
 }
 
-.sidebar ul li a:hover {
-    background: #f0f0f0;
-    color: #000;
-}
-
-/* Main content */
-.content {
-    flex: 1;
-    padding: 2rem;
+.app-picker {
+    padding: 4px;
 }
