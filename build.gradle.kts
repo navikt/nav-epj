@@ -35,6 +35,11 @@ dependencies {
     testImplementation(libs.kotlin.test.junit)
 }
 
+tasks.register<Exec>("preRunLocal") {
+    group = "application"
+    commandLine("./scripts/pre-dev.sh")
+}
+
 tasks.register<JavaExec>("runLocal") {
     group = "application"
     mainClass.set("io.ktor.server.netty.EngineMain")
@@ -42,4 +47,6 @@ tasks.register<JavaExec>("runLocal") {
 
     args("-config=application-local.yaml")
     jvmArgs("-Dio.ktor.development=true")
+
+    dependsOn("preRunLocal")
 }
