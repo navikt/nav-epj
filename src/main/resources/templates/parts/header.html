@@ -1,4 +1,9 @@
 <header id="app-header">
     <img src="/static/logo.png" alt="NAV logo">
     <span>NavEPJ</span>
+    <div id="header-user">
+        <span id="header-user-name">{{ user.name }}</span>
+        <span id="header-user-hpr">{{ user.hpr }}</span>
+    </div>
+    <a href="/oauth2/logout" id="header-logout">Logg ut</a>
 </header>

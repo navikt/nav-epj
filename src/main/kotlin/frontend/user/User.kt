@@ -4,6 +4,7 @@ import io.ktor.server.auth.principal
 import io.ktor.server.routing.RoutingContext
 
 data class User(
+    val name: String,
     val hpr: String,
 )
 

@@ -31,7 +31,7 @@ fun Route.landingPage() {
         val user = loggedInUser()
 
         call.respond(
-            PebbleContent("main.html", mapOf("content" to "Hello from Pebble! You are ${user.hpr}"))
+            PebbleContent("main.html", mapOf("user" to user))
         )
     }
     get("/debug-user") {
