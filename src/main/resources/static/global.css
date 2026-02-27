@@ -11,7 +11,11 @@ body {
     color: var(--ax-text-brand-blue-contrast)
 }
 
-h1 {
+a {
+    color: inherit;
+}
+
+
     font-size: 1.5rem;
     margin: 0;
 }
