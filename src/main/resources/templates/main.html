@@ -1,30 +1,35 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-color="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }}</title>
+    <title>NavEPJ - Utviklings-EPJ</title>
+
+    <link rel="stylesheet" href="https://cdn.nav.no/aksel/@navikt/ds-css/8.6.0/index.min.css">
+    <link rel="stylesheet" href="/static/global.css">
     <link rel="stylesheet" href="/static/main.css">
 </head>
 <body>
-    <header>
-        <div class="header-logo">MyApp</div>
-        <nav class="header-nav">
-            <a href="#">Home</a>
-            <a href="#">About</a>
-        </nav>
-    </header>
-    <div class="layout">
-        <aside class="sidebar">
-            <ul>
-                <li><a href="#">Dashboard</a></li>
-                <li><a href="#">Reports</a></li>
-                <li><a href="#">Settings</a></li>
-            </ul>
-        </aside>
-        <main class="content">
-            {{ content }}
-        </main>
+<div id="root-grid">
+    <div id="grid-header">
+        {% include "parts/header.html" %}
     </div>
+    <div id="grid-sidebar">
+        <div class="patient-picker">
+            <h2>Pasienter</h2>
+        </div>
+        <div class="app-picker">
+            <h2>Apper</h2>
+        </div>
+    </div>
+    <div id="grid-content">CONTENTA</div>
+    <div id="grid-footer">
+        <div>NavEPJ er en fiktig EPJ med falske data fra Dolly.</div
+        <a className="text-xs underline" href="https://github.com/navikt/nav-fhir-server" target="_blank">
+            Kildekode på Github
+        </a>
+    </div>
+</div>
+<script type="module" src="https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js"></script>
 </body>
 </html>
