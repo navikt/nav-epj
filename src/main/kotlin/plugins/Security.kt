@@ -3,13 +3,12 @@ package no.nav.tsm.plugins
 import com.auth0.jwk.JwkProviderBuilder
 import com.auth0.jwt.JWT
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata
-import io.ktor.http.*
+import frontend.user.DebugInfo
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
-import io.ktor.server.response.*
-import no.nav.tsm.frontend.wonderwall.HelseIdPrincipal
-import no.nav.tsm.frontend.wonderwall.User
+import frontend.user.HelseIdPrincipal
+import frontend.user.User
 import no.nav.tsm.utils.logger
 import java.net.URI
 
@@ -47,9 +46,13 @@ fun Application.configureSecurity() {
                     return@validate null
                 }
 
+
                 HelseIdPrincipal(
                     user = User(hpr = hpr),
-                    accessToken = JWTPrincipal(credential.payload),
+                    debug = DebugInfo(
+                        idToken = idToken,
+                        accessToken = request.headers["Authorization"]?.replace("Bearer ", "") ?: "missing",
+                    )
                 )
             }
         }
@@ -61,7 +64,11 @@ private fun Application.configureLocalDevelopmentSecurity() {
 
     val stubPrincipal = HelseIdPrincipal(
         user = User(hpr = "1234567"),
-        accessToken = JWTPrincipal(JWT.decode("eyJhbGciOiJub25lIn0.eyJzdWIiOiJsb2NhbC1kZXYifQ.")),
+        debug = DebugInfo(
+            accessToken = "eyJhbGciOiJub25lIn0.eyJzdWIiOiJsb2NhbC1kZXYifQ.",
+            idToken = "eyJhbGciOiJub25lIn0.eyJzdWIiOiJsb2NhbC1kZXYifQ."
+        )
+
     )
 
     authentication {
