@@ -19,6 +19,10 @@ spec:
 
   ingresses:
     - 'https://epj.ansatt.dev.nav.no'
+
+  postgres:
+    clusterName: nav-epj-postgres
+
   observability:
     autoInstrumentation:
       enabled: true
