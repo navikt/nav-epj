@@ -37,18 +37,22 @@ fun Application.configureSecurity() {
                     return@validate null
                 }
 
-                val hpr = JWT.decode(idToken).getClaim("helseid://claims/hpr/hpr_number").asString()
+                val decodedIdToken = JWT.decode(idToken)
+                val hpr = decodedIdToken.getClaim("helseid://claims/hpr/hpr_number").asString()
                 if (hpr == null) {
                     log.warn(
                         "Missing hpr_number claim in id_token, available claims: {}",
-                        JWT.decode(idToken).claims.keys
+                        decodedIdToken.claims.keys
                     )
                     return@validate null
                 }
 
 
                 HelseIdPrincipal(
-                    user = User(hpr = hpr),
+                    user = User(
+                        name = decodedIdToken.getClaim("name").asString(),
+                        hpr = hpr
+                    ),
                     debug = DebugInfo(
                         idToken = idToken,
                         accessToken = request.headers["Authorization"]?.replace("Bearer ", "") ?: "missing",
@@ -63,7 +67,10 @@ private fun Application.configureLocalDevelopmentSecurity() {
     log.error("Local development security, if you see this in production, something is very wrong!")
 
     val stubPrincipal = HelseIdPrincipal(
-        user = User(hpr = "1234567"),
+        user = User(
+            name = "Local Dev",
+            hpr = "1234567"
+        ),
         debug = DebugInfo(
             accessToken = "eyJhbGciOiJub25lIn0.eyJzdWIiOiJsb2NhbC1kZXYifQ.",
             idToken = "eyJhbGciOiJub25lIn0.eyJzdWIiOiJsb2NhbC1kZXYifQ."

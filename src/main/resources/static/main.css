@@ -51,11 +51,48 @@
     width: auto;
 }
 
-#app-header span {
+#app-header > span {
     font-size: 2rem;
     font-weight: 600;
     line-height: 1;
     letter-spacing: -0.01em;
+}
+
+#header-user {
+    margin-left: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.1rem;
+}
+
+#header-user-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+#header-user-hpr {
+    font-size: 0.75rem;
+    opacity: 0.8;
+    line-height: 1;
+}
+
+#header-logout {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: inherit;
+    opacity: 0.85;
+    text-decoration: none;
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    padding: 0.25rem 0.65rem;
+    white-space: nowrap;
+}
+
+#header-logout:hover {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.15);
 }
 
 .patient-picker {
