@@ -2,7 +2,7 @@ apiVersion: data.nais.io/v1
 kind: Postgres
 metadata:
   name: nav-epj-postgres
-  namespace: helseopplysinger
+  namespace: helseopplysninger
 spec:
   cluster:
     majorVersion: '17'

@@ -7,3 +7,8 @@ ktor:
     watch:
       - classes
       - resources
+
+database:
+  url: jdbc:postgresql://localhost:6954/nav-epj
+  user: postgres
+  password: password

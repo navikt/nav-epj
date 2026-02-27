@@ -4,6 +4,10 @@ ktor = "3.4.0"
 logback = "1.5.13"
 logbackEncoder = "8.1"
 nimbus = "11.33"
+exposed = "1.1.1"
+h2 = "2.4.240"
+flyway = "12.0.2"
+postgresql = "42.7.10"
 
 [libraries]
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
@@ -24,7 +28,15 @@ logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "lo
 logback-encoder = { module = "net.logstash.logback:logstash-logback-encoder", version.ref = "logbackEncoder"}
 khealth = { module = "dev.hayden:khealth", version = "3.0.2" }
 nimbus-oidc-sdk = { module = "com.nimbusds:oauth2-oidc-sdk", version.ref = "nimbus" }
+# Database + Exposed
+h2 = { module = "com.h2database:h2", version.ref = "h2" }
+exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
+exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
+flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
+flyway-postgres = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
+flyway = { id = "org.flywaydb.flyway", version.ref = "flyway" }

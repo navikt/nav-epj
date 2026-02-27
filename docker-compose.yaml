@@ -5,6 +5,6 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: zara
+      POSTGRES_DB: nav-epj
     ports:
       - '6954:5432'
