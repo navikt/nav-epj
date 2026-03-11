@@ -1,0 +1,7 @@
+<div class="app-list">
+    {% for app in apps %}
+    <button class="app-button" data-on:click="@get('/app/{{ app.id }}')">
+        {{ app.name }}
+    </button>
+    {% endfor %}
+</div>

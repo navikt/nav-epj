@@ -13,8 +13,10 @@ fun Application.configureDatabases() {
     val flyway = Flyway.configure()
         .dataSource(url, user, password)
         .locations("db/migrations")
+        .cleanDisabled(false)
         .load()
 
+    flyway.clean()
     flyway.migrate()
 
     Database.connect(url, user = user, password = password)
