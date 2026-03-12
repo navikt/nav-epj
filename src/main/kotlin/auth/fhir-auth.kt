@@ -36,13 +36,14 @@ fun Application.fhirAuthModule() {
                 )
             )
         }.describe {
-            summary = "Get SMART on FHIR configuration"
+            summary = "Get SMART on FHIR configuratøion"
         }
 
 
         route("/auth") {
+            get("/authorize") {
 
-
+            }
         }
     }
 }
