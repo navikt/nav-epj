@@ -1,0 +1,10 @@
+ktor:
+  environment: local
+
+oauth:
+  authorizeUrl: "http://localhost:8080/oidc/authorize"
+  accessTokenUrl: "http://localhost:8080/oidc/token"
+  clientId: "dr-zara-web"
+  clientSecret: "secret"
+  callbackUrl: "http://localhost:8080/callback"
+  defaultScopes: "openid,profile"

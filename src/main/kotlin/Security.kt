@@ -1,79 +1,36 @@
 package no.nav.helse
 
-import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.client.*
-import io.ktor.client.engine.apache.*
+import io.ktor.client.engine.cio.CIO
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import io.ktor.server.sessions.*
-import java.util.UUID
-import io.ktor.client.engine.apache.*
-import io.ktor.client.engine.apache.*
+import io.ktor.server.sessions.Sessions
+import io.ktor.server.sessions.cookie
+import kotlinx.serialization.Serializable
 
 fun Application.configureSecurity() {
-  // Please read the jwt property from the config file if you are using EngineMain
-  val jwtAudience = "jwt-audience"
-  val jwtDomain = "https://jwt-provider-domain/"
-  val jwtRealm = "ktor sample app"
-  val jwtSecret = "secret"
+  val config = environment.config.config("oauth")
 
   authentication {
-    /*oauth("local-stub") {
-      urlProvider = { "http://localhost:8080/callback" }
+    oauth("local-stub") {
+      urlProvider = { config.property("callbackUrl").getString() }
       providerLookup = {
         OAuthServerSettings.OAuth2ServerSettings(
-
-        )
-      }
-    }*/
-    oauth("auth-oauth-google") {
-      urlProvider = { "http://localhost:8080/callback" }
-      providerLookup = {
-        OAuthServerSettings.OAuth2ServerSettings(
-          name = "google",
-          authorizeUrl = "https://accounts.google.com/o/oauth2/auth",
-          accessTokenUrl = "https://accounts.google.com/o/oauth2/token",
+          name = "local-stub",
+          authorizeUrl = config.property("authorizeUrl").getString(),
+          accessTokenUrl = config.property("accessTokenUrl").getString(),
           requestMethod = HttpMethod.Post,
-          clientId = UUID.randomUUID().toString(),//System.getenv("GOOGLE_CLIENT_ID"),
-          clientSecret = UUID.randomUUID().toString(),//System.getenv("GOOGLE_CLIENT_SECRET"),
-          defaultScopes = listOf("https://www.googleapis.com/auth/userinfo.profile")
+          clientId = config.property("clientId").getString(),
+          clientSecret = config.property("clientSecret").getString(),
+          defaultScopes = config.property("defaultScopes").getString().split(","),
         )
       }
-      client = HttpClient(io.ktor.client.engine.apache.Apache) {
-        engine {
-          followRedirects = true
-          socketTimeout = 10_000
-          connectTimeout = 10_000
-          connectionRequestTimeout = 20_000
-          customizeClient {
-            setMaxConnTotal(1000)
-            setMaxConnPerRoute(100)
-          }
-          customizeRequest {
-            // TODO: request transformations
-          }
-        }
-      }
-    }
-    jwt {
-      realm = jwtRealm
-      verifier(
-        JWT
-          .require(Algorithm.HMAC256(jwtSecret))
-          .withAudience(jwtAudience)
-          .withIssuer(jwtDomain)
-          .build()
-      )
-      validate { credential ->
-        if (credential.payload.audience.contains(jwtAudience)) JWTPrincipal(credential.payload) else null
-      }
+      // TODO fallback = {}
+      client = HttpClient(CIO)
     }
   }
 }
 
-class UserSession(accessToken: String)
+@Serializable
+class UserSession(val accessToken: String)
