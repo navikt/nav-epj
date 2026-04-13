@@ -38,27 +38,39 @@ fun Application.configureOidcStub() {
             issuer = issuer,
             authorizationEndpoint = "$issuer/authorize",
             tokenEndpoint = "$issuer/token",
-            jwksUri = "$issuer/jwks"
-          )
+            jwksUri = "$issuer/jwks",
+          ),
         )
       }
 
       get("/jwks") {
         val enc = Base64.getUrlEncoder().withoutPadding()
-        call.respond(JwksResponse(keys = listOf(JwkKey(
-          kty = "RSA",
-          kid = keyId,
-          use = "sig",
-          alg = "RS256",
-          n = enc.encodeToString(rsaPublic.modulus.toByteArray().dropWhile { it == 0.toByte() }.toByteArray()),
-          e = enc.encodeToString(rsaPublic.publicExponent.toByteArray())
-        ))))
+        call.respond(
+          JwksResponse(
+            keys = listOf(
+              JwkKey(
+                kty = "RSA",
+                kid = keyId,
+                use = "sig",
+                alg = "RS256",
+                n = enc.encodeToString(
+                  rsaPublic.modulus.toByteArray().dropWhile { it == 0.toByte() }
+                    .toByteArray(),
+                ),
+                e = enc.encodeToString(rsaPublic.publicExponent.toByteArray()),
+              ),
+            ),
+          ),
+        )
       }
 
       // Browser lands here via redirect from Ktor's oauth plugin
       get("/authorize") {
         val redirectUri = call.parameters["redirect_uri"]
-          ?: return@get call.respondText("Missing redirect_uri", status = HttpStatusCode.BadRequest)
+          ?: return@get call.respondText(
+            "Missing redirect_uri",
+            status = HttpStatusCode.BadRequest,
+          )
         val state = call.parameters["state"] ?: ""
         val nonce = call.parameters["nonce"]
 
@@ -69,7 +81,11 @@ fun Application.configureOidcStub() {
               hiddenInput(name = "redirect_uri") { value = redirectUri }
               hiddenInput(name = "state") { value = state }
               nonce?.let { hiddenInput(name = "nonce") { value = it } }
-              p { textInput(name = "username") { value = "testuser"; placeholder = "Username" } }
+              p {
+                textInput(name = "username") {
+                  value = "testuser"; placeholder = "Username"
+                }
+              }
               p {
                 passwordInput(name = "password") {
                   value = "password"; placeholder = "Password"
@@ -102,10 +118,16 @@ fun Application.configureOidcStub() {
         log.info("OIDC stub /token called with params: $params")
 
         val code = params["code"]
-          ?: return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "missing code"))
+          ?: return@post call.respond(
+            HttpStatusCode.BadRequest,
+            mapOf("error" to "missing code"),
+          )
 
         val (username, _, nonce) = authCodes.remove(code)
-          ?: return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "invalid code"))
+          ?: return@post call.respond(
+            HttpStatusCode.BadRequest,
+            mapOf("error" to "invalid code"),
+          )
 
         log.info("OIDC stub: issuing token for user=$username")
 
@@ -142,7 +164,7 @@ data class DiscoveryDocument(
   @SerialName("grant_types_supported") val grantTypesSupported: List<String> = listOf("authorization_code"),
   @SerialName("subject_types_supported") val subjectTypesSupported: List<String> = listOf("public"),
   @SerialName("id_token_signing_alg_values_supported") val idTokenSigningAlgValuesSupported: List<String> = listOf(
-    "RS256"
+    "RS256",
   ),
 )
 

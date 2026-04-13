@@ -5,8 +5,6 @@ import io.ktor.client.engine.cio.CIO
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.ktor.server.sessions.Sessions
-import io.ktor.server.sessions.cookie
 import kotlinx.serialization.Serializable
 
 fun Application.configureSecurity() {
