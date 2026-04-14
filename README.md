@@ -41,3 +41,15 @@ If the server starts successfully, you'll see the following output:
 2024-12-04 14:32:45.682 [main] INFO  Application - Responding at http://0.0.0.0:8080
 ```
 
+## Building and running frontend locally
+
+Frontend can be run separate from backend when developing locally. To do this, run the following commands in the terminal:
+
+`cd frontend`
+`yarn dev`
+
+TODO: Add functionality to proxy API calls to backend when running frontend locally.
+
+For the frontend to be served with ktor, the dist folder needs to be copied into the `resources` folder in the backend.
+
+TODO: Add github action to build and copy dist folder into `resources` when building backend for nais envinronments.

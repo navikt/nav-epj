@@ -4,12 +4,19 @@ import com.auth0.jwt.JWT
 import io.ktor.http.ContentType
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
+import io.ktor.server.http.content.singlePageApplication
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 
 fun Application.configureRouting() {
   routing {
+    singlePageApplication {
+      useResources = true
+      defaultPage = "index.html"
+      filesPath = "dist"
+    }
+
     authenticate("local-stub") {
       get("/login") {
         call.respondRedirect("/callback")
@@ -31,10 +38,6 @@ fun Application.configureRouting() {
       }
       val token = session.accessToken.let { JWT.decode(it) }
       call.respondText("Hello, ${token?.subject ?: "unknown"}!")
-    }
-
-    get("/") {
-      call.respondText("Hello World!")
     }
   }
 }
