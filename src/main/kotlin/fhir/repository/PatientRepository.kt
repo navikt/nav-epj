@@ -1,0 +1,8 @@
+package no.nav.helse.fhir.repository
+
+import com.google.fhir.model.r4.Patient
+
+interface PatientRepository {
+  fun getPatient(id: String): Patient?
+  fun getAllPatients(): List<Patient>
+}

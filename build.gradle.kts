@@ -1,5 +1,6 @@
 val kotlin_version: String by project
 val logback_version: String by project
+val mockk_version: String by project
 
 plugins {
   kotlin("jvm") version "2.3.0"
@@ -18,6 +19,11 @@ kotlin {
   jvmToolchain(21)
 }
 
+repositories {
+  mavenCentral()
+  google()
+}
+
 dependencies {
   implementation("io.ktor:ktor-server-core")
   implementation("io.ktor:ktor-server-auth")
@@ -30,6 +36,9 @@ dependencies {
   implementation("io.ktor:ktor-client-core")
   implementation("io.ktor:ktor-client-cio")
   implementation("ch.qos.logback:logback-classic:$logback_version")
+  //FHIR
+  implementation("com.google.fhir:fhir-model:1.0.0-beta02")
   testImplementation("io.ktor:ktor-server-test-host")
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
+  testImplementation("io.mockk:mockk:$mockk_version")
 }
