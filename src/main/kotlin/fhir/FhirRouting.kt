@@ -11,7 +11,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import no.nav.helse.UserSession
-import no.nav.helse.fhir.repository.StubPatientRepository
+import no.nav.helse.fhir.patient.PatientService
+import no.nav.helse.fhir.patient.repository.StubPatientRepository
 
 private val fhirJson = FhirR4Json()
 private const val FHIR_CONTENT_TYPE = "application/fhir+json"

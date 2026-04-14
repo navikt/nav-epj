@@ -11,7 +11,8 @@ import com.google.fhir.model.r4.terminologies.AdministrativeGender
 import io.mockk.every
 import io.mockk.verify
 import io.mockk.mockk
-import no.nav.helse.fhir.repository.PatientRepository
+import no.nav.helse.fhir.patient.PatientService
+import no.nav.helse.fhir.patient.repository.PatientRepository
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
