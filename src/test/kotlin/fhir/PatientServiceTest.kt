@@ -103,6 +103,7 @@ class PatientServiceTest {
     every { patientRepository.getAllPatients() } returns emptyList()
     val patients = patientService.getAllPatients()
     verify (exactly = 1) { patientRepository.getAllPatients() }
+
     assertTrue { patients.isEmpty() }
   }
 
