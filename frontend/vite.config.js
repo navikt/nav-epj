@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': {
+      '/fhir': {
         target: 'http://localhost:8080', // Your Ktor server port
         changeOrigin: true,
       },
