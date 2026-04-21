@@ -27,8 +27,8 @@ class PatientServiceTest {
     active = Boolean(value = true),
     name = listOf(
       HumanName(
-        family = String(value = "Nordmann"),
-        given = listOf(String(value = "Ola")),
+        family = String(value = "Li"),
+        given = listOf(String(value = "Jun")),
       ),
     ),
     gender = Enumeration(value = AdministrativeGender.Male),
@@ -40,8 +40,8 @@ class PatientServiceTest {
     active = Boolean(value = true),
     name = listOf(
       HumanName(
-        family = String(value = "Nordmann"),
-        given = listOf(String(value = "Kari")),
+        family = String(value = "Elle"),
+        given = listOf(String(value = "McGibbons")),
       ),
     ),
     gender = Enumeration(value = AdministrativeGender.Female),
@@ -53,8 +53,8 @@ class PatientServiceTest {
     active = Boolean(value = false),
     name = listOf(
       HumanName(
-        family = String(value = "Hansen"),
-        given = listOf(String(value = "Per")),
+        family = String(value = "Wee"),
+        given = listOf(String(value = "Jack")),
       ),
     ),
     gender = Enumeration(value = AdministrativeGender.Male),

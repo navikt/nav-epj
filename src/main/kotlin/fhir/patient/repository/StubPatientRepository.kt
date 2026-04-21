@@ -16,8 +16,8 @@ class StubPatientRepository : PatientRepository {
           active = Boolean(value = true),
           name = listOf(
               HumanName(
-                  family = com.google.fhir.model.r4.String(value = "Nordmann"),
-                  given = listOf(com.google.fhir.model.r4.String(value = "Ola"))
+                  family = com.google.fhir.model.r4.String(value = "Li"),
+                  given = listOf(com.google.fhir.model.r4.String(value = "Jun"))
               )
           ),
           gender = Enumeration(value = AdministrativeGender.Male),
@@ -29,8 +29,8 @@ class StubPatientRepository : PatientRepository {
           active = Boolean(value = true),
           name = listOf(
               HumanName(
-                  family = com.google.fhir.model.r4.String(value = "Nordmann"),
-                  given = listOf(com.google.fhir.model.r4.String(value = "Kari"))
+                  family = com.google.fhir.model.r4.String(value = "McGibbons"),
+                  given = listOf(com.google.fhir.model.r4.String(value = "Elle"))
               )
           ),
           gender = Enumeration(value = AdministrativeGender.Female),
@@ -42,8 +42,8 @@ class StubPatientRepository : PatientRepository {
           active = Boolean(value = false),
           name = listOf(
               HumanName(
-                  family = com.google.fhir.model.r4.String(value = "Hansen"),
-                  given = listOf(com.google.fhir.model.r4.String(value = "Per"))
+                  family = com.google.fhir.model.r4.String(value = "Wee"),
+                  given = listOf(com.google.fhir.model.r4.String(value = "Jack"))
               )
           ),
           gender = Enumeration(value = AdministrativeGender.Male),

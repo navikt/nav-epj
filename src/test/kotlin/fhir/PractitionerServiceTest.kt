@@ -26,8 +26,8 @@ class PractitionerServiceTest {
     active = Boolean(value = true),
     name = listOf(
       HumanName(
-        family = String(value = "Larsen"),
-        given = listOf(String(value = "Erik")),
+        family = String(value = "Boom"),
+        given = listOf(String(value = "Carl")),
         prefix = listOf(String(value = "Dr."))
       ),
     ),
@@ -40,8 +40,8 @@ class PractitionerServiceTest {
     active = Boolean(value = true),
     name = listOf(
       HumanName(
-        family = String(value = "Berg"),
-        given = listOf(String(value = "Maria")),
+        family = String(value = "Mudskipper"),
+        given = listOf(String(value = "Zev")),
         prefix = listOf(String(value = "Dr."))
       ),
     ),
@@ -54,8 +54,8 @@ class PractitionerServiceTest {
     active = Boolean(value = false),
     name = listOf(
       HumanName(
-        family = String(value = "Olsen"),
-        given = listOf(String(value = "Anders")),
+        family = String(value = "Andrews"),
+        given = listOf(String(value = "Chris")),
         prefix = listOf(String(value = "Dr."))
       ),
     ),

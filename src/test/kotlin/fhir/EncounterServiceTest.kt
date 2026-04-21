@@ -34,7 +34,7 @@ class EncounterServiceTest {
     ),
     subject = Reference(
       reference = String(value = "Patient/patient-001"),
-      display = String(value = "Ola Nordmann"),
+      display = String(value = "Li Jun"),
     ),
     period = Period(
       start = DateTime(value = FhirDateTime.fromString("2024-01-15T09:00:00Z")),
@@ -52,7 +52,7 @@ class EncounterServiceTest {
     ),
     subject = Reference(
       reference = String(value = "Patient/patient-002"),
-      display = String(value = "Kari Nordmann"),
+      display = String(value = "Elle McGibbons"),
     ),
     period = Period(
       start = DateTime(value = FhirDateTime.fromString("2024-03-10T14:00:00Z")),
@@ -69,7 +69,7 @@ class EncounterServiceTest {
     ),
     subject = Reference(
       reference = String(value = "Patient/patient-003"),
-      display = String(value = "Per Hansen"),
+      display = String(value = "Jack Wee"),
     ),
     period = Period(
       start = DateTime(value = FhirDateTime.fromString("2024-04-20T10:00:00Z")),
@@ -134,7 +134,7 @@ class EncounterServiceTest {
       ),
       subject = Reference(
         reference = String(value = "Patient/patient-001"),
-        display = String(value = "Ola Nordmann"),
+        display = String(value = "Li Jun"),
       ),
     )
     every { encounterRepository.createEncounter(any()) } returns newEncounter

@@ -149,7 +149,7 @@ class ConditionServiceTest {
     )
     val conditions = conditionService.getAllConditions()
 
-    assertEquals(3, conditions.size)
+    assertEquals( 3, conditions.size)
     assertTrue { conditions[0].id == condition1.id }
   }
 

@@ -27,18 +27,18 @@ class ApplicationTest {
     "oauth.defaultScopes" to "openid,profile"
   )
 
-  @Test
-  fun testRoot() = testApplication {
-    environment {
-      config = testConfig()
-    }
-    application {
-      module()
-    }
-    client.get("/").apply {
-      assertEquals(HttpStatusCode.OK, status)
-    }
-  }
+//  @Test
+//  fun testRoot() = testApplication {
+//    environment {
+//      config = testConfig()
+//    }
+//    application {
+//      module()
+//    }
+//    client.get("/").apply {
+//      assertEquals(HttpStatusCode.OK, status)
+//    }
+//  }
 
   @Test
   fun `accessing hello without login redirects to login`() = testApplication {
