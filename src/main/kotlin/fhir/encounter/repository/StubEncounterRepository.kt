@@ -24,13 +24,13 @@ class StubEncounterRepository : EncounterRepository {
       ),
       subject = Reference(
         reference = com.google.fhir.model.r4.String(value = "Patient/patient-001"),
-        display = com.google.fhir.model.r4.String(value = "Ola Nordmann")
+        display = com.google.fhir.model.r4.String(value = "Li Jun")
       ),
       participant = listOf(
         Encounter.Participant(
           individual = Reference(
             reference = com.google.fhir.model.r4.String(value = "Practitioner/practitioner-001"),
-            display = com.google.fhir.model.r4.String(value = "Dr. Erik Larsen")
+            display = com.google.fhir.model.r4.String(value = "Dr. Carl Boom")
           )
         )
       ),
@@ -50,13 +50,13 @@ class StubEncounterRepository : EncounterRepository {
       ),
       subject = Reference(
         reference = com.google.fhir.model.r4.String(value = "Patient/patient-002"),
-        display = com.google.fhir.model.r4.String(value = "Kari Nordmann")
+        display = com.google.fhir.model.r4.String(value = "Elle McGibbons")
       ),
       participant = listOf(
         Encounter.Participant(
           individual = Reference(
             reference = com.google.fhir.model.r4.String(value = "Practitioner/practitioner-002"),
-            display = com.google.fhir.model.r4.String(value = "Dr. Maria Berg")
+            display = com.google.fhir.model.r4.String(value = "Dr. Zev Mudskipper")
           )
         )
       ),
@@ -75,13 +75,13 @@ class StubEncounterRepository : EncounterRepository {
       ),
       subject = Reference(
         reference = com.google.fhir.model.r4.String(value = "Patient/patient-003"),
-        display = com.google.fhir.model.r4.String(value = "Per Hansen")
+        display = com.google.fhir.model.r4.String(value = "Jack Wee")
       ),
       participant = listOf(
         Encounter.Participant(
           individual = Reference(
             reference = com.google.fhir.model.r4.String(value = "Practitioner/practitioner-001"),
-            display = com.google.fhir.model.r4.String(value = "Dr. Erik Larsen")
+            display = com.google.fhir.model.r4.String(value = "Dr. Carl Boom")
           )
         )
       ),
