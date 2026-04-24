@@ -1,32 +1,7 @@
 {
-    "compilerOptions": {
-        "lib": ["dom", "dom.iterable", "esnext"],
-        "allowJs": true,
-        "skipLibCheck": true,
-        "strict": true,
-        "noEmit": true,
-        "esModuleInterop": true,
-        "module": "esnext",
-        "moduleResolution": "bundler",
-        "resolveJsonModule": true,
-        "isolatedModules": true,
-        "jsx": "react-jsx",
-        "incremental": true,
-        "plugins": [{ "name": "next" }],
-        "types": ["@navikt/ds-react/types/theme"],
-        "paths": {
-            /*"@bruksvilkar.mdx": ["./docs/bruksvilkar.mdx"],
-            "@lib/*": ["./src/lib/*"],
-            "@core/*": ["./src/core/*"],
-            "@data-layer/*": ["./src/core/data-layer/*"],
-            "@queries": ["./src/core/data-layer/graphql/generated/queries.generated.ts"],
-            "@resolvers": ["./src/core/data-layer/graphql/generated/resolvers.generated.ts"],
-            "@features/*": ["./src/features/*"],
-            "@components/*": ["./src/components/*"],
-            "@dev/*": ["./src/dev/*"]*/
-        },
-        "target": "ES2017"
-    },
-    "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", ".next/dev/types/**/*.ts"],
-    "exclude": ["node_modules"]
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ]
 }
