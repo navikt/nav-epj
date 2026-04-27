@@ -7,4 +7,5 @@ interface ConditionRepository {
   fun getAllConditions(): List<Condition>
   fun getConditionsForPatient(patientId: String): List<Condition>
   fun getConditionsForEncounter(encounterId: String): List<Condition>
+  fun createCondition(condition: Condition): Condition
 }

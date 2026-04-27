@@ -12,4 +12,8 @@ class PatientService(private val repository: PatientRepository) {
   fun getAllPatients(): List<Patient> {
     return repository.getAllPatients()
   }
+
+  fun createPatient(patient: Patient): Patient {
+    return repository.createPatient(patient)
+  }
 }

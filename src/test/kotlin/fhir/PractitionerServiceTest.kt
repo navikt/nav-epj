@@ -10,6 +10,7 @@ import com.google.fhir.model.r4.String
 import com.google.fhir.model.r4.terminologies.AdministrativeGender
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import no.nav.helse.fhir.practitioner.PractitionerService
 import no.nav.helse.fhir.practitioner.repository.PractitionerRepository
 import kotlin.test.Test
@@ -101,5 +102,33 @@ class PractitionerServiceTest {
     every { practitionerRepository.getAllPractitioners() } returns emptyList()
     val practitioners = practitionerService.getAllPractitioners()
     assertTrue { practitioners.isEmpty() }
+  }
+
+  @Test
+  fun `create practitioner successfully`() {
+    val practitionerService = PractitionerService(practitionerRepository)
+    val newPractitioner = Practitioner(
+      id = "practitioner-new",
+      active = Boolean(value = true),
+      name = listOf(
+        HumanName(
+          family = String(value = "Andrews"),
+          given = listOf(String(value = "Brandon")),
+          prefix = listOf(String(value = "Dr."))
+        ),
+      ),
+      gender = Enumeration(value = AdministrativeGender.Male),
+      birthDate = Date(value = FhirDate.fromString("1980-03-20")),
+    )
+    every { practitionerRepository.createPractitioner(any()) } returns newPractitioner
+
+    val created = practitionerService.createPractitioner(newPractitioner)
+    verify(exactly = 1) { practitionerRepository.createPractitioner(newPractitioner) }
+
+    assertEquals(newPractitioner.id, created.id)
+    assertEquals(newPractitioner.active, created.active)
+    assertEquals(newPractitioner.name, created.name)
+    assertEquals(newPractitioner.gender, created.gender)
+    assertEquals(newPractitioner.birthDate, created.birthDate)
   }
 }

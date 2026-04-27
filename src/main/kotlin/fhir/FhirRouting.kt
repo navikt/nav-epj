@@ -9,6 +9,7 @@ import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import no.nav.helse.UserSession
 import no.nav.helse.fhir.condition.configureConditionRouting
+import no.nav.helse.fhir.documentreference.configureDocumentReferenceRouting
 import no.nav.helse.fhir.encounter.configureEncounterRouting
 import no.nav.helse.fhir.organization.configureOrganizationRouting
 import no.nav.helse.fhir.patient.configurePatientRouting
@@ -25,6 +26,7 @@ fun Application.configureFhirRouting() {
       configureEncounterRouting()
       configureConditionRouting()
       configurePractitionerRouting()
+      configureDocumentReferenceRouting()
     }
   }
 }

@@ -46,7 +46,7 @@ class ConditionServiceTest {
     ),
     subject = Reference(
       reference = FhirString(value = "Patient/patient-001"),
-      display = FhirString(value = "Ola Nordmann")
+      display = FhirString(value = "Li Jun")
     ),
     encounter = Reference(
       reference = FhirString(value = "Encounter/encounter-001"),
@@ -77,7 +77,7 @@ class ConditionServiceTest {
     ),
     subject = Reference(
       reference = FhirString(value = "Patient/patient-002"),
-      display = FhirString(value = "Kari Nordmann")
+      display = FhirString(value = "Elle McGibbons")
     ),
     encounter = Reference(
       reference = FhirString(value = "Encounter/encounter-002"),
@@ -108,7 +108,7 @@ class ConditionServiceTest {
     ),
     subject = Reference(
       reference = FhirString(value = "Patient/patient-003"),
-      display = FhirString(value = "Per Hansen")
+      display = FhirString(value = "Jack Wee")
     ),
     encounter = Reference(
       reference = FhirString(value = "Encounter/encounter-003"),
@@ -180,6 +180,51 @@ class ConditionServiceTest {
 
     assertEquals(1, conditions.size)
     assertEquals(condition1.id, conditions[0].id)
+  }
+
+  @Test
+  fun `create condition successfully`() {
+    val conditionService = ConditionService(conditionRepository)
+    val newCondition = Condition(
+      id = "condition-new",
+      clinicalStatus = CodeableConcept(
+        coding = listOf(
+          Coding(
+            system = Uri(value = "http://terminology.hl7.org/CodeSystem/condition-clinical"),
+            code = Code(value = "active"),
+            display = FhirString(value = "Active")
+          )
+        )
+      ),
+      code = CodeableConcept(
+        coding = listOf(
+          Coding(
+            system = Uri(value = "urn:oid:2.16.578.1.12.4.1.1.7170"),
+            code = Code(value = "R05"),
+            display = FhirString(value = "Hoste")
+          )
+        )
+      ),
+      subject = Reference(
+        reference = FhirString(value = "Patient/patient-001"),
+        display = FhirString(value = "Li Jun")
+      ),
+      encounter = Reference(
+        reference = FhirString(value = "Encounter/encounter-001"),
+        display = FhirString(value = "Ambulatory encounter")
+      ),
+      recordedDate = DateTime(value = FhirDateTime.fromString("2024-05-01T10:00:00Z"))
+    )
+    every { conditionRepository.createCondition(any()) } returns newCondition
+
+    val created = conditionService.createCondition(newCondition)
+    verify(exactly = 1) { conditionRepository.createCondition(newCondition) }
+
+    assertEquals(newCondition.id, created.id)
+    assertEquals(newCondition.clinicalStatus, created.clinicalStatus)
+    assertEquals(newCondition.code, created.code)
+    assertEquals(newCondition.subject, created.subject)
+    assertEquals(newCondition.encounter, created.encounter)
   }
 
 }

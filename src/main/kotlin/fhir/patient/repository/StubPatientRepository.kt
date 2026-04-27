@@ -10,7 +10,7 @@ import com.google.fhir.model.r4.terminologies.AdministrativeGender
 
 class StubPatientRepository : PatientRepository {
 
-  private val patients = listOf(
+  private val patients = mutableListOf(
       Patient(
           id = "patient-001",
           active = Boolean(value = true),
@@ -57,5 +57,15 @@ class StubPatientRepository : PatientRepository {
 
   override fun getAllPatients(): List<Patient> {
     return patients
+  }
+
+  override fun createPatient(patient: Patient): Patient {
+    val newPatient = if (patient.id == null) {
+      patient.copy(id = "patient-${java.util.UUID.randomUUID()}")
+    } else {
+      patient
+    }
+    patients.add(newPatient)
+    return newPatient
   }
 }

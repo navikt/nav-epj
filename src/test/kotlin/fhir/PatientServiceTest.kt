@@ -107,4 +107,31 @@ class PatientServiceTest {
     assertTrue { patients.isEmpty() }
   }
 
+  @Test
+  fun `create patient successfully`() {
+    val patientService = PatientService(patientRepository)
+    val newPatient = Patient(
+      id = "patient-new",
+      active = Boolean(value = true),
+      name = listOf(
+        HumanName(
+          family = String(value = "Croc"),
+          given = listOf(String(value = "Florin")),
+        ),
+      ),
+      gender = Enumeration(value = AdministrativeGender.Male),
+      birthDate = Date(value = FhirDate.fromString("1995-05-15")),
+    )
+    every { patientRepository.createPatient(any()) } returns newPatient
+
+    val created = patientService.createPatient(newPatient)
+    verify(exactly = 1) { patientRepository.createPatient(newPatient) }
+
+    assertEquals(newPatient.id, created.id)
+    assertEquals(newPatient.active, created.active)
+    assertEquals(newPatient.name, created.name)
+    assertEquals(newPatient.gender, created.gender)
+    assertEquals(newPatient.birthDate, created.birthDate)
+  }
+
 }

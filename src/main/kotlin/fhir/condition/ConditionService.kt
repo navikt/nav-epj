@@ -20,4 +20,8 @@ class ConditionService(private val repository: ConditionRepository) {
   fun getConditionsForEncounter(encounterId: String): List<Condition> {
     return repository.getConditionsForEncounter(encounterId)
   }
+
+  fun createCondition(condition: Condition): Condition {
+    return repository.createCondition(condition)
+  }
 }

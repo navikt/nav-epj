@@ -5,7 +5,7 @@ import com.google.fhir.model.r4.terminologies.AdministrativeGender
 
 class StubPractitionerRepository : PractitionerRepository {
 
-  private val practitioners = listOf(
+  private val practitioners = mutableListOf(
     Practitioner(
       id = "practitioner-001",
       active = Boolean(value = true),
@@ -55,5 +55,15 @@ class StubPractitionerRepository : PractitionerRepository {
 
   override fun getAllPractitioners(): List<Practitioner> {
     return practitioners
+  }
+
+  override fun createPractitioner(practitioner: Practitioner): Practitioner {
+    val newPractitioner = if (practitioner.id == null) {
+      practitioner.copy(id = "practitioner-${java.util.UUID.randomUUID()}")
+    } else {
+      practitioner
+    }
+    practitioners.add(newPractitioner)
+    return newPractitioner
   }
 }

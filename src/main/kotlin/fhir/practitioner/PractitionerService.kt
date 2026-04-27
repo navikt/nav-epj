@@ -12,4 +12,8 @@ class PractitionerService(private val repository: PractitionerRepository) {
   fun getAllPractitioners(): List<Practitioner> {
     return repository.getAllPractitioners()
   }
+
+  fun createPractitioner(practitioner: Practitioner): Practitioner {
+    return repository.createPractitioner(practitioner)
+  }
 }

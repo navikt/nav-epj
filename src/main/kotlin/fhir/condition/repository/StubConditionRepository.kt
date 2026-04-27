@@ -13,7 +13,7 @@ import com.google.fhir.model.r4.String as FhirString
 class StubConditionRepository : ConditionRepository {
 
   private val conditions = mutableListOf(
-    // Condition for Patient Ola Nordmann from Encounter 001 - Leg/Ankle fracture
+    // Condition for Patient Li Jun from Encounter 001 - Leg/Ankle fracture
     Condition(
       id = "condition-001",
       clinicalStatus = CodeableConcept(
@@ -45,7 +45,7 @@ class StubConditionRepository : ConditionRepository {
       ),
       subject = Reference(
         reference = FhirString(value = "Patient/patient-001"),
-        display = FhirString(value = "Ola Nordmann")
+        display = FhirString(value = "Li Jun")
       ),
       encounter = Reference(
         reference = FhirString(value = "Encounter/encounter-001"),
@@ -54,7 +54,7 @@ class StubConditionRepository : ConditionRepository {
       recordedDate = DateTime(value = FhirDateTime.fromString("2024-01-15T09:15:00Z"))
     ),
 
-    // Condition for Patient Kari Nordmann from Encounter 002 - Anxiety disorder
+    // Condition for Patient Elle McGibbons from Encounter 002 - Anxiety disorder
     Condition(
       id = "condition-002",
       clinicalStatus = CodeableConcept(
@@ -86,7 +86,7 @@ class StubConditionRepository : ConditionRepository {
       ),
       subject = Reference(
         reference = FhirString(value = "Patient/patient-002"),
-        display = FhirString(value = "Kari Nordmann")
+        display = FhirString(value = "Elle McGibbons")
       ),
       encounter = Reference(
         reference = FhirString(value = "Encounter/encounter-002"),
@@ -95,7 +95,7 @@ class StubConditionRepository : ConditionRepository {
       recordedDate = DateTime(value = FhirDateTime.fromString("2024-03-10T14:30:00Z"))
     ),
 
-    // Condition for Patient Per Hansen from Encounter 003 - Botulism
+    // Condition for Patient Jack Wee from Encounter 003 - Botulism
     Condition(
       id = "condition-003",
       clinicalStatus = CodeableConcept(
@@ -127,7 +127,7 @@ class StubConditionRepository : ConditionRepository {
       ),
       subject = Reference(
         reference = FhirString(value = "Patient/patient-003"),
-        display = FhirString(value = "Per Hansen")
+        display = FhirString(value = "Jack Wee")
       ),
       encounter = Reference(
         reference = FhirString(value = "Encounter/encounter-003"),
@@ -153,6 +153,16 @@ class StubConditionRepository : ConditionRepository {
   override fun getConditionsForEncounter(encounterId: kotlin.String): List<Condition> {
     val encounterReference = "Encounter/$encounterId"
     return conditions.filter { it.encounter?.reference?.value == encounterReference }
+  }
+
+  override fun createCondition(condition: Condition): Condition {
+    val newCondition = if (condition.id == null) {
+      condition.copy(id = "condition-${java.util.UUID.randomUUID()}")
+    } else {
+      condition
+    }
+    conditions.add(newCondition)
+    return newCondition
   }
 
 }
