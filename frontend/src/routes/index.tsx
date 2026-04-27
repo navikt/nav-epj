@@ -1,12 +1,11 @@
-import {
-  InternalHeader,
-  Spacer,
-  HStack,
-  Search,
-  Heading,
-} from "@navikt/ds-react";
+import { Heading } from "@navikt/ds-react";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import z from "zod";
+
+export const Route = createFileRoute("/")({
+  component: Index,
+});
 
 const Patient = z.object({
   id: z.string(),
@@ -29,7 +28,7 @@ function getFullPatientName(patient: z.infer<typeof Patient>): string {
   return `${givenNames} ${familyName}`.trim();
 }
 
-function App() {
+function Index() {
   const [patients, setPatients] = useState<z.infer<typeof Patient>[]>([]);
 
   useEffect(() => {
@@ -38,27 +37,6 @@ function App() {
 
   return (
     <>
-      <InternalHeader>
-        <InternalHeader.Title>Dr. Zara</InternalHeader.Title>
-        <Spacer />
-        <HStack
-          as="form"
-          paddingInline="space-20"
-          align="center"
-          onSubmit={(e) => {
-            e.preventDefault();
-            console.info("Search!");
-          }}
-        >
-          <Search
-            label="InternalHeader søk"
-            size="small"
-            variant="simple"
-            placeholder="Søk"
-          />
-        </HStack>
-        <InternalHeader.User name="Zev" />
-      </InternalHeader>
       <main>
         {patients.length > 0 && (
           <Heading level="1" size="xlarge">
@@ -72,5 +50,3 @@ function App() {
     </>
   );
 }
-
-export default App;
