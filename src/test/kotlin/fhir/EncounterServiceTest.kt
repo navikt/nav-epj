@@ -1,12 +1,11 @@
 package no.nav.helse.fhir
 
 import com.google.fhir.model.r4.Code
+import com.google.fhir.model.r4.CodeableConcept
 import com.google.fhir.model.r4.Coding
-import com.google.fhir.model.r4.DateTime
 import com.google.fhir.model.r4.Encounter
+import com.google.fhir.model.r4.Encounter.EncounterStatus
 import com.google.fhir.model.r4.Enumeration
-import com.google.fhir.model.r4.FhirDateTime
-import com.google.fhir.model.r4.Period
 import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.String
 import com.google.fhir.model.r4.Uri
@@ -25,54 +24,41 @@ class EncounterServiceTest {
 
   val encounter1Id = "encounter-001"
   val encounter1 = Encounter(
-    id = encounter1Id,
-    status = Enumeration(value = Encounter.EncounterStatus.Finished),
-    `class` = Coding(
-      system = Uri(value = "http://terminology.hl7.org/CodeSystem/v3-ActCode"),
-      code = Code(value = "AMB"),
-      display = String(value = "ambulatory"),
-    ),
+    id = "encounter-001",
     subject = Reference(
       reference = String(value = "Patient/patient-001"),
-      display = String(value = "Li Jun"),
     ),
-    period = Period(
-      start = DateTime(value = FhirDateTime.fromString("2024-01-15T09:00:00Z")),
-      end = DateTime(value = FhirDateTime.fromString("2024-01-15T09:30:00Z")),
+    participant = listOf(
+      Encounter.Participant(
+        individual = Reference(
+          reference = String(value = "Practitioner/practitioner-001"),
+        ),
+      ),
     ),
-  )
-
-  val encounter2 = Encounter(
-    id = "encounter-002",
-    status = Enumeration(value = Encounter.EncounterStatus.In_Progress),
-    `class` = Coding(
-      system = Uri(value = "http://terminology.hl7.org/CodeSystem/v3-ActCode"),
-      code = Code(value = "IMP"),
-      display = String(value = "inpatient encounter"),
+    diagnosis = listOf(
+      Encounter.Diagnosis(
+        condition = Reference(
+          reference = String(value = "Condition/condition-001"),
+        ),
+      ),
     ),
-    subject = Reference(
-      reference = String(value = "Patient/patient-002"),
-      display = String(value = "Elle McGibbons"),
+    serviceProvider = Reference(
+      reference = String(value = "Organization/organization-001"),
     ),
-    period = Period(
-      start = DateTime(value = FhirDateTime.fromString("2024-03-10T14:00:00Z")),
+    status = Enumeration(value = EncounterStatus.Finished),
+    type = listOf(
+      CodeableConcept(
+        coding = listOf(
+          Coding(
+            system = Uri(value = "urn:oid:2.16.578.1.12.4.1.1.8432"),
+            code = Code("kontaktype"),
+          ),
+        ),
+      ),
     ),
-  )
-
-  val encounter3 = Encounter(
-    id = "encounter-003",
-    status = Enumeration(value = Encounter.EncounterStatus.Planned),
     `class` = Coding(
       system = Uri(value = "http://terminology.hl7.org/CodeSystem/v3-ActCode"),
       code = Code(value = "AMB"),
-      display = String(value = "ambulatory"),
-    ),
-    subject = Reference(
-      reference = String(value = "Patient/patient-003"),
-      display = String(value = "Jack Wee"),
-    ),
-    period = Period(
-      start = DateTime(value = FhirDateTime.fromString("2024-04-20T10:00:00Z")),
     ),
   )
 
@@ -99,16 +85,14 @@ class EncounterServiceTest {
   }
 
   @Test
-  fun `get all encounters should return all encounters and assert that there are three encounters`() {
+  fun `get encounters should return and assert that there are one encounter`() {
     val encounterService = EncounterService(encounterRepository)
     every { encounterRepository.getAllEncounters() } returns listOf(
       encounter1,
-      encounter2,
-      encounter3,
     )
     val encounters = encounterService.getAllEncounters()
 
-    assertEquals(3, encounters.size)
+    assertEquals(1, encounters.size)
     assertTrue { encounters[0].id == encounter1.id }
   }
 
