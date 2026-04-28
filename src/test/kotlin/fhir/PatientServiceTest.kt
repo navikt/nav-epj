@@ -1,12 +1,16 @@
 package no.nav.helse.fhir
 
 import com.google.fhir.model.r4.Boolean
+import com.google.fhir.model.r4.Canonical
 import com.google.fhir.model.r4.Date
 import com.google.fhir.model.r4.Enumeration
 import com.google.fhir.model.r4.FhirDate
 import com.google.fhir.model.r4.HumanName
+import com.google.fhir.model.r4.Identifier
+import com.google.fhir.model.r4.Meta
 import com.google.fhir.model.r4.Patient
 import com.google.fhir.model.r4.String
+import com.google.fhir.model.r4.Uri
 import com.google.fhir.model.r4.terminologies.AdministrativeGender
 import io.mockk.every
 import io.mockk.verify
@@ -24,6 +28,19 @@ class PatientServiceTest {
   val olaPatientId = "patient-001"
   val olaThePatient = Patient(
     id = olaPatientId,
+    meta = Meta(
+      profile = listOf(Canonical(value = "http://hl7.no/fhir/StructureDefinition/no-basis-Patient"))
+    ),
+    identifier = listOf(
+      Identifier(
+        system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.1"),
+        value = String(value = "12345678901")
+      ),
+      Identifier(
+        system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.2"),
+        value = String(value = "01234567890")
+      )
+    ),
     active = Boolean(value = true),
     name = listOf(
       HumanName(
@@ -37,6 +54,19 @@ class PatientServiceTest {
 
   val kariPatient = Patient(
     id = "patient-002",
+    meta = Meta(
+      profile = listOf(Canonical(value = "http://hl7.no/fhir/StructureDefinition/no-basis-Patient"))
+    ),
+    identifier = listOf(
+      Identifier(
+        system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.1"),
+        value = String(value = "12345678902")
+      ),
+      Identifier(
+        system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.2"),
+        value = String(value = "01234567891")
+      )
+    ),
     active = Boolean(value = true),
     name = listOf(
       HumanName(
@@ -50,6 +80,19 @@ class PatientServiceTest {
 
   val perPatient = Patient(
     id = "patient-003",
+    meta = Meta(
+      profile = listOf(Canonical(value = "http://hl7.no/fhir/StructureDefinition/no-basis-Patient"))
+    ),
+    identifier = listOf(
+      Identifier(
+        system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.1"),
+        value = String(value = "12345678903")
+      ),
+      Identifier(
+        system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.2"),
+        value = String(value = "01234567892")
+      )
+    ),
     active = Boolean(value = false),
     name = listOf(
       HumanName(
@@ -69,6 +112,8 @@ class PatientServiceTest {
     verify(exactly = 1) { patientRepository.getPatient(olaPatientId) }
 
     assertEquals(olaThePatient.id, patient?.id)
+    assertEquals(olaThePatient.meta, patient?.meta)
+    assertEquals(olaThePatient.identifier, patient?.identifier)
     assertEquals(olaThePatient.active, patient?.active)
     assertEquals(olaThePatient.name, patient?.name)
     assertEquals(olaThePatient.gender, patient?.gender)
@@ -112,6 +157,19 @@ class PatientServiceTest {
     val patientService = PatientService(patientRepository)
     val newPatient = Patient(
       id = "patient-new",
+      meta = Meta(
+        profile = listOf(Canonical(value = "http://hl7.no/fhir/StructureDefinition/no-basis-Patient"))
+      ),
+      identifier = listOf(
+        Identifier(
+          system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.1"),
+          value = String(value = "12345678904")
+        ),
+        Identifier(
+          system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.2"),
+          value = String(value = "01234567893")
+        )
+      ),
       active = Boolean(value = true),
       name = listOf(
         HumanName(
@@ -128,6 +186,8 @@ class PatientServiceTest {
     verify(exactly = 1) { patientRepository.createPatient(newPatient) }
 
     assertEquals(newPatient.id, created.id)
+    assertEquals(newPatient.meta, created.meta)
+    assertEquals(newPatient.identifier, created.identifier)
     assertEquals(newPatient.active, created.active)
     assertEquals(newPatient.name, created.name)
     assertEquals(newPatient.gender, created.gender)

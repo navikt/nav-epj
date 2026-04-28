@@ -1,12 +1,16 @@
 package no.nav.helse.fhir
 
 import com.google.fhir.model.r4.Boolean
+import com.google.fhir.model.r4.Canonical
 import com.google.fhir.model.r4.Date
 import com.google.fhir.model.r4.Enumeration
 import com.google.fhir.model.r4.FhirDate
 import com.google.fhir.model.r4.HumanName
+import com.google.fhir.model.r4.Identifier
+import com.google.fhir.model.r4.Meta
 import com.google.fhir.model.r4.Practitioner
 import com.google.fhir.model.r4.String
+import com.google.fhir.model.r4.Uri
 import com.google.fhir.model.r4.terminologies.AdministrativeGender
 import io.mockk.every
 import io.mockk.mockk
@@ -24,6 +28,15 @@ class PractitionerServiceTest {
   val erikPractitionerId = "practitioner-001"
   val erikThePractitioner = Practitioner(
     id = erikPractitionerId,
+    meta = Meta(
+      profile = listOf(Canonical(value = "http://hl7.no/fhir/StructureDefinition/no-basis-Practitioner"))
+    ),
+    identifier = listOf(
+      Identifier(
+        system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.4"),
+        value = String(value = "9144889")
+      )
+    ),
     active = Boolean(value = true),
     name = listOf(
       HumanName(
@@ -38,6 +51,15 @@ class PractitionerServiceTest {
 
   val mariaPractitioner = Practitioner(
     id = "practitioner-002",
+    meta = Meta(
+      profile = listOf(Canonical(value = "http://hl7.no/fhir/StructureDefinition/no-basis-Practitioner"))
+    ),
+    identifier = listOf(
+      Identifier(
+        system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.4"),
+        value = String(value = "9144890")
+      )
+    ),
     active = Boolean(value = true),
     name = listOf(
       HumanName(
@@ -52,6 +74,15 @@ class PractitionerServiceTest {
 
   val andersPractitioner = Practitioner(
     id = "practitioner-003",
+    meta = Meta(
+      profile = listOf(Canonical(value = "http://hl7.no/fhir/StructureDefinition/no-basis-Practitioner"))
+    ),
+    identifier = listOf(
+      Identifier(
+        system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.4"),
+        value = String(value = "9144891")
+      )
+    ),
     active = Boolean(value = false),
     name = listOf(
       HumanName(
@@ -71,6 +102,8 @@ class PractitionerServiceTest {
     val practitioner = practitionerService.getPractitioner(erikPractitionerId)
 
     assertEquals(erikThePractitioner.id, practitioner?.id)
+    assertEquals(erikThePractitioner.meta, practitioner?.meta)
+    assertEquals(erikThePractitioner.identifier, practitioner?.identifier)
     assertEquals(erikThePractitioner.active, practitioner?.active)
     assertEquals(erikThePractitioner.name, practitioner?.name)
     assertEquals(erikThePractitioner.gender, practitioner?.gender)
@@ -109,6 +142,15 @@ class PractitionerServiceTest {
     val practitionerService = PractitionerService(practitionerRepository)
     val newPractitioner = Practitioner(
       id = "practitioner-new",
+      meta = Meta(
+        profile = listOf(Canonical(value = "http://hl7.no/fhir/StructureDefinition/no-basis-Practitioner"))
+      ),
+      identifier = listOf(
+        Identifier(
+          system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.4"),
+          value = String(value = "9144892")
+        )
+      ),
       active = Boolean(value = true),
       name = listOf(
         HumanName(
@@ -126,6 +168,8 @@ class PractitionerServiceTest {
     verify(exactly = 1) { practitionerRepository.createPractitioner(newPractitioner) }
 
     assertEquals(newPractitioner.id, created.id)
+    assertEquals(newPractitioner.meta, created.meta)
+    assertEquals(newPractitioner.identifier, created.identifier)
     assertEquals(newPractitioner.active, created.active)
     assertEquals(newPractitioner.name, created.name)
     assertEquals(newPractitioner.gender, created.gender)

@@ -8,6 +8,15 @@ class StubPractitionerRepository : PractitionerRepository {
   private val practitioners = mutableListOf(
     Practitioner(
       id = "practitioner-001",
+      meta = Meta(
+        profile = listOf(Canonical(value = "http://hl7.no/fhir/StructureDefinition/no-basis-Practitioner"))
+      ),
+      identifier = listOf(
+        Identifier(
+          system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.4"),
+          value = String(value = "9144889")
+        )
+      ),
       active = Boolean(value = true),
       name = listOf(
         HumanName(
@@ -22,6 +31,15 @@ class StubPractitionerRepository : PractitionerRepository {
 
     Practitioner(
       id = "practitioner-002",
+      meta = Meta(
+        profile = listOf(Canonical(value = "http://hl7.no/fhir/StructureDefinition/no-basis-Practitioner"))
+      ),
+      identifier = listOf(
+        Identifier(
+          system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.4"),
+          value = String(value = "9144890")
+        )
+      ),
       active = Boolean(value = true),
       name = listOf(
         HumanName(
@@ -36,6 +54,15 @@ class StubPractitionerRepository : PractitionerRepository {
 
     Practitioner(
       id = "practitioner-003",
+      meta = Meta(
+        profile = listOf(Canonical(value = "http://hl7.no/fhir/StructureDefinition/no-basis-Practitioner"))
+      ),
+      identifier = listOf(
+        Identifier(
+          system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.4"),
+          value = String(value = "9144891")
+        )
+      ),
       active = Boolean(value = false),
       name = listOf(
         HumanName(

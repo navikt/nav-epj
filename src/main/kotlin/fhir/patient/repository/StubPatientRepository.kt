@@ -1,11 +1,6 @@
 package no.nav.helse.fhir.patient.repository
 
-import com.google.fhir.model.r4.Boolean
-import com.google.fhir.model.r4.Date
-import com.google.fhir.model.r4.Enumeration
-import com.google.fhir.model.r4.FhirDate
-import com.google.fhir.model.r4.HumanName
-import com.google.fhir.model.r4.Patient
+import com.google.fhir.model.r4.*
 import com.google.fhir.model.r4.terminologies.AdministrativeGender
 
 class StubPatientRepository : PatientRepository {
@@ -13,11 +8,24 @@ class StubPatientRepository : PatientRepository {
   private val patients = mutableListOf(
       Patient(
           id = "patient-001",
+          meta = Meta(
+              profile = listOf(Canonical(value = "http://hl7.no/fhir/StructureDefinition/no-basis-Patient"))
+          ),
+          identifier = listOf(
+              Identifier(
+                  system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.1"),
+                  value = String(value = "12345678901")
+              ),
+              Identifier(
+                  system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.2"),
+                  value = String(value = "01234567890")
+              )
+          ),
           active = Boolean(value = true),
           name = listOf(
               HumanName(
-                  family = com.google.fhir.model.r4.String(value = "Li"),
-                  given = listOf(com.google.fhir.model.r4.String(value = "Jun"))
+                  family = String(value = "Li"),
+                  given = listOf(String(value = "Jun"))
               )
           ),
           gender = Enumeration(value = AdministrativeGender.Male),
@@ -26,11 +34,24 @@ class StubPatientRepository : PatientRepository {
 
       Patient(
           id = "patient-002",
+          meta = Meta(
+              profile = listOf(Canonical(value = "http://hl7.no/fhir/StructureDefinition/no-basis-Patient"))
+          ),
+          identifier = listOf(
+              Identifier(
+                  system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.1"),
+                  value = String(value = "12345678902")
+              ),
+              Identifier(
+                  system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.2"),
+                  value = String(value = "01234567891")
+              )
+          ),
           active = Boolean(value = true),
           name = listOf(
               HumanName(
-                  family = com.google.fhir.model.r4.String(value = "McGibbons"),
-                  given = listOf(com.google.fhir.model.r4.String(value = "Elle"))
+                  family = String(value = "McGibbons"),
+                  given = listOf(String(value = "Elle"))
               )
           ),
           gender = Enumeration(value = AdministrativeGender.Female),
@@ -39,11 +60,24 @@ class StubPatientRepository : PatientRepository {
 
       Patient(
           id = "patient-003",
+          meta = Meta(
+              profile = listOf(Canonical(value = "http://hl7.no/fhir/StructureDefinition/no-basis-Patient"))
+          ),
+          identifier = listOf(
+              Identifier(
+                  system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.1"),
+                  value = String(value = "12345678903")
+              ),
+              Identifier(
+                  system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.2"),
+                  value = String(value = "01234567892")
+              )
+          ),
           active = Boolean(value = false),
           name = listOf(
               HumanName(
-                  family = com.google.fhir.model.r4.String(value = "Wee"),
-                  given = listOf(com.google.fhir.model.r4.String(value = "Jack"))
+                  family = String(value = "Wee"),
+                  given = listOf(String(value = "Jack"))
               )
           ),
           gender = Enumeration(value = AdministrativeGender.Male),
