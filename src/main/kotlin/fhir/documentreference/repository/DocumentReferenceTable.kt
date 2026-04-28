@@ -4,20 +4,18 @@ import com.google.fhir.model.r4.CodeableConcept
 import com.google.fhir.model.r4.DocumentReference
 import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.terminologies.DocumentReferenceStatus
-import kotlinx.serialization.json.Json
+import no.nav.helse.fhir.fhirJsonConfig
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.json.jsonb
 import com.google.fhir.model.r4.String as FhirString
 
 object DocumentReferenceTable : Table("document_reference") {
   val id = text("id")
-  val status = jsonb<DocumentReferenceStatus>("status", jsonConfig)
-  val type = jsonb<CodeableConcept>("type", jsonConfig)
-  val description = jsonb<FhirString>("description", jsonConfig)
-  val subject = jsonb<Reference>("subject", jsonConfig)
-  val author = jsonb<Array<Reference>>("author", jsonConfig)
-  val content = jsonb<Array<DocumentReference.Content>>("content", jsonConfig)
-  val context = jsonb<DocumentReference.Context>("context", jsonConfig)
+  val status = jsonb<DocumentReferenceStatus>("status", fhirJsonConfig)
+  val type = jsonb<CodeableConcept>("type", fhirJsonConfig)
+  val description = jsonb<FhirString>("description", fhirJsonConfig)
+  val subject = jsonb<Reference>("subject", fhirJsonConfig)
+  val author = jsonb<Array<Reference>>("author", fhirJsonConfig)
+  val content = jsonb<Array<DocumentReference.Content>>("content", fhirJsonConfig)
+  val context = jsonb<DocumentReference.Context>("context", fhirJsonConfig)
 }
-
-private val jsonConfig = Json { prettyPrint = true }

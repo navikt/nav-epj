@@ -5,18 +5,16 @@ import com.google.fhir.model.r4.HumanName
 import com.google.fhir.model.r4.Identifier
 import com.google.fhir.model.r4.Meta
 import com.google.fhir.model.r4.terminologies.AdministrativeGender
-import kotlinx.serialization.json.Json
+import no.nav.helse.fhir.fhirJsonConfig
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.json.jsonb
 
 object PractitionerTable : Table("practitioner") {
   val id = text("id")
-  val meta = jsonb<Meta>("meta", jsonConfig)
-  val identifier = jsonb<Array<Identifier>>("identifier", jsonConfig)
+  val meta = jsonb<Meta>("meta", fhirJsonConfig)
+  val identifier = jsonb<Array<Identifier>>("identifier", fhirJsonConfig)
   val active = bool("active")
-  val name = jsonb<Array<HumanName>>("name", jsonConfig)
-  val gender = jsonb<AdministrativeGender>("gender", jsonConfig)
-  val birthDate = jsonb<Date>("birth_date", jsonConfig)
+  val name = jsonb<Array<HumanName>>("name", fhirJsonConfig)
+  val gender = jsonb<AdministrativeGender>("gender", fhirJsonConfig)
+  val birthDate = jsonb<Date>("birth_date", fhirJsonConfig)
 }
-
-private val jsonConfig = Json { prettyPrint = true }
