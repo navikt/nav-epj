@@ -9,7 +9,9 @@ import com.google.fhir.model.r4.DocumentReference
 import com.google.fhir.model.r4.Enumeration
 import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.Uri
+import com.google.fhir.model.r4.terminologies.CommonLanguages
 import com.google.fhir.model.r4.terminologies.DocumentReferenceStatus
+import com.google.fhir.model.r4.String as FhirString
 
 class StubDocumentReferenceRepository : DocumentReferenceRepository {
 
@@ -22,35 +24,33 @@ class StubDocumentReferenceRepository : DocumentReferenceRepository {
           Coding(
             system = Uri(value = "urn:oid:2.16.578.1.12.4.1.1.9602"),
             code = Code(value = "J01-2"),
-            display = com.google.fhir.model.r4.String(value = "Sykmelding")
+            display = FhirString(value = "Sykmeldinger og trygdesaker")
           )
         )
       ),
-      description = com.google.fhir.model.r4.String(value = "100% Sykmelding fra 01.06.2024 til 07.06.2024"),
+      description = FhirString(value = "100% Sykmelding fra 01.06.2024 til 07.06.2024"),
       subject = Reference(
-        reference = com.google.fhir.model.r4.String(value = "Patient/patient-001"),
-        display = com.google.fhir.model.r4.String(value = "Li Jun")
+        reference = FhirString(value = "Patient/patient-001")
       ),
       author = listOf(
         Reference(
-          reference = com.google.fhir.model.r4.String(value = "Practitioner/practitioner-001"),
-          display = com.google.fhir.model.r4.String(value = "Dr. Carl Boom")
+          reference = FhirString(value = "Practitioner/practitioner-001")
         )
       ),
       content = listOf(
         DocumentReference.Content(
           attachment = Attachment(
+            title = FhirString(value = "Sykmelding.pdf"),
+            language = Enumeration(value = CommonLanguages.No_No),
             contentType = Code(value = "application/pdf"),
-            data = Base64Binary(value = "JVBERi0xLjQKJeLjz9MKMSAwIG9iago8PC9UeXBlL0NhdGFsb2cvUGFnZXMgMiAwIFI+PgplbmRvYmoK"),
-            title = com.google.fhir.model.r4.String(value = "Sykmelding.pdf")
+            data = Base64Binary(value = "JVBERi0xLjQKJeLjz9MKMSAwIG9iago8PC9UeXBlL0NhdGFsb2cvUGFnZXMgMiAwIFI+PgplbmRvYmoK")
           )
         )
       ),
       context = DocumentReference.Context(
         encounter = listOf(
           Reference(
-            reference = com.google.fhir.model.r4.String(value = "Encounter/encounter-001"),
-            display = com.google.fhir.model.r4.String(value = "Konsultasjon 15.01.2024")
+            reference = FhirString(value = "Encounter/encounter-001")
           )
         )
       )
@@ -64,35 +64,33 @@ class StubDocumentReferenceRepository : DocumentReferenceRepository {
           Coding(
             system = Uri(value = "urn:oid:2.16.578.1.12.4.1.1.9602"),
             code = Code(value = "J01-2"),
-            display = com.google.fhir.model.r4.String(value = "Sykmelding")
+            display = FhirString(value = "Sykmeldinger og trygdesaker")
           )
         )
       ),
-      description = com.google.fhir.model.r4.String(value = "50% Sykmelding fra 10.03.2024 til 24.03.2024"),
+      description = FhirString(value = "50% Sykmelding fra 10.03.2024 til 24.03.2024"),
       subject = Reference(
-        reference = com.google.fhir.model.r4.String(value = "Patient/patient-002"),
-        display = com.google.fhir.model.r4.String(value = "Elle McGibbons")
+        reference = FhirString(value = "Patient/patient-002")
       ),
       author = listOf(
         Reference(
-          reference = com.google.fhir.model.r4.String(value = "Practitioner/practitioner-002"),
-          display = com.google.fhir.model.r4.String(value = "Dr. Zev Mudskipper")
+          reference = FhirString(value = "Practitioner/practitioner-002")
         )
       ),
       content = listOf(
         DocumentReference.Content(
           attachment = Attachment(
+            title = FhirString(value = "Sykmelding.pdf"),
+            language = Enumeration(value = CommonLanguages.No_No),
             contentType = Code(value = "application/pdf"),
-            data = Base64Binary(value = "JVBERi0xLjQKJeLjz9MKMSAwIG9iago8PC9UeXBlL0NhdGFsb2cvUGFnZXMgMiAwIFI+PgplbmRvYmoK"),
-            title = com.google.fhir.model.r4.String(value = "Sykmelding.pdf")
+            data = Base64Binary(value = "JVBERi0xLjQKJeLjz9MKMSAwIG9iago8PC9UeXBlL0NhdGFsb2cvUGFnZXMgMiAwIFI+PgplbmRvYmoK")
           )
         )
       ),
       context = DocumentReference.Context(
         encounter = listOf(
           Reference(
-            reference = com.google.fhir.model.r4.String(value = "Encounter/encounter-002"),
-            display = com.google.fhir.model.r4.String(value = "Konsultasjon 10.03.2024")
+            reference = FhirString(value = "Encounter/encounter-002")
           )
         )
       )
@@ -106,35 +104,33 @@ class StubDocumentReferenceRepository : DocumentReferenceRepository {
           Coding(
             system = Uri(value = "urn:oid:2.16.578.1.12.4.1.1.9602"),
             code = Code(value = "J01-2"),
-            display = com.google.fhir.model.r4.String(value = "Sykmelding")
+            display = FhirString(value = "Sykmeldinger og trygdesaker")
           )
         )
       ),
-      description = com.google.fhir.model.r4.String(value = "100% Sykmelding fra 20.04.2024 til 30.04.2024"),
+      description = FhirString(value = "100% Sykmelding fra 20.04.2024 til 30.04.2024"),
       subject = Reference(
-        reference = com.google.fhir.model.r4.String(value = "Patient/patient-003"),
-        display = com.google.fhir.model.r4.String(value = "Jack Wee")
+        reference = FhirString(value = "Patient/patient-003")
       ),
       author = listOf(
         Reference(
-          reference = com.google.fhir.model.r4.String(value = "Practitioner/practitioner-001"),
-          display = com.google.fhir.model.r4.String(value = "Dr. Carl Boom")
+          reference = FhirString(value = "Practitioner/practitioner-001")
         )
       ),
       content = listOf(
         DocumentReference.Content(
           attachment = Attachment(
+            title = FhirString(value = "Sykmelding.pdf"),
+            language = Enumeration(value = CommonLanguages.No_No),
             contentType = Code(value = "application/pdf"),
-            data = Base64Binary(value = "JVBERi0xLjQKJeLjz9MKMSAwIG9iago8PC9UeXBlL0NhdGFsb2cvUGFnZXMgMiAwIFI+PgplbmRvYmoK"),
-            title = com.google.fhir.model.r4.String(value = "Sykmelding.pdf")
+            data = Base64Binary(value = "JVBERi0xLjQKJeLjz9MKMSAwIG9iago8PC9UeXBlL0NhdGFsb2cvUGFnZXMgMiAwIFI+PgplbmRvYmoK")
           )
         )
       ),
       context = DocumentReference.Context(
         encounter = listOf(
           Reference(
-            reference = com.google.fhir.model.r4.String(value = "Encounter/encounter-003"),
-            display = com.google.fhir.model.r4.String(value = "Konsultasjon 20.04.2024")
+            reference = FhirString(value = "Encounter/encounter-003")
           )
         )
       )
