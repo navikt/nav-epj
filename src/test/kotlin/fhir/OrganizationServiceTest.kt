@@ -1,12 +1,14 @@
 package no.nav.helse.fhir
 
 import com.google.fhir.model.r4.Address
+import com.google.fhir.model.r4.Canonical
 import com.google.fhir.model.r4.Code
 import com.google.fhir.model.r4.CodeableConcept
 import com.google.fhir.model.r4.Coding
 import com.google.fhir.model.r4.ContactPoint
 import com.google.fhir.model.r4.Enumeration
 import com.google.fhir.model.r4.Identifier
+import com.google.fhir.model.r4.Meta
 import com.google.fhir.model.r4.Organization
 import com.google.fhir.model.r4.Uri
 import com.google.fhir.model.r4.Boolean as FhirBoolean
@@ -27,52 +29,27 @@ class OrganizationServiceTest {
 
   private val organization1Id = "organization-001"
   private val organization1 = Organization(
-    id = organization1Id,
-    active = FhirBoolean(value = true),
+    id = "organization-001",
+    meta = Meta(
+      profile = listOf(Canonical(value = "http://hl7.no/fhir/StructureDefinition/no-basis-Organization"))
+    ),
     identifier = listOf(
       Identifier(
         system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.101"),
-        value = FhirString(value = "993467049")
+        value = FhirString(value = "organisasjonsnummer / ENH")
+      ),
+      Identifier(
+        system = Uri(value = "urn:oid:2.16.578.1.12.4.1.2"),
+        value = FhirString(value = "her-id")
       )
     ),
-    type = listOf(
-      CodeableConcept(
-        coding = listOf(
-          Coding(
-            system = Uri(value = "http://terminology.hl7.org/CodeSystem/organization-type"),
-            code = Code(value = "prov"),
-            display = FhirString(value = "Healthcare Provider")
-          )
-        )
+
+    telecom = listOf(
+      ContactPoint(
+        system = Enumeration(value = ContactPoint.ContactPointSystem.Phone),
+        value = FhirString(value = "+47 12345678")
       )
     ),
-    name = FhirString(value = "Oslo universitetssykehus HF"),
-    alias = listOf(FhirString(value = "OUS")),
-    address = listOf(
-      Address(
-        city = FhirString(value = "Oslo"),
-        country = FhirString(value = "NO")
-      )
-    )
-  )
-
-  private val organization2 = Organization(
-    id = "organization-002",
-    active = FhirBoolean(value = true),
-    name = FhirString(value = "St. Olavs hospital HF"),
-    address = listOf(
-      Address(
-        city = FhirString(value = "Trondheim"),
-        country = FhirString(value = "NO")
-      )
-    )
-  )
-
-  private val organization3 = Organization(
-    id = "organization-003",
-    active = FhirBoolean(value = true),
-    name = FhirString(value = "Arbeids- og velferdsetaten"),
-    alias = listOf(FhirString(value = "NAV"))
   )
 
   @Test
@@ -102,12 +79,10 @@ class OrganizationServiceTest {
     val organizationService = OrganizationService(organizationRepository)
     every { organizationRepository.getAllOrganizations() } returns listOf(
       organization1,
-      organization2,
-      organization3
     )
     val organizations = organizationService.getAllOrganizations()
 
-    assertEquals(3, organizations.size)
+    assertEquals(1, organizations.size)
     assertTrue { organizations[0].id == organization1.id }
   }
 
