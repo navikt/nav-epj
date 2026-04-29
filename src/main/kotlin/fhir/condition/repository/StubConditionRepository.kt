@@ -13,26 +13,10 @@ import com.google.fhir.model.r4.String as FhirString
 class StubConditionRepository : ConditionRepository {
 
   private val conditions = mutableListOf(
-    // Condition for Patient Li Jun from Encounter 001 - Leg/Ankle fracture
     Condition(
       id = "condition-001",
-      clinicalStatus = CodeableConcept(
-        coding = listOf(
-          Coding(
-            system = Uri(value = "http://terminology.hl7.org/CodeSystem/condition-clinical"),
-            code = Code(value = "active"),
-            display = FhirString(value = "Active")
-          )
-        )
-      ),
-      verificationStatus = CodeableConcept(
-        coding = listOf(
-          Coding(
-            system = Uri(value = "http://terminology.hl7.org/CodeSystem/condition-ver-status"),
-            code = Code(value = "confirmed"),
-            display = FhirString(value = "Confirmed")
-          )
-        )
+      subject = Reference(
+        reference = com.google.fhir.model.r4.String(value = "Patient/patient-001"),
       ),
       code = CodeableConcept(
         coding = listOf(
@@ -43,37 +27,12 @@ class StubConditionRepository : ConditionRepository {
           )
         )
       ),
-      subject = Reference(
-        reference = FhirString(value = "Patient/patient-001"),
-        display = FhirString(value = "Li Jun")
-      ),
-      encounter = Reference(
-        reference = FhirString(value = "Encounter/encounter-001"),
-        display = FhirString(value = "Ambulatory encounter 2024-01-15")
-      ),
-      recordedDate = DateTime(value = FhirDateTime.fromString("2024-01-15T09:15:00Z"))
     ),
 
-    // Condition for Patient Elle McGibbons from Encounter 002 - Anxiety disorder
     Condition(
       id = "condition-002",
-      clinicalStatus = CodeableConcept(
-        coding = listOf(
-          Coding(
-            system = Uri(value = "http://terminology.hl7.org/CodeSystem/condition-clinical"),
-            code = Code(value = "active"),
-            display = FhirString(value = "Active")
-          )
-        )
-      ),
-      verificationStatus = CodeableConcept(
-        coding = listOf(
-          Coding(
-            system = Uri(value = "http://terminology.hl7.org/CodeSystem/condition-ver-status"),
-            code = Code(value = "confirmed"),
-            display = FhirString(value = "Confirmed")
-          )
-        )
+      subject = Reference(
+        reference = com.google.fhir.model.r4.String(value = "Patient/patient-002"),
       ),
       code = CodeableConcept(
         coding = listOf(
@@ -84,37 +43,12 @@ class StubConditionRepository : ConditionRepository {
           )
         )
       ),
-      subject = Reference(
-        reference = FhirString(value = "Patient/patient-002"),
-        display = FhirString(value = "Elle McGibbons")
-      ),
-      encounter = Reference(
-        reference = FhirString(value = "Encounter/encounter-002"),
-        display = FhirString(value = "Inpatient encounter 2024-03-10")
-      ),
-      recordedDate = DateTime(value = FhirDateTime.fromString("2024-03-10T14:30:00Z"))
     ),
 
-    // Condition for Patient Jack Wee from Encounter 003 - Botulism
     Condition(
       id = "condition-003",
-      clinicalStatus = CodeableConcept(
-        coding = listOf(
-          Coding(
-            system = Uri(value = "http://terminology.hl7.org/CodeSystem/condition-clinical"),
-            code = Code(value = "active"),
-            display = FhirString(value = "Active")
-          )
-        )
-      ),
-      verificationStatus = CodeableConcept(
-        coding = listOf(
-          Coding(
-            system = Uri(value = "http://terminology.hl7.org/CodeSystem/condition-ver-status"),
-            code = Code(value = "provisional"),
-            display = FhirString(value = "Provisional")
-          )
-        )
+      subject = Reference(
+        reference = com.google.fhir.model.r4.String(value = "Patient/patient-003"),
       ),
       code = CodeableConcept(
         coding = listOf(
@@ -125,15 +59,6 @@ class StubConditionRepository : ConditionRepository {
           )
         )
       ),
-      subject = Reference(
-        reference = FhirString(value = "Patient/patient-003"),
-        display = FhirString(value = "Jack Wee")
-      ),
-      encounter = Reference(
-        reference = FhirString(value = "Encounter/encounter-003"),
-        display = FhirString(value = "Planned ambulatory encounter 2024-04-20")
-      ),
-      recordedDate = DateTime(value = FhirDateTime.fromString("2024-04-20T10:00:00Z"))
     )
   )
 

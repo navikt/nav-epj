@@ -26,14 +26,8 @@ class ConditionServiceTest {
   private val condition1Id = "condition-001"
   private val condition1 = Condition(
     id = condition1Id,
-    clinicalStatus = CodeableConcept(
-      coding = listOf(
-        Coding(
-          system = Uri(value = "http://terminology.hl7.org/CodeSystem/condition-clinical"),
-          code = Code(value = "active"),
-          display = FhirString(value = "Active")
-        )
-      )
+    subject = Reference(
+      reference = com.google.fhir.model.r4.String(value = "Patient/patient-001"),
     ),
     code = CodeableConcept(
       coding = listOf(
@@ -44,27 +38,12 @@ class ConditionServiceTest {
         )
       )
     ),
-    subject = Reference(
-      reference = FhirString(value = "Patient/patient-001"),
-      display = FhirString(value = "Li Jun")
-    ),
-    encounter = Reference(
-      reference = FhirString(value = "Encounter/encounter-001"),
-      display = FhirString(value = "Ambulatory encounter")
-    ),
-    recordedDate = DateTime(value = FhirDateTime.fromString("2024-01-15T09:15:00Z"))
   )
 
   private val condition2 = Condition(
     id = "condition-002",
-    clinicalStatus = CodeableConcept(
-      coding = listOf(
-        Coding(
-          system = Uri(value = "http://terminology.hl7.org/CodeSystem/condition-clinical"),
-          code = Code(value = "active"),
-          display = FhirString(value = "Active")
-        )
-      )
+    subject = Reference(
+      reference = com.google.fhir.model.r4.String(value = "Patient/patient-002"),
     ),
     code = CodeableConcept(
       coding = listOf(
@@ -75,27 +54,12 @@ class ConditionServiceTest {
         )
       )
     ),
-    subject = Reference(
-      reference = FhirString(value = "Patient/patient-002"),
-      display = FhirString(value = "Elle McGibbons")
-    ),
-    encounter = Reference(
-      reference = FhirString(value = "Encounter/encounter-002"),
-      display = FhirString(value = "Inpatient encounter")
-    ),
-    recordedDate = DateTime(value = FhirDateTime.fromString("2024-03-10T14:30:00Z"))
   )
 
   private val condition3 = Condition(
     id = "condition-003",
-    clinicalStatus = CodeableConcept(
-      coding = listOf(
-        Coding(
-          system = Uri(value = "http://terminology.hl7.org/CodeSystem/condition-clinical"),
-          code = Code(value = "active"),
-          display = FhirString(value = "Active")
-        )
-      )
+    subject = Reference(
+      reference = com.google.fhir.model.r4.String(value = "Patient/patient-002"),
     ),
     code = CodeableConcept(
       coding = listOf(
@@ -106,15 +70,6 @@ class ConditionServiceTest {
         )
       )
     ),
-    subject = Reference(
-      reference = FhirString(value = "Patient/patient-003"),
-      display = FhirString(value = "Jack Wee")
-    ),
-    encounter = Reference(
-      reference = FhirString(value = "Encounter/encounter-003"),
-      display = FhirString(value = "Planned ambulatory encounter")
-    ),
-    recordedDate = DateTime(value = FhirDateTime.fromString("2024-04-20T10:00:00Z"))
   )
 
   @Test
@@ -187,33 +142,18 @@ class ConditionServiceTest {
     val conditionService = ConditionService(conditionRepository)
     val newCondition = Condition(
       id = "condition-new",
-      clinicalStatus = CodeableConcept(
-        coding = listOf(
-          Coding(
-            system = Uri(value = "http://terminology.hl7.org/CodeSystem/condition-clinical"),
-            code = Code(value = "active"),
-            display = FhirString(value = "Active")
-          )
-        )
+      subject = Reference(
+        reference = com.google.fhir.model.r4.String(value = "Patient/patient-001"),
       ),
       code = CodeableConcept(
         coding = listOf(
           Coding(
-            system = Uri(value = "urn:oid:2.16.578.1.12.4.1.1.7170"),
-            code = Code(value = "R05"),
-            display = FhirString(value = "Hoste")
+            system = Uri(value = "urn:oid:2.16.578.1.12.4.1.1.7110"),
+            code = Code(value = "A051"),
+            display = FhirString(value = "Botulisme")
           )
         )
       ),
-      subject = Reference(
-        reference = FhirString(value = "Patient/patient-001"),
-        display = FhirString(value = "Li Jun")
-      ),
-      encounter = Reference(
-        reference = FhirString(value = "Encounter/encounter-001"),
-        display = FhirString(value = "Ambulatory encounter")
-      ),
-      recordedDate = DateTime(value = FhirDateTime.fromString("2024-05-01T10:00:00Z"))
     )
     every { conditionRepository.createCondition(any()) } returns newCondition
 
