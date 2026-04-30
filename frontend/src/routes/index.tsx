@@ -1,35 +1,25 @@
+import type { FhirPatient } from "@utils/mapping/fhir";
 import { Heading } from "@navikt/ds-react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import z from "zod";
 
 export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const Patient = z.object({
-  id: z.string(),
-  name: z.array(
-    z.object({
-      given: z.array(z.string()),
-      family: z.string(),
-    }),
-  ),
-});
-
-async function fetchPatients(): Promise<z.infer<typeof Patient>[]> {
+async function fetchPatients(): Promise<FhirPatient[]> {
   const res = await fetch("/fhir/Patient").then((res) => res.json());
   return res.entry.map((entry: any) => entry.resource);
 }
 
-function getFullPatientName(patient: z.infer<typeof Patient>): string {
+function getFullPatientName(patient: FhirPatient): string {
   const givenNames = patient.name[0]?.given.join(" ") || "";
   const familyName = patient.name[0]?.family || "";
   return `${givenNames} ${familyName}`.trim();
 }
 
 function Index() {
-  const [patients, setPatients] = useState<z.infer<typeof Patient>[]>([]);
+  const [patients, setPatients] = useState<FhirPatient[]>([]);
 
   useEffect(() => {
     fetchPatients().then((res) => setPatients(res));
@@ -43,8 +33,12 @@ function Index() {
             Pasienter
           </Heading>
         )}
-        {patients.map((patient, key) => (
-          <div key={patient.id}>{getFullPatientName(patient)}</div>
+        {patients.map((patient) => (
+          <div key={patient.id}>
+            <Link to="/patient/$patientId" params={{ patientId: patient.id }}>
+              {getFullPatientName(patient)}
+            </Link>
+          </div>
         ))}
       </main>
     </>

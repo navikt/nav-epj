@@ -11,6 +11,11 @@ export default defineConfig({
     }),
     react(),
   ],
+  resolve: {
+    alias: {
+      "@utils": "/src/utils",
+    },
+  },
   server: {
     proxy: {
       "/fhir": {
