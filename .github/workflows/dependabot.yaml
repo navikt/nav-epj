@@ -1,0 +1,15 @@
+name: dependabot.yml
+on:
+  push:
+    branches:
+      - 'dependabot/**'
+
+permissions:
+  contents: read
+
+jobs:
+  dependabot-test:
+    runs-on: ubuntu-latest
+    if: github.ref_name != 'main' && !startsWith(github.ref_name, 'dev')
+    steps:
+      - uses: navikt/tsm-workflows/actions/gradle/test@main

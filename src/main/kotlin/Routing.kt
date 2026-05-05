@@ -1,7 +1,6 @@
 package no.nav.helse
 
 import com.auth0.jwt.JWT
-import io.ktor.http.ContentType
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.http.content.singlePageApplication
@@ -11,12 +10,17 @@ import io.ktor.server.sessions.*
 
 fun Application.configureRouting() {
   routing {
+    get("/internal/health/alive"){
+      call.respondText("alive")
+    }
+    get("/internal/health/ready"){
+      call.respondText("ready")
+    }
     singlePageApplication {
       useResources = true
       defaultPage = "index.html"
       filesPath = "dist"
     }
-
     authenticate("local-stub") {
       get("/login") {
         call.respondRedirect("/callback")

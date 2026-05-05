@@ -1,0 +1,59 @@
+apiVersion: nais.io/v1alpha1
+kind: Application
+metadata:
+  name: dr-zara
+  namespace: tsm
+  labels:
+    team: tsm
+spec:
+  image: {{image}}
+  gcp:
+    sqlInstances:
+      - type: POSTGRES_17
+        name: dr-zara-db-instance
+        cascadingDelete: false
+        databases:
+          - name: dr-zara
+            envVarPrefix: DB
+        diskAutoresize: true
+        highAvailability: false
+        diskType: SSD
+        insights:
+          enabled: true
+        tier: db-f1-micro
+        flags:
+          - name: cloudsql.enable_pgaudit
+            value: "true"
+          - name: pgaudit.log
+            value: "write,ddl,role"
+          - name: pgaudit.log_parameter
+            value: "on"
+          - name: cloudsql.logical_decoding
+            value: "on"
+
+  port: 8080
+  replicas:
+    min: 1
+    max: 2
+    cpuThresholdPercentage: 90
+  resources:
+    limits:
+      memory: 1Gi
+    requests:
+      cpu: 30m
+      memory: 512Mi
+
+  liveness:
+    path: /internal/health/alive
+  readiness:
+    path: /internal/health/ready
+  preStopHook:
+    http:
+      path: /internal/shutdown
+  prometheus:
+    enabled: true
+    path: /internal/metrics
+  observability:
+    autoInstrumentation:
+      enabled: true
+      runtime: java

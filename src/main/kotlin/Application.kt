@@ -20,7 +20,7 @@ fun Application.module() {
   configureRouting()
   configureFhirRouting()
 
-  if (environment.config.property("ktor.environment").getString() == "local") {
+  if (environment.config.propertyOrNull("ktor.environment")?.getString() == "local") {
     configureOidcStub()
   }
 }

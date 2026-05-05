@@ -1,0 +1,55 @@
+on:
+  push:
+    branches-ignore:
+      - 'dependabot/**'
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+  packages: write
+  id-token: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    if: github.ref_name != 'main' && !startsWith(github.ref_name, 'dev')
+    steps:
+      - uses: navikt/tsm-workflows/actions/gradle/test@main
+
+  build:
+    runs-on: ubuntu-latest
+    if: github.ref_name == 'main' || startsWith(github.ref_name, 'dev')
+    steps:
+      - uses: navikt/tsm-workflows/actions/gradle/build@main
+        id: build
+        with:
+          app: "dr-zara"
+          team: "tsm"
+          salsa: false
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    outputs:
+      image: ${{ steps.build.outputs.image }}
+      digest: ${{ steps.build.outputs.digest }}
+
+  sbom:
+    name: Upload SBOM for build
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: navikt/tsm-workflows/actions/attest-sign@main
+        with:
+          image: ${{ needs.build.outputs.image }}
+          digest: ${{ needs.build.outputs.digest }}
+          team: tsm
+
+  deploy-dev:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: nais/deploy/actions/deploy@v2
+        env:
+          CLUSTER: "dev-gcp"
+          RESOURCE: ".nais/nais-dev.yaml"
+          VAR: image=${{ needs.build.outputs.image }},sourceVersionURL=https://github.com/${{ github.repository }}/tree/${{ github.sha }}
