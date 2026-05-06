@@ -5,26 +5,28 @@ import io.ktor.client.engine.cio.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
+import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.sessions.*
 import kotlinx.serialization.Serializable
+import no.nav.helse.core.Environment
 
 fun Application.configureSecurity() {
-    val config = environment.config.config("oauth")
+    val env: Environment by dependencies
 
     authentication {
         oauth("local-stub") {
-            urlProvider = { config.property("callbackUrl").getString() }
+            urlProvider = { env.oauth.callbackUrl }
             providerLookup = {
                 OAuthServerSettings.OAuth2ServerSettings(
                     name = "local-stub",
-                    authorizeUrl = config.property("authorizeUrl").getString(),
-                    accessTokenUrl = config.property("accessTokenUrl").getString(),
+                    authorizeUrl = env.oauth.authorizeUrl,
+                    accessTokenUrl = env.oauth.accessTokenUrl,
                     requestMethod = HttpMethod.Post,
-                    clientId = config.property("clientId").getString(),
-                    clientSecret = config.property("clientSecret").getString(),
-                    defaultScopes = config.property("defaultScopes").getString().split(","),
+                    clientId = env.oauth.clientId,
+                    clientSecret = env.oauth.clientSecret,
+                    defaultScopes = env.oauth.defaultScopes,
                 )
             }
             fallback = { cause ->

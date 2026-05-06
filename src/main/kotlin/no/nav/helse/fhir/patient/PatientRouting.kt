@@ -1,67 +1,70 @@
-package no.nav.helse.fhir.encounter
+package no.nav.helse.fhir.patient
 
 import com.google.fhir.model.r4.Bundle
-import com.google.fhir.model.r4.Encounter
 import com.google.fhir.model.r4.Enumeration
+import com.google.fhir.model.r4.Patient
 import com.google.fhir.model.r4.Uri
 import io.ktor.http.*
+import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.helse.fhir.encounter.repository.StubEncounterRepository
 import no.nav.helse.fhir.fhirJson
 import no.nav.helse.fhir.isAuthenticated
 import no.nav.helse.fhir.respondFhir
 
-fun Route.configureEncounterRouting() {
-    val encounterService = EncounterService(StubEncounterRepository())
-    get("/Encounter/{id}") {
+fun Route.configurePatientRouting() {
+    val patientService: PatientService by application.dependencies
+    get("/Patient/{id}") {
         if (!call.isAuthenticated()) {
             call.respondRedirect("/login")
             return@get
         }
+
         val id =
             call.parameters["id"]
                 ?: return@get call.respondText(
-                    "Missing encounter id",
+                    "Missing patient id",
                     status = HttpStatusCode.BadRequest,
                 )
-        val encounter = encounterService.getEncounter(id)
-        if (encounter != null) {
-            call.respondFhir(encounter)
+
+        val patient = patientService.getPatient(id)
+        if (patient != null) {
+            call.respondFhir(patient)
         } else {
-            call.respondText("Encounter not found", status = HttpStatusCode.NotFound)
+            call.respondText("Patient not found", status = HttpStatusCode.NotFound)
         }
     }
 
-    get("/Encounter") {
+    get("/Patient") {
         if (!call.isAuthenticated()) {
             call.respondRedirect("/login")
             return@get
         }
-        val encounters = encounterService.getAllEncounters()
+
+        val patients = patientService.getAllPatients()
         val bundle =
             Bundle(
                 type = Enumeration(value = Bundle.BundleType.Searchset),
                 entry =
-                    encounters.map { encounter ->
+                    patients.map { patient ->
                         Bundle.Entry(
-                            fullUrl = Uri(value = "Encounter/${encounter.id}"),
-                            resource = encounter,
+                            fullUrl = Uri(value = "Patient/${patient.id}"),
+                            resource = patient,
                         )
                     },
             )
         call.respondFhir(bundle)
     }
 
-    post("/Encounter") {
+    post("/Patient") {
         if (!call.isAuthenticated()) {
             call.respondRedirect("/login")
             return@post
         }
         val body = call.receiveText()
-        val encounter = fhirJson.decodeFromString(body) as Encounter
-        val created = encounterService.createEncounter(encounter)
+        val patient = fhirJson.decodeFromString(body) as Patient
+        val created = patientService.createPatient(patient)
         call.respondFhir(created)
     }
 }

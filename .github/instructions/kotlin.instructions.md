@@ -75,7 +75,7 @@ YAML config (`application.yaml`) with environment variables for secrets. Parse i
 class Environment(
     val runtime: Runtime,
     val postgres: PostgresConfig,
-    val auth: () -> Auth,         // Lazy — may not be needed in all envs
+    val auth: () -> Auth,         // Lazy - may not be needed in all envs
     val external: () -> ExternalApi,
 )
 ```
@@ -83,7 +83,7 @@ class Environment(
 ## Serialization
 
 - **Ktor endpoints**: `kotlinx.serialization` via `ContentNegotiation` with `Json { ignoreUnknownKeys = true }`
-- **FHIR resources**: `FhirR4Json` from `com.google.fhir:fhir-model` — do NOT use kotlinx or Jackson for FHIR types
+- **FHIR resources**: `FhirR4Json` from `com.google.fhir:fhir-model` - do NOT use kotlinx or Jackson for FHIR types
 - **Exposed JSON columns**: `jsonb<T>(column, fhirJsonConfig)` using kotlinx Json config
 
 Never mix serialization frameworks for the same type.
@@ -127,7 +127,7 @@ class StubPersonClient : PersonClient { /* static test data */ }
 - **Exposed R2DBC** with `dbQuery { }` wrapper (suspendTransaction on `Dispatchers.IO`)
 - **Repository interface** + Stub implementation for local dev
 - **Flyway** for migrations: `src/main/resources/db/migrations/V{N}__{description}.sql`
-- Never modify existing migrations — always create new ones
+- Never modify existing migrations - always create new ones
 
 ## Authentication
 

@@ -1,70 +1,67 @@
-package no.nav.helse.fhir.practitioner
+package no.nav.helse.fhir.documentreference
 
 import com.google.fhir.model.r4.Bundle
+import com.google.fhir.model.r4.DocumentReference
 import com.google.fhir.model.r4.Enumeration
-import com.google.fhir.model.r4.Practitioner
 import com.google.fhir.model.r4.Uri
 import io.ktor.http.*
+import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.helse.fhir.fhirJson
 import no.nav.helse.fhir.isAuthenticated
-import no.nav.helse.fhir.practitioner.repository.StubPractitionerRepository
 import no.nav.helse.fhir.respondFhir
 
-fun Route.configurePractitionerRouting() {
-    val practitionerService = PractitionerService(StubPractitionerRepository())
-    get("/Practitioner/{id}") {
+fun Route.configureDocumentReferenceRouting() {
+    val documentReferenceService: DocumentReferenceService by application.dependencies
+    get("/DocumentReference/{id}") {
         if (!call.isAuthenticated()) {
             call.respondRedirect("/login")
             return@get
         }
-
         val id =
             call.parameters["id"]
                 ?: return@get call.respondText(
-                    "Missing practitioner id",
+                    "Missing document reference id",
                     status = HttpStatusCode.BadRequest,
                 )
-
-        val practitioner = practitionerService.getPractitioner(id)
-        if (practitioner != null) {
-            call.respondFhir(practitioner)
+        val documentReference = documentReferenceService.getDocumentReference(id)
+        if (documentReference != null) {
+            call.respondFhir(documentReference)
         } else {
-            call.respondText("Practitioner not found", status = HttpStatusCode.NotFound)
+            call.respondText("DocumentReference not found", status = HttpStatusCode.NotFound)
         }
     }
 
-    get("/Practitioner") {
+    get("/DocumentReference") {
         if (!call.isAuthenticated()) {
             call.respondRedirect("/login")
             return@get
         }
-
-        val practitioners = practitionerService.getAllPractitioners()
+        val documentReferences = documentReferenceService.getAllDocumentReferences()
         val bundle =
             Bundle(
                 type = Enumeration(value = Bundle.BundleType.Searchset),
                 entry =
-                    practitioners.map { practitioner ->
+                    documentReferences.map { documentReference ->
                         Bundle.Entry(
-                            fullUrl = Uri(value = "Practitioner/${practitioner.id}"),
-                            resource = practitioner,
+                            fullUrl = Uri(value = "DocumentReference/${documentReference.id}"),
+                            resource = documentReference,
                         )
                     },
             )
         call.respondFhir(bundle)
     }
 
-    post("/Practitioner") {
+    post("/DocumentReference") {
         if (!call.isAuthenticated()) {
             call.respondRedirect("/login")
             return@post
         }
         val body = call.receiveText()
-        val practitioner = fhirJson.decodeFromString(body) as Practitioner
-        val created = practitionerService.createPractitioner(practitioner)
+        val documentReference = fhirJson.decodeFromString(body) as DocumentReference
+        val created = documentReferenceService.createDocumentReference(documentReference)
         call.respondFhir(created)
     }
 }

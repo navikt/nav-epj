@@ -1,21 +1,21 @@
-package no.nav.helse.fhir.documentreference
+package no.nav.helse.fhir.organization
 
 import com.google.fhir.model.r4.Bundle
-import com.google.fhir.model.r4.DocumentReference
 import com.google.fhir.model.r4.Enumeration
+import com.google.fhir.model.r4.Organization
 import com.google.fhir.model.r4.Uri
 import io.ktor.http.*
+import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.helse.fhir.documentreference.repository.StubDocumentReferenceRepository
 import no.nav.helse.fhir.fhirJson
 import no.nav.helse.fhir.isAuthenticated
 import no.nav.helse.fhir.respondFhir
 
-fun Route.configureDocumentReferenceRouting() {
-    val documentReferenceService = DocumentReferenceService(StubDocumentReferenceRepository())
-    get("/DocumentReference/{id}") {
+fun Route.configureOrganizationRouting() {
+    val organizationService: OrganizationService by application.dependencies
+    get("/Organization/{id}") {
         if (!call.isAuthenticated()) {
             call.respondRedirect("/login")
             return@get
@@ -23,45 +23,45 @@ fun Route.configureDocumentReferenceRouting() {
         val id =
             call.parameters["id"]
                 ?: return@get call.respondText(
-                    "Missing document reference id",
+                    "Missing organization id",
                     status = HttpStatusCode.BadRequest,
                 )
-        val documentReference = documentReferenceService.getDocumentReference(id)
-        if (documentReference != null) {
-            call.respondFhir(documentReference)
+        val organization = organizationService.getOrganization(id)
+        if (organization != null) {
+            call.respondFhir(organization)
         } else {
-            call.respondText("DocumentReference not found", status = HttpStatusCode.NotFound)
+            call.respondText("Organization not found", status = HttpStatusCode.NotFound)
         }
     }
 
-    get("/DocumentReference") {
+    get("/Organization") {
         if (!call.isAuthenticated()) {
             call.respondRedirect("/login")
             return@get
         }
-        val documentReferences = documentReferenceService.getAllDocumentReferences()
+        val organizations = organizationService.getAllOrganizations()
         val bundle =
             Bundle(
                 type = Enumeration(value = Bundle.BundleType.Searchset),
                 entry =
-                    documentReferences.map { documentReference ->
+                    organizations.map { organization ->
                         Bundle.Entry(
-                            fullUrl = Uri(value = "DocumentReference/${documentReference.id}"),
-                            resource = documentReference,
+                            fullUrl = Uri(value = "Organization/${organization.id}"),
+                            resource = organization,
                         )
                     },
             )
         call.respondFhir(bundle)
     }
 
-    post("/DocumentReference") {
+    post("/Organization") {
         if (!call.isAuthenticated()) {
             call.respondRedirect("/login")
             return@post
         }
         val body = call.receiveText()
-        val documentReference = fhirJson.decodeFromString(body) as DocumentReference
-        val created = documentReferenceService.createDocumentReference(documentReference)
+        val organization = fhirJson.decodeFromString(body) as Organization
+        val created = organizationService.createOrganization(organization)
         call.respondFhir(created)
     }
 }

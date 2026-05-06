@@ -1,4 +1,4 @@
-package no.nav.helse.fhir.utils
+package no.nav.helse.core.db
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

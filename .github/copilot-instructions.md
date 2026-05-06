@@ -2,12 +2,13 @@
 
 **Dr. Zara** — EHR vendor simulator for internal testing at Nav.
 
-**Stack**: Ktor, Gradle wrapper, Exposed, Jackson, OAuth 2.1, OIDC, FHIR R4, Docker Compose, Nais.
+**Stack**: Ktor, Gradle wrapper, Exposed, Jackson, OAuth 2.1, OIDC, FHIR R4, Docker Compose, Nais,
+PostgreSQL.
 
 ## Principles
 
 1. All data follows **FHIR R4** spec
-2. User isolation — every query filters by user/session id
+2. User isolation - every query filters by user/session id
 3. Delete before adding; question every requirement
 4. Ship working code — done = build succeeds and tests pass
 5. One feature per commit (`feat|chore|fix|test|refactor|docs: description`)
@@ -16,6 +17,7 @@
 8. Code in English, domain terms in Norwegian (e.g. `getSykmeldinger`, `Behandler`, `Fastlege`)
 9. Prefer inlining/copying over shared Nav libraries — avoid fellesbiblioteker
 10. Distroless base images for all containers
+11. Always do another pass to check for common AI-slop and fix it
 
 ## Commits & Merging
 
@@ -39,7 +41,7 @@ Language-specific patterns live in `.github/instructions/kotlin.instructions.md`
 
 Skip this for changes that only modify existing files without adding/removing any.
 
-## Anti-Pattern & State Coherence Check
+## Antipattern & State Coherence Check
 
 After completing a change, review the affected flow(s) for:
 
@@ -49,9 +51,19 @@ After completing a change, review the affected flow(s) for:
 - Auth bypass patterns (routes accessible without session)
 - Repository interface violations (stub vs real implementation drift)
 
-If anti-patterns are found, **prompt the user**: "I noticed [issue]. Should I address this in a separate commit?" Never silently fix anti-patterns as part of an unrelated change.
+If antipatterns are found, **prompt the user**: "I noticed [issue]. Should I address this in a
+separate commit?" Never silently fix antipatterns as part of an unrelated change.
 
 ## Testing
 
 - New features require unit tests covering edge cases
 - Test names describe behaviour (`should do X when Y`)
+
+## Session Learnings
+
+When you discover a bug pattern, recurring mistake, or architectural insight during a session,
+propose updating this copilot-instructions.md directly before the session ends.
+
+## README
+
+Always check if README.md needs to be updated based on introduced changes.

@@ -1,67 +1,70 @@
-package no.nav.helse.fhir.organization
+package no.nav.helse.fhir.practitioner
 
 import com.google.fhir.model.r4.Bundle
 import com.google.fhir.model.r4.Enumeration
-import com.google.fhir.model.r4.Organization
+import com.google.fhir.model.r4.Practitioner
 import com.google.fhir.model.r4.Uri
 import io.ktor.http.*
+import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.helse.fhir.fhirJson
 import no.nav.helse.fhir.isAuthenticated
-import no.nav.helse.fhir.organization.repository.StubOrganizationRepository
 import no.nav.helse.fhir.respondFhir
 
-fun Route.configureOrganizationRouting() {
-    val organizationService = OrganizationService(StubOrganizationRepository())
-    get("/Organization/{id}") {
+fun Route.configurePractitionerRouting() {
+    val practitionerService: PractitionerService by application.dependencies
+    get("/Practitioner/{id}") {
         if (!call.isAuthenticated()) {
             call.respondRedirect("/login")
             return@get
         }
+
         val id =
             call.parameters["id"]
                 ?: return@get call.respondText(
-                    "Missing organization id",
+                    "Missing practitioner id",
                     status = HttpStatusCode.BadRequest,
                 )
-        val organization = organizationService.getOrganization(id)
-        if (organization != null) {
-            call.respondFhir(organization)
+
+        val practitioner = practitionerService.getPractitioner(id)
+        if (practitioner != null) {
+            call.respondFhir(practitioner)
         } else {
-            call.respondText("Organization not found", status = HttpStatusCode.NotFound)
+            call.respondText("Practitioner not found", status = HttpStatusCode.NotFound)
         }
     }
 
-    get("/Organization") {
+    get("/Practitioner") {
         if (!call.isAuthenticated()) {
             call.respondRedirect("/login")
             return@get
         }
-        val organizations = organizationService.getAllOrganizations()
+
+        val practitioners = practitionerService.getAllPractitioners()
         val bundle =
             Bundle(
                 type = Enumeration(value = Bundle.BundleType.Searchset),
                 entry =
-                    organizations.map { organization ->
+                    practitioners.map { practitioner ->
                         Bundle.Entry(
-                            fullUrl = Uri(value = "Organization/${organization.id}"),
-                            resource = organization,
+                            fullUrl = Uri(value = "Practitioner/${practitioner.id}"),
+                            resource = practitioner,
                         )
                     },
             )
         call.respondFhir(bundle)
     }
 
-    post("/Organization") {
+    post("/Practitioner") {
         if (!call.isAuthenticated()) {
             call.respondRedirect("/login")
             return@post
         }
         val body = call.receiveText()
-        val organization = fhirJson.decodeFromString(body) as Organization
-        val created = organizationService.createOrganization(organization)
+        val practitioner = fhirJson.decodeFromString(body) as Practitioner
+        val created = practitionerService.createPractitioner(practitioner)
         call.respondFhir(created)
     }
 }

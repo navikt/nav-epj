@@ -5,16 +5,16 @@ import com.google.fhir.model.r4.Condition
 import com.google.fhir.model.r4.Enumeration
 import com.google.fhir.model.r4.Uri
 import io.ktor.http.*
+import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.helse.fhir.condition.repository.StubConditionRepository
 import no.nav.helse.fhir.fhirJson
 import no.nav.helse.fhir.isAuthenticated
 import no.nav.helse.fhir.respondFhir
 
 fun Route.configureConditionRouting() {
-    val conditionService = ConditionService(StubConditionRepository())
+    val conditionService: ConditionService by application.dependencies
     get("/Condition/{id}") {
         if (!call.isAuthenticated()) {
             call.respondRedirect("/login")

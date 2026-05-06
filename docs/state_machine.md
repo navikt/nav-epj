@@ -84,9 +84,10 @@ sequenceDiagram
 Application entry point — wires plugins, serialization, sessions, security, and FHIR routing.
 
 **Files:**
-- `src/main/kotlin/Application.kt`
-- `src/main/kotlin/plugins/Serialization.kt`
-- `src/main/kotlin/plugins/Session.kt`
+- `src/main/kotlin/no/nav/helse/Application.kt`
+- `src/main/kotlin/no/nav/helse/plugins/Serialization.kt`
+- `src/main/kotlin/no/nav/helse/plugins/Session.kt`
+- `src/main/kotlin/no/nav/helse/plugins/Dependencies.kt`
 - `src/main/resources/application.yaml`
 - `src/main/resources/application-local.yaml`
 - `src/main/resources/logback.xml`
@@ -96,33 +97,33 @@ Application entry point — wires plugins, serialization, sessions, security, an
 User navigates to `/login`. Ktor's OAuth plugin redirects to the OIDC provider's authorize endpoint.
 
 **Files:**
-- `src/main/kotlin/Routing.kt` (GET /login)
-- `src/main/kotlin/auth/Security.kt` (OAuth provider config)
+- `src/main/kotlin/no/nav/helse/Routing.kt` (GET /login)
+- `src/main/kotlin/no/nav/helse/auth/Security.kt` (OAuth provider config)
 
 ### 3. Authorization Form (Local Stub)
 
 Local stub presents a login form. In cloud, HelseID handles this externally.
 
 **Files:**
-- `src/main/kotlin/auth/stub/Oidc.kt` (GET /oidc/authorize, POST /oidc/authorize)
+- `src/main/kotlin/no/nav/helse/auth/stub/Oidc.kt` (GET /oidc/authorize, POST /oidc/authorize)
 
 ### 4. Token Exchange
 
 Ktor exchanges the authorization code for a JWT access token.
 
 **Files:**
-- `src/main/kotlin/auth/stub/Oidc.kt` (POST /oidc/token, GET /oidc/jwks, GET /oidc/.well-known/openid-configuration)
-- `src/main/kotlin/Routing.kt` (GET /callback)
+- `src/main/kotlin/no/nav/helse/auth/stub/Oidc.kt` (POST /oidc/token, GET /oidc/jwks, GET /oidc/.well-known/openid-configuration)
+- `src/main/kotlin/no/nav/helse/Routing.kt` (GET /callback)
 
 ### 5. Session Created → Home
 
 After successful auth, a `UserSession` cookie is set and the user is redirected to `/home`.
 
 **Files:**
-- `src/main/kotlin/Routing.kt` (GET /callback, GET /home)
-- `src/main/kotlin/plugins/Session.kt`
-- `src/main/kotlin/auth/Security.kt`
-- `src/main/kotlin/auth/UserInfo.kt`
+- `src/main/kotlin/no/nav/helse/Routing.kt` (GET /callback, GET /home)
+- `src/main/kotlin/no/nav/helse/plugins/Session.kt`
+- `src/main/kotlin/no/nav/helse/auth/Security.kt`
+- `src/main/kotlin/no/nav/helse/auth/UserInfo.kt`
 
 ### 6. Patient List (Frontend)
 
@@ -148,63 +149,63 @@ All FHIR resources follow the same pattern: GET collection, GET by ID, POST crea
 #### 8a. Patient
 
 **Files:**
-- `src/main/kotlin/fhir/patient/PatientRouting.kt`
-- `src/main/kotlin/fhir/patient/PatientService.kt`
-- `src/main/kotlin/fhir/patient/repository/PatientRepository.kt`
-- `src/main/kotlin/fhir/patient/repository/PatientTable.kt`
-- `src/main/kotlin/fhir/patient/repository/StubPatientRepository.kt`
+- `src/main/kotlin/no/nav/helse/fhir/patient/PatientRouting.kt`
+- `src/main/kotlin/no/nav/helse/fhir/patient/PatientService.kt`
+- `src/main/kotlin/no/nav/helse/fhir/patient/repository/PatientRepository.kt`
+- `src/main/kotlin/no/nav/helse/fhir/patient/repository/PatientTable.kt`
+- `src/main/kotlin/no/nav/helse/fhir/patient/repository/StubPatientRepository.kt`
 
 #### 8b. Organization
 
 **Files:**
-- `src/main/kotlin/fhir/organization/OrganizationRouting.kt`
-- `src/main/kotlin/fhir/organization/OrganizationService.kt`
-- `src/main/kotlin/fhir/organization/repository/OrganizationRepository.kt`
-- `src/main/kotlin/fhir/organization/repository/OrganizationTable.kt`
-- `src/main/kotlin/fhir/organization/repository/StubOrganizationRepository.kt`
+- `src/main/kotlin/no/nav/helse/fhir/organization/OrganizationRouting.kt`
+- `src/main/kotlin/no/nav/helse/fhir/organization/OrganizationService.kt`
+- `src/main/kotlin/no/nav/helse/fhir/organization/repository/OrganizationRepository.kt`
+- `src/main/kotlin/no/nav/helse/fhir/organization/repository/OrganizationTable.kt`
+- `src/main/kotlin/no/nav/helse/fhir/organization/repository/StubOrganizationRepository.kt`
 
 #### 8c. Encounter
 
 **Files:**
-- `src/main/kotlin/fhir/encounter/EncounterRouting.kt`
-- `src/main/kotlin/fhir/encounter/EncounterService.kt`
-- `src/main/kotlin/fhir/encounter/repository/EncounterRepository.kt`
-- `src/main/kotlin/fhir/encounter/repository/EncounterTable.kt`
-- `src/main/kotlin/fhir/encounter/repository/StubEncounterRepository.kt`
+- `src/main/kotlin/no/nav/helse/fhir/encounter/EncounterRouting.kt`
+- `src/main/kotlin/no/nav/helse/fhir/encounter/EncounterService.kt`
+- `src/main/kotlin/no/nav/helse/fhir/encounter/repository/EncounterRepository.kt`
+- `src/main/kotlin/no/nav/helse/fhir/encounter/repository/EncounterTable.kt`
+- `src/main/kotlin/no/nav/helse/fhir/encounter/repository/StubEncounterRepository.kt`
 
 #### 8d. Condition
 
 **Files:**
-- `src/main/kotlin/fhir/condition/ConditionRouting.kt`
-- `src/main/kotlin/fhir/condition/ConditionService.kt`
-- `src/main/kotlin/fhir/condition/repository/ConditionRepository.kt`
-- `src/main/kotlin/fhir/condition/repository/ConditionTable.kt`
-- `src/main/kotlin/fhir/condition/repository/StubConditionRepository.kt`
+- `src/main/kotlin/no/nav/helse/fhir/condition/ConditionRouting.kt`
+- `src/main/kotlin/no/nav/helse/fhir/condition/ConditionService.kt`
+- `src/main/kotlin/no/nav/helse/fhir/condition/repository/ConditionRepository.kt`
+- `src/main/kotlin/no/nav/helse/fhir/condition/repository/ConditionTable.kt`
+- `src/main/kotlin/no/nav/helse/fhir/condition/repository/StubConditionRepository.kt`
 
 #### 8e. Practitioner
 
 **Files:**
-- `src/main/kotlin/fhir/practitioner/PractitionerRouting.kt`
-- `src/main/kotlin/fhir/practitioner/PractitionerService.kt`
-- `src/main/kotlin/fhir/practitioner/repository/PractitionerRepository.kt`
-- `src/main/kotlin/fhir/practitioner/repository/PractitionerTable.kt`
-- `src/main/kotlin/fhir/practitioner/repository/StubPractitionerRepository.kt`
+- `src/main/kotlin/no/nav/helse/fhir/practitioner/PractitionerRouting.kt`
+- `src/main/kotlin/no/nav/helse/fhir/practitioner/PractitionerService.kt`
+- `src/main/kotlin/no/nav/helse/fhir/practitioner/repository/PractitionerRepository.kt`
+- `src/main/kotlin/no/nav/helse/fhir/practitioner/repository/PractitionerTable.kt`
+- `src/main/kotlin/no/nav/helse/fhir/practitioner/repository/StubPractitionerRepository.kt`
 
 #### 8f. DocumentReference
 
 **Files:**
-- `src/main/kotlin/fhir/documentreference/DocumentReferenceRouting.kt`
-- `src/main/kotlin/fhir/documentreference/DocumentReferenceService.kt`
-- `src/main/kotlin/fhir/documentreference/repository/DocumentReferenceRepository.kt`
-- `src/main/kotlin/fhir/documentreference/repository/DocumentReferenceTable.kt`
-- `src/main/kotlin/fhir/documentreference/repository/StubDocumentReferenceRepository.kt`
+- `src/main/kotlin/no/nav/helse/fhir/documentreference/DocumentReferenceRouting.kt`
+- `src/main/kotlin/no/nav/helse/fhir/documentreference/DocumentReferenceService.kt`
+- `src/main/kotlin/no/nav/helse/fhir/documentreference/repository/DocumentReferenceRepository.kt`
+- `src/main/kotlin/no/nav/helse/fhir/documentreference/repository/DocumentReferenceTable.kt`
+- `src/main/kotlin/no/nav/helse/fhir/documentreference/repository/StubDocumentReferenceRepository.kt`
 
 ### 9. Health Checks
 
 Kubernetes liveness and readiness probes.
 
 **Files:**
-- `src/main/kotlin/Routing.kt` (GET /internal/health/alive, GET /internal/health/ready)
+- `src/main/kotlin/no/nav/helse/Routing.kt` (GET /internal/health/alive, GET /internal/health/ready)
 
 ---
 
@@ -238,9 +239,10 @@ These files are used across multiple flows:
 | **Auth Stub** | `auth/stub/Oidc.kt` |
 | **Serialization** | `plugins/Serialization.kt`, `fhir/FhirJsonConfig.kt` |
 | **FHIR Utilities** | `fhir/FhirRouting.kt` (`isAuthenticated`, `respondFhir`) |
-| **Database** | `fhir/utils/DbQuery.kt` |
-| **Config** | `application.yaml`, `application-local.yaml` |
-| **Logging** | `logback.xml` |
+| **Database** | `core/db/DbQuery.kt` |
+| **Config** | `core/Environment.kt`, `application.yaml`, `application-local.yaml` |
+| **Logging** | `core/Logging.kt`, `logback.xml` |
+| **DI** | `plugins/Dependencies.kt` |
 | **Frontend Shell** | `frontend/src/routes/__root.tsx` |
 | **Frontend Types** | `frontend/src/utils/mapping/fhir.ts` |
 
@@ -257,7 +259,7 @@ These files are used across multiple flows:
 | `condition` | 8d | FHIR Condition resources |
 | `document_reference` | 8f | FHIR DocumentReference resources |
 
-All tables use `TEXT` for ID and `JSONB` for FHIR-specific fields. Schema managed by Flyway (`src/main/resources/db.migrations/V1__initial_fhir_db_schema.sql`).
+All tables use `TEXT` for ID and `JSONB` for FHIR-specific fields. Schema managed by Flyway (`src/main/resources/db/migrations/V1__initial_fhir_db_schema.sql`).
 
 ---
 
@@ -265,71 +267,76 @@ All tables use `TEXT` for ID and `JSONB` for FHIR-specific fields. Schema manage
 
 Last verified: 2026-05-06.
 
-### Backend — Kotlin (24 files)
+### Backend — Kotlin (27 files)
 
-#### Application & Plugins (4)
-- `src/main/kotlin/Application.kt`
-- `src/main/kotlin/Routing.kt`
-- `src/main/kotlin/plugins/Serialization.kt`
-- `src/main/kotlin/plugins/Session.kt`
+#### Application & Plugins (5)
+- `src/main/kotlin/no/nav/helse/Application.kt`
+- `src/main/kotlin/no/nav/helse/Routing.kt`
+- `src/main/kotlin/no/nav/helse/plugins/Serialization.kt`
+- `src/main/kotlin/no/nav/helse/plugins/Session.kt`
+- `src/main/kotlin/no/nav/helse/plugins/Dependencies.kt`
+
+#### Core (3)
+- `src/main/kotlin/no/nav/helse/core/Environment.kt`
+- `src/main/kotlin/no/nav/helse/core/Logging.kt`
+- `src/main/kotlin/no/nav/helse/core/db/DbQuery.kt`
 
 #### Auth (3)
-- `src/main/kotlin/auth/Security.kt`
-- `src/main/kotlin/auth/UserInfo.kt`
-- `src/main/kotlin/auth/stub/Oidc.kt`
+- `src/main/kotlin/no/nav/helse/auth/Security.kt`
+- `src/main/kotlin/no/nav/helse/auth/UserInfo.kt`
+- `src/main/kotlin/no/nav/helse/auth/stub/Oidc.kt`
 
-#### FHIR Core (3)
-- `src/main/kotlin/fhir/FhirJsonConfig.kt`
-- `src/main/kotlin/fhir/FhirRouting.kt`
-- `src/main/kotlin/fhir/utils/DbQuery.kt`
+#### FHIR Core (2)
+- `src/main/kotlin/no/nav/helse/fhir/FhirJsonConfig.kt`
+- `src/main/kotlin/no/nav/helse/fhir/FhirRouting.kt`
 
-#### FHIR Patient (3)
-- `src/main/kotlin/fhir/patient/PatientRouting.kt`
-- `src/main/kotlin/fhir/patient/PatientService.kt`
-- `src/main/kotlin/fhir/patient/repository/PatientRepository.kt`
-- `src/main/kotlin/fhir/patient/repository/PatientTable.kt`
-- `src/main/kotlin/fhir/patient/repository/StubPatientRepository.kt`
+#### FHIR Patient (5)
+- `src/main/kotlin/no/nav/helse/fhir/patient/PatientRouting.kt`
+- `src/main/kotlin/no/nav/helse/fhir/patient/PatientService.kt`
+- `src/main/kotlin/no/nav/helse/fhir/patient/repository/PatientRepository.kt`
+- `src/main/kotlin/no/nav/helse/fhir/patient/repository/PatientTable.kt`
+- `src/main/kotlin/no/nav/helse/fhir/patient/repository/StubPatientRepository.kt`
 
-#### FHIR Organization (3)
-- `src/main/kotlin/fhir/organization/OrganizationRouting.kt`
-- `src/main/kotlin/fhir/organization/OrganizationService.kt`
-- `src/main/kotlin/fhir/organization/repository/OrganizationRepository.kt`
-- `src/main/kotlin/fhir/organization/repository/OrganizationTable.kt`
-- `src/main/kotlin/fhir/organization/repository/StubOrganizationRepository.kt`
+#### FHIR Organization (5)
+- `src/main/kotlin/no/nav/helse/fhir/organization/OrganizationRouting.kt`
+- `src/main/kotlin/no/nav/helse/fhir/organization/OrganizationService.kt`
+- `src/main/kotlin/no/nav/helse/fhir/organization/repository/OrganizationRepository.kt`
+- `src/main/kotlin/no/nav/helse/fhir/organization/repository/OrganizationTable.kt`
+- `src/main/kotlin/no/nav/helse/fhir/organization/repository/StubOrganizationRepository.kt`
 
-#### FHIR Encounter (3)
-- `src/main/kotlin/fhir/encounter/EncounterRouting.kt`
-- `src/main/kotlin/fhir/encounter/EncounterService.kt`
-- `src/main/kotlin/fhir/encounter/repository/EncounterRepository.kt`
-- `src/main/kotlin/fhir/encounter/repository/EncounterTable.kt`
-- `src/main/kotlin/fhir/encounter/repository/StubEncounterRepository.kt`
+#### FHIR Encounter (5)
+- `src/main/kotlin/no/nav/helse/fhir/encounter/EncounterRouting.kt`
+- `src/main/kotlin/no/nav/helse/fhir/encounter/EncounterService.kt`
+- `src/main/kotlin/no/nav/helse/fhir/encounter/repository/EncounterRepository.kt`
+- `src/main/kotlin/no/nav/helse/fhir/encounter/repository/EncounterTable.kt`
+- `src/main/kotlin/no/nav/helse/fhir/encounter/repository/StubEncounterRepository.kt`
 
-#### FHIR Condition (3)
-- `src/main/kotlin/fhir/condition/ConditionRouting.kt`
-- `src/main/kotlin/fhir/condition/ConditionService.kt`
-- `src/main/kotlin/fhir/condition/repository/ConditionRepository.kt`
-- `src/main/kotlin/fhir/condition/repository/ConditionTable.kt`
-- `src/main/kotlin/fhir/condition/repository/StubConditionRepository.kt`
+#### FHIR Condition (5)
+- `src/main/kotlin/no/nav/helse/fhir/condition/ConditionRouting.kt`
+- `src/main/kotlin/no/nav/helse/fhir/condition/ConditionService.kt`
+- `src/main/kotlin/no/nav/helse/fhir/condition/repository/ConditionRepository.kt`
+- `src/main/kotlin/no/nav/helse/fhir/condition/repository/ConditionTable.kt`
+- `src/main/kotlin/no/nav/helse/fhir/condition/repository/StubConditionRepository.kt`
 
-#### FHIR Practitioner (3)
-- `src/main/kotlin/fhir/practitioner/PractitionerRouting.kt`
-- `src/main/kotlin/fhir/practitioner/PractitionerService.kt`
-- `src/main/kotlin/fhir/practitioner/repository/PractitionerRepository.kt`
-- `src/main/kotlin/fhir/practitioner/repository/PractitionerTable.kt`
-- `src/main/kotlin/fhir/practitioner/repository/StubPractitionerRepository.kt`
+#### FHIR Practitioner (5)
+- `src/main/kotlin/no/nav/helse/fhir/practitioner/PractitionerRouting.kt`
+- `src/main/kotlin/no/nav/helse/fhir/practitioner/PractitionerService.kt`
+- `src/main/kotlin/no/nav/helse/fhir/practitioner/repository/PractitionerRepository.kt`
+- `src/main/kotlin/no/nav/helse/fhir/practitioner/repository/PractitionerTable.kt`
+- `src/main/kotlin/no/nav/helse/fhir/practitioner/repository/StubPractitionerRepository.kt`
 
-#### FHIR DocumentReference (3)
-- `src/main/kotlin/fhir/documentreference/DocumentReferenceRouting.kt`
-- `src/main/kotlin/fhir/documentreference/DocumentReferenceService.kt`
-- `src/main/kotlin/fhir/documentreference/repository/DocumentReferenceRepository.kt`
-- `src/main/kotlin/fhir/documentreference/repository/DocumentReferenceTable.kt`
-- `src/main/kotlin/fhir/documentreference/repository/StubDocumentReferenceRepository.kt`
+#### FHIR DocumentReference (5)
+- `src/main/kotlin/no/nav/helse/fhir/documentreference/DocumentReferenceRouting.kt`
+- `src/main/kotlin/no/nav/helse/fhir/documentreference/DocumentReferenceService.kt`
+- `src/main/kotlin/no/nav/helse/fhir/documentreference/repository/DocumentReferenceRepository.kt`
+- `src/main/kotlin/no/nav/helse/fhir/documentreference/repository/DocumentReferenceTable.kt`
+- `src/main/kotlin/no/nav/helse/fhir/documentreference/repository/StubDocumentReferenceRepository.kt`
 
 ### Backend — Resources (4)
 - `src/main/resources/application.yaml`
 - `src/main/resources/application-local.yaml`
 - `src/main/resources/logback.xml`
-- `src/main/resources/db.migrations/V1__initial_fhir_db_schema.sql`
+- `src/main/resources/db/migrations/V1__initial_fhir_db_schema.sql`
 
 ### Frontend — TypeScript/React (5)
 - `frontend/src/main.tsx`
