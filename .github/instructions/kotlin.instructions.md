@@ -63,9 +63,14 @@ fun Application.configureFeatureDependencies() {
     }
 }
 
-// Resolve via delegation
+// Resolve via delegation — in Application scope
 val service: FeatureService by dependencies
+
+// Resolve via delegation — in Route extension functions (Application not in scope)
+val service: FeatureService by application.dependencies
 ```
+
+**`configureDependencies()` must be the first call in `Application.module()`** — all other plugins resolve from it. Never call config parsing (e.g. `initializeEnvironment()`) again after registration; use `val env: Environment by dependencies` instead.
 
 ## Configuration
 
@@ -83,10 +88,23 @@ class Environment(
 ## Serialization
 
 - **Ktor endpoints**: `kotlinx.serialization` via `ContentNegotiation` with `Json { ignoreUnknownKeys = true }`
-- **FHIR resources**: `FhirR4Json` from `com.google.fhir:fhir-model` - do NOT use kotlinx or Jackson for FHIR types
+- **FHIR resources**: `FhirR4Json` from `com.google.fhir:fhir-model` — do NOT use kotlinx or Jackson for FHIR types
 - **Exposed JSON columns**: `jsonb<T>(column, fhirJsonConfig)` using kotlinx Json config
 
 Never mix serialization frameworks for the same type.
+
+**`ContentNegotiation` must be installed at Application level**, not inside `routing { install(...) }` — route-scoped installation silently breaks negotiation for all other routes.
+
+**FHIR responses**: pass the content type directly to `respondText` — don't set it via `response.header()` first, as `respondText`'s `ContentType` argument overwrites it:
+
+```kotlin
+// ✅ Correct
+respondText(fhirJson.encodeToString(resource), ContentType.parse(FHIR_CONTENT_TYPE))
+
+// ❌ Wrong — second call overwrites the header set by the first
+response.header(HttpHeaders.ContentType, FHIR_CONTENT_TYPE)
+respondText(fhirJson.encodeToString(resource), ContentType.Application.Json)
+```
 
 ## Error Handling
 
@@ -135,6 +153,8 @@ class StubPersonClient : PersonClient { /* static test data */ }
 - Protect routes with `authenticate("provider-name") { ... }`
 - Service-to-service: Texas token exchange via `TokenClient`
 - Local dev: OAuth2 stub with `configureOidcStub()`
+- `getSession()` redirects unauthenticated requests to `/login` — keep it simple; don't build `redirectUrl` query params unless something actually consumes them
+- Never use `JWT.decode()` (unverified decode) in route handlers — the session was already validated by the OAuth flow; use session data directly
 
 ## Monitoring & Observability
 
@@ -204,3 +224,4 @@ Coroutine-based: extend a `BackgroundJob` abstraction, register on `ApplicationS
 - Block coroutines with synchronous I/O
 - Commit secrets or credentials
 - Modify existing Flyway migrations
+- Add wildcard catch-all routes (`/{path}`) at the top level — they shadow other routes and conflict with `singlePageApplication {}`
