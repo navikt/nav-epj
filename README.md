@@ -16,15 +16,15 @@ Here's a list of features included in this project:
 
 To build or run the project, use one of the following tasks:
 
-| Task                                                                    | Description                                                          |
-|-------------------------------------------------------------------------|----------------------------------------------------------------------|
-| `./gradlew test`                                                        | Run the tests                                                        |
-| `./gradlew build`                                                       | Build everything                                                     |
-| `./gradlew buildFatJar`                                                 | Build an executable JAR of the server with all dependencies included |
-| `./gradlew buildImage`                                                  | Build the docker image to use with the fat JAR                       |
-| `./gradlew publishImageToLocalRegistry`                                 | Publish the docker image locally                                     |
-| `./gradlew run -config=application.yaml -config=application-local.yaml` | Run the server with local config                                     |
-| `./gradlew runDocker`                                                   | Run using the local docker image                                     |
+| Task                                                                             | Description                                                          |
+|----------------------------------------------------------------------------------|----------------------------------------------------------------------|
+| `./gradlew test`                                                                 | Run the tests                                                        |
+| `./gradlew build`                                                                | Build everything                                                     |
+| `./gradlew buildFatJar`                                                          | Build an executable JAR of the server with all dependencies included |
+| `./gradlew buildImage`                                                           | Build the docker image to use with the fat JAR                       |
+| `./gradlew publishImageToLocalRegistry`                                          | Publish the docker image locally                                     |
+| `./gradlew run --args='-config=application.yaml -config=application-local.yaml'` | Run the server with local config                                     |
+| `./gradlew runDocker`                                                            | Run using the local docker image                                     |
 
 ## Building and running frontend locally
 
