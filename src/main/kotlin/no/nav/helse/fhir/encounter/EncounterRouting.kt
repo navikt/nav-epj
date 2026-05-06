@@ -14,54 +14,48 @@ import no.nav.helse.fhir.isAuthenticated
 import no.nav.helse.fhir.respondFhir
 
 fun Route.configureEncounterRouting() {
-    val encounterService: EncounterService by application.dependencies
-    get("/Encounter/{id}") {
-        if (!call.isAuthenticated()) {
-            call.respondRedirect("/login")
-            return@get
-        }
-        val id =
-            call.parameters["id"]
-                ?: return@get call.respondText(
-                    "Missing encounter id",
-                    status = HttpStatusCode.BadRequest,
-                )
-        val encounter = encounterService.getEncounter(id)
-        if (encounter != null) {
-            call.respondFhir(encounter)
-        } else {
-            call.respondText("Encounter not found", status = HttpStatusCode.NotFound)
-        }
+  val encounterService: EncounterService by application.dependencies
+  get("/Encounter/{id}") {
+    if (!call.isAuthenticated()) {
+      call.respondRedirect("/login")
+      return@get
     }
+    val id =
+      call.parameters["id"]
+        ?: return@get call.respondText("Missing encounter id", status = HttpStatusCode.BadRequest)
+    val encounter = encounterService.getEncounter(id)
+    if (encounter != null) {
+      call.respondFhir(encounter)
+    } else {
+      call.respondText("Encounter not found", status = HttpStatusCode.NotFound)
+    }
+  }
 
-    get("/Encounter") {
-        if (!call.isAuthenticated()) {
-            call.respondRedirect("/login")
-            return@get
-        }
-        val encounters = encounterService.getAllEncounters()
-        val bundle =
-            Bundle(
-                type = Enumeration(value = Bundle.BundleType.Searchset),
-                entry =
-                    encounters.map { encounter ->
-                        Bundle.Entry(
-                            fullUrl = Uri(value = "Encounter/${encounter.id}"),
-                            resource = encounter,
-                        )
-                    },
-            )
-        call.respondFhir(bundle)
+  get("/Encounter") {
+    if (!call.isAuthenticated()) {
+      call.respondRedirect("/login")
+      return@get
     }
+    val encounters = encounterService.getAllEncounters()
+    val bundle =
+      Bundle(
+        type = Enumeration(value = Bundle.BundleType.Searchset),
+        entry =
+          encounters.map { encounter ->
+            Bundle.Entry(fullUrl = Uri(value = "Encounter/${encounter.id}"), resource = encounter)
+          },
+      )
+    call.respondFhir(bundle)
+  }
 
-    post("/Encounter") {
-        if (!call.isAuthenticated()) {
-            call.respondRedirect("/login")
-            return@post
-        }
-        val body = call.receiveText()
-        val encounter = fhirJson.decodeFromString(body) as Encounter
-        val created = encounterService.createEncounter(encounter)
-        call.respondFhir(created)
+  post("/Encounter") {
+    if (!call.isAuthenticated()) {
+      call.respondRedirect("/login")
+      return@post
     }
+    val body = call.receiveText()
+    val encounter = fhirJson.decodeFromString(body) as Encounter
+    val created = encounterService.createEncounter(encounter)
+    call.respondFhir(created)
+  }
 }

@@ -10,11 +10,11 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.json.jsonb
 
 object PatientTable : Table("patient") {
-    val id = text("id")
-    val meta = jsonb<Meta>("meta", fhirJsonConfig)
-    val identifier = jsonb<Array<Identifier>>("identifier", fhirJsonConfig)
-    val active = bool("active")
-    val name = jsonb<Array<HumanName>>("name", fhirJsonConfig)
-    val gender = jsonb<AdministrativeGender>("gender", fhirJsonConfig)
-    val birthDate = jsonb<Date>("birth_date", fhirJsonConfig)
+  val id = text("id")
+  val meta = jsonb<Meta>("meta", fhirJsonConfig)
+  val identifier = jsonb<Array<Identifier>>("identifier", fhirJsonConfig)
+  val active = bool("active")
+  val name = jsonb<Array<HumanName>>("name", fhirJsonConfig)
+  val gender = jsonb<AdministrativeGender>("gender", fhirJsonConfig)
+  val birthDate = jsonb<Date>("birth_date", fhirJsonConfig)
 }

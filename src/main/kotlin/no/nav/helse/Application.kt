@@ -14,15 +14,15 @@ import no.nav.helse.plugins.configureSession
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
 fun Application.module() {
-    configureDependencies()
-    configureSerialization()
-    configureSession()
-    configureSecurity()
-    configureRouting()
-    configureFhirRouting()
+  configureDependencies()
+  configureSerialization()
+  configureSession()
+  configureSecurity()
+  configureRouting()
+  configureFhirRouting()
 
-    val env: Environment by dependencies
-    if (env.runtime == Runtime.LOCAL) {
-        configureOidcStub()
-    }
+  val env: Environment by dependencies
+  if (env.runtime == Runtime.LOCAL) {
+    configureOidcStub()
+  }
 }

@@ -5,15 +5,15 @@ import no.nav.helse.fhir.practitioner.repository.PractitionerRepository
 
 class PractitionerService(private val repository: PractitionerRepository) {
 
-    fun getPractitioner(id: String): Practitioner? {
-        return repository.getPractitioner(id)
-    }
+  fun getPractitioner(id: String): Practitioner? {
+    return repository.getPractitioner(id)
+  }
 
-    fun getAllPractitioners(): List<Practitioner> {
-        return repository.getAllPractitioners()
-    }
+  fun getAllPractitioners(): List<Practitioner> {
+    return repository.getAllPractitioners()
+  }
 
-    fun createPractitioner(practitioner: Practitioner): Practitioner {
-        return repository.createPractitioner(practitioner)
-    }
+  fun createPractitioner(practitioner: Practitioner): Practitioner {
+    return repository.createPractitioner(practitioner)
+  }
 }

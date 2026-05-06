@@ -5,15 +5,15 @@ import no.nav.helse.fhir.organization.repository.OrganizationRepository
 
 class OrganizationService(private val repository: OrganizationRepository) {
 
-    fun getOrganization(id: String): Organization? {
-        return repository.getOrganization(id)
-    }
+  fun getOrganization(id: String): Organization? {
+    return repository.getOrganization(id)
+  }
 
-    fun getAllOrganizations(): List<Organization> {
-        return repository.getAllOrganizations()
-    }
+  fun getAllOrganizations(): List<Organization> {
+    return repository.getAllOrganizations()
+  }
 
-    fun createOrganization(organization: Organization): Organization {
-        return repository.createOrganization(organization)
-    }
+  fun createOrganization(organization: Organization): Organization {
+    return repository.createOrganization(organization)
+  }
 }

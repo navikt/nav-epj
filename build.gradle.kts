@@ -59,7 +59,7 @@ dependencies {
 }
 
 configure<com.diffplug.gradle.spotless.SpotlessExtension> {
-    kotlin { ktfmt("0.62").kotlinlangStyle() }
+    kotlin { ktfmt("0.62").googleStyle() }
 }
 
 tasks.named("spotlessCheck") {

@@ -18,16 +18,16 @@ import no.nav.helse.fhir.practitioner.PractitionerService
 import no.nav.helse.fhir.practitioner.repository.StubPractitionerRepository
 
 fun Application.configureDependencies() {
-    val env = initializeEnvironment(environment.config)
-    dependencies {
-        provide<Environment> { env }
-        provide<PatientService> { PatientService(StubPatientRepository()) }
-        provide<OrganizationService> { OrganizationService(StubOrganizationRepository()) }
-        provide<EncounterService> { EncounterService(StubEncounterRepository()) }
-        provide<ConditionService> { ConditionService(StubConditionRepository()) }
-        provide<PractitionerService> { PractitionerService(StubPractitionerRepository()) }
-        provide<DocumentReferenceService> {
-            DocumentReferenceService(StubDocumentReferenceRepository())
-        }
+  val env = initializeEnvironment(environment.config)
+  dependencies {
+    provide<Environment> { env }
+    provide<PatientService> { PatientService(StubPatientRepository()) }
+    provide<OrganizationService> { OrganizationService(StubOrganizationRepository()) }
+    provide<EncounterService> { EncounterService(StubEncounterRepository()) }
+    provide<ConditionService> { ConditionService(StubConditionRepository()) }
+    provide<PractitionerService> { PractitionerService(StubPractitionerRepository()) }
+    provide<DocumentReferenceService> {
+      DocumentReferenceService(StubDocumentReferenceRepository())
     }
+  }
 }

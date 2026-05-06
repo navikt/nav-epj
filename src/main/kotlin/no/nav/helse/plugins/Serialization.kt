@@ -6,5 +6,5 @@ import io.ktor.server.plugins.contentnegotiation.*
 import kotlinx.serialization.json.Json
 
 fun Application.configureSerialization() {
-    install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
+  install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
 }

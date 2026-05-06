@@ -19,23 +19,23 @@ val fhirJson = FhirR4Json()
 const val FHIR_CONTENT_TYPE = "application/fhir+json"
 
 fun Application.configureFhirRouting() {
-    routing {
-        route("fhir") {
-            configurePatientRouting()
-            configureOrganizationRouting()
-            configureEncounterRouting()
-            configureConditionRouting()
-            configurePractitionerRouting()
-            configureDocumentReferenceRouting()
-        }
+  routing {
+    route("fhir") {
+      configurePatientRouting()
+      configureOrganizationRouting()
+      configureEncounterRouting()
+      configureConditionRouting()
+      configurePractitionerRouting()
+      configureDocumentReferenceRouting()
     }
+  }
 }
 
 fun ApplicationCall.isAuthenticated(): Boolean {
-    val session = sessions.get<UserSession>()
-    return session?.accessToken != null
+  val session = sessions.get<UserSession>()
+  return session?.accessToken != null
 }
 
 suspend inline fun <reified T : Resource> ApplicationCall.respondFhir(resource: T) {
-    respondText(fhirJson.encodeToString(resource), ContentType.parse(FHIR_CONTENT_TYPE))
+  respondText(fhirJson.encodeToString(resource), ContentType.parse(FHIR_CONTENT_TYPE))
 }
