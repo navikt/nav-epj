@@ -2,6 +2,7 @@ ktor:
   application:
     modules:
       - no.nav.helse.ApplicationKt.module
+    # dependencies:
   deployment:
     port: 8080
 

@@ -4,13 +4,10 @@ import com.google.fhir.model.r4.Bundle
 import com.google.fhir.model.r4.Enumeration
 import com.google.fhir.model.r4.Practitioner
 import com.google.fhir.model.r4.Uri
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.request.receiveText
-import io.ktor.server.response.respondRedirect
-import io.ktor.server.response.respondText
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
+import io.ktor.http.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import no.nav.helse.fhir.fhirJson
 import no.nav.helse.fhir.isAuthenticated
 import no.nav.helse.fhir.practitioner.repository.StubPractitionerRepository

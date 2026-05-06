@@ -4,8 +4,6 @@ import com.google.fhir.model.r4.Code
 import com.google.fhir.model.r4.CodeableConcept
 import com.google.fhir.model.r4.Coding
 import com.google.fhir.model.r4.Condition
-import com.google.fhir.model.r4.DateTime
-import com.google.fhir.model.r4.FhirDateTime
 import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.Uri
 import com.google.fhir.model.r4.String as FhirString

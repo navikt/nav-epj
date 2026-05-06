@@ -1,6 +1,5 @@
 package no.nav.helse.fhir
 
-import com.google.fhir.model.r4.Address
 import com.google.fhir.model.r4.Canonical
 import com.google.fhir.model.r4.Code
 import com.google.fhir.model.r4.CodeableConcept
@@ -11,8 +10,6 @@ import com.google.fhir.model.r4.Identifier
 import com.google.fhir.model.r4.Meta
 import com.google.fhir.model.r4.Organization
 import com.google.fhir.model.r4.Uri
-import com.google.fhir.model.r4.Boolean as FhirBoolean
-import com.google.fhir.model.r4.String as FhirString
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -22,6 +19,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import com.google.fhir.model.r4.Boolean as FhirBoolean
+import com.google.fhir.model.r4.String as FhirString
 
 class OrganizationServiceTest {
 

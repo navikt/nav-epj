@@ -2,6 +2,7 @@ val kotlin_version: String by project
 val logback_version: String by project
 val mockk_version: String by project
 val exposed_version: String by project
+val kotest_version: String by project
 
 plugins {
   kotlin("jvm") version "2.3.0"
@@ -36,6 +37,7 @@ dependencies {
   implementation("io.ktor:ktor-server-config-yaml")
   implementation("io.ktor:ktor-client-core")
   implementation("io.ktor:ktor-client-cio")
+  implementation("io.ktor:ktor-server-di")
   implementation("ch.qos.logback:logback-classic:$logback_version")
   implementation("org.jetbrains.exposed:exposed-core:$exposed_version")
   implementation("org.jetbrains.exposed:exposed-r2dbc:$exposed_version")
@@ -46,7 +48,10 @@ dependencies {
 
   //FHIR
   implementation("com.google.fhir:fhir-model:1.0.0-beta02")
+
+  // Test
   testImplementation("io.ktor:ktor-server-test-host")
+  testImplementation("io.kotest:kotest-assertions-core:${kotest_version}")
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
   testImplementation("io.mockk:mockk:$mockk_version")
 }

@@ -2,6 +2,7 @@ package no.nav.helse.fhir.practitioner.repository
 
 import com.google.fhir.model.r4.*
 import com.google.fhir.model.r4.terminologies.AdministrativeGender
+import kotlin.String
 
 class StubPractitionerRepository : PractitionerRepository {
 

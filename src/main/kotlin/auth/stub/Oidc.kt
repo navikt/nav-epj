@@ -1,5 +1,5 @@
 // src/main/kotlin/OidcStub.kt
-package no.nav.helse
+package no.nav.helse.auth.stub
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
@@ -9,7 +9,15 @@ import io.ktor.server.html.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.html.*
+import kotlinx.html.FormMethod
+import kotlinx.html.body
+import kotlinx.html.form
+import kotlinx.html.h2
+import kotlinx.html.hiddenInput
+import kotlinx.html.p
+import kotlinx.html.passwordInput
+import kotlinx.html.submitInput
+import kotlinx.html.textInput
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.security.KeyPairGenerator
@@ -104,7 +112,7 @@ fun Application.configureOidcStub() {
         val state = params["state"] ?: ""
         val username = params["username"] ?: "testuser"
 
-        log.info("OIDC stub: issuing code for user=$username, redirecting to $redirectUri")
+        log.debug("OIDC stub: issuing code for user=$username, redirecting to $redirectUri")
 
         val code = UUID.randomUUID().toString()
         authCodes[code] = Triple(username, redirectUri, params["nonce"])
@@ -115,7 +123,7 @@ fun Application.configureOidcStub() {
       // Ktor's oauth plugin calls this server-to-server to exchange code for tokens
       post("/token") {
         val params = call.receiveParameters()
-        log.info("OIDC stub /token called with params: $params")
+        log.debug("OIDC stub /token called with params: {}", params)
 
         val code = params["code"]
           ?: return@post call.respond(
@@ -129,7 +137,7 @@ fun Application.configureOidcStub() {
             mapOf("error" to "invalid code"),
           )
 
-        log.info("OIDC stub: issuing token for user=$username")
+        log.debug("OIDC stub: issuing token for user=$username")
 
         val now = Date()
         val accessToken = JWT.create()

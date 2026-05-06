@@ -13,8 +13,8 @@ import com.google.fhir.model.r4.String
 import com.google.fhir.model.r4.Uri
 import com.google.fhir.model.r4.terminologies.AdministrativeGender
 import io.mockk.every
-import io.mockk.verify
 import io.mockk.mockk
+import io.mockk.verify
 import no.nav.helse.fhir.patient.PatientService
 import no.nav.helse.fhir.patient.repository.PatientRepository
 import kotlin.test.Test

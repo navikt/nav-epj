@@ -7,7 +7,7 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
-import no.nav.helse.UserSession
+import no.nav.helse.auth.UserSession
 import no.nav.helse.fhir.condition.configureConditionRouting
 import no.nav.helse.fhir.documentreference.configureDocumentReferenceRouting
 import no.nav.helse.fhir.encounter.configureEncounterRouting

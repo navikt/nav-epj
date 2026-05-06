@@ -3,12 +3,9 @@ package no.nav.helse.fhir.encounter.repository
 import com.google.fhir.model.r4.Code
 import com.google.fhir.model.r4.CodeableConcept
 import com.google.fhir.model.r4.Coding
-import com.google.fhir.model.r4.DateTime
 import com.google.fhir.model.r4.Encounter
 import com.google.fhir.model.r4.Encounter.EncounterStatus
 import com.google.fhir.model.r4.Enumeration
-import com.google.fhir.model.r4.FhirDateTime
-import com.google.fhir.model.r4.Period
 import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.Uri
 
