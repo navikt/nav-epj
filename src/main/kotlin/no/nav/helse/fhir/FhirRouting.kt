@@ -37,6 +37,5 @@ fun ApplicationCall.isAuthenticated(): Boolean {
 }
 
 suspend inline fun <reified T : Resource> ApplicationCall.respondFhir(resource: T) {
-    response.header(HttpHeaders.ContentType, FHIR_CONTENT_TYPE)
-    respondText(fhirJson.encodeToString(resource), ContentType.Application.Json)
+    respondText(fhirJson.encodeToString(resource), ContentType.parse(FHIR_CONTENT_TYPE))
 }

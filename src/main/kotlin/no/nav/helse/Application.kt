@@ -1,10 +1,11 @@
 package no.nav.helse
 
 import io.ktor.server.application.*
+import io.ktor.server.plugins.di.dependencies
 import no.nav.helse.auth.configureSecurity
 import no.nav.helse.auth.stub.configureOidcStub
+import no.nav.helse.core.Environment
 import no.nav.helse.core.Runtime
-import no.nav.helse.core.initializeEnvironment
 import no.nav.helse.fhir.configureFhirRouting
 import no.nav.helse.plugins.configureDependencies
 import no.nav.helse.plugins.configureSerialization
@@ -20,7 +21,8 @@ fun Application.module() {
     configureRouting()
     configureFhirRouting()
 
-    if (initializeEnvironment(environment.config).runtime == Runtime.LOCAL) {
+    val env: Environment by dependencies
+    if (env.runtime == Runtime.LOCAL) {
         configureOidcStub()
     }
 }

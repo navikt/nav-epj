@@ -1,4 +1,3 @@
-// src/main/kotlin/OidcStub.kt
 package no.nav.helse.auth.stub
 
 import com.auth0.jwt.JWT

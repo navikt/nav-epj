@@ -3,7 +3,6 @@ package no.nav.helse
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -53,7 +52,7 @@ class ApplicationTest {
 
         client.get("/home").apply {
             status shouldBe HttpStatusCode.Found
-            headers[HttpHeaders.Location] shouldContain "home"
+            headers[HttpHeaders.Location] shouldBe "/login"
         }
     }
 

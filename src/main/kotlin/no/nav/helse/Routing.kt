@@ -1,6 +1,5 @@
 package no.nav.helse
 
-import com.auth0.jwt.JWT
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.html.*
@@ -17,9 +16,7 @@ import no.nav.helse.auth.getSession
 fun Application.configureRouting() {
     routing {
         authenticate("local-stub") {
-            get("/login") {
-                // automagic
-            }
+            get("/login") {}
 
             get("/callback") {
                 val principal = call.principal<OAuthAccessTokenResponse.OAuth2>()
@@ -44,17 +41,10 @@ fun Application.configureRouting() {
         get("/home") {
             val userSession: UserSession? = getSession(call)
             if (userSession != null) {
-                val token = userSession.accessToken.let { JWT.decode(it) }
-                call.respondText("Hello, ${token.subject}! Welcome home!")
+                call.respondText("Welcome!")
             }
         }
-        get("/{path}") {
-            val userSession: UserSession? = getSession(call)
-            if (userSession != null) {
-                val token = userSession.accessToken.let { JWT.decode(it) }
-                call.respondText("Hello, ${token.subject}!")
-            }
-        }
+
         get("/login-after-fallback") { call.respondText("Redirected after fallback") }
     }
 }
