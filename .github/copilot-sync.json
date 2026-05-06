@@ -1,0 +1,6 @@
+{
+  "overrides": [
+    ".github/instructions/kotlin-ktor.instructions.md",
+    ".github/instructions/kotlin-spring.instructions.md"
+  ]
+}
