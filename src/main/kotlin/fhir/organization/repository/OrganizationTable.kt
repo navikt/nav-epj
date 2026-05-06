@@ -8,8 +8,8 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.json.jsonb
 
 object OrganizationTable : Table("organization") {
-  val id = text("id")
-  val meta = jsonb<Meta>("meta", fhirJsonConfig)
-  val identifier = jsonb<Array<Identifier>>("identifier", fhirJsonConfig)
-  val telecom = jsonb<Array<ContactPoint>>("telecom", fhirJsonConfig)
+    val id = text("id")
+    val meta = jsonb<Meta>("meta", fhirJsonConfig)
+    val identifier = jsonb<Array<Identifier>>("identifier", fhirJsonConfig)
+    val telecom = jsonb<Array<ContactPoint>>("telecom", fhirJsonConfig)
 }

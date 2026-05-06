@@ -6,14 +6,6 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 
-
 fun Application.configureSerialization() {
-  routing {
-    install(ContentNegotiation) {
-      json(
-        Json { ignoreUnknownKeys = true }
-      )
-    }
-  }
+    routing { install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) } }
 }
-

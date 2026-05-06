@@ -15,63 +15,46 @@ import no.nav.helse.auth.UserSession
 import no.nav.helse.auth.getSession
 
 fun Application.configureRouting() {
-  routing {
-    authenticate("local-stub") {
-      get("/login") {
-        // automagic
-      }
+    routing {
+        authenticate("local-stub") {
+            get("/login") {
+                // automagic
+            }
 
-      get("/callback") {
-        val principal = call.principal<OAuthAccessTokenResponse.OAuth2>()
-        principal?.state?.let { state ->
-          call.sessions.set(UserSession(state, principal.accessToken))
+            get("/callback") {
+                val principal = call.principal<OAuthAccessTokenResponse.OAuth2>()
+                principal?.state?.let { state ->
+                    call.sessions.set(UserSession(state, principal.accessToken))
+                }
+                call.respondRedirect("/home")
+            }
         }
-        call.respondRedirect("/home")
-      }
-    }
 
-    get("/internal/health/alive"){
-      call.respondText("alive")
-    }
-    get("/internal/health/ready"){
-      call.respondText("ready")
-    }
+        get("/internal/health/alive") { call.respondText("alive") }
+        get("/internal/health/ready") { call.respondText("ready") }
 
-    singlePageApplication {
-      useResources = true
-      defaultPage = "index.html"
-      filesPath = "dist"
-    }
-
-
-    get("/") {
-      call.respondHtml {
-        body {
-          p {
-            a("/login") { +"Login" }
-          }
+        singlePageApplication {
+            useResources = true
+            defaultPage = "index.html"
+            filesPath = "dist"
         }
-      }
-    }
 
-    get("/home") {
-      val userSession: UserSession? =
-        getSession(call)
-      if (userSession != null) {
-        val token = userSession.accessToken.let { JWT.decode(it) }
-        call.respondText("Hello, ${token.subject}! Welcome home!")
-      }
+        get("/") { call.respondHtml { body { p { a("/login") { +"Login" } } } } }
+
+        get("/home") {
+            val userSession: UserSession? = getSession(call)
+            if (userSession != null) {
+                val token = userSession.accessToken.let { JWT.decode(it) }
+                call.respondText("Hello, ${token.subject}! Welcome home!")
+            }
+        }
+        get("/{path}") {
+            val userSession: UserSession? = getSession(call)
+            if (userSession != null) {
+                val token = userSession.accessToken.let { JWT.decode(it) }
+                call.respondText("Hello, ${token.subject}!")
+            }
+        }
+        get("/login-after-fallback") { call.respondText("Redirected after fallback") }
     }
-    get("/{path}") {
-      val userSession: UserSession? =
-        getSession(call)
-      if (userSession != null) {
-        val token = userSession.accessToken.let { JWT.decode(it) }
-        call.respondText("Hello, ${token.subject}!")
-      }
-    }
-    get("/login-after-fallback") {
-      call.respondText("Redirected after fallback")
-    }
-  }
 }

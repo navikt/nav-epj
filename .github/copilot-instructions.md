@@ -13,6 +13,16 @@
 5. One feature per commit (`feat|chore|fix|test|refactor|docs: description`)
 6. DRY, KISS, SOLID, security-first
 7. Delete unused code rather than commenting it out
+8. Code in English, domain terms in Norwegian (e.g. `getSykmeldinger`, `Behandler`, `Fastlege`)
+9. Prefer inlining/copying over shared Nav libraries — avoid fellesbiblioteker
+10. Distroless base images for all containers
+
+## Commits & Merging
+
+- Commit messages are **descriptive** — explain *why*, not just *what*
+- Squash when a feature branch has noisy/WIP commits
+- Rebase when individual commits are meaningful and should be preserved in history
+- Fat JAR built via Ktor plugin (not ShadowJar)
 
 ## Architecture
 

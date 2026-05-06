@@ -7,7 +7,7 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.json.jsonb
 
 object ConditionTable : Table("condition") {
-  val id = text("id")
-  val subject = jsonb<Reference>("subject", fhirJsonConfig)
-  val code = jsonb<CodeableConcept>("type", fhirJsonConfig)
+    val id = text("id")
+    val subject = jsonb<Reference>("subject", fhirJsonConfig)
+    val code = jsonb<CodeableConcept>("type", fhirJsonConfig)
 }

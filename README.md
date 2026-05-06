@@ -25,6 +25,19 @@ To build or run the project, use one of the following tasks:
 | `./gradlew publishImageToLocalRegistry`                                          | Publish the docker image locally                                     |
 | `./gradlew run --args='-config=application.yaml -config=application-local.yaml'` | Run the server with local config                                     |
 | `./gradlew runDocker`                                                            | Run using the local docker image                                     |
+| `./gradlew spotlessApply`                                                        | Auto-format Kotlin code with ktfmt                                   |
+| `./gradlew spotlessCheck`                                                        | Check formatting without modifying files                             |
+| `./gradlew detekt`                                                               | Run static analysis                                                  |
+
+## Code Quality
+
+The project uses [Spotless](https://github.com/diffplug/spotless) with **ktfmt** (kotlinlangStyle) for formatting and [detekt](https://detekt.dev/) for static analysis.
+
+Formatting is applied automatically during build (`spotlessCheck` depends on `spotlessApply`). To set up a pre-commit hook that formats before each commit:
+
+```sh
+cp scripts/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+```
 
 ## Building and running frontend locally
 

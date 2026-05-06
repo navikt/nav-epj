@@ -8,6 +8,8 @@ plugins {
   kotlin("jvm") version "2.3.0"
   kotlin("plugin.serialization") version "2.3.0"
   id("io.ktor.plugin") version "3.4.2"
+  id("com.diffplug.spotless") version "8.4.0"
+  id("dev.detekt") version "2.0.0-alpha.3"
 }
 
 group = "no.nav.helse"
@@ -54,4 +56,24 @@ dependencies {
   testImplementation("io.kotest:kotest-assertions-core:${kotest_version}")
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
   testImplementation("io.mockk:mockk:$mockk_version")
+}
+
+configure<com.diffplug.gradle.spotless.SpotlessExtension> {
+    kotlin { ktfmt("0.62").kotlinlangStyle() }
+}
+
+tasks.named("spotlessCheck") {
+    dependsOn("spotlessApply")
+}
+
+tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
+    config.setFrom(file("detekt.yml"))
+    buildUponDefaultConfig = true
+    dependsOn("spotlessApply")
+}
+
+afterEvaluate {
+    tasks.named("check") {
+        setDependsOn(dependsOn.filter { !it.toString().contains("detekt") })
+    }
 }

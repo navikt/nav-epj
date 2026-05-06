@@ -165,6 +165,7 @@ fun `should return patient by id`() = testApplication {
 - Classes: PascalCase, suffixed by role (`Service`, `Repository`, `Client`)
 - Extension functions: `configure<What>()` on `Application`, `configure<What>Routing()` on `Route`
 - Tests: `<Subject>Test`, methods in backticks (`should do X when Y`)
+- **Language**: Code in English, domain terms in Norwegian (e.g. `getSykmeldinger`, `Behandler`, `Fastlege`)
 
 ## Code Style
 
