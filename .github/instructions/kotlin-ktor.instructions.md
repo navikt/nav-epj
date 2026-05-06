@@ -1,5 +1,9 @@
 ---
-applyTo: "**/*.kt", "**/*.kts", "**/build.gradle.kts", "**/settings.gradle.kts"
+applyTo:
+  - "**/*.kt"
+  - "**/*.kts"
+  - "**/build.gradle.kts"
+  - "**/settings.gradle.kts"
 ---
 
 # Kotlin/Ktor Development Guidelines
