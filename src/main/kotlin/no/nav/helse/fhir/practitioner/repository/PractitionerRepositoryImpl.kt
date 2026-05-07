@@ -10,9 +10,9 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 
-class PractitionerRepo : PractitionerRepository {
+class PractitionerRepositoryImpl : PractitionerRepository {
 
-  override suspend fun getPractitioner(id: String): Practitioner? {
+  override suspend fun getById(id: String): Practitioner? {
     return dbQuery {
       PractitionerTable.selectAll()
         .where { PractitionerTable.id eq id }
@@ -21,11 +21,11 @@ class PractitionerRepo : PractitionerRepository {
     }
   }
 
-  override suspend fun getAllPractitioners(): List<Practitioner> {
+  override suspend fun getAll(): List<Practitioner> {
     return dbQuery { PractitionerTable.selectAll().map { it[PractitionerTable.data] }.toList() }
   }
 
-  override suspend fun createPractitioner(practitioner: Practitioner): Practitioner {
+  override suspend fun create(practitioner: Practitioner): Practitioner {
     val id = practitioner.id ?: "practitioner-${UUID.randomUUID()}"
     val practitionerData = if (practitioner.id == null) practitioner.copy(id = id) else practitioner
 

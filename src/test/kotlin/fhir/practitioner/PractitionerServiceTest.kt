@@ -117,7 +117,7 @@ class PractitionerServiceTest {
   @Test
   fun `get practitioner successfully and assert results`() = runBlocking {
     val practitionerService = PractitionerService(practitionerRepository)
-    coEvery { practitionerRepository.getPractitioner(any()) } returns carlThePractitioner
+    coEvery { practitionerRepository.getById(any()) } returns carlThePractitioner
     val practitioner = practitionerService.getPractitioner(carlPractitionerId)
 
     assertEquals(carlThePractitioner.id, practitioner?.id)
@@ -132,7 +132,7 @@ class PractitionerServiceTest {
   @Test
   fun `get practitioner with non existing id should return null`() = runBlocking {
     val practitionerService = PractitionerService(practitionerRepository)
-    coEvery { practitionerRepository.getPractitioner(any()) } returns null
+    coEvery { practitionerRepository.getById(any()) } returns null
     val practitioner = practitionerService.getPractitioner("non-existing-id")
 
     assertEquals(null, practitioner)
@@ -142,7 +142,7 @@ class PractitionerServiceTest {
   fun `get all practitioners should return all practitioners and assert that there are three practitioners`() =
     runBlocking {
       val practitionerService = PractitionerService(practitionerRepository)
-      coEvery { practitionerRepository.getAllPractitioners() } returns
+      coEvery { practitionerRepository.getAll() } returns
         listOf(carlThePractitioner, zevPractitioner, chrisPractitioner)
       val practitioners = practitionerService.getAllPractitioners()
 
@@ -153,7 +153,7 @@ class PractitionerServiceTest {
   @Test
   fun `get practitioners returns an empty list when there are no practitioners`() = runBlocking {
     val practitionerService = PractitionerService(practitionerRepository)
-    coEvery { practitionerRepository.getAllPractitioners() } returns emptyList()
+    coEvery { practitionerRepository.getAll() } returns emptyList()
     val practitioners = practitionerService.getAllPractitioners()
     assertTrue { practitioners.isEmpty() }
   }
@@ -190,10 +190,10 @@ class PractitionerServiceTest {
         gender = Enumeration(value = AdministrativeGender.Male),
         birthDate = Date(value = FhirDate.Companion.fromString("1980-03-20")),
       )
-    coEvery { practitionerRepository.createPractitioner(any()) } returns newPractitioner
+    coEvery { practitionerRepository.create(any()) } returns newPractitioner
 
     val created = practitionerService.createPractitioner(newPractitioner)
-    coVerify(exactly = 1) { practitionerRepository.createPractitioner(newPractitioner) }
+    coVerify(exactly = 1) { practitionerRepository.create(newPractitioner) }
 
     assertEquals(newPractitioner.id, created.id)
     assertEquals(newPractitioner.meta, created.meta)

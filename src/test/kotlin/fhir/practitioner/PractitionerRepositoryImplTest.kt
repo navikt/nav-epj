@@ -19,7 +19,7 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.core.db.DatabaseConnection
 import no.nav.helse.core.db.dbQuery
-import no.nav.helse.fhir.practitioner.repository.PractitionerRepo
+import no.nav.helse.fhir.practitioner.repository.PractitionerRepositoryImpl
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.testcontainers.containers.PostgreSQLContainer
 
@@ -27,7 +27,7 @@ import org.testcontainers.containers.PostgreSQLContainer
  * Integration tests for PractitionerRepo. Uses testcontainers with PostgreSQL to test actual
  * database operations.
  */
-class PractitionerRepoTest {
+class PractitionerRepositoryImplTest {
 
   companion object {
     private val postgres =
@@ -52,11 +52,11 @@ class PractitionerRepoTest {
     }
   }
 
-  private lateinit var repo: PractitionerRepo
+  private lateinit var repo: PractitionerRepositoryImpl
 
   @BeforeTest
   fun setup() {
-    repo = PractitionerRepo()
+    repo = PractitionerRepositoryImpl()
 
     // Clean up table before each test
     runBlocking { dbQuery { exec("DELETE FROM practitioner") } }
@@ -102,7 +102,7 @@ class PractitionerRepoTest {
   fun `create practitioner persists to database`() = runBlocking {
     val practitioner = createTestPractitioner()
 
-    val created = repo.createPractitioner(practitioner)
+    val created = repo.create(practitioner)
 
     assertEquals(practitioner.id, created.id)
     assertEquals(practitioner.name, created.name)
@@ -111,9 +111,9 @@ class PractitionerRepoTest {
   @Test
   fun `get practitioner returns persisted practitioner`() = runBlocking {
     val practitioner = createTestPractitioner()
-    repo.createPractitioner(practitioner)
+    repo.create(practitioner)
 
-    val retrieved = repo.getPractitioner(practitioner.id!!)
+    val retrieved = repo.getById(practitioner.id!!)
 
     assertNotNull(retrieved)
     assertEquals(practitioner.id, retrieved.id)
@@ -127,7 +127,7 @@ class PractitionerRepoTest {
 
   @Test
   fun `get practitioner with non-existing id returns null`() = runBlocking {
-    val retrieved = repo.getPractitioner("non-existing-id")
+    val retrieved = repo.getById("non-existing-id")
 
     assertNull(retrieved)
   }
@@ -138,11 +138,11 @@ class PractitionerRepoTest {
     val practitioner2 = createTestPractitioner(id = "practitioner-002", familyName = "Smith")
     val practitioner3 = createTestPractitioner(id = "practitioner-003", familyName = "Jones")
 
-    repo.createPractitioner(practitioner1)
-    repo.createPractitioner(practitioner2)
-    repo.createPractitioner(practitioner3)
+    repo.create(practitioner1)
+    repo.create(practitioner2)
+    repo.create(practitioner3)
 
-    val all = repo.getAllPractitioners()
+    val all = repo.getAll()
 
     assertEquals(3, all.size)
     assertTrue(all.any { it.id == "practitioner-001" })
@@ -152,7 +152,7 @@ class PractitionerRepoTest {
 
   @Test
   fun `get all practitioners returns empty list when no practitioners exist`() = runBlocking {
-    val all = repo.getAllPractitioners()
+    val all = repo.getAll()
 
     assertTrue(all.isEmpty())
   }
@@ -189,7 +189,7 @@ class PractitionerRepoTest {
         birthDate = Date(value = FhirDate.Companion.fromString("1975-06-20")),
       )
 
-    val created = repo.createPractitioner(practitioner)
+    val created = repo.create(practitioner)
 
     assertNotNull(created.id)
     assertTrue(created.id!!.startsWith("practitioner-"))
@@ -205,8 +205,8 @@ class PractitionerRepoTest {
         gender = AdministrativeGender.Female,
       )
 
-    repo.createPractitioner(practitioner)
-    val retrieved = repo.getPractitioner("practitioner-female")
+    repo.create(practitioner)
+    val retrieved = repo.getById("practitioner-female")
 
     assertNotNull(retrieved)
     assertEquals(AdministrativeGender.Female, retrieved.gender?.value)
@@ -216,8 +216,8 @@ class PractitionerRepoTest {
   fun `inactive practitioner is stored and retrieved correctly`() = runBlocking {
     val practitioner = createTestPractitioner(id = "practitioner-inactive", active = false)
 
-    repo.createPractitioner(practitioner)
-    val retrieved = repo.getPractitioner("practitioner-inactive")
+    repo.create(practitioner)
+    val retrieved = repo.getById("practitioner-inactive")
 
     assertNotNull(retrieved)
     assertEquals(false, retrieved.active?.value)
