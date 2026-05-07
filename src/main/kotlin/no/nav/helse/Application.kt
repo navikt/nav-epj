@@ -1,5 +1,6 @@
 package no.nav.helse
 
+import database.configureDatabase
 import io.ktor.server.application.*
 import io.ktor.server.plugins.di.dependencies
 import no.nav.helse.auth.configureSecurity
@@ -20,6 +21,7 @@ fun Application.module() {
   configureSecurity()
   configureRouting()
   configureFhirRouting()
+  configureDatabase()
 
   val env: Environment by dependencies
   if (env.runtime == Runtime.LOCAL) {

@@ -13,3 +13,10 @@ oauth:
   clientSecret: ${?OAUTH_CLIENT_SECRET}
   callbackUrl: ${?OAUTH_CALLBACK_URL}
   defaultScopes: ${?OAUTH_DEFAULT_SCOPES}
+
+database:
+  host: ${?DB_HOST}
+  port: ${?DB_PORT}
+  name: ${?DB_NAME}
+  username: ${?DB_USERNAME}
+  password: ${?DB_PASSWORD}

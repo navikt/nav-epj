@@ -4,6 +4,7 @@ val mockk_version: String by project
 val exposed_version: String by project
 val kotest_version: String by project
 
+
 plugins {
   kotlin("jvm") version "2.3.0"
   kotlin("plugin.serialization") version "2.3.0"
@@ -45,7 +46,12 @@ dependencies {
   implementation("org.jetbrains.exposed:exposed-r2dbc:$exposed_version")
   implementation("org.jetbrains.exposed:exposed-json:$exposed_version")
   implementation("org.jetbrains.exposed:exposed-kotlin-datetime:$exposed_version")
+  implementation("org.postgresql:r2dbc-postgresql:1.1.1.RELEASE")
+  implementation("org.postgresql:postgresql:42.7.10")
+  implementation("org.flywaydb:flyway-core:12.4.0")
+  implementation("org.flywaydb:flyway-database-postgresql:11.8.2")
   implementation("io.ktor:ktor-serialization-jackson")
+  implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.0")
 
 
   //FHIR
@@ -56,6 +62,9 @@ dependencies {
   testImplementation("io.kotest:kotest-assertions-core:${kotest_version}")
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
   testImplementation("io.mockk:mockk:$mockk_version")
+  testImplementation("org.testcontainers:testcontainers:1.21.0")
+  testImplementation("org.testcontainers:postgresql:1.21.0")
+  testImplementation("org.testcontainers:junit-jupiter:1.21.0")
 }
 
 configure<com.diffplug.gradle.spotless.SpotlessExtension> {

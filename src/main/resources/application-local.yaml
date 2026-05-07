@@ -8,3 +8,10 @@ oauth:
   clientSecret: "secret"
   callbackUrl: "http://localhost:8080/callback"
   defaultScopes: "openid,profile"
+
+database:
+  host: "localhost"
+  port: 5432
+  name: "dr-zara"
+  username: "postgres"
+  password: "postgres"

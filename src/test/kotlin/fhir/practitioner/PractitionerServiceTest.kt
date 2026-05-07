@@ -1,6 +1,5 @@
-package no.nav.helse.fhir
+package no.nav.helse.fhir.practitioner
 
-import com.google.fhir.model.r4.Boolean
 import com.google.fhir.model.r4.Canonical
 import com.google.fhir.model.r4.Date
 import com.google.fhir.model.r4.Enumeration
@@ -9,26 +8,25 @@ import com.google.fhir.model.r4.HumanName
 import com.google.fhir.model.r4.Identifier
 import com.google.fhir.model.r4.Meta
 import com.google.fhir.model.r4.Practitioner
-import com.google.fhir.model.r4.String
 import com.google.fhir.model.r4.Uri
 import com.google.fhir.model.r4.terminologies.AdministrativeGender
-import io.mockk.every
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.verify
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import no.nav.helse.fhir.practitioner.PractitionerService
+import kotlinx.coroutines.runBlocking
 import no.nav.helse.fhir.practitioner.repository.PractitionerRepository
 
 class PractitionerServiceTest {
 
   val practitionerRepository = mockk<PractitionerRepository>()
 
-  val erikPractitionerId = "practitioner-001"
-  val erikThePractitioner =
+  val carlPractitionerId = "practitioner-001"
+  val carlThePractitioner =
     Practitioner(
-      id = erikPractitionerId,
+      id = carlPractitionerId,
       meta =
         Meta(
           profile =
@@ -40,23 +38,23 @@ class PractitionerServiceTest {
         listOf(
           Identifier(
             system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.4"),
-            value = String(value = "9144889"),
+            value = com.google.fhir.model.r4.String(value = "9144889"),
           )
         ),
-      active = Boolean(value = true),
+      active = com.google.fhir.model.r4.Boolean(value = true),
       name =
         listOf(
           HumanName(
-            family = String(value = "Boom"),
-            given = listOf(String(value = "Carl")),
-            prefix = listOf(String(value = "Dr.")),
+            family = com.google.fhir.model.r4.String(value = "Boom"),
+            given = listOf(com.google.fhir.model.r4.String(value = "Carl")),
+            prefix = listOf(com.google.fhir.model.r4.String(value = "Dr.")),
           )
         ),
       gender = Enumeration(value = AdministrativeGender.Male),
-      birthDate = Date(value = FhirDate.fromString("1975-06-20")),
+      birthDate = Date(value = FhirDate.Companion.fromString("1975-06-20")),
     )
 
-  val mariaPractitioner =
+  val zevPractitioner =
     Practitioner(
       id = "practitioner-002",
       meta =
@@ -70,23 +68,23 @@ class PractitionerServiceTest {
         listOf(
           Identifier(
             system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.4"),
-            value = String(value = "9144890"),
+            value = com.google.fhir.model.r4.String(value = "9144890"),
           )
         ),
-      active = Boolean(value = true),
+      active = com.google.fhir.model.r4.Boolean(value = true),
       name =
         listOf(
           HumanName(
-            family = String(value = "Mudskipper"),
-            given = listOf(String(value = "Zev")),
-            prefix = listOf(String(value = "Dr.")),
+            family = com.google.fhir.model.r4.String(value = "Mudskipper"),
+            given = listOf(com.google.fhir.model.r4.String(value = "Zev")),
+            prefix = listOf(com.google.fhir.model.r4.String(value = "Dr.")),
           )
         ),
       gender = Enumeration(value = AdministrativeGender.Female),
-      birthDate = Date(value = FhirDate.fromString("1982-09-14")),
+      birthDate = Date(value = FhirDate.Companion.fromString("1982-09-14")),
     )
 
-  val andersPractitioner =
+  val chrisPractitioner =
     Practitioner(
       id = "practitioner-003",
       meta =
@@ -100,67 +98,68 @@ class PractitionerServiceTest {
         listOf(
           Identifier(
             system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.4"),
-            value = String(value = "9144891"),
+            value = com.google.fhir.model.r4.String(value = "9144891"),
           )
         ),
-      active = Boolean(value = false),
+      active = com.google.fhir.model.r4.Boolean(value = false),
       name =
         listOf(
           HumanName(
-            family = String(value = "Andrews"),
-            given = listOf(String(value = "Chris")),
-            prefix = listOf(String(value = "Dr.")),
+            family = com.google.fhir.model.r4.String(value = "Andrews"),
+            given = listOf(com.google.fhir.model.r4.String(value = "Chris")),
+            prefix = listOf(com.google.fhir.model.r4.String(value = "Dr.")),
           )
         ),
       gender = Enumeration(value = AdministrativeGender.Male),
-      birthDate = Date(value = FhirDate.fromString("1968-02-28")),
+      birthDate = Date(value = FhirDate.Companion.fromString("1968-02-28")),
     )
 
   @Test
-  fun `get practitioner successfully and assert results`() {
+  fun `get practitioner successfully and assert results`() = runBlocking {
     val practitionerService = PractitionerService(practitionerRepository)
-    every { practitionerRepository.getPractitioner(any()) } returns erikThePractitioner
-    val practitioner = practitionerService.getPractitioner(erikPractitionerId)
+    coEvery { practitionerRepository.getPractitioner(any()) } returns carlThePractitioner
+    val practitioner = practitionerService.getPractitioner(carlPractitionerId)
 
-    assertEquals(erikThePractitioner.id, practitioner?.id)
-    assertEquals(erikThePractitioner.meta, practitioner?.meta)
-    assertEquals(erikThePractitioner.identifier, practitioner?.identifier)
-    assertEquals(erikThePractitioner.active, practitioner?.active)
-    assertEquals(erikThePractitioner.name, practitioner?.name)
-    assertEquals(erikThePractitioner.gender, practitioner?.gender)
-    assertEquals(erikThePractitioner.birthDate, practitioner?.birthDate)
+    assertEquals(carlThePractitioner.id, practitioner?.id)
+    assertEquals(carlThePractitioner.meta, practitioner?.meta)
+    assertEquals(carlThePractitioner.identifier, practitioner?.identifier)
+    assertEquals(carlThePractitioner.active, practitioner?.active)
+    assertEquals(carlThePractitioner.name, practitioner?.name)
+    assertEquals(carlThePractitioner.gender, practitioner?.gender)
+    assertEquals(carlThePractitioner.birthDate, practitioner?.birthDate)
   }
 
   @Test
-  fun `get practitioner with non existing id should return null`() {
+  fun `get practitioner with non existing id should return null`() = runBlocking {
     val practitionerService = PractitionerService(practitionerRepository)
-    every { practitionerRepository.getPractitioner(any()) } returns null
+    coEvery { practitionerRepository.getPractitioner(any()) } returns null
     val practitioner = practitionerService.getPractitioner("non-existing-id")
 
     assertEquals(null, practitioner)
   }
 
   @Test
-  fun `get all practitioners should return all practitioners and assert that there are three practitioners`() {
-    val practitionerService = PractitionerService(practitionerRepository)
-    every { practitionerRepository.getAllPractitioners() } returns
-      listOf(erikThePractitioner, mariaPractitioner, andersPractitioner)
-    val practitioners = practitionerService.getAllPractitioners()
+  fun `get all practitioners should return all practitioners and assert that there are three practitioners`() =
+    runBlocking {
+      val practitionerService = PractitionerService(practitionerRepository)
+      coEvery { practitionerRepository.getAllPractitioners() } returns
+        listOf(carlThePractitioner, zevPractitioner, chrisPractitioner)
+      val practitioners = practitionerService.getAllPractitioners()
 
-    assertEquals(3, practitioners.size)
-    assertTrue { practitioners[0].id == erikThePractitioner.id }
-  }
+      assertEquals(3, practitioners.size)
+      assertTrue { practitioners[0].id == carlThePractitioner.id }
+    }
 
   @Test
-  fun `get practitioners returns an empty list when there are no practitioners`() {
+  fun `get practitioners returns an empty list when there are no practitioners`() = runBlocking {
     val practitionerService = PractitionerService(practitionerRepository)
-    every { practitionerRepository.getAllPractitioners() } returns emptyList()
+    coEvery { practitionerRepository.getAllPractitioners() } returns emptyList()
     val practitioners = practitionerService.getAllPractitioners()
     assertTrue { practitioners.isEmpty() }
   }
 
   @Test
-  fun `create practitioner successfully`() {
+  fun `create practitioner successfully`() = runBlocking {
     val practitionerService = PractitionerService(practitionerRepository)
     val newPractitioner =
       Practitioner(
@@ -176,25 +175,25 @@ class PractitionerServiceTest {
           listOf(
             Identifier(
               system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.4"),
-              value = String(value = "9144892"),
+              value = com.google.fhir.model.r4.String(value = "9144892"),
             )
           ),
-        active = Boolean(value = true),
+        active = com.google.fhir.model.r4.Boolean(value = true),
         name =
           listOf(
             HumanName(
-              family = String(value = "Andrews"),
-              given = listOf(String(value = "Brandon")),
-              prefix = listOf(String(value = "Dr.")),
+              family = com.google.fhir.model.r4.String(value = "Andrews"),
+              given = listOf(com.google.fhir.model.r4.String(value = "Brandon")),
+              prefix = listOf(com.google.fhir.model.r4.String(value = "Dr.")),
             )
           ),
         gender = Enumeration(value = AdministrativeGender.Male),
-        birthDate = Date(value = FhirDate.fromString("1980-03-20")),
+        birthDate = Date(value = FhirDate.Companion.fromString("1980-03-20")),
       )
-    every { practitionerRepository.createPractitioner(any()) } returns newPractitioner
+    coEvery { practitionerRepository.createPractitioner(any()) } returns newPractitioner
 
     val created = practitionerService.createPractitioner(newPractitioner)
-    verify(exactly = 1) { practitionerRepository.createPractitioner(newPractitioner) }
+    coVerify(exactly = 1) { practitionerRepository.createPractitioner(newPractitioner) }
 
     assertEquals(newPractitioner.id, created.id)
     assertEquals(newPractitioner.meta, created.meta)

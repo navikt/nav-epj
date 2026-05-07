@@ -29,6 +29,11 @@ class ApplicationTest {
       "oauth.clientSecret" to "secret",
       "oauth.callbackUrl" to "http://localhost/callback",
       "oauth.defaultScopes" to "openid,profile",
+      "database.host" to "localhost",
+      "database.port" to "5432",
+      "database.name" to "dr-zara",
+      "database.username" to "postgres",
+      "database.password" to "postgres",
     )
 
   //  @Test
