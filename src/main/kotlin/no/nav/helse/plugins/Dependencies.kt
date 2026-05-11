@@ -7,7 +7,7 @@ import no.nav.helse.core.initializeEnvironment
 import no.nav.helse.fhir.condition.ConditionService
 import no.nav.helse.fhir.condition.repository.ConditionRepositoryImpl
 import no.nav.helse.fhir.documentreference.DocumentReferenceService
-import no.nav.helse.fhir.documentreference.repository.StubDocumentReferenceRepository
+import no.nav.helse.fhir.documentreference.repository.DocumentReferenceRepositoryImpl
 import no.nav.helse.fhir.encounter.EncounterService
 import no.nav.helse.fhir.encounter.repository.EncounterRepositoryImpl
 import no.nav.helse.fhir.organization.OrganizationService
@@ -27,7 +27,7 @@ fun Application.configureDependencies() {
     provide<ConditionService> { ConditionService(ConditionRepositoryImpl()) }
     provide<PractitionerService> { PractitionerService(PractitionerRepositoryImpl()) }
     provide<DocumentReferenceService> {
-      DocumentReferenceService(StubDocumentReferenceRepository())
+      DocumentReferenceService(DocumentReferenceRepositoryImpl())
     }
   }
 }

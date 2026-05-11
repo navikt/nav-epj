@@ -190,3 +190,111 @@ INSERT INTO organization (id, data) VALUES
   }'::jsonb
 )
 ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data;
+
+INSERT INTO document_reference (id, data) VALUES
+(
+  'documentreference-001',
+  '{
+    "resourceType": "DocumentReference",
+    "id": "documentreference-001",
+    "status": "current",
+    "type": {
+      "coding": [{
+        "system": "urn:oid:2.16.578.1.12.4.1.1.9602",
+        "code": "J01-2",
+        "display": "Sykmeldinger og trygdesaker"
+      }]
+    },
+    "description": "100% Sykmelding fra 01.06.2024 til 07.06.2024",
+    "subject": {
+      "reference": "Patient/patient-001"
+    },
+    "author": [{
+      "reference": "Practitioner/practitioner-001"
+    }],
+    "content": [{
+      "attachment": {
+        "title": "Sykmelding.pdf",
+        "language": "no-NO",
+        "contentType": "application/pdf",
+        "data": "JVBERi0xLjQKJeLjz9MKMSAwIG9iago8PC9UeXBlL0NhdGFsb2cvUGFnZXMgMiAwIFI+PgplbmRvYmoK"
+      }
+    }],
+    "context": {
+      "encounter": [{
+        "reference": "Encounter/encounter-001"
+      }]
+    }
+  }'::jsonb
+),
+(
+  'documentreference-002',
+  '{
+    "resourceType": "DocumentReference",
+    "id": "documentreference-002",
+    "status": "current",
+    "type": {
+      "coding": [{
+        "system": "urn:oid:2.16.578.1.12.4.1.1.9602",
+        "code": "J01-2",
+        "display": "Sykmeldinger og trygdesaker"
+      }]
+    },
+    "description": "50% Sykmelding fra 10.03.2024 til 24.03.2024",
+    "subject": {
+      "reference": "Patient/patient-002"
+    },
+    "author": [{
+      "reference": "Practitioner/practitioner-002"
+    }],
+    "content": [{
+      "attachment": {
+        "title": "Sykmelding.pdf",
+        "language": "no-NO",
+        "contentType": "application/pdf",
+        "data": "JVBERi0xLjQKJeLjz9MKMSAwIG9iago8PC9UeXBlL0NhdGFsb2cvUGFnZXMgMiAwIFI+PgplbmRvYmoK"
+      }
+    }],
+    "context": {
+      "encounter": [{
+        "reference": "Encounter/encounter-002"
+      }]
+    }
+  }'::jsonb
+),
+(
+  'documentreference-003',
+  '{
+    "resourceType": "DocumentReference",
+    "id": "documentreference-003",
+    "status": "current",
+    "type": {
+      "coding": [{
+        "system": "urn:oid:2.16.578.1.12.4.1.1.9602",
+        "code": "J01-2",
+        "display": "Sykmeldinger og trygdesaker"
+      }]
+    },
+    "description": "100% Sykmelding fra 20.04.2024 til 30.04.2024",
+    "subject": {
+      "reference": "Patient/patient-003"
+    },
+    "author": [{
+      "reference": "Practitioner/practitioner-001"
+    }],
+    "content": [{
+      "attachment": {
+        "title": "Sykmelding.pdf",
+        "language": "no-NO",
+        "contentType": "application/pdf",
+        "data": "JVBERi0xLjQKJeLjz9MKMSAwIG9iago8PC9UeXBlL0NhdGFsb2cvUGFnZXMgMiAwIFI+PgplbmRvYmoK"
+      }
+    }],
+    "context": {
+      "encounter": [{
+        "reference": "Encounter/encounter-003"
+      }]
+    }
+  }'::jsonb
+)
+ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data;

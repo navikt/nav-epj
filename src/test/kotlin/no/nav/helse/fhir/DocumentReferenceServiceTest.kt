@@ -12,12 +12,13 @@ import com.google.fhir.model.r4.String as FhirString
 import com.google.fhir.model.r4.Uri
 import com.google.fhir.model.r4.terminologies.CommonLanguages
 import com.google.fhir.model.r4.terminologies.DocumentReferenceStatus
-import io.mockk.every
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.verify
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlinx.coroutines.runBlocking
 import no.nav.helse.fhir.documentreference.DocumentReferenceService
 import no.nav.helse.fhir.documentreference.repository.DocumentReferenceRepository
 
@@ -135,9 +136,9 @@ class DocumentReferenceServiceTest {
     )
 
   @Test
-  fun `get document reference successfully and assert results`() {
+  fun `get document reference successfully and assert results`() = runBlocking {
     val documentReferenceService = DocumentReferenceService(documentReferenceRepository)
-    every { documentReferenceRepository.getDocumentReference(any()) } returns documentReference1
+    coEvery { documentReferenceRepository.getById(any()) } returns documentReference1
     val documentReference = documentReferenceService.getDocumentReference(documentReference1Id)
 
     assertEquals(documentReference1.id, documentReference?.id)
@@ -151,36 +152,37 @@ class DocumentReferenceServiceTest {
   }
 
   @Test
-  fun `get document reference with non existing id should return null`() {
+  fun `get document reference with non existing id should return null`() = runBlocking {
     val documentReferenceService = DocumentReferenceService(documentReferenceRepository)
-    every { documentReferenceRepository.getDocumentReference(any()) } returns null
+    coEvery { documentReferenceRepository.getById(any()) } returns null
     val documentReference = documentReferenceService.getDocumentReference("non-existing-id")
 
     assertEquals(null, documentReference)
   }
 
   @Test
-  fun `get all document references should return all documents and assert that there are three`() {
-    val documentReferenceService = DocumentReferenceService(documentReferenceRepository)
-    every { documentReferenceRepository.getAllDocumentReferences() } returns
-      listOf(documentReference1, documentReference2, documentReference3)
-    val documentReferences = documentReferenceService.getAllDocumentReferences()
+  fun `get all document references should return all documents and assert that there are three`() =
+    runBlocking {
+      val documentReferenceService = DocumentReferenceService(documentReferenceRepository)
+      coEvery { documentReferenceRepository.getAll() } returns
+        listOf(documentReference1, documentReference2, documentReference3)
+      val documentReferences = documentReferenceService.getAllDocumentReferences()
 
-    assertEquals(3, documentReferences.size)
-    assertTrue { documentReferences[0].id == documentReference1.id }
-  }
+      assertEquals(3, documentReferences.size)
+      assertTrue { documentReferences[0].id == documentReference1.id }
+    }
 
   @Test
-  fun `get document references returns an empty list when there are none`() {
+  fun `get document references returns an empty list when there are none`() = runBlocking {
     val documentReferenceService = DocumentReferenceService(documentReferenceRepository)
-    every { documentReferenceRepository.getAllDocumentReferences() } returns emptyList()
+    coEvery { documentReferenceRepository.getAll() } returns emptyList()
     val documentReferences = documentReferenceService.getAllDocumentReferences()
 
     assertTrue { documentReferences.isEmpty() }
   }
 
   @Test
-  fun `create document reference successfully`() {
+  fun `create document reference successfully`() = runBlocking {
     val documentReferenceService = DocumentReferenceService(documentReferenceRepository)
     val newDocumentReference =
       DocumentReference(
@@ -217,13 +219,10 @@ class DocumentReferenceServiceTest {
             encounter = listOf(Reference(reference = FhirString(value = "Encounter/encounter-001")))
           ),
       )
-    every { documentReferenceRepository.createDocumentReference(any()) } returns
-      newDocumentReference
+    coEvery { documentReferenceRepository.create(any()) } returns newDocumentReference
 
     val created = documentReferenceService.createDocumentReference(newDocumentReference)
-    verify(exactly = 1) {
-      documentReferenceRepository.createDocumentReference(newDocumentReference)
-    }
+    coVerify(exactly = 1) { documentReferenceRepository.create(newDocumentReference) }
 
     assertEquals(newDocumentReference.id, created.id)
     assertEquals(newDocumentReference.status, created.status)

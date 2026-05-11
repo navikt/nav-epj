@@ -5,15 +5,15 @@ import no.nav.helse.fhir.documentreference.repository.DocumentReferenceRepositor
 
 class DocumentReferenceService(private val repository: DocumentReferenceRepository) {
 
-  fun getDocumentReference(id: String): DocumentReference? {
-    return repository.getDocumentReference(id)
+  suspend fun getDocumentReference(id: String): DocumentReference? {
+    return repository.getById(id)
   }
 
-  fun getAllDocumentReferences(): List<DocumentReference> {
-    return repository.getAllDocumentReferences()
+  suspend fun getAllDocumentReferences(): List<DocumentReference> {
+    return repository.getAll()
   }
 
-  fun createDocumentReference(documentReference: DocumentReference): DocumentReference {
-    return repository.createDocumentReference(documentReference)
+  suspend fun createDocumentReference(documentReference: DocumentReference): DocumentReference {
+    return repository.create(documentReference)
   }
 }
