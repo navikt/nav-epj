@@ -7,13 +7,14 @@ import com.google.fhir.model.r4.Condition
 import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.String as FhirString
 import com.google.fhir.model.r4.Uri
-import io.mockk.every
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.verify
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.runBlocking
 import no.nav.helse.fhir.condition.ConditionService
 import no.nav.helse.fhir.condition.repository.ConditionRepository
 
@@ -77,9 +78,9 @@ class ConditionServiceTest {
     )
 
   @Test
-  fun `get condition successfully and assert results`() {
+  fun `get condition successfully and assert results`() = runBlocking {
     val conditionService = ConditionService(conditionRepository)
-    every { conditionRepository.getCondition(any()) } returns condition1
+    coEvery { conditionRepository.getById(any()) } returns condition1
     val condition = conditionService.getCondition(condition1Id)
 
     assertEquals(condition1.id, condition?.id)
@@ -90,19 +91,18 @@ class ConditionServiceTest {
   }
 
   @Test
-  fun `get condition with non existing id should return null`() {
+  fun `get condition with non existing id should return null`() = runBlocking {
     val conditionService = ConditionService(conditionRepository)
-    every { conditionRepository.getCondition(any()) } returns null
+    coEvery { conditionRepository.getById(any()) } returns null
     val condition = conditionService.getCondition("non-existing-id")
 
     assertNull(condition)
   }
 
   @Test
-  fun `get all conditions should return all conditions`() {
+  fun `get all conditions should return all conditions`() = runBlocking {
     val conditionService = ConditionService(conditionRepository)
-    every { conditionRepository.getAllConditions() } returns
-      listOf(condition1, condition2, condition3)
+    coEvery { conditionRepository.getAll() } returns listOf(condition1, condition2, condition3)
     val conditions = conditionService.getAllConditions()
 
     assertEquals(3, conditions.size)
@@ -110,18 +110,18 @@ class ConditionServiceTest {
   }
 
   @Test
-  fun `get conditions returns an empty list when there are no conditions`() {
+  fun `get conditions returns an empty list when there are no conditions`() = runBlocking {
     val conditionService = ConditionService(conditionRepository)
-    every { conditionRepository.getAllConditions() } returns emptyList()
+    coEvery { conditionRepository.getAll() } returns emptyList()
     val conditions = conditionService.getAllConditions()
 
     assertTrue { conditions.isEmpty() }
   }
 
   @Test
-  fun `get conditions for patient returns matching conditions`() {
+  fun `get conditions for patient returns matching conditions`() = runBlocking {
     val conditionService = ConditionService(conditionRepository)
-    every { conditionRepository.getConditionsForPatient("patient-001") } returns listOf(condition1)
+    coEvery { conditionRepository.getByPatientId("patient-001") } returns listOf(condition1)
     val conditions = conditionService.getConditionsForPatient("patient-001")
 
     assertEquals(1, conditions.size)
@@ -129,10 +129,9 @@ class ConditionServiceTest {
   }
 
   @Test
-  fun `get conditions for encounter returns matching conditions`() {
+  fun `get conditions for encounter returns matching conditions`() = runBlocking {
     val conditionService = ConditionService(conditionRepository)
-    every { conditionRepository.getConditionsForEncounter("encounter-001") } returns
-      listOf(condition1)
+    coEvery { conditionRepository.getByEncounterId("encounter-001") } returns listOf(condition1)
     val conditions = conditionService.getConditionsForEncounter("encounter-001")
 
     assertEquals(1, conditions.size)
@@ -140,7 +139,7 @@ class ConditionServiceTest {
   }
 
   @Test
-  fun `create condition successfully`() {
+  fun `create condition successfully`() = runBlocking {
     val conditionService = ConditionService(conditionRepository)
     val newCondition =
       Condition(
@@ -159,10 +158,10 @@ class ConditionServiceTest {
               )
           ),
       )
-    every { conditionRepository.createCondition(any()) } returns newCondition
+    coEvery { conditionRepository.create(any()) } returns newCondition
 
     val created = conditionService.createCondition(newCondition)
-    verify(exactly = 1) { conditionRepository.createCondition(newCondition) }
+    coVerify(exactly = 1) { conditionRepository.create(newCondition) }
 
     assertEquals(newCondition.id, created.id)
     assertEquals(newCondition.clinicalStatus, created.clinicalStatus)

@@ -5,23 +5,23 @@ import no.nav.helse.fhir.condition.repository.ConditionRepository
 
 class ConditionService(private val repository: ConditionRepository) {
 
-  fun getCondition(id: String): Condition? {
-    return repository.getCondition(id)
+  suspend fun getCondition(id: String): Condition? {
+    return repository.getById(id)
   }
 
-  fun getAllConditions(): List<Condition> {
-    return repository.getAllConditions()
+  suspend fun getAllConditions(): List<Condition> {
+    return repository.getAll()
   }
 
-  fun getConditionsForPatient(patientId: String): List<Condition> {
-    return repository.getConditionsForPatient(patientId)
+  suspend fun getConditionsForPatient(patientId: String): List<Condition> {
+    return repository.getByPatientId(patientId)
   }
 
-  fun getConditionsForEncounter(encounterId: String): List<Condition> {
-    return repository.getConditionsForEncounter(encounterId)
+  suspend fun getConditionsForEncounter(encounterId: String): List<Condition> {
+    return repository.getByEncounterId(encounterId)
   }
 
-  fun createCondition(condition: Condition): Condition {
-    return repository.createCondition(condition)
+  suspend fun createCondition(condition: Condition): Condition {
+    return repository.create(condition)
   }
 }

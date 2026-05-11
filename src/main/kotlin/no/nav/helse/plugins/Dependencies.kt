@@ -5,7 +5,7 @@ import io.ktor.server.plugins.di.dependencies
 import no.nav.helse.core.Environment
 import no.nav.helse.core.initializeEnvironment
 import no.nav.helse.fhir.condition.ConditionService
-import no.nav.helse.fhir.condition.repository.StubConditionRepository
+import no.nav.helse.fhir.condition.repository.ConditionRepositoryImpl
 import no.nav.helse.fhir.documentreference.DocumentReferenceService
 import no.nav.helse.fhir.documentreference.repository.StubDocumentReferenceRepository
 import no.nav.helse.fhir.encounter.EncounterService
@@ -24,7 +24,7 @@ fun Application.configureDependencies() {
     provide<PatientService> { PatientService(StubPatientRepository()) }
     provide<OrganizationService> { OrganizationService(StubOrganizationRepository()) }
     provide<EncounterService> { EncounterService(EncounterRepositoryImpl()) }
-    provide<ConditionService> { ConditionService(StubConditionRepository()) }
+    provide<ConditionService> { ConditionService(ConditionRepositoryImpl()) }
     provide<PractitionerService> { PractitionerService(PractitionerRepositoryImpl()) }
     provide<DocumentReferenceService> {
       DocumentReferenceService(StubDocumentReferenceRepository())

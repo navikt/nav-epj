@@ -109,3 +109,57 @@ INSERT INTO encounter (id, data) VALUES
   }'::jsonb
 )
 ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data;
+
+INSERT INTO condition (id, data) VALUES
+(
+  'condition-001',
+  '{
+    "resourceType": "Condition",
+    "id": "condition-001",
+    "subject": {
+      "reference": "Patient/patient-001"
+    },
+    "code": {
+      "coding": [{
+        "system": "urn:oid:2.16.578.1.12.4.1.1.7170",
+        "code": "L73",
+        "display": "Brudd legg/ankel"
+      }]
+    }
+  }'::jsonb
+),
+(
+  'condition-002',
+  '{
+    "resourceType": "Condition",
+    "id": "condition-002",
+    "subject": {
+      "reference": "Patient/patient-002"
+    },
+    "code": {
+      "coding": [{
+        "system": "urn:oid:2.16.578.1.12.4.1.1.7170",
+        "code": "P74",
+        "display": "Angstlidelse"
+      }]
+    }
+  }'::jsonb
+),
+(
+  'condition-003',
+  '{
+    "resourceType": "Condition",
+    "id": "condition-003",
+    "subject": {
+      "reference": "Patient/patient-003"
+    },
+    "code": {
+      "coding": [{
+        "system": "urn:oid:2.16.578.1.12.4.1.1.7110",
+        "code": "A051",
+        "display": "Botulisme"
+      }]
+    }
+  }'::jsonb
+)
+ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data;
