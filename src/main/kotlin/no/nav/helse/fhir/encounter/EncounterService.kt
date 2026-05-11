@@ -5,15 +5,15 @@ import no.nav.helse.fhir.encounter.repository.EncounterRepository
 
 class EncounterService(private val repository: EncounterRepository) {
 
-  fun getEncounter(id: String): Encounter? {
-    return repository.getEncounter(id)
+  suspend fun getEncounter(id: String): Encounter? {
+    return repository.getById(id)
   }
 
-  fun getAllEncounters(): List<Encounter> {
-    return repository.getAllEncounters()
+  suspend fun getAllEncounters(): List<Encounter> {
+    return repository.getAll()
   }
 
-  fun createEncounter(encounter: Encounter): Encounter {
-    return repository.createEncounter(encounter)
+  suspend fun createEncounter(encounter: Encounter): Encounter {
+    return repository.create(encounter)
   }
 }

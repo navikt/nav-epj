@@ -72,3 +72,40 @@ INSERT INTO practitioner (id, data) VALUES
   }'::jsonb
 )
 ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data;
+
+INSERT INTO encounter (id, data) VALUES
+(
+  'encounter-001',
+  '{
+    "resourceType": "Encounter",
+    "id": "encounter-001",
+    "status": "finished",
+    "class": {
+      "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+      "code": "AMB"
+    },
+    "type": [{
+      "coding": [{
+        "system": "urn:oid:2.16.578.1.12.4.1.1.8432",
+        "code": "kontaktype"
+      }]
+    }],
+    "subject": {
+      "reference": "Patient/patient-001"
+    },
+    "participant": [{
+      "individual": {
+        "reference": "Practitioner/practitioner-001"
+      }
+    }],
+    "diagnosis": [{
+      "condition": {
+        "reference": "Condition/condition-001"
+      }
+    }],
+    "serviceProvider": {
+      "reference": "Organization/organization-001"
+    }
+  }'::jsonb
+)
+ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data;

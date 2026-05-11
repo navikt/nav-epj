@@ -9,12 +9,13 @@ import com.google.fhir.model.r4.Enumeration
 import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.String
 import com.google.fhir.model.r4.Uri
-import io.mockk.every
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.verify
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlinx.coroutines.runBlocking
 import no.nav.helse.fhir.encounter.EncounterService
 import no.nav.helse.fhir.encounter.repository.EncounterRepository
 
@@ -61,9 +62,9 @@ class EncounterServiceTest {
     )
 
   @Test
-  fun `get encounter successfully and assert results`() {
+  fun `get encounter successfully and assert results`() = runBlocking {
     val encounterService = EncounterService(encounterRepository)
-    every { encounterRepository.getEncounter(any()) } returns encounter1
+    coEvery { encounterRepository.getById(any()) } returns encounter1
     val encounter = encounterService.getEncounter(encounter1Id)
 
     assertEquals(encounter1.id, encounter?.id)
@@ -74,18 +75,18 @@ class EncounterServiceTest {
   }
 
   @Test
-  fun `get encounter with non existing id should return null`() {
+  fun `get encounter with non existing id should return null`() = runBlocking {
     val encounterService = EncounterService(encounterRepository)
-    every { encounterRepository.getEncounter(any()) } returns null
+    coEvery { encounterRepository.getById(any()) } returns null
     val encounter = encounterService.getEncounter("non-existing-id")
 
     assertEquals(null, encounter)
   }
 
   @Test
-  fun `get encounters should return and assert that there are one encounter`() {
+  fun `get encounters should return and assert that there are one encounter`() = runBlocking {
     val encounterService = EncounterService(encounterRepository)
-    every { encounterRepository.getAllEncounters() } returns listOf(encounter1)
+    coEvery { encounterRepository.getAll() } returns listOf(encounter1)
     val encounters = encounterService.getAllEncounters()
 
     assertEquals(1, encounters.size)
@@ -93,16 +94,16 @@ class EncounterServiceTest {
   }
 
   @Test
-  fun `get encounters returns an empty list when there are no encounters`() {
+  fun `get encounters returns an empty list when there are no encounters`() = runBlocking {
     val encounterService = EncounterService(encounterRepository)
-    every { encounterRepository.getAllEncounters() } returns emptyList()
+    coEvery { encounterRepository.getAll() } returns emptyList()
     val encounters = encounterService.getAllEncounters()
 
     assertTrue { encounters.isEmpty() }
   }
 
   @Test
-  fun `create encounter successfully`() {
+  fun `create encounter successfully`() = runBlocking {
     val encounterService = EncounterService(encounterRepository)
     val newEncounter =
       Encounter(
@@ -120,10 +121,10 @@ class EncounterServiceTest {
             display = String(value = "Li Jun"),
           ),
       )
-    every { encounterRepository.createEncounter(any()) } returns newEncounter
+    coEvery { encounterRepository.create(any()) } returns newEncounter
 
     val created = encounterService.createEncounter(newEncounter)
-    verify(exactly = 1) { encounterRepository.createEncounter(newEncounter) }
+    coVerify(exactly = 1) { encounterRepository.create(newEncounter) }
 
     assertEquals(newEncounter.id, created.id)
     assertEquals(newEncounter.status, created.status)

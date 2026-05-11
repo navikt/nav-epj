@@ -3,9 +3,9 @@ package no.nav.helse.fhir.encounter.repository
 import com.google.fhir.model.r4.Encounter
 
 interface EncounterRepository {
-  fun getEncounter(id: String): Encounter?
+  suspend fun getById(id: String): Encounter?
 
-  fun getAllEncounters(): List<Encounter>
+  suspend fun getAll(): List<Encounter>
 
-  fun createEncounter(encounter: Encounter): Encounter
+  suspend fun create(encounter: Encounter): Encounter
 }
