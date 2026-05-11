@@ -1,7 +1,6 @@
 package no.nav.helse.fhir.condition
 
 import com.google.fhir.model.r4.Condition
-import no.nav.helse.fhir.condition.repository.ConditionRepository
 
 class ConditionService(private val repository: ConditionRepository) {
 

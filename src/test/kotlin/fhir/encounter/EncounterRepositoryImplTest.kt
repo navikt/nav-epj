@@ -17,7 +17,7 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.core.db.DatabaseConnection
 import no.nav.helse.core.db.dbQuery
-import no.nav.helse.fhir.encounter.repository.EncounterRepositoryImpl
+import no.nav.helse.fhir.encounter.EncounterRepositoryImpl
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.testcontainers.containers.PostgreSQLContainer
 

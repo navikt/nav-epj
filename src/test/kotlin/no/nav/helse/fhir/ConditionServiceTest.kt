@@ -16,7 +16,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.fhir.condition.ConditionService
-import no.nav.helse.fhir.condition.repository.ConditionRepository
+import no.nav.helse.fhir.condition.ConditionRepository
 
 class ConditionServiceTest {
 

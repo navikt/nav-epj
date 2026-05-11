@@ -13,7 +13,6 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import no.nav.helse.fhir.fhirJson
 import no.nav.helse.fhir.isAuthenticated
-import no.nav.helse.fhir.practitioner.repository.PractitionerRepositoryImpl
 import no.nav.helse.fhir.respondFhir
 
 fun Route.configurePractitionerRouting() {

@@ -1,7 +1,8 @@
-package no.nav.helse.fhir.patient.repository
+package no.nav.helse.fhir.patient
 
 import com.google.fhir.model.r4.*
 import com.google.fhir.model.r4.terminologies.AdministrativeGender
+import java.util.UUID
 import kotlin.String
 
 class StubPatientRepository : PatientRepository {
@@ -95,7 +96,7 @@ class StubPatientRepository : PatientRepository {
   override fun createPatient(patient: Patient): Patient {
     val newPatient =
       if (patient.id == null) {
-        patient.copy(id = "patient-${java.util.UUID.randomUUID()}")
+        patient.copy(id = "patient-${UUID.randomUUID()}")
       } else {
         patient
       }

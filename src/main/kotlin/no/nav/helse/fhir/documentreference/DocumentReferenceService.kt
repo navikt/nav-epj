@@ -1,7 +1,6 @@
 package no.nav.helse.fhir.documentreference
 
 import com.google.fhir.model.r4.DocumentReference
-import no.nav.helse.fhir.documentreference.repository.DocumentReferenceRepository
 
 class DocumentReferenceService(private val repository: DocumentReferenceRepository) {
 

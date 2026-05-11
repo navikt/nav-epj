@@ -21,7 +21,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.fhir.organization.OrganizationService
-import no.nav.helse.fhir.organization.repository.OrganizationRepository
+import no.nav.helse.fhir.organization.OrganizationRepository
 
 class OrganizationServiceTest {
 

@@ -1,4 +1,4 @@
-package no.nav.helse.fhir.encounter.repository
+package no.nav.helse.fhir.encounter
 
 import com.google.fhir.model.r4.Encounter
 import no.nav.helse.fhir.fhirResource

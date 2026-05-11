@@ -1,4 +1,4 @@
-package no.nav.helse.fhir.patient.repository
+package no.nav.helse.fhir.patient
 
 import com.google.fhir.model.r4.Patient
 import no.nav.helse.fhir.fhirResource

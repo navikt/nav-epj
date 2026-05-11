@@ -17,7 +17,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
-import no.nav.helse.fhir.practitioner.repository.PractitionerRepository
 
 class PractitionerServiceTest {
 

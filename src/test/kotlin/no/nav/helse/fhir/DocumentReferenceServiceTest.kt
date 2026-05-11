@@ -20,7 +20,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.fhir.documentreference.DocumentReferenceService
-import no.nav.helse.fhir.documentreference.repository.DocumentReferenceRepository
+import no.nav.helse.fhir.documentreference.DocumentReferenceRepository
 
 class DocumentReferenceServiceTest {
 

@@ -17,7 +17,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.fhir.encounter.EncounterService
-import no.nav.helse.fhir.encounter.repository.EncounterRepository
+import no.nav.helse.fhir.encounter.EncounterRepository
 
 class EncounterServiceTest {
 

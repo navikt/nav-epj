@@ -19,7 +19,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import no.nav.helse.fhir.patient.PatientService
-import no.nav.helse.fhir.patient.repository.PatientRepository
+import no.nav.helse.fhir.patient.PatientRepository
 
 class PatientServiceTest {
 

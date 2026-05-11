@@ -1,7 +1,6 @@
 package no.nav.helse.fhir.organization
 
 import com.google.fhir.model.r4.Organization
-import no.nav.helse.fhir.organization.repository.OrganizationRepository
 
 class OrganizationService(private val repository: OrganizationRepository) {
 

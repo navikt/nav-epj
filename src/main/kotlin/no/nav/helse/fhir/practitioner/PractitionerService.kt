@@ -1,7 +1,6 @@
 package no.nav.helse.fhir.practitioner
 
 import com.google.fhir.model.r4.Practitioner
-import no.nav.helse.fhir.practitioner.repository.PractitionerRepository
 
 class PractitionerService(private val repository: PractitionerRepository) {
 

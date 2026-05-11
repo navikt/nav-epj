@@ -1,4 +1,4 @@
-package no.nav.helse.fhir.condition.repository
+package no.nav.helse.fhir.condition
 
 import com.google.fhir.model.r4.Condition
 

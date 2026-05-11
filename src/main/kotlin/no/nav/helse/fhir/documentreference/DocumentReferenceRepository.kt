@@ -1,4 +1,4 @@
-package no.nav.helse.fhir.documentreference.repository
+package no.nav.helse.fhir.documentreference
 
 import com.google.fhir.model.r4.DocumentReference
 
