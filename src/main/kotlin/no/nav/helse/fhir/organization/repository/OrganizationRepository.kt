@@ -3,9 +3,9 @@ package no.nav.helse.fhir.organization.repository
 import com.google.fhir.model.r4.Organization
 
 interface OrganizationRepository {
-  fun getOrganization(id: String): Organization?
+  suspend fun getById(id: String): Organization?
 
-  fun getAllOrganizations(): List<Organization>
+  suspend fun getAll(): List<Organization>
 
-  fun createOrganization(organization: Organization): Organization
+  suspend fun create(organization: Organization): Organization
 }

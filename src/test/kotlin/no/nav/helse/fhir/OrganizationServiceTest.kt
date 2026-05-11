@@ -12,13 +12,14 @@ import com.google.fhir.model.r4.Meta
 import com.google.fhir.model.r4.Organization
 import com.google.fhir.model.r4.String as FhirString
 import com.google.fhir.model.r4.Uri
-import io.mockk.every
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.verify
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.runBlocking
 import no.nav.helse.fhir.organization.OrganizationService
 import no.nav.helse.fhir.organization.repository.OrganizationRepository
 
@@ -58,9 +59,9 @@ class OrganizationServiceTest {
     )
 
   @Test
-  fun `get organization successfully and assert results`() {
+  fun `get organization successfully and assert results`() = runBlocking {
     val organizationService = OrganizationService(organizationRepository)
-    every { organizationRepository.getOrganization(any()) } returns organization1
+    coEvery { organizationRepository.getById(any()) } returns organization1
     val organization = organizationService.getOrganization(organization1Id)
 
     assertEquals(organization1.id, organization?.id)
@@ -71,18 +72,18 @@ class OrganizationServiceTest {
   }
 
   @Test
-  fun `get organization with non existing id should return null`() {
+  fun `get organization with non existing id should return null`() = runBlocking {
     val organizationService = OrganizationService(organizationRepository)
-    every { organizationRepository.getOrganization(any()) } returns null
+    coEvery { organizationRepository.getById(any()) } returns null
     val organization = organizationService.getOrganization("non-existing-id")
 
     assertNull(organization)
   }
 
   @Test
-  fun `get all organizations should return all organizations`() {
+  fun `get all organizations should return all organizations`() = runBlocking {
     val organizationService = OrganizationService(organizationRepository)
-    every { organizationRepository.getAllOrganizations() } returns listOf(organization1)
+    coEvery { organizationRepository.getAll() } returns listOf(organization1)
     val organizations = organizationService.getAllOrganizations()
 
     assertEquals(1, organizations.size)
@@ -90,16 +91,16 @@ class OrganizationServiceTest {
   }
 
   @Test
-  fun `get organizations returns an empty list when there are no organizations`() {
+  fun `get organizations returns an empty list when there are no organizations`() = runBlocking {
     val organizationService = OrganizationService(organizationRepository)
-    every { organizationRepository.getAllOrganizations() } returns emptyList()
+    coEvery { organizationRepository.getAll() } returns emptyList()
     val organizations = organizationService.getAllOrganizations()
 
     assertTrue { organizations.isEmpty() }
   }
 
   @Test
-  fun `create organization successfully`() {
+  fun `create organization successfully`() = runBlocking {
     val organizationService = OrganizationService(organizationRepository)
     val newOrganization =
       Organization(
@@ -120,10 +121,10 @@ class OrganizationServiceTest {
             )
           ),
       )
-    every { organizationRepository.createOrganization(any()) } returns newOrganization
+    coEvery { organizationRepository.create(any()) } returns newOrganization
 
     val created = organizationService.createOrganization(newOrganization)
-    verify(exactly = 1) { organizationRepository.createOrganization(newOrganization) }
+    coVerify(exactly = 1) { organizationRepository.create(newOrganization) }
 
     assertEquals(newOrganization.id, created.id)
     assertEquals(newOrganization.name, created.name)

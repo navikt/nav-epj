@@ -163,3 +163,30 @@ INSERT INTO condition (id, data) VALUES
   }'::jsonb
 )
 ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data;
+
+INSERT INTO organization (id, data) VALUES
+(
+  'organization-001',
+  '{
+    "resourceType": "Organization",
+    "id": "organization-001",
+    "meta": {
+      "profile": ["http://hl7.no/fhir/StructureDefinition/no-basis-Organization"]
+    },
+    "identifier": [
+      {
+        "system": "urn:oid:2.16.578.1.12.4.1.4.101",
+        "value": "organisasjonsnummer / ENH"
+      },
+      {
+        "system": "urn:oid:2.16.578.1.12.4.1.2",
+        "value": "her-id"
+      }
+    ],
+    "telecom": [{
+      "system": "phone",
+      "value": "+47 12345678"
+    }]
+  }'::jsonb
+)
+ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data;

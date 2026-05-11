@@ -11,7 +11,7 @@ import no.nav.helse.fhir.documentreference.repository.StubDocumentReferenceRepos
 import no.nav.helse.fhir.encounter.EncounterService
 import no.nav.helse.fhir.encounter.repository.EncounterRepositoryImpl
 import no.nav.helse.fhir.organization.OrganizationService
-import no.nav.helse.fhir.organization.repository.StubOrganizationRepository
+import no.nav.helse.fhir.organization.repository.OrganizationRepositoryImpl
 import no.nav.helse.fhir.patient.PatientService
 import no.nav.helse.fhir.patient.repository.StubPatientRepository
 import no.nav.helse.fhir.practitioner.PractitionerService
@@ -22,7 +22,7 @@ fun Application.configureDependencies() {
   dependencies {
     provide<Environment> { env }
     provide<PatientService> { PatientService(StubPatientRepository()) }
-    provide<OrganizationService> { OrganizationService(StubOrganizationRepository()) }
+    provide<OrganizationService> { OrganizationService(OrganizationRepositoryImpl()) }
     provide<EncounterService> { EncounterService(EncounterRepositoryImpl()) }
     provide<ConditionService> { ConditionService(ConditionRepositoryImpl()) }
     provide<PractitionerService> { PractitionerService(PractitionerRepositoryImpl()) }
