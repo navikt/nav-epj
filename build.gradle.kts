@@ -1,3 +1,6 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.gradle.api.file.DuplicatesStrategy
+
 val kotlin_version: String by project
 val logback_version: String by project
 val mockk_version: String by project
@@ -18,6 +21,13 @@ version = "0.0.1"
 
 application {
   mainClass = "io.ktor.server.netty.EngineMain"
+}
+
+// this attempts to fix an issue: FlywayException: Unknown prefix for location (should be one of ): classpath:db/callback
+tasks.withType<ShadowJar> {
+  mergeServiceFiles()
+  isZip64 = true
+  duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
 kotlin {
