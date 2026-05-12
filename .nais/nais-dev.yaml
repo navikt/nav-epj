@@ -70,3 +70,5 @@ spec:
       value: "http://localhost:8080/callback"
     - name: OAUTH_DEFAULT_SCOPES
       value: "openid,profile"
+    - name: DB_NAME
+      value: "dr-zara"
