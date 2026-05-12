@@ -24,10 +24,17 @@ application {
 }
 
 // this attempts to fix an issue: FlywayException: Unknown prefix for location (should be one of ): classpath:db/callback
-tasks.withType<ShadowJar> {
-  mergeServiceFiles()
-  isZip64 = true
-  duplicatesStrategy = DuplicatesStrategy.INCLUDE
+//tasks.withType<ShadowJar> {
+//  mergeServiceFiles()
+//  isZip64 = true
+//  duplicatesStrategy = DuplicatesStrategy.INCLUDE
+//}
+
+tasks {
+  shadowJar {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    mergeServiceFiles {}
+  }
 }
 
 kotlin {

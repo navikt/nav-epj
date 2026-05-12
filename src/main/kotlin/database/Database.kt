@@ -15,7 +15,7 @@ fun Application.configureDatabase() {
 
   Flyway.configure()
     .dataSource("jdbc:postgresql://$host:$port/$name", username, password)
-    .locations("db/migration")
+    .locations("classpath:db/migration")
     .load()
     .migrate()
 
