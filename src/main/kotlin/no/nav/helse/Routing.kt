@@ -42,9 +42,9 @@ fun Application.configureRouting() {
     get("/home") {
       val userSession: UserSession? = getSession(call)
       log.info("user session: $userSession")
-            val token = userSession?.accessToken.let { JWT.decode(it) }
+      val token = userSession?.accessToken.let { JWT.decode(it) }
       if (userSession != null) {
-                call.respondText("Welcome ${token.subject}!")
+        call.respondText("Welcome ${token.subject}!")
       }
     }
 

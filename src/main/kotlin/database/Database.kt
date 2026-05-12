@@ -12,17 +12,12 @@ fun Application.configureDatabase() {
   val name = config.property("database.name").getString()
   val username = config.property("database.username").getString()
   val password = config.property("database.password").getString()
-  val isLocal = config.propertyOrNull("ktor.environment")?.getString() == "local"
 
-  // Run Flyway migrations using JDBC
-  val flywayConfig =
-    Flyway.configure().dataSource("jdbc:postgresql://$host:$port/$name", username, password)
-
-  if (isLocal) {
-    flywayConfig.locations("classpath:db/migration", "classpath:db/migration/local")
-  }
-
-  flywayConfig.load().migrate()
+  Flyway.configure()
+    .dataSource("jdbc:postgresql://$host:$port/$name", username, password)
+    .locations("classpath:db/migration")
+    .load()
+    .migrate()
 
   DatabaseConnection.database =
     R2dbcDatabase.connect(

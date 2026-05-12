@@ -202,10 +202,10 @@ class DocumentReferenceRepositoryImplTest {
       val retrievedSuperseded = repo.getById("doc-superseded")
 
       assertNotNull(retrievedCurrent)
-      assertEquals(DocumentReferenceStatus.Current, retrievedCurrent.status?.value)
+      assertEquals(DocumentReferenceStatus.Current, retrievedCurrent.status.value)
 
       assertNotNull(retrievedSuperseded)
-      assertEquals(DocumentReferenceStatus.Superseded, retrievedSuperseded.status?.value)
+      assertEquals(DocumentReferenceStatus.Superseded, retrievedSuperseded.status.value)
     }
 
   @Test
