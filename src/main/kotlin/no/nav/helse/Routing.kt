@@ -1,6 +1,5 @@
 package no.nav.helse
 
-import com.auth0.jwt.JWT
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.html.*
@@ -41,9 +40,11 @@ fun Application.configureRouting() {
 
     get("/home") {
       val userSession: UserSession? = getSession(call)
-      val token = userSession?.accessToken.let { JWT.decode(it) }
+      log.info("user session: $userSession")
+      //      val token = userSession?.accessToken.let { JWT.decode(it) }
       if (userSession != null) {
-        call.respondText("Welcome ${token.subject}!")
+        call.respondText("Welcome")
+        //        call.respondText("Welcome ${token.subject}!")
       }
     }
 

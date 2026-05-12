@@ -19,8 +19,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
-import no.nav.helse.fhir.documentreference.DocumentReferenceService
 import no.nav.helse.fhir.documentreference.DocumentReferenceRepository
+import no.nav.helse.fhir.documentreference.DocumentReferenceService
 
 class DocumentReferenceServiceTest {
 

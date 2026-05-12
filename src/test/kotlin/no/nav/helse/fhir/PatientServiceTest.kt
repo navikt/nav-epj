@@ -18,8 +18,8 @@ import io.mockk.verify
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import no.nav.helse.fhir.patient.PatientService
 import no.nav.helse.fhir.patient.PatientRepository
+import no.nav.helse.fhir.patient.PatientService
 
 class PatientServiceTest {
 

@@ -20,8 +20,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
-import no.nav.helse.fhir.organization.OrganizationService
 import no.nav.helse.fhir.organization.OrganizationRepository
+import no.nav.helse.fhir.organization.OrganizationService
 
 class OrganizationServiceTest {
 
