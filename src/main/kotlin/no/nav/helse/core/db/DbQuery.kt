@@ -2,13 +2,12 @@ package no.nav.helse.core.db
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
-import org.jetbrains.exposed.v1.r2dbc.R2dbcTransaction
-import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 object DatabaseConnection {
-  lateinit var database: R2dbcDatabase
+  lateinit var database: Database
 }
 
-suspend fun <T> dbQuery(statement: suspend R2dbcTransaction.() -> T): T =
-  withContext(Dispatchers.IO) { suspendTransaction(DatabaseConnection.database) { statement() } }
+suspend fun <T> dbQuery(statement: () -> T): T =
+  withContext(Dispatchers.IO) { transaction(DatabaseConnection.database) { statement() } }

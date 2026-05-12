@@ -1,6 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import org.gradle.api.file.DuplicatesStrategy
-
 val kotlin_version: String by project
 val logback_version: String by project
 val mockk_version: String by project
@@ -60,10 +57,9 @@ dependencies {
   implementation("io.ktor:ktor-server-di")
   implementation("ch.qos.logback:logback-classic:$logback_version")
   implementation("org.jetbrains.exposed:exposed-core:$exposed_version")
-  implementation("org.jetbrains.exposed:exposed-r2dbc:$exposed_version")
+  implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
   implementation("org.jetbrains.exposed:exposed-json:$exposed_version")
   implementation("org.jetbrains.exposed:exposed-kotlin-datetime:$exposed_version")
-  implementation("org.postgresql:r2dbc-postgresql:1.1.1.RELEASE")
   implementation("org.postgresql:postgresql:42.7.10")
   implementation("org.flywaydb:flyway-core:12.4.0")
   implementation("org.flywaydb:flyway-database-postgresql:11.8.2")

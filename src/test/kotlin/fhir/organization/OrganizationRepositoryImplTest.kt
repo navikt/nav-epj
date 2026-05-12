@@ -22,7 +22,9 @@ import kotlinx.coroutines.runBlocking
 import no.nav.helse.core.db.DatabaseConnection
 import no.nav.helse.core.db.dbQuery
 import no.nav.helse.fhir.organization.OrganizationRepositoryImpl
-import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
+import no.nav.helse.fhir.organization.OrganizationTable
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.testcontainers.containers.PostgreSQLContainer
 
 class OrganizationRepositoryImplTest {
@@ -40,9 +42,10 @@ class OrganizationRepositoryImplTest {
       postgres.start()
 
       DatabaseConnection.database =
-        R2dbcDatabase.Companion.connect(
+        Database.connect(
           url =
-            "r2dbc:postgresql://${postgres.host}:${postgres.getMappedPort(5432)}/${postgres.databaseName}",
+            "jdbc:postgresql://${postgres.host}:${postgres.getMappedPort(5432)}/${postgres.databaseName}",
+          driver = "org.postgresql.Driver",
           user = postgres.username,
           password = postgres.password,
         )
@@ -55,7 +58,7 @@ class OrganizationRepositoryImplTest {
   fun setup() {
     repo = OrganizationRepositoryImpl()
 
-    runBlocking { dbQuery { exec("DELETE FROM organization") } }
+    runBlocking { dbQuery { OrganizationTable.deleteAll() } }
   }
 
   private fun createTestOrganization(

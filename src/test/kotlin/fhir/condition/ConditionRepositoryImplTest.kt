@@ -17,7 +17,9 @@ import kotlinx.coroutines.runBlocking
 import no.nav.helse.core.db.DatabaseConnection
 import no.nav.helse.core.db.dbQuery
 import no.nav.helse.fhir.condition.ConditionRepositoryImpl
-import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
+import no.nav.helse.fhir.condition.ConditionTable
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.testcontainers.containers.PostgreSQLContainer
 
 class ConditionRepositoryImplTest {
@@ -35,9 +37,10 @@ class ConditionRepositoryImplTest {
       postgres.start()
 
       DatabaseConnection.database =
-        R2dbcDatabase.Companion.connect(
+        Database.connect(
           url =
-            "r2dbc:postgresql://${postgres.host}:${postgres.getMappedPort(5432)}/${postgres.databaseName}",
+            "jdbc:postgresql://${postgres.host}:${postgres.getMappedPort(5432)}/${postgres.databaseName}",
+          driver = "org.postgresql.Driver",
           user = postgres.username,
           password = postgres.password,
         )
@@ -50,7 +53,7 @@ class ConditionRepositoryImplTest {
   fun setup() {
     repo = ConditionRepositoryImpl()
 
-    runBlocking { dbQuery { exec("DELETE FROM condition") } }
+    runBlocking { dbQuery { ConditionTable.deleteAll() } }
   }
 
   private fun createTestCondition(

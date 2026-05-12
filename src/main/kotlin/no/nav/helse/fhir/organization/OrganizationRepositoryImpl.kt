@@ -2,13 +2,10 @@ package no.nav.helse.fhir.organization
 
 import com.google.fhir.model.r4.Organization
 import java.util.UUID
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.singleOrNull
-import kotlinx.coroutines.flow.toList
 import no.nav.helse.core.db.dbQuery
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.r2dbc.insert
-import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
 
 class OrganizationRepositoryImpl : OrganizationRepository {
 

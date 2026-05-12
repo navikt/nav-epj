@@ -3,7 +3,7 @@ package database
 import io.ktor.server.application.*
 import no.nav.helse.core.db.DatabaseConnection
 import org.flywaydb.core.Flyway
-import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
+import org.jetbrains.exposed.v1.jdbc.Database
 
 fun Application.configureDatabase() {
   val config = environment.config
@@ -20,8 +20,9 @@ fun Application.configureDatabase() {
     .migrate()
 
   DatabaseConnection.database =
-    R2dbcDatabase.connect(
-      url = "r2dbc:postgresql://$host:$port/$name",
+    Database.connect(
+      url = "jdbc:postgresql://$host:$port/$name",
+      driver = "org.postgresql.Driver",
       user = username,
       password = password,
     )

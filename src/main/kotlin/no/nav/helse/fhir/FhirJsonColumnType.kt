@@ -2,10 +2,10 @@ package no.nav.helse.fhir
 
 import com.google.fhir.model.r4.FhirR4Json
 import com.google.fhir.model.r4.Resource
-import io.r2dbc.postgresql.codec.Json
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.ColumnType
 import org.jetbrains.exposed.v1.core.Table
+import org.postgresql.util.PGobject
 
 /**
  * Custom JSONB column type that uses FhirR4Json (Jackson-based) for serialization. This allows
@@ -25,7 +25,7 @@ class FhirResourceColumnType<T : Resource>(private val klass: Class<T>) : Column
   override fun valueFromDB(value: Any): T {
     val jsonString =
       when (value) {
-        is Json -> value.asString()
+        is PGobject -> value.value ?: error("PGobject value is null")
         is String -> value
         is ByteArray -> String(value)
         else -> error("Unexpected value type: ${value::class.qualifiedName}")
@@ -36,7 +36,10 @@ class FhirResourceColumnType<T : Resource>(private val klass: Class<T>) : Column
   }
 
   override fun notNullValueToDB(value: T): Any {
-    return Json.of(fhirJson.encodeToString(value))
+    return PGobject().apply {
+      type = "jsonb"
+      this.value = fhirJson.encodeToString(value)
+    }
   }
 
   override fun nonNullValueToString(value: T): String {

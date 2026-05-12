@@ -18,7 +18,9 @@ import kotlinx.coroutines.runBlocking
 import no.nav.helse.core.db.DatabaseConnection
 import no.nav.helse.core.db.dbQuery
 import no.nav.helse.fhir.encounter.EncounterRepositoryImpl
-import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
+import no.nav.helse.fhir.encounter.EncounterTable
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.testcontainers.containers.PostgreSQLContainer
 
 class EncounterRepositoryImplTest {
@@ -36,9 +38,10 @@ class EncounterRepositoryImplTest {
       postgres.start()
 
       DatabaseConnection.database =
-        R2dbcDatabase.Companion.connect(
+        Database.connect(
           url =
-            "r2dbc:postgresql://${postgres.host}:${postgres.getMappedPort(5432)}/${postgres.databaseName}",
+            "jdbc:postgresql://${postgres.host}:${postgres.getMappedPort(5432)}/${postgres.databaseName}",
+          driver = "org.postgresql.Driver",
           user = postgres.username,
           password = postgres.password,
         )
@@ -51,7 +54,7 @@ class EncounterRepositoryImplTest {
   fun setup() {
     repo = EncounterRepositoryImpl()
 
-    runBlocking { dbQuery { exec("DELETE FROM encounter") } }
+    runBlocking { dbQuery { EncounterTable.deleteAll() } }
   }
 
   private fun createTestEncounter(
