@@ -57,3 +57,16 @@ spec:
     autoInstrumentation:
       enabled: true
       runtime: java
+  env:
+    - name: OAUTH_AUTHORIZE_URL
+      value: "http://localhost:8080/oidc/authorize"
+    - name: OAUTH_ACCESS_TOKEN_URL
+      value: "http://localhost:8080/oidc/token"
+    - name: OAUTH_CLIENT_ID
+      value: "dr-zara-web"
+    - name: OAUTH_CLIENT_SECRET
+      value: "secret"
+    - name: OAUTH_CALLBACK_URL
+      value: "http://localhost:8080/callback"
+    - name: OAUTH_DEFAULT_SCOPES
+      value: "openid,profile"
