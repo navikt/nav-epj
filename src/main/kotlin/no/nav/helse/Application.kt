@@ -23,8 +23,8 @@ fun Application.module() {
   configureFhirRouting()
   configureDatabase()
 
-  val env: Environment by dependencies
-  if (env.runtime == Runtime.LOCAL) {
-    configureOidcStub()
-  }
+  configureOidcStub()
+//  val env: Environment by dependencies
+//  if (env.runtime == Runtime.LOCAL) {
+//  }
 }
