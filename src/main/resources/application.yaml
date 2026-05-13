@@ -18,5 +18,6 @@ database:
   host: ${?DB_HOST}
   port: ${?DB_PORT}
   name: ${?DB_NAME}
+  url: ${?DB_JDBC_URL}
   username: ${?DB_USERNAME}
   password: ${?DB_PASSWORD}

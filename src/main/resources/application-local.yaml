@@ -10,8 +10,6 @@ oauth:
   defaultScopes: "openid,profile"
 
 database:
-  host: "localhost"
-  port: 5432
-  name: "dr-zara"
+  url: "jdbc:postgresql://localhost:5432/dr-zara"
   username: "postgres"
   password: "postgres"
