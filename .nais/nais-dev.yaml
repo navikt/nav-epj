@@ -22,12 +22,6 @@ spec:
           enabled: true
         tier: db-f1-micro
         flags:
-          - name: cloudsql.enable_pgaudit
-            value: "true"
-          - name: pgaudit.log
-            value: "write,ddl,role"
-          - name: pgaudit.log_parameter
-            value: "on"
           - name: cloudsql.logical_decoding
             value: "on"
 
