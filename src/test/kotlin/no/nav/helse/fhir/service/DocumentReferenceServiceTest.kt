@@ -1,4 +1,4 @@
-package no.nav.helse.fhir
+package no.nav.helse.fhir.service
 
 import com.google.fhir.model.r4.Attachment
 import com.google.fhir.model.r4.Base64Binary

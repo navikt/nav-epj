@@ -1,6 +1,5 @@
-package fhir.organization
+package no.nav.helse.fhir.repository
 
-import com.google.fhir.model.r4.Boolean as FhirBoolean
 import com.google.fhir.model.r4.Canonical
 import com.google.fhir.model.r4.Code
 import com.google.fhir.model.r4.CodeableConcept
@@ -10,7 +9,6 @@ import com.google.fhir.model.r4.Enumeration
 import com.google.fhir.model.r4.Identifier
 import com.google.fhir.model.r4.Meta
 import com.google.fhir.model.r4.Organization
-import com.google.fhir.model.r4.String as FhirString
 import com.google.fhir.model.r4.Uri
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -42,7 +40,7 @@ class OrganizationRepositoryImplTest {
       postgres.start()
 
       DatabaseConnection.database =
-        Database.connect(
+        Database.Companion.connect(
           url =
             "jdbc:postgresql://${postgres.host}:${postgres.getMappedPort(5432)}/${postgres.databaseName}",
           driver = "org.postgresql.Driver",
@@ -75,20 +73,20 @@ class OrganizationRepositoryImplTest {
               Canonical(value = "http://hl7.no/fhir/StructureDefinition/no-basis-Organization")
             )
         ),
-      active = FhirBoolean(value = active),
-      name = FhirString(value = name),
+      active = com.google.fhir.model.r4.Boolean(value = active),
+      name = com.google.fhir.model.r4.String(value = name),
       identifier =
         listOf(
           Identifier(
             system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.101"),
-            value = FhirString(value = "123456789"),
+            value = com.google.fhir.model.r4.String(value = "123456789"),
           )
         ),
       telecom =
         listOf(
           ContactPoint(
             system = Enumeration(value = ContactPoint.ContactPointSystem.Phone),
-            value = FhirString(value = "+47 12345678"),
+            value = com.google.fhir.model.r4.String(value = "+47 12345678"),
           )
         ),
     )
@@ -156,8 +154,8 @@ class OrganizationRepositoryImplTest {
     val organization =
       Organization(
         id = null,
-        name = FhirString(value = "New Organization"),
-        active = FhirBoolean(value = true),
+        name = com.google.fhir.model.r4.String(value = "New Organization"),
+        active = com.google.fhir.model.r4.Boolean(value = true),
       )
 
     val created = repo.create(organization)
@@ -190,7 +188,7 @@ class OrganizationRepositoryImplTest {
     val organization =
       Organization(
         id = "org-with-type",
-        name = FhirString(value = "Healthcare Provider"),
+        name = com.google.fhir.model.r4.String(value = "Healthcare Provider"),
         type =
           listOf(
             CodeableConcept(
@@ -199,7 +197,7 @@ class OrganizationRepositoryImplTest {
                   Coding(
                     system = Uri(value = "http://terminology.hl7.org/CodeSystem/organization-type"),
                     code = Code(value = "prov"),
-                    display = FhirString(value = "Healthcare Provider"),
+                    display = com.google.fhir.model.r4.String(value = "Healthcare Provider"),
                   )
                 )
             )

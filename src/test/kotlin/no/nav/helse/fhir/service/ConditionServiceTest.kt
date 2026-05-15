@@ -1,4 +1,4 @@
-package no.nav.helse.fhir
+package no.nav.helse.fhir.service
 
 import com.google.fhir.model.r4.Code
 import com.google.fhir.model.r4.CodeableConcept
@@ -6,6 +6,7 @@ import com.google.fhir.model.r4.Coding
 import com.google.fhir.model.r4.Condition
 import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.String as FhirString
+import com.google.fhir.model.r4.String
 import com.google.fhir.model.r4.Uri
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -26,8 +27,7 @@ class ConditionServiceTest {
   private val condition1 =
     Condition(
       id = condition1Id,
-      subject =
-        Reference(reference = com.google.fhir.model.r4.String(value = "Patient/patient-001")),
+      subject = Reference(reference = String(value = "Patient/patient-001")),
       code =
         CodeableConcept(
           coding =
@@ -44,8 +44,7 @@ class ConditionServiceTest {
   private val condition2 =
     Condition(
       id = "condition-002",
-      subject =
-        Reference(reference = com.google.fhir.model.r4.String(value = "Patient/patient-002")),
+      subject = Reference(reference = String(value = "Patient/patient-002")),
       code =
         CodeableConcept(
           coding =
@@ -62,8 +61,7 @@ class ConditionServiceTest {
   private val condition3 =
     Condition(
       id = "condition-003",
-      subject =
-        Reference(reference = com.google.fhir.model.r4.String(value = "Patient/patient-002")),
+      subject = Reference(reference = String(value = "Patient/patient-002")),
       code =
         CodeableConcept(
           coding =
@@ -144,8 +142,7 @@ class ConditionServiceTest {
     val newCondition =
       Condition(
         id = "condition-new",
-        subject =
-          Reference(reference = com.google.fhir.model.r4.String(value = "Patient/patient-001")),
+        subject = Reference(reference = String(value = "Patient/patient-001")),
         code =
           CodeableConcept(
             coding =

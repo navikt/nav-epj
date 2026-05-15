@@ -1,4 +1,4 @@
-package no.nav.helse.fhir
+package no.nav.helse.fhir.service
 
 import com.google.fhir.model.r4.Code
 import com.google.fhir.model.r4.CodeableConcept
@@ -108,7 +108,7 @@ class EncounterServiceTest {
     val newEncounter =
       Encounter(
         id = "encounter-new",
-        status = Enumeration(value = Encounter.EncounterStatus.Planned),
+        status = Enumeration(value = EncounterStatus.Planned),
         `class` =
           Coding(
             system = Uri(value = "http://terminology.hl7.org/CodeSystem/v3-ActCode"),

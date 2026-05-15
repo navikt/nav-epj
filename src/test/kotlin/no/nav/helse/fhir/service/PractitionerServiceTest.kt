@@ -1,5 +1,6 @@
-package no.nav.helse.fhir.practitioner
+package no.nav.helse.fhir.service
 
+import com.google.fhir.model.r4.Boolean
 import com.google.fhir.model.r4.Canonical
 import com.google.fhir.model.r4.Date
 import com.google.fhir.model.r4.Enumeration
@@ -8,6 +9,7 @@ import com.google.fhir.model.r4.HumanName
 import com.google.fhir.model.r4.Identifier
 import com.google.fhir.model.r4.Meta
 import com.google.fhir.model.r4.Practitioner
+import com.google.fhir.model.r4.String
 import com.google.fhir.model.r4.Uri
 import com.google.fhir.model.r4.terminologies.AdministrativeGender
 import io.mockk.coEvery
@@ -17,6 +19,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
+import no.nav.helse.fhir.practitioner.PractitionerRepository
+import no.nav.helse.fhir.practitioner.PractitionerService
 
 class PractitionerServiceTest {
 
@@ -37,16 +41,16 @@ class PractitionerServiceTest {
         listOf(
           Identifier(
             system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.4"),
-            value = com.google.fhir.model.r4.String(value = "9144889"),
+            value = String(value = "9144889"),
           )
         ),
-      active = com.google.fhir.model.r4.Boolean(value = true),
+      active = Boolean(value = true),
       name =
         listOf(
           HumanName(
-            family = com.google.fhir.model.r4.String(value = "Boom"),
-            given = listOf(com.google.fhir.model.r4.String(value = "Carl")),
-            prefix = listOf(com.google.fhir.model.r4.String(value = "Dr.")),
+            family = String(value = "Boom"),
+            given = listOf(String(value = "Carl")),
+            prefix = listOf(String(value = "Dr.")),
           )
         ),
       gender = Enumeration(value = AdministrativeGender.Male),
@@ -67,16 +71,16 @@ class PractitionerServiceTest {
         listOf(
           Identifier(
             system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.4"),
-            value = com.google.fhir.model.r4.String(value = "9144890"),
+            value = String(value = "9144890"),
           )
         ),
-      active = com.google.fhir.model.r4.Boolean(value = true),
+      active = Boolean(value = true),
       name =
         listOf(
           HumanName(
-            family = com.google.fhir.model.r4.String(value = "Mudskipper"),
-            given = listOf(com.google.fhir.model.r4.String(value = "Zev")),
-            prefix = listOf(com.google.fhir.model.r4.String(value = "Dr.")),
+            family = String(value = "Mudskipper"),
+            given = listOf(String(value = "Zev")),
+            prefix = listOf(String(value = "Dr.")),
           )
         ),
       gender = Enumeration(value = AdministrativeGender.Female),
@@ -97,16 +101,16 @@ class PractitionerServiceTest {
         listOf(
           Identifier(
             system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.4"),
-            value = com.google.fhir.model.r4.String(value = "9144891"),
+            value = String(value = "9144891"),
           )
         ),
-      active = com.google.fhir.model.r4.Boolean(value = false),
+      active = Boolean(value = false),
       name =
         listOf(
           HumanName(
-            family = com.google.fhir.model.r4.String(value = "Andrews"),
-            given = listOf(com.google.fhir.model.r4.String(value = "Chris")),
-            prefix = listOf(com.google.fhir.model.r4.String(value = "Dr.")),
+            family = String(value = "Andrews"),
+            given = listOf(String(value = "Chris")),
+            prefix = listOf(String(value = "Dr.")),
           )
         ),
       gender = Enumeration(value = AdministrativeGender.Male),
@@ -174,16 +178,16 @@ class PractitionerServiceTest {
           listOf(
             Identifier(
               system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.4"),
-              value = com.google.fhir.model.r4.String(value = "9144892"),
+              value = String(value = "9144892"),
             )
           ),
-        active = com.google.fhir.model.r4.Boolean(value = true),
+        active = Boolean(value = true),
         name =
           listOf(
             HumanName(
-              family = com.google.fhir.model.r4.String(value = "Andrews"),
-              given = listOf(com.google.fhir.model.r4.String(value = "Brandon")),
-              prefix = listOf(com.google.fhir.model.r4.String(value = "Dr.")),
+              family = String(value = "Andrews"),
+              given = listOf(String(value = "Brandon")),
+              prefix = listOf(String(value = "Dr.")),
             )
           ),
         gender = Enumeration(value = AdministrativeGender.Male),

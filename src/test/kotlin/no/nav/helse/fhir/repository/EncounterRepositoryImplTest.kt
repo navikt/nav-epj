@@ -1,10 +1,9 @@
-package fhir.encounter
+package no.nav.helse.fhir.repository
 
 import com.google.fhir.model.r4.Code
 import com.google.fhir.model.r4.CodeableConcept
 import com.google.fhir.model.r4.Coding
 import com.google.fhir.model.r4.Encounter
-import com.google.fhir.model.r4.Encounter.EncounterStatus
 import com.google.fhir.model.r4.Enumeration
 import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.Uri
@@ -38,7 +37,7 @@ class EncounterRepositoryImplTest {
       postgres.start()
 
       DatabaseConnection.database =
-        Database.connect(
+        Database.Companion.connect(
           url =
             "jdbc:postgresql://${postgres.host}:${postgres.getMappedPort(5432)}/${postgres.databaseName}",
           driver = "org.postgresql.Driver",
@@ -59,7 +58,7 @@ class EncounterRepositoryImplTest {
 
   private fun createTestEncounter(
     id: String = "encounter-001",
-    status: EncounterStatus = EncounterStatus.Finished,
+    status: Encounter.EncounterStatus = Encounter.EncounterStatus.Finished,
     classCode: String = "AMB",
   ) =
     Encounter(
@@ -145,8 +144,10 @@ class EncounterRepositoryImplTest {
   @Test
   fun `get all encounters returns all persisted encounters`() = runBlocking {
     val encounter1 = createTestEncounter(id = "encounter-001")
-    val encounter2 = createTestEncounter(id = "encounter-002", status = EncounterStatus.Planned)
-    val encounter3 = createTestEncounter(id = "encounter-003", status = EncounterStatus.In_Progress)
+    val encounter2 =
+      createTestEncounter(id = "encounter-002", status = Encounter.EncounterStatus.Planned)
+    val encounter3 =
+      createTestEncounter(id = "encounter-003", status = Encounter.EncounterStatus.In_Progress)
 
     repo.create(encounter1)
     repo.create(encounter2)
@@ -172,7 +173,7 @@ class EncounterRepositoryImplTest {
     val encounter =
       Encounter(
         id = null,
-        status = Enumeration(value = EncounterStatus.Planned),
+        status = Enumeration(value = Encounter.EncounterStatus.Planned),
         `class` =
           Coding(
             system = Uri(value = "http://terminology.hl7.org/CodeSystem/v3-ActCode"),
@@ -191,9 +192,12 @@ class EncounterRepositoryImplTest {
   @Test
   fun `encounter with different status values is stored and retrieved correctly`() = runBlocking {
     val plannedEncounter =
-      createTestEncounter(id = "encounter-planned", status = EncounterStatus.Planned)
+      createTestEncounter(id = "encounter-planned", status = Encounter.EncounterStatus.Planned)
     val inProgressEncounter =
-      createTestEncounter(id = "encounter-in-progress", status = EncounterStatus.In_Progress)
+      createTestEncounter(
+        id = "encounter-in-progress",
+        status = Encounter.EncounterStatus.In_Progress,
+      )
 
     repo.create(plannedEncounter)
     repo.create(inProgressEncounter)
@@ -202,10 +206,10 @@ class EncounterRepositoryImplTest {
     val retrievedInProgress = repo.getById("encounter-in-progress")
 
     assertNotNull(retrievedPlanned)
-    assertEquals(EncounterStatus.Planned, retrievedPlanned.status.value)
+    assertEquals(Encounter.EncounterStatus.Planned, retrievedPlanned.status.value)
 
     assertNotNull(retrievedInProgress)
-    assertEquals(EncounterStatus.In_Progress, retrievedInProgress.status.value)
+    assertEquals(Encounter.EncounterStatus.In_Progress, retrievedInProgress.status.value)
   }
 
   @Test

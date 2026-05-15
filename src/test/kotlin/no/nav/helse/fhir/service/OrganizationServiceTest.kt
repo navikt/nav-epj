@@ -1,4 +1,4 @@
-package no.nav.helse.fhir
+package no.nav.helse.fhir.service
 
 import com.google.fhir.model.r4.Boolean as FhirBoolean
 import com.google.fhir.model.r4.Canonical

@@ -33,3 +33,9 @@ CREATE TABLE document_reference (
     id TEXT NOT NULL PRIMARY KEY,
     data JSONB NOT NULL
 );
+
+-- QuestionnaireResponse table
+CREATE TABLE questionnaire_response (
+    id TEXT NOT NULL PRIMARY KEY,
+    data JSONB NOT NULL
+);

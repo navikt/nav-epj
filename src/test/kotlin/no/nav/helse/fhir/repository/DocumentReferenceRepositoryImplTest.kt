@@ -1,4 +1,4 @@
-package fhir.documentreference
+package no.nav.helse.fhir.repository
 
 import com.google.fhir.model.r4.Attachment
 import com.google.fhir.model.r4.Base64Binary
@@ -8,10 +8,10 @@ import com.google.fhir.model.r4.Coding
 import com.google.fhir.model.r4.DocumentReference
 import com.google.fhir.model.r4.Enumeration
 import com.google.fhir.model.r4.Reference
-import com.google.fhir.model.r4.String as FhirString
 import com.google.fhir.model.r4.Uri
 import com.google.fhir.model.r4.terminologies.CommonLanguages
 import com.google.fhir.model.r4.terminologies.DocumentReferenceStatus
+import java.util.Base64
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -42,7 +42,7 @@ class DocumentReferenceRepositoryImplTest {
       postgres.start()
 
       DatabaseConnection.database =
-        Database.connect(
+        Database.Companion.connect(
           url =
             "jdbc:postgresql://${postgres.host}:${postgres.getMappedPort(5432)}/${postgres.databaseName}",
           driver = "org.postgresql.Driver",
@@ -76,19 +76,25 @@ class DocumentReferenceRepositoryImplTest {
               Coding(
                 system = Uri(value = "urn:oid:2.16.578.1.12.4.1.1.9602"),
                 code = Code(value = "J01-2"),
-                display = FhirString(value = "Sykmeldinger og trygdesaker"),
+                display = com.google.fhir.model.r4.String(value = "Sykmeldinger og trygdesaker"),
               )
             )
         ),
-      description = FhirString(value = description),
-      subject = Reference(reference = FhirString(value = "Patient/patient-001")),
-      author = listOf(Reference(reference = FhirString(value = "Practitioner/practitioner-001"))),
+      description = com.google.fhir.model.r4.String(value = description),
+      subject =
+        Reference(reference = com.google.fhir.model.r4.String(value = "Patient/patient-001")),
+      author =
+        listOf(
+          Reference(
+            reference = com.google.fhir.model.r4.String(value = "Practitioner/practitioner-001")
+          )
+        ),
       content =
         listOf(
           DocumentReference.Content(
             attachment =
               Attachment(
-                title = FhirString(value = "Sykmelding.pdf"),
+                title = com.google.fhir.model.r4.String(value = "Sykmelding.pdf"),
                 language = Enumeration(value = CommonLanguages.No_No),
                 contentType = Code(value = "application/pdf"),
                 data = Base64Binary(value = "JVBERi0xLjQ="),
@@ -97,7 +103,12 @@ class DocumentReferenceRepositoryImplTest {
         ),
       context =
         DocumentReference.Context(
-          encounter = listOf(Reference(reference = FhirString(value = "Encounter/encounter-001")))
+          encounter =
+            listOf(
+              Reference(
+                reference = com.google.fhir.model.r4.String(value = "Encounter/encounter-001")
+              )
+            )
         ),
     )
 
@@ -168,13 +179,13 @@ class DocumentReferenceRepositoryImplTest {
       DocumentReference(
         id = null,
         status = Enumeration(value = DocumentReferenceStatus.Current),
-        description = FhirString(value = "New document"),
+        description = com.google.fhir.model.r4.String(value = "New document"),
         content =
           listOf(
             DocumentReference.Content(
               attachment =
                 Attachment(
-                  title = FhirString(value = "Document.pdf"),
+                  title = com.google.fhir.model.r4.String(value = "Document.pdf"),
                   contentType = Code(value = "application/pdf"),
                 )
             )
@@ -230,7 +241,7 @@ class DocumentReferenceRepositoryImplTest {
     // Create a known PDF file header (minimal valid PDF)
     val pdfContent = "%PDF-1.4\n%Test PDF content for roundtrip verification\n%%EOF"
     val originalBytes = pdfContent.toByteArray(Charsets.UTF_8)
-    val base64Encoded = java.util.Base64.getEncoder().encodeToString(originalBytes)
+    val base64Encoded = Base64.getEncoder().encodeToString(originalBytes)
 
     val documentReference =
       DocumentReference(
@@ -241,7 +252,7 @@ class DocumentReferenceRepositoryImplTest {
             DocumentReference.Content(
               attachment =
                 Attachment(
-                  title = FhirString(value = "test-document.pdf"),
+                  title = com.google.fhir.model.r4.String(value = "test-document.pdf"),
                   contentType = Code(value = "application/pdf"),
                   data = Base64Binary(value = base64Encoded),
                 )
@@ -257,7 +268,7 @@ class DocumentReferenceRepositoryImplTest {
     assertNotNull(retrievedBase64)
 
     // Decode the base64 and verify it matches the original bytes
-    val decodedBytes = java.util.Base64.getDecoder().decode(retrievedBase64)
+    val decodedBytes = Base64.getDecoder().decode(retrievedBase64)
     assertTrue(originalBytes.contentEquals(decodedBytes))
 
     // Verify we can reconstruct the original content

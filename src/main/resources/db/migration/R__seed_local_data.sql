@@ -382,3 +382,147 @@ INSERT INTO document_reference (id, data) VALUES
   }'::jsonb
 )
 ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data;
+
+INSERT INTO questionnaire_response (id, data) VALUES
+(
+  'e3f7a92b-1d44-4c8e-b6f0-2a9d7c5e1038',
+  '{
+    "resourceType": "QuestionnaireResponse",
+    "id": "e3f7a92b-1d44-4c8e-b6f0-2a9d7c5e1038",
+    "questionnaire": "https://www.nav.no/samarbeidspartner/sykmelding/fhir/R4/Questionnaire/V1",
+    "status": "completed",
+    "subject": {
+      "reference": "Patient/patient-001"
+    },
+    "encounter": {
+      "reference": "Encounter/encounter-001"
+    },
+    "authored": "2026-02-10T09:30:00+01:00",
+    "author": {
+      "reference": "Practitioner/practitioner-001"
+    },
+    "item": [
+      {
+        "linkId": "hoveddiagnose",
+        "answer": [{
+          "valueCoding": {
+            "system": "urn:oid:2.16.578.1.12.4.1.1.7110",
+            "code": "M54.5",
+            "display": "Korsryggsmerter"
+          }
+        }]
+      },
+      {
+        "linkId": "bidiagnose",
+        "answer": [{
+          "valueCoding": {
+            "system": "urn:oid:2.16.578.1.12.4.1.1.7110",
+            "code": "F32.0",
+            "display": "Mild depressiv episode"
+          }
+        }]
+      },
+      {
+        "linkId": "aktivitet",
+        "item": [
+          {
+            "linkId": "aktivitet-type",
+            "answer": [{
+              "valueCoding": {
+                "code": "AKTIVITET_IKKE_MULIG",
+                "display": "Aktivitet ikke mulig"
+              }
+            }]
+          },
+          {
+            "linkId": "aktivitet-fom",
+            "answer": [{ "valueDate": "2026-02-10" }]
+          },
+          {
+            "linkId": "aktivitet-tom",
+            "answer": [{ "valueDate": "2026-02-24" }]
+          }
+        ]
+      },
+      {
+        "linkId": "aktivitet",
+        "item": [
+          {
+            "linkId": "aktivitet-type",
+            "answer": [{
+              "valueCoding": {
+                "code": "GRADERT",
+                "display": "Gradert"
+              }
+            }]
+          },
+          {
+            "linkId": "aktivitet-fom",
+            "answer": [{ "valueDate": "2026-02-25" }]
+          },
+          {
+            "linkId": "aktivitet-tom",
+            "answer": [{ "valueDate": "2026-03-24" }]
+          },
+          {
+            "linkId": "aktivitet-grad",
+            "answer": [{ "valueInteger": 60 }]
+          }
+        ]
+      },
+      {
+        "linkId": "aktivitet",
+        "item": [
+          {
+            "linkId": "aktivitet-type",
+            "answer": [{
+              "valueCoding": {
+                "code": "GRADERT",
+                "display": "Gradert"
+              }
+            }]
+          },
+          {
+            "linkId": "aktivitet-fom",
+            "answer": [{ "valueDate": "2026-03-25" }]
+          },
+          {
+            "linkId": "aktivitet-tom",
+            "answer": [{ "valueDate": "2026-04-14" }]
+          },
+          {
+            "linkId": "aktivitet-grad",
+            "answer": [{ "valueInteger": 20 }]
+          }
+        ]
+      },
+      {
+        "linkId": "svangerskapsrelatert",
+        "answer": [{ "valueBoolean": false }]
+      },
+      {
+        "linkId": "yrkesskade",
+        "item": [
+          {
+            "linkId": "yrkesskade-er-yrkesskade",
+            "answer": [{ "valueBoolean": true }]
+          },
+          {
+            "linkId": "yrkesskade-skadedato",
+            "answer": [{ "valueDate": "2025-06-15" }]
+          }
+        ]
+      },
+      {
+        "linkId": "arbeidsforhold",
+        "item": [
+          {
+            "linkId": "arbeidsforhold-arbeidsgivernavn",
+            "answer": [{ "valueString": "Arbeidsgiver AS" }]
+          }
+        ]
+      }
+    ]
+  }'::jsonb
+)
+ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data;

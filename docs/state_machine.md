@@ -328,15 +328,28 @@ Last verified: 2026-05-06.
 #### FHIR DocumentReference (5)
 - `src/main/kotlin/no/nav/helse/fhir/documentreference/DocumentReferenceRouting.kt`
 - `src/main/kotlin/no/nav/helse/fhir/documentreference/DocumentReferenceService.kt`
-- `src/main/kotlin/no/nav/helse/fhir/documentreference/repository/DocumentReferenceRepository.kt`
-- `src/main/kotlin/no/nav/helse/fhir/documentreference/repository/DocumentReferenceTable.kt`
-- `src/main/kotlin/no/nav/helse/fhir/documentreference/repository/StubDocumentReferenceRepository.kt`
+- `src/main/kotlin/no/nav/helse/fhir/documentreference/DocumentReferenceRepository.kt`
+- `src/main/kotlin/no/nav/helse/fhir/documentreference/DocumentReferenceRepositoryImpl.kt`
+- `src/main/kotlin/no/nav/helse/fhir/documentreference/DocumentReferenceTable.kt`
 
-### Backend — Resources (4)
+#### FHIR QuestionnaireResponse (5)
+- `src/main/kotlin/no/nav/helse/fhir/questionnaireresponse/QuestionnaireResponseRouting.kt`
+- `src/main/kotlin/no/nav/helse/fhir/questionnaireresponse/QuestionnaireResponseService.kt`
+- `src/main/kotlin/no/nav/helse/fhir/questionnaireresponse/QuestionnaireResponseRepository.kt`
+- `src/main/kotlin/no/nav/helse/fhir/questionnaireresponse/QuestionnaireResponseRepositoryImpl.kt`
+- `src/main/kotlin/no/nav/helse/fhir/questionnaireresponse/QuestionnaireResponseTable.kt`
+
+#### FHIR Transaction Bundle (1)
+- `src/main/kotlin/no/nav/helse/fhir/bundle/TransactionBundleService.kt`
+
+### Backend — Resources (7)
 - `src/main/resources/application.yaml`
 - `src/main/resources/application-local.yaml`
 - `src/main/resources/logback.xml`
-- `src/main/resources/db/migrations/V1__initial_fhir_db_schema.sql`
+- `src/main/resources/db/migration/V1__initial_fhir_db_schema.sql`
+- `src/main/resources/db/migration/V2__simplify_fhir_tables_to_jsonb.sql`
+- `src/main/resources/db/migration/V3__add_questionnaire_response.sql`
+- `src/main/resources/db/migration/R__seed_local_data.sql`
 
 ### Frontend — TypeScript/React (5)
 - `frontend/src/main.tsx`

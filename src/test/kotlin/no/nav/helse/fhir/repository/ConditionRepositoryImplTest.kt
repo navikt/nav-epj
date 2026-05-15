@@ -1,11 +1,10 @@
-package fhir.condition
+package no.nav.helse.fhir.repository
 
 import com.google.fhir.model.r4.Code
 import com.google.fhir.model.r4.CodeableConcept
 import com.google.fhir.model.r4.Coding
 import com.google.fhir.model.r4.Condition
 import com.google.fhir.model.r4.Reference
-import com.google.fhir.model.r4.String as FhirString
 import com.google.fhir.model.r4.Uri
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -37,7 +36,7 @@ class ConditionRepositoryImplTest {
       postgres.start()
 
       DatabaseConnection.database =
-        Database.connect(
+        Database.Companion.connect(
           url =
             "jdbc:postgresql://${postgres.host}:${postgres.getMappedPort(5432)}/${postgres.databaseName}",
           driver = "org.postgresql.Driver",
@@ -65,8 +64,12 @@ class ConditionRepositoryImplTest {
   ) =
     Condition(
       id = id,
-      subject = Reference(reference = FhirString(value = "Patient/$patientId")),
-      encounter = encounterId?.let { Reference(reference = FhirString(value = "Encounter/$it")) },
+      subject =
+        Reference(reference = com.google.fhir.model.r4.String(value = "Patient/$patientId")),
+      encounter =
+        encounterId?.let {
+          Reference(reference = com.google.fhir.model.r4.String(value = "Encounter/$it"))
+        },
       code =
         CodeableConcept(
           coding =
@@ -74,7 +77,7 @@ class ConditionRepositoryImplTest {
               Coding(
                 system = Uri(value = "urn:oid:2.16.578.1.12.4.1.1.7170"),
                 code = Code(value = code),
-                display = FhirString(value = display),
+                display = com.google.fhir.model.r4.String(value = display),
               )
             )
         ),
@@ -140,7 +143,8 @@ class ConditionRepositoryImplTest {
     val condition =
       Condition(
         id = null,
-        subject = Reference(reference = FhirString(value = "Patient/patient-001")),
+        subject =
+          Reference(reference = com.google.fhir.model.r4.String(value = "Patient/patient-001")),
         code =
           CodeableConcept(
             coding =
@@ -148,7 +152,7 @@ class ConditionRepositoryImplTest {
                 Coding(
                   system = Uri(value = "urn:oid:2.16.578.1.12.4.1.1.7170"),
                   code = Code(value = "L73"),
-                  display = FhirString(value = "Brudd legg/ankel"),
+                  display = com.google.fhir.model.r4.String(value = "Brudd legg/ankel"),
                 )
               )
           ),

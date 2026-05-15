@@ -1,4 +1,4 @@
-package fhir.patient
+package no.nav.helse.fhir.repository
 
 import com.google.fhir.model.r4.Canonical
 import com.google.fhir.model.r4.Date
@@ -40,7 +40,7 @@ class PatientRepositoryImplTest {
       postgres.start()
 
       DatabaseConnection.database =
-        Database.connect(
+        Database.Companion.connect(
           url =
             "jdbc:postgresql://${postgres.host}:${postgres.getMappedPort(5432)}/${postgres.databaseName}",
           driver = "org.postgresql.Driver",
