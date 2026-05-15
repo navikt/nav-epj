@@ -4,15 +4,15 @@ import com.google.fhir.model.r4.Patient
 
 class PatientService(private val repository: PatientRepository) {
 
-  fun getPatient(id: String): Patient? {
-    return repository.getPatient(id)
+  suspend fun getPatient(id: String): Patient? {
+    return repository.getById(id)
   }
 
-  fun getAllPatients(): List<Patient> {
-    return repository.getAllPatients()
+  suspend fun getAllPatients(): List<Patient> {
+    return repository.getAll()
   }
 
-  fun createPatient(patient: Patient): Patient {
-    return repository.createPatient(patient)
+  suspend fun createPatient(patient: Patient): Patient {
+    return repository.create(patient)
   }
 }

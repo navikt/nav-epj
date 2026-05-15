@@ -4,6 +4,90 @@
 -- Only seed if we're in local environment (check for empty practitioners table)
 -- Using INSERT ... ON CONFLICT to make this idempotent
 
+INSERT INTO patient (id, data) VALUES
+(
+  'patient-001',
+  '{
+    "resourceType": "Patient",
+    "id": "patient-001",
+    "meta": {
+      "profile": ["http://hl7.no/fhir/StructureDefinition/no-basis-Patient"]
+    },
+    "identifier": [
+      {
+        "system": "urn:oid:2.16.578.1.12.4.1.4.1",
+        "value": "12345678901"
+      },
+      {
+        "system": "urn:oid:2.16.578.1.12.4.1.4.2",
+        "value": "01234567890"
+      }
+    ],
+    "active": true,
+    "name": [{
+      "family": "Li",
+      "given": ["Jun"]
+    }],
+    "gender": "male",
+    "birthDate": "1985-03-15"
+  }'::jsonb
+),
+(
+  'patient-002',
+  '{
+    "resourceType": "Patient",
+    "id": "patient-002",
+    "meta": {
+      "profile": ["http://hl7.no/fhir/StructureDefinition/no-basis-Patient"]
+    },
+    "identifier": [
+      {
+        "system": "urn:oid:2.16.578.1.12.4.1.4.1",
+        "value": "12345678902"
+      },
+      {
+        "system": "urn:oid:2.16.578.1.12.4.1.4.2",
+        "value": "01234567891"
+      }
+    ],
+    "active": true,
+    "name": [{
+      "family": "McGibbons",
+      "given": ["Elle"]
+    }],
+    "gender": "female",
+    "birthDate": "1990-07-22"
+  }'::jsonb
+),
+(
+  'patient-003',
+  '{
+    "resourceType": "Patient",
+    "id": "patient-003",
+    "meta": {
+      "profile": ["http://hl7.no/fhir/StructureDefinition/no-basis-Patient"]
+    },
+    "identifier": [
+      {
+        "system": "urn:oid:2.16.578.1.12.4.1.4.1",
+        "value": "12345678903"
+      },
+      {
+        "system": "urn:oid:2.16.578.1.12.4.1.4.2",
+        "value": "01234567892"
+      }
+    ],
+    "active": false,
+    "name": [{
+      "family": "Wee",
+      "given": ["Jack"]
+    }],
+    "gender": "male",
+    "birthDate": "1972-11-08"
+  }'::jsonb
+)
+ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data;
+
 INSERT INTO practitioner (id, data) VALUES
 (
   'practitioner-001',

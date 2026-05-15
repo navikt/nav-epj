@@ -151,9 +151,9 @@ All FHIR resources follow the same pattern: GET collection, GET by ID, POST crea
 **Files:**
 - `src/main/kotlin/no/nav/helse/fhir/patient/PatientRouting.kt`
 - `src/main/kotlin/no/nav/helse/fhir/patient/PatientService.kt`
-- `src/main/kotlin/no/nav/helse/fhir/patient/repository/PatientRepository.kt`
-- `src/main/kotlin/no/nav/helse/fhir/patient/repository/PatientTable.kt`
-- `src/main/kotlin/no/nav/helse/fhir/patient/repository/StubPatientRepository.kt`
+- `src/main/kotlin/no/nav/helse/fhir/patient/PatientRepository.kt`
+- `src/main/kotlin/no/nav/helse/fhir/patient/PatientRepositoryImpl.kt`
+- `src/main/kotlin/no/nav/helse/fhir/patient/PatientTable.kt`
 
 #### 8b. Organization
 
@@ -293,9 +293,9 @@ Last verified: 2026-05-06.
 #### FHIR Patient (5)
 - `src/main/kotlin/no/nav/helse/fhir/patient/PatientRouting.kt`
 - `src/main/kotlin/no/nav/helse/fhir/patient/PatientService.kt`
-- `src/main/kotlin/no/nav/helse/fhir/patient/repository/PatientRepository.kt`
-- `src/main/kotlin/no/nav/helse/fhir/patient/repository/PatientTable.kt`
-- `src/main/kotlin/no/nav/helse/fhir/patient/repository/StubPatientRepository.kt`
+- `src/main/kotlin/no/nav/helse/fhir/patient/PatientRepository.kt`
+- `src/main/kotlin/no/nav/helse/fhir/patient/PatientRepositoryImpl.kt`
+- `src/main/kotlin/no/nav/helse/fhir/patient/PatientTable.kt`
 
 #### FHIR Organization (5)
 - `src/main/kotlin/no/nav/helse/fhir/organization/OrganizationRouting.kt`

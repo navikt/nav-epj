@@ -12,12 +12,13 @@ import com.google.fhir.model.r4.Patient
 import com.google.fhir.model.r4.String
 import com.google.fhir.model.r4.Uri
 import com.google.fhir.model.r4.terminologies.AdministrativeGender
-import io.mockk.every
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.verify
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlinx.coroutines.runBlocking
 import no.nav.helse.fhir.patient.PatientRepository
 import no.nav.helse.fhir.patient.PatientService
 
@@ -107,12 +108,13 @@ class PatientServiceTest {
     )
 
   @Test
-  fun `get patient successfully and assert results`() {
+  fun `should return patient when id exists`() = runBlocking {
     val patientService = PatientService(patientRepository)
-    every { patientRepository.getPatient(any()) } returns olaThePatient
-    val patient = patientService.getPatient(olaPatientId)
-    verify(exactly = 1) { patientRepository.getPatient(olaPatientId) }
+    coEvery { patientRepository.getById(any()) } returns olaThePatient
 
+    val patient = patientService.getPatient(olaPatientId)
+
+    coVerify(exactly = 1) { patientRepository.getById(olaPatientId) }
     assertEquals(olaThePatient.id, patient?.id)
     assertEquals(olaThePatient.meta, patient?.meta)
     assertEquals(olaThePatient.identifier, patient?.identifier)
@@ -123,40 +125,42 @@ class PatientServiceTest {
   }
 
   @Test
-  fun `get patient with non existing id should return null`() {
+  fun `should return null when patient id does not exist`() = runBlocking {
     val nonExistingId = "non-existing-id"
     val patientService = PatientService(patientRepository)
-    every { patientRepository.getPatient(any()) } returns null
-    val patient = patientService.getPatient(nonExistingId)
-    verify(exactly = 1) { patientRepository.getPatient(nonExistingId) }
+    coEvery { patientRepository.getById(any()) } returns null
 
+    val patient = patientService.getPatient(nonExistingId)
+
+    coVerify(exactly = 1) { patientRepository.getById(nonExistingId) }
     assertEquals(null, patient)
   }
 
   @Test
-  fun `get all patients should return all patients and assert that there are three patients`() {
+  fun `should return all patients`() = runBlocking {
     val patientService = PatientService(patientRepository)
-    every { patientRepository.getAllPatients() } returns
-      listOf(olaThePatient, kariPatient, perPatient)
-    val patients = patientService.getAllPatients()
-    verify(exactly = 1) { patientRepository.getAllPatients() }
+    coEvery { patientRepository.getAll() } returns listOf(olaThePatient, kariPatient, perPatient)
 
+    val patients = patientService.getAllPatients()
+
+    coVerify(exactly = 1) { patientRepository.getAll() }
     assertEquals(3, patients.size)
     assertTrue { patients[0].id == olaThePatient.id }
   }
 
   @Test
-  fun `get patients returns an empty list when there are no patients`() {
+  fun `should return empty list when no patients exist`() = runBlocking {
     val patientService = PatientService(patientRepository)
-    every { patientRepository.getAllPatients() } returns emptyList()
-    val patients = patientService.getAllPatients()
-    verify(exactly = 1) { patientRepository.getAllPatients() }
+    coEvery { patientRepository.getAll() } returns emptyList()
 
+    val patients = patientService.getAllPatients()
+
+    coVerify(exactly = 1) { patientRepository.getAll() }
     assertTrue { patients.isEmpty() }
   }
 
   @Test
-  fun `create patient successfully`() {
+  fun `should create patient successfully`() = runBlocking {
     val patientService = PatientService(patientRepository)
     val newPatient =
       Patient(
@@ -185,11 +189,11 @@ class PatientServiceTest {
         gender = Enumeration(value = AdministrativeGender.Male),
         birthDate = Date(value = FhirDate.fromString("1995-05-15")),
       )
-    every { patientRepository.createPatient(any()) } returns newPatient
+    coEvery { patientRepository.create(any()) } returns newPatient
 
     val created = patientService.createPatient(newPatient)
-    verify(exactly = 1) { patientRepository.createPatient(newPatient) }
 
+    coVerify(exactly = 1) { patientRepository.create(newPatient) }
     assertEquals(newPatient.id, created.id)
     assertEquals(newPatient.meta, created.meta)
     assertEquals(newPatient.identifier, created.identifier)

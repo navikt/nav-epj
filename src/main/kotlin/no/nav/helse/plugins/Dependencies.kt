@@ -12,8 +12,8 @@ import no.nav.helse.fhir.encounter.EncounterRepositoryImpl
 import no.nav.helse.fhir.encounter.EncounterService
 import no.nav.helse.fhir.organization.OrganizationRepositoryImpl
 import no.nav.helse.fhir.organization.OrganizationService
+import no.nav.helse.fhir.patient.PatientRepositoryImpl
 import no.nav.helse.fhir.patient.PatientService
-import no.nav.helse.fhir.patient.StubPatientRepository
 import no.nav.helse.fhir.practitioner.PractitionerRepositoryImpl
 import no.nav.helse.fhir.practitioner.PractitionerService
 
@@ -21,7 +21,7 @@ fun Application.configureDependencies() {
   val env = initializeEnvironment(environment.config)
   dependencies {
     provide<Environment> { env }
-    provide<PatientService> { PatientService(StubPatientRepository()) }
+    provide<PatientService> { PatientService(PatientRepositoryImpl()) }
     provide<OrganizationService> { OrganizationService(OrganizationRepositoryImpl()) }
     provide<EncounterService> { EncounterService(EncounterRepositoryImpl()) }
     provide<ConditionService> { ConditionService(ConditionRepositoryImpl()) }
