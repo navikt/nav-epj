@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# yarn
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz

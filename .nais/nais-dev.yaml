@@ -12,6 +12,7 @@ spec:
       - type: POSTGRES_17
         name: dr-zara-db-instance
         cascadingDelete: false
+        tier: db-f1-micro
         databases:
           - name: dr-zara
             envVarPrefix: DB
@@ -20,7 +21,6 @@ spec:
         diskType: SSD
         insights:
           enabled: true
-        tier: db-f1-micro
         flags:
           - name: cloudsql.logical_decoding
             value: "on"
@@ -39,8 +39,13 @@ spec:
 
   liveness:
     path: /internal/health/alive
+    initialDelay: 30
+    periodSeconds: 10
+    failureThreshold: 5
   readiness:
     path: /internal/health/ready
+    initialDelay: 30
+    periodSeconds: 5
   preStopHook:
     http:
       path: /internal/shutdown
@@ -51,18 +56,22 @@ spec:
     autoInstrumentation:
       enabled: true
       runtime: java
-  env:
-    - name: OAUTH_AUTHORIZE_URL
-      value: "http://localhost:8080/oidc/authorize"
-    - name: OAUTH_ACCESS_TOKEN_URL
-      value: "http://localhost:8080/oidc/token"
-    - name: OAUTH_CLIENT_ID
-      value: "dr-zara-web"
-    - name: OAUTH_CLIENT_SECRET
-      value: "secret"
-    - name: OAUTH_CALLBACK_URL
-      value: "http://localhost:8080/callback"
-    - name: OAUTH_DEFAULT_SCOPES
-      value: "openid,profile"
-    - name: DB_NAME
-      value: "dr-zara"
+
+  ingresses:
+    - 'https://dr-zara.ansatt.dev.nav.no'
+
+  login:
+    provider: openid
+    enforce:
+      enabled: true
+      excludePaths:
+        - /auth/**
+        - /api/**
+
+  accessPolicy:
+    outbound:
+      external:
+        - host: 'helseid-sts.test.nhn.no'
+
+  envFrom:
+    - secret: login-config-dr-zara

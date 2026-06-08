@@ -2,22 +2,15 @@ ktor:
   application:
     modules:
       - no.nav.helse.ApplicationKt.module
-    # dependencies:
   deployment:
     port: 8080
 
-oauth:
-  authorizeUrl: ${?OAUTH_AUTHORIZE_URL}
-  accessTokenUrl: ${?OAUTH_ACCESS_TOKEN_URL}
-  clientId: ${?OAUTH_CLIENT_ID}
-  clientSecret: ${?OAUTH_CLIENT_SECRET}
-  callbackUrl: ${?OAUTH_CALLBACK_URL}
-  defaultScopes: ${?OAUTH_DEFAULT_SCOPES}
-
 database:
-  host: ${?DB_HOST}
-  port: ${?DB_PORT}
-  name: ${?DB_NAME}
-  url: ${?DB_JDBC_URL}
-  username: ${?DB_USERNAME}
-  password: ${?DB_PASSWORD}
+  url: ${DB_JDBC_URL}
+  user: ${DB_USERNAME}
+  password: ${DB_PASSWORD}
+
+auth:
+  helseId:
+    wellKnownUrl: ${WONDERWALL_OPENID_WELL_KNOWN_URL}
+    clientId: ${WONDERWALL_OPENID_CLIENT_ID}

@@ -1,15 +1,14 @@
 ktor:
-  environment: local
-
-oauth:
-  authorizeUrl: "http://localhost:8080/oidc/authorize"
-  accessTokenUrl: "http://localhost:8080/oidc/token"
-  clientId: "dr-zara-web"
-  clientSecret: "secret"
-  callbackUrl: "http://localhost:8080/callback"
-  defaultScopes: "openid,profile"
+  application:
+    modules:
+      - no.nav.helse.ApplicationKt.module
+  deployment:
+    port: 8080
+    watch:
+      - classes
+      - resources
 
 database:
   url: "jdbc:postgresql://localhost:5432/dr-zara"
-  username: "postgres"
+  user: "postgres"
   password: "postgres"

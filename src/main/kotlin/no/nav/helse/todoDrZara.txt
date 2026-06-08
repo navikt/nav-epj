@@ -1,0 +1,25 @@
+deploy
+- deploye app til nais med helseid og database
+
+
+lage apis mot frontend
+- dataklasser
+- sql tabeller
+- generell kommuniksjasjon med frontend
+- få frontend på (grizzly - pair)
+
+
+smart configuration
+- valkey
+
+
+dokumentasjon
+
+
+implementere etterhvert:
+- takster: hva du som lege blir kompensert for av staten for å skrive sykmelding
+
+
+
+
+

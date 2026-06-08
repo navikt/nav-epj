@@ -1,27 +1,24 @@
 package no.nav.helse
 
-import database.configureDatabase
 import io.ktor.server.application.*
-import no.nav.helse.auth.configureSecurity
-import no.nav.helse.auth.stub.configureOidcStub
-import no.nav.helse.fhir.configureFhirRouting
+import no.nav.helse.epj.configureEpjModule
+import no.nav.helse.helseIdAuth.configureHelseIdAuth
+import no.nav.helse.plugins.configureDatabases
 import no.nav.helse.plugins.configureDependencies
+import no.nav.helse.plugins.configureHealthCheck
 import no.nav.helse.plugins.configureSerialization
-import no.nav.helse.plugins.configureSession
+import no.nav.helse.smartAuth.configureSmartAuth
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
 fun Application.module() {
-  configureDependencies()
   configureSerialization()
-  configureSession()
-  configureSecurity()
-  configureRouting()
-  configureFhirRouting()
-  configureDatabase()
+  configureDatabases()
+  configureHealthCheck()
 
-  configureOidcStub()
-  //  val env: Environment by dependencies
-  //  if (env.runtime == Runtime.LOCAL) {
-  //  }
+  configureHelseIdAuth()
+  configureSmartAuth()
+
+  configureEpjModule()
+  configureDependencies()
 }

@@ -2,17 +2,15 @@ import * as z from "zod";
 
 export const PatientSchema = z.object({
   id: z.string(),
-  name: z.array(
-    z.object({
-      given: z.array(z.string()),
-      family: z.string(),
-    }),
-  ),
+  name: z.string(),
   birthDate: z.string(),
 });
 
-export type FhirPatient = z.infer<typeof PatientSchema>;
+export type Patient = z.infer<typeof PatientSchema>;
 
+
+
+// TODO: endre på disse til å ikke være fhir data, men epj data
 export const PractitionerSchema = z.object({
   id: z.string(),
   name: z.array(

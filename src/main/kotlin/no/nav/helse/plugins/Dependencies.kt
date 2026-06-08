@@ -1,40 +1,8 @@
 package no.nav.helse.plugins
 
 import io.ktor.server.application.*
-import io.ktor.server.plugins.di.dependencies
-import no.nav.helse.core.Environment
-import no.nav.helse.core.initializeEnvironment
-import no.nav.helse.fhir.bundle.TransactionBundleService
-import no.nav.helse.fhir.condition.ConditionRepositoryImpl
-import no.nav.helse.fhir.condition.ConditionService
-import no.nav.helse.fhir.documentreference.DocumentReferenceRepositoryImpl
-import no.nav.helse.fhir.documentreference.DocumentReferenceService
-import no.nav.helse.fhir.encounter.EncounterRepositoryImpl
-import no.nav.helse.fhir.encounter.EncounterService
-import no.nav.helse.fhir.organization.OrganizationRepositoryImpl
-import no.nav.helse.fhir.organization.OrganizationService
-import no.nav.helse.fhir.patient.PatientRepositoryImpl
-import no.nav.helse.fhir.patient.PatientService
-import no.nav.helse.fhir.practitioner.PractitionerRepositoryImpl
-import no.nav.helse.fhir.practitioner.PractitionerService
-import no.nav.helse.fhir.questionnaireresponse.QuestionnaireResponseRepositoryImpl
-import no.nav.helse.fhir.questionnaireresponse.QuestionnaireResponseService
+import io.ktor.server.plugins.di.*
 
 fun Application.configureDependencies() {
-  val env = initializeEnvironment(environment.config)
-  dependencies {
-    provide<Environment> { env }
-    provide<PatientService> { PatientService(PatientRepositoryImpl()) }
-    provide<OrganizationService> { OrganizationService(OrganizationRepositoryImpl()) }
-    provide<EncounterService> { EncounterService(EncounterRepositoryImpl()) }
-    provide<ConditionService> { ConditionService(ConditionRepositoryImpl()) }
-    provide<PractitionerService> { PractitionerService(PractitionerRepositoryImpl()) }
-    provide<DocumentReferenceService> {
-      DocumentReferenceService(DocumentReferenceRepositoryImpl())
-    }
-    provide<QuestionnaireResponseService> {
-      QuestionnaireResponseService(QuestionnaireResponseRepositoryImpl())
-    }
-    provide<TransactionBundleService> { TransactionBundleService() }
-  }
+  dependencies {}
 }

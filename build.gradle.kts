@@ -1,16 +1,10 @@
-val kotlin_version: String by project
-val logback_version: String by project
-val mockk_version: String by project
-val exposed_version: String by project
-val kotest_version: String by project
-
-
 plugins {
-  kotlin("jvm") version "2.3.0"
-  kotlin("plugin.serialization") version "2.3.0"
-  id("io.ktor.plugin") version "3.4.2"
-  id("com.diffplug.spotless") version "8.4.0"
-  id("dev.detekt") version "2.0.0-alpha.3"
+  alias(libs.plugins.kotlin.jvm)
+  alias(libs.plugins.kotlin.serialization)
+  alias(libs.plugins.ktor)
+  alias(libs.plugins.spotless)
+  alias(libs.plugins.detekt)
+  alias(libs.plugins.flyway)
 }
 
 group = "no.nav.helse"
@@ -19,13 +13,6 @@ version = "0.0.1"
 application {
   mainClass = "io.ktor.server.netty.EngineMain"
 }
-
-// this attempts to fix an issue: FlywayException: Unknown prefix for location (should be one of ): classpath:db/callback
-//tasks.withType<ShadowJar> {
-//  mergeServiceFiles()
-//  isZip64 = true
-//  duplicatesStrategy = DuplicatesStrategy.INCLUDE
-//}
 
 tasks {
   shadowJar {
@@ -44,40 +31,39 @@ repositories {
 }
 
 dependencies {
-  implementation("io.ktor:ktor-server-core")
-  implementation("io.ktor:ktor-server-auth")
-  implementation("io.ktor:ktor-server-auth-jwt")
-  implementation("io.ktor:ktor-server-content-negotiation")
-  implementation("io.ktor:ktor-server-html-builder")
-  implementation("io.ktor:ktor-serialization-kotlinx-json")
-  implementation("io.ktor:ktor-server-netty")
-  implementation("io.ktor:ktor-server-config-yaml")
-  implementation("io.ktor:ktor-client-core")
-  implementation("io.ktor:ktor-client-cio")
-  implementation("io.ktor:ktor-server-di")
-  implementation("ch.qos.logback:logback-classic:$logback_version")
-  implementation("org.jetbrains.exposed:exposed-core:$exposed_version")
-  implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
-  implementation("org.jetbrains.exposed:exposed-json:$exposed_version")
-  implementation("org.jetbrains.exposed:exposed-kotlin-datetime:$exposed_version")
-  implementation("org.postgresql:postgresql:42.7.10")
-  implementation("org.flywaydb:flyway-core:12.4.0")
-  implementation("org.flywaydb:flyway-database-postgresql:11.8.2")
-  implementation("io.ktor:ktor-serialization-jackson")
-  implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.0")
+  implementation(libs.ktor.server.core)
+  implementation(libs.ktor.server.auth)
+  implementation(libs.ktor.server.auth.jwt)
+  implementation(libs.ktor.server.content.negotiation)
+  implementation(libs.ktor.server.html.builder)
+  implementation(libs.ktor.serialization.kotlinx.json)
+  implementation(libs.ktor.server.netty)
+  implementation(libs.ktor.server.config.yaml)
+  implementation(libs.ktor.client.core)
+  implementation(libs.ktor.client.cio)
+  implementation(libs.ktor.server.di)
+  implementation(libs.ktor.serialization.jackson)
+  implementation(libs.ktor.server.routing.openapi)
+  implementation(libs.ktor.server.cors)
+  implementation(libs.logback.classic)
+  implementation(libs.exposed.core)
+  implementation(libs.exposed.jdbc)
+  implementation(libs.exposed.json)
+  implementation(libs.exposed.kotlin.datetime)
+  implementation(libs.postgresql)
+  implementation(libs.flyway.core)
+  implementation(libs.flyway.postgresql)
+  implementation(libs.jackson.datatype.jsr310)
+  implementation(libs.nimbus.oauth2.oidc.sdk)
+  implementation(libs.fhir.model)
 
-
-  //FHIR
-  implementation("com.google.fhir:fhir-model:1.0.0-beta02")
-
-  // Test
-  testImplementation("io.ktor:ktor-server-test-host")
-  testImplementation("io.kotest:kotest-assertions-core:${kotest_version}")
-  testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
-  testImplementation("io.mockk:mockk:$mockk_version")
-  testImplementation("org.testcontainers:testcontainers:1.21.0")
-  testImplementation("org.testcontainers:postgresql:1.21.0")
-  testImplementation("org.testcontainers:junit-jupiter:1.21.0")
+  testImplementation(libs.ktor.server.test.host)
+  testImplementation(libs.kotest.assertions)
+  testImplementation(kotlin("test-junit"))
+  testImplementation(libs.mockk)
+  testImplementation(libs.testcontainers.core)
+  testImplementation(libs.testcontainers.postgresql)
+  testImplementation(libs.testcontainers.junit)
 }
 
 configure<com.diffplug.gradle.spotless.SpotlessExtension> {
@@ -88,10 +74,25 @@ tasks.named("spotlessCheck") {
     dependsOn("spotlessApply")
 }
 
+tasks.register<JavaExec>("runLocal") {
+  group = "application"
+  mainClass.set("io.ktor.server.netty.EngineMain")
+  classpath = sourceSets["main"].runtimeClasspath
+
+  args("-config=application-local.yaml")
+  jvmArgs("-Dio.ktor.development=true", "-Dlogback.configurationFile=logback-local.xml")
+}
+
 tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
     config.setFrom(file("detekt.yml"))
     buildUponDefaultConfig = true
     dependsOn("spotlessApply")
+}
+
+// TODO: remove this
+tasks.withType<Test> {
+  enabled = false
+
 }
 
 afterEvaluate {

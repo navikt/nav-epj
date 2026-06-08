@@ -259,7 +259,7 @@ These files are used across multiple flows:
 | `condition` | 8d | FHIR Condition resources |
 | `document_reference` | 8f | FHIR DocumentReference resources |
 
-All tables use `TEXT` for ID and `JSONB` for FHIR-specific fields. Schema managed by Flyway (`src/main/resources/db/migrations/V1__initial_fhir_db_schema.sql`).
+All tables use `TEXT` for ID and `JSONB` for FHIR-specific fields. Schema managed by Flyway (`src/main/resources/db/migrations/V1__initi.sql`).
 
 ---
 
@@ -346,7 +346,7 @@ Last verified: 2026-05-06.
 - `src/main/resources/application.yaml`
 - `src/main/resources/application-local.yaml`
 - `src/main/resources/logback.xml`
-- `src/main/resources/db/migration/V1__initial_fhir_db_schema.sql`
+- `src/main/resources/db/migration/V1__initi.sql`
 - `src/main/resources/db/migration/V2__simplify_fhir_tables_to_jsonb.sql`
 - `src/main/resources/db/migration/V3__add_questionnaire_response.sql`
 - `src/main/resources/db/migration/R__seed_local_data.sql`

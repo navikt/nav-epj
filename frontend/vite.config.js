@@ -18,8 +18,8 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      "/fhir": {
-        target: "http://localhost:8080", // Your Ktor server port
+      "/api": {
+        target: "http://localhost:8080",
         changeOrigin: true,
       },
     },
