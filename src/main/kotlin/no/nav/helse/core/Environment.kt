@@ -11,7 +11,7 @@ fun initEnvironment(config: ApplicationConfig): Environment {
     postgres =
       PostgresConfig(
         url = config.property("database.url").getString(),
-        username = config.property("database.username").getString(),
+        username = config.property("database.user").getString(),
         password = config.property("database.password").getString(),
       )
   )

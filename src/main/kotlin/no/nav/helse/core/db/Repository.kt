@@ -1,9 +1,5 @@
 package no.nav.helse.core.db
 
-import kotlin.uuid.ExperimentalUuidApi
-import no.nav.helse.core.db.PasientTable.fastlegeId
-import no.nav.helse.core.db.PasientTable.legekontorId
-import no.nav.helse.core.db.PasientTable.navn
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.Pasient
 import org.jetbrains.exposed.v1.core.ResultRow
@@ -11,6 +7,7 @@ import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import kotlin.uuid.ExperimentalUuidApi
 
 class Repository {
   private val logger = logger()
