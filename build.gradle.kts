@@ -56,14 +56,14 @@ dependencies {
   implementation(libs.jackson.datatype.jsr310)
   implementation(libs.nimbus.oauth2.oidc.sdk)
   implementation(libs.fhir.model)
+  implementation(libs.otel.annotations)
 
   testImplementation(libs.ktor.server.test.host)
-  testImplementation(libs.kotest.assertions)
-  testImplementation(kotlin("test-junit"))
+  testImplementation(libs.ktor.client.test.mock)
+  testImplementation(libs.kotlin.test.junit)
   testImplementation(libs.mockk)
-  testImplementation(libs.testcontainers.core)
   testImplementation(libs.testcontainers.postgresql)
-  testImplementation(libs.testcontainers.junit)
+  testImplementation(libs.kotest.assertions)
 }
 
 configure<com.diffplug.gradle.spotless.SpotlessExtension> {
@@ -87,12 +87,6 @@ tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
     config.setFrom(file("detekt.yml"))
     buildUponDefaultConfig = true
     dependsOn("spotlessApply")
-}
-
-// TODO: remove this
-tasks.withType<Test> {
-  enabled = false
-
 }
 
 afterEvaluate {

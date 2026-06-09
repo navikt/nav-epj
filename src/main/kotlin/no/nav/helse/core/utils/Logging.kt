@@ -1,4 +1,4 @@
-package no.nav.helse.utils
+package no.nav.helse.core.utils
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

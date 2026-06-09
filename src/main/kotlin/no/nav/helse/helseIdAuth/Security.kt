@@ -8,7 +8,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.jwt
 import java.net.URI
 import kotlin.text.replace
-import no.nav.helse.utils.logger
+import no.nav.helse.core.utils.logger
 
 fun Application.configureHelseIdAuth() {
   val log = logger()

@@ -6,14 +6,14 @@ mockk = "1.14.9"
 exposed = "1.3.0"
 kotest = "6.1.11"
 nimbus = "11.33"
-h2 = "2.4.240"
 postgresql = "42.7.10"
 flyway = "12.4.0"
 jackson = "2.19.0"
-testcontainers = "1.21.0"
+testcontainers = "2.0.5"
 spotless = "8.4.0"
 detekt = "2.0.0-alpha.3"
 fhir = "1.0.0-beta02"
+otel = "2.28.1"
 
 [libraries]
 # Ktor server
@@ -27,7 +27,6 @@ ktor-server-config-yaml = { module = "io.ktor:ktor-server-config-yaml", version.
 ktor-server-di = { module = "io.ktor:ktor-server-di", version.ref = "ktor" }
 ktor-server-routing-openapi = { module = "io.ktor:ktor-server-routing-openapi", version.ref = "ktor" }
 ktor-server-cors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor" }
-ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
@@ -35,6 +34,7 @@ ktor-serialization-jackson = { module = "io.ktor:ktor-serialization-jackson", ve
 
 # Monitoring and observability
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+otel-annotations = { module = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations", version.ref = "otel" }
 
 # DB
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
@@ -53,11 +53,14 @@ nimbus-oauth2-oidc-sdk = { module = "com.nimbusds:oauth2-oidc-sdk", version.ref 
 fhir-model = { module = "com.google.fhir:fhir-model", version.ref = "fhir" }
 
 # Testing
-testcontainers-core = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
-testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
-testcontainers-junit = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
-kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+ktor-client-test-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
+ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
+kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+testcontainers-postgresql = { module = "org.testcontainers:testcontainers-postgresql", version.ref = "testcontainers" }
+h2 = { module = "com.h2database:h2", version = "2.2.224" }
+kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

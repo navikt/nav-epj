@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref_name != 'main' && !startsWith(github.ref_name, 'dev')
     steps:
+      - uses: actions/checkout@v6
       - uses: navikt/tsm-workflows/actions/gradle/test@main
 
   build:
