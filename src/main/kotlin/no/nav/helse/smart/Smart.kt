@@ -1,4 +1,4 @@
-package no.nav.helse.smartAuth
+package no.nav.helse.smart
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

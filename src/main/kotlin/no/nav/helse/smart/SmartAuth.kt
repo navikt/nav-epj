@@ -1,4 +1,4 @@
-package no.nav.helse.smartAuth
+package no.nav.helse.smart
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm

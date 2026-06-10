@@ -1,18 +1,19 @@
 package no.nav.helse.epj
 
-import no.nav.helse.core.db.Repository
+import no.nav.helse.epj.api.pasient.Pasient
+import no.nav.helse.epj.db.PasientRepository
 
-class EpjService(private val repository: Repository) {
+class EpjService(private val repository: PasientRepository) {
 
   suspend fun getPasienter(): List<Pasient> {
-    return repository.getPasienter()
+    return repository.getAllPasients()
   }
 
-  suspend fun getPasient(id: String): Pasient {
+  suspend fun getPasient(id: String): Pasient? {
     return repository.getPasient(id)
   }
 
   suspend fun deleteAllPasienter(): Int {
-    return repository.deleteAllPasienter()
+    return repository.deleteAllPasients()
   }
 }

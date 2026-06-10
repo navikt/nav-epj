@@ -1,10 +1,11 @@
-package no.nav.helse.epj
+package no.nav.helse.epj.api.pasient
 
-import java.util.UUID
-import kotlin.uuid.ExperimentalUuidApi
-
-@OptIn(ExperimentalUuidApi::class)
-data class Pasient(val id: UUID, val legekontorId: UUID, val fastlegeId: UUID, val navn: String)
+data class Pasient(
+  val id: String,
+  val legekontorId: String,
+  val fastlegeId: String,
+  val navn: String,
+)
 
 /**
  * vise liste over pasienter: hente pasient i db lage api for dette starte konsultasjon på pasient:
