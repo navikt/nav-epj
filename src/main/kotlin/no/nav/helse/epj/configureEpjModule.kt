@@ -21,7 +21,6 @@ fun Application.configureEpjModule() {
     route("api") {
       get("/patient") {
         val pasienter = epjService.getPasienter()
-        print("hello ${pasienter.first()}!")
         call.respond(pasienter)
       }
       get("/patient/{id}") {
