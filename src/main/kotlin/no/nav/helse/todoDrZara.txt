@@ -1,10 +1,6 @@
-deploy
-- deploye app til nais med helseid og database
-
-
 lage apis mot frontend
 - dataklasser
-- sql tabeller
+- exposed tabeller
 - generell kommuniksjasjon med frontend
 - få frontend på (grizzly - pair)
 
