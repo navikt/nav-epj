@@ -29,7 +29,7 @@ function Index() {
         {patients.map((patient) => (
           <div key={patient.id}>
             <Link to="/patient/$patientId" params={{ patientId: patient.id }}>
-                {patient.name}
+                {patient.navn}
             </Link>
           </div>
         ))}

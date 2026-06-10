@@ -3,9 +3,10 @@ package no.nav.helse.modules
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import java.util.UUID
 import kotlin.test.BeforeTest
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
+import kotlin.uuid.toKotlinUuid
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.db.PasientTable
 import no.nav.helse.core.db.Repository
@@ -20,20 +21,20 @@ import org.junit.Test
 // refererer til ider som er seedet i databasen
 // TODO: finn en annen måte å gjøre dette på med disse id greiene ..
 @OptIn(ExperimentalUuidApi::class)
-val legekontorId = Uuid.parse("a1000000-0000-0000-0000-000000000001")
+val legekontorId = UUID.fromString("a1000000-0000-0000-0000-000000000001")
 
 @OptIn(ExperimentalUuidApi::class)
-val fastlegeId = Uuid.parse("b2000000-0000-0000-0000-000000000001")
+val fastlegeId = UUID.fromString("b2000000-0000-0000-0000-000000000001")
 
 @OptIn(ExperimentalUuidApi::class)
-val fastlege2Id = Uuid.parse("b2000000-0000-0000-0000-000000000002")
+val fastlege2Id = UUID.fromString("b2000000-0000-0000-0000-000000000002")
 
 @OptIn(ExperimentalUuidApi::class)
 class EpjServiceTest : WithPostgresql() {
 
   val pasient =
     Pasient(
-      id = Uuid.generateV4(),
+      id = UUID.randomUUID(),
       legekontorId = legekontorId,
       fastlegeId = fastlegeId,
       navn = "pasientnavn",
@@ -50,6 +51,14 @@ class EpjServiceTest : WithPostgresql() {
 
   val repository = Repository()
   val epjService = EpjService(repository)
+
+  @Test
+  fun `should return pasient by id`() = runTest {
+    repository.insertPasient(pasient)
+    val result = epjService.getPasient(pasient.id.toString())
+    result.id shouldBe pasient.id
+    result.navn shouldBe pasient.navn
+  }
 
   @Test
   fun `should return empty list when no pasienter exist`() = runTest {
@@ -70,22 +79,22 @@ class EpjServiceTest : WithPostgresql() {
   fun `should return all pasienter when multiple are inserted`() = runTest {
     val pasient2 =
       Pasient(
-        id = Uuid.generateV4(),
+        id = UUID.randomUUID(),
         legekontorId = legekontorId,
         fastlegeId = fastlege2Id,
         navn = "annen pasient",
       )
     dbQuery {
       PasientTable.insert {
-        it[id] = pasient.id
-        it[PasientTable.legekontorId] = pasient.legekontorId
-        it[PasientTable.fastlegeId] = pasient.fastlegeId
+        it[id] = pasient.id.toKotlinUuid()
+        it[PasientTable.legekontorId] = pasient.legekontorId.toKotlinUuid()
+        it[PasientTable.fastlegeId] = pasient.fastlegeId.toKotlinUuid()
         it[navn] = pasient.navn
       }
       PasientTable.insert {
-        it[id] = pasient2.id
-        it[PasientTable.legekontorId] = pasient2.legekontorId
-        it[PasientTable.fastlegeId] = pasient2.fastlegeId
+        it[id] = pasient2.id.toKotlinUuid()
+        it[PasientTable.legekontorId] = pasient2.legekontorId.toKotlinUuid()
+        it[PasientTable.fastlegeId] = pasient2.fastlegeId.toKotlinUuid()
         it[navn] = pasient2.navn
       }
     }

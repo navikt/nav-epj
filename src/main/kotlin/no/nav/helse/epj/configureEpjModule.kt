@@ -1,5 +1,6 @@
 package no.nav.helse.epj
 
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.http.content.singlePageApplication
 import io.ktor.server.plugins.di.dependencies
@@ -17,6 +18,16 @@ fun Application.configureEpjModule() {
       filesPath = "static"
     }
 
-    route("api") { get("/patient") { call.respond(epjService.getPasienter()) } }
+    route("api") {
+      get("/patient") {
+        val pasienter = epjService.getPasienter()
+        print("hello ${pasienter.first()}!")
+        call.respond(pasienter)
+      }
+      get("/patient/{id}") {
+        val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+        call.respond(epjService.getPasient(id))
+      }
+    }
   }
 }
