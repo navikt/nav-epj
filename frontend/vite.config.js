@@ -22,6 +22,10 @@ export default defineConfig({
         target: "http://localhost:8080",
         changeOrigin: true,
       },
+      "/epj": {
+        target: "http://localhost:8080", // Your Ktor server port
+        changeOrigin: true,
+      },
     },
   },
 });
