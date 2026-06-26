@@ -15,6 +15,7 @@ import no.nav.helse.epj.EpjService
 import no.nav.helse.epj.api.OpprettHelsepersonell
 import no.nav.helse.epj.api.Pasient
 import no.nav.helse.epj.db.HelsepersonellRepository
+import no.nav.helse.epj.db.KonsultasjonRepository
 import no.nav.helse.epj.db.PasientRepository
 import no.nav.helse.utils.WithPostgresql
 import org.jetbrains.exposed.v1.jdbc.deleteAll
@@ -48,7 +49,8 @@ class EpjServiceTest : WithPostgresql() {
 
   val pasientRepository = PasientRepository()
   val helsepersonellRepository = HelsepersonellRepository()
-  val epjService = EpjService(pasientRepository, helsepersonellRepository)
+  val konsultasjonRepository = KonsultasjonRepository()
+  val epjService = EpjService(pasientRepository, helsepersonellRepository, konsultasjonRepository)
 
   @Test
   fun `should insert helsepersonell`() = runTest {
@@ -65,36 +67,6 @@ class EpjServiceTest : WithPostgresql() {
     result.hpr shouldBe helsepersonell.hpr
     result.navn shouldBe helsepersonell.navn
   }
-
-  /*  @Test
-  fun `should create konsultasjon`() = runTest {
-    epjService.createKonsultasjon(pasient.id.toString())
-    val result = epjService.getKonsultasjon(pasient.id.toString())
-    result.id shouldBe pasient.id
-  }*/
-
-  /*
-    @Test
-    fun `get all konsultasjoner som ikke er avsluttet`() = runTest {
-      val result = epjService.createKonsultasjon(pasient.id.toString())
-      result.id shouldBe pasient.id
-    }
-  */
-
-  /*  @Test
-  fun `should create konsultasjon`() = runTest {
-    epjService.createKonsultasjon(pasient.id.toString())
-    val result = epjService.getKonsultasjon(pasient.id.toString())
-    result.id shouldBe pasient.id
-  }*/
-
-  /*
-    @Test
-    fun `get all konsultasjoner som ikke er avsluttet`() = runTest {
-      val result = epjService.createKonsultasjon(pasient.id.toString())
-      result.id shouldBe pasient.id
-    }
-  */
 
   @Test
   fun `should return pasient by id`() = runTest {

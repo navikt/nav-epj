@@ -43,8 +43,8 @@ object KonsultasjonTable : Table("konsultasjon") {
   val avsluttetTidspunkt = datetime("avsluttet_tidspunkt")
   val type = text("type")
   val status = text("status")
-  val problemstilling = text("problemstilling")
-  val journalnotat = text("journalnotat")
+  val problemstilling = text("problemstilling").nullable()
+  val journalnotat = text("journalnotat").nullable()
   val created = datetime("created_at")
   val updated = datetime("updated_at")
 }

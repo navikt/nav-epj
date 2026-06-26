@@ -32,18 +32,14 @@ data class Konsultasjon(
   val avsluttetTidspunkt: LocalDateTime?,
   val type: String,
   val status: String,
-  val problemstilling: String,
-  val journalnotat: String,
+  val problemstilling: String?,
+  val journalnotat: String?,
 )
 
-/**
- * vise liste over pasienter: hente pasient i db lage api for dette starte konsultasjon på pasient:
- * opprette konsultasjon og lagre i db - får alt vi trenger fra frontend
- */
-
-// laget api for konsultasjon
-// hente ut og
-// pasienter
-// pasient på id
-// helsepersonell
-// legekontor
+data class OpprettKonsultasjon(
+  val pasientId: String,
+  val helsepersonellId: String,
+  val startetTidspunkt: LocalDateTime,
+  val type: String,
+  val status: String,
+)

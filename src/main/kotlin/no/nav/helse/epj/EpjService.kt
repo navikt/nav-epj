@@ -1,17 +1,24 @@
 package no.nav.helse.epj
 
+import kotlin.time.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.api.Helsepersonell
+import no.nav.helse.epj.api.Konsultasjon
 import no.nav.helse.epj.api.OpprettHelsepersonell
+import no.nav.helse.epj.api.OpprettKonsultasjon
 import no.nav.helse.epj.api.Pasient
 import no.nav.helse.epj.api.legekontorId
 import no.nav.helse.epj.db.HelsepersonellRepository
+import no.nav.helse.epj.db.KonsultasjonRepository
 import no.nav.helse.epj.db.PasientRepository
 import no.nav.helse.helseIdAuth.User
 
 class EpjService(
   private val pasientRepository: PasientRepository,
   private val helsepersonellRepository: HelsepersonellRepository,
+  private val konsultasjonRepository: KonsultasjonRepository,
 ) {
 
   private val logger = logger()
@@ -24,13 +31,37 @@ class EpjService(
     return pasientRepository.getPasient(id)
   }
 
-  /*  suspend fun getKonsultasjon(id: String): Konsultasjon {
-    repository.getKonsultasjon(id)
-  }*/
+  suspend fun getAktivKonsultasjon(pasientId: String): Konsultasjon? {
+    return konsultasjonRepository.getAktivKonsultasjon(pasientId)
+  }
 
-  /*fun createKonsultasjon(pasientId: String): Konsultasjon {
-    return repository.createKonsultasjon(pasientId)
-  }*/
+  suspend fun createKonsultasjon(opprettKonsultasjon: OpprettKonsultasjon): Boolean {
+    val created = konsultasjonRepository.createKonsultasjon(opprettKonsultasjon)
+    logger.info("created konsultasjon på pasient: '${opprettKonsultasjon.pasientId}'")
+    return (created.insertedCount == 1)
+  }
+
+  suspend fun getOrCreateKonsultasjon(pasientId: String, hpr: String): Konsultasjon {
+    val aktivKonsultasjon = getAktivKonsultasjon(pasientId)
+    if (aktivKonsultasjon != null) return aktivKonsultasjon
+    val helsepersonell =
+      getHelspersonell(hpr) ?: throw IllegalStateException("Helspersonell ikke funnet")
+    val opprettKonsultasjon =
+      OpprettKonsultasjon(
+        pasientId = pasientId,
+        helsepersonellId = helsepersonell.id,
+        startetTidspunkt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+        type = "fysisk",
+        status = "pagaende",
+      )
+    if (createKonsultasjon(opprettKonsultasjon)) {
+      val nyKonsultasjon = getAktivKonsultasjon(pasientId)
+      logger.info("ny konstultasjon: $nyKonsultasjon")
+      return nyKonsultasjon
+        ?: throw IllegalStateException("Konsultasjon på pasientId $pasientId ikke funnet")
+    }
+    throw IllegalStateException("Konsultasjon på pasientId $pasientId ikke funnet")
+  }
 
   suspend fun insertHelsepersonell(helsepersonell: OpprettHelsepersonell): Boolean {
     val insertHelsepersonell = helsepersonellRepository.insertHelsepersonell(helsepersonell)
@@ -62,9 +93,3 @@ class EpjService(
     throw IllegalStateException("Helspersonell ikke funnet")
   }
 }
-
-/*
-en pasient kan ha mange konsultasjoiner
-
-
- */

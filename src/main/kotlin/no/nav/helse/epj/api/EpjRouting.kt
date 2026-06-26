@@ -24,7 +24,7 @@ fun Application.configureEpjRouting() {
         filesPath = "static"
       }
 
-      route("api") {
+      route("/api") {
         route("/helsepersonell/me") {
           get {
             val principal = loggedInUser()
@@ -46,14 +46,14 @@ fun Application.configureEpjRouting() {
                 ?: return@get call.respond(HttpStatusCode.NotFound, "Pasient not found")
             call.respond(pasient)
           }
-          /*
-          post("/konsultasjon/{id}") {
-            val id = call.parameters["id"] ?: return@post call.respond(HttpStatusCode.BadRequest)
-            epjService.createKonsultasjon(id)
-          }
+          post("/{pasientId}/konsultasjon") {
+            val pasientId = call.parameters["pasientId"] ?: error("Missing  pasientId")
+            log.info("looking up konsultasjon for pasientId: $pasientId")
+            val principal = loggedInUser()
+            val konsultasjon = epjService.getOrCreateKonsultasjon(pasientId, principal.hpr)
 
-           */
-          post { TODO("not implemented yet") }
+            call.respond(konsultasjon)
+          }
         }
       }
     }
