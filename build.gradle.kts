@@ -74,41 +74,10 @@ tasks.named("spotlessCheck") {
     dependsOn("spotlessApply")
 }
 
-val frontendDir = file("frontend")
-val frontendBuildDir = file("frontend/dist")
-val staticResourcesDir = file("src/main/resources/static")
-
-tasks.register<Exec>("buildFrontend") {
-  group = "frontend"
-  description = "Builds the Vite frontend"
-  workingDir = frontendDir
-  commandLine("yarn", "build")
-  inputs.dir(frontendDir.resolve("src"))
-  inputs.files(
-    frontendDir.resolve("package.json"),
-    frontendDir.resolve("vite.config.js"),
-    frontendDir.resolve("tsconfig.json"),
-  )
-  outputs.dir(frontendBuildDir)
-}
-
-tasks.register<Copy>("copyFrontend") {
-  group = "frontend"
-  description = "Copies Vite build output into Ktor static resources"
-  dependsOn("buildFrontend")
-  from(frontendBuildDir)
-  into(staticResourcesDir)
-}
-
-tasks.named("processResources") {
-  dependsOn("copyFrontend")
-}
-
 tasks.register<JavaExec>("runLocal") {
   group = "application"
   mainClass.set("io.ktor.server.netty.EngineMain")
   classpath = sourceSets["main"].runtimeClasspath
-  dependsOn("copyFrontend")
 
   args("-config=application-local.yaml")
   jvmArgs("-Dio.ktor.development=true", "-Dlogback.configurationFile=logback-local.xml")

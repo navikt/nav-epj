@@ -23,16 +23,17 @@ jobs:
     if: github.ref_name == 'main' || startsWith(github.ref_name, 'dev')
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+
+      - uses: navikt/tsm-workflows/actions/yarn@main
         with:
-          node-version: '24'
-      - run: corepack enable
-      - run: yarn --immutable
-        env:
-          NPM_AUTH_TOKEN: ${{ secrets.READER_TOKEN }}
-        working-directory: frontend
-      - run: ./scripts/build-frontend.sh
-      - run: ls -al src/main/resources/static
+          READER_TOKEN: ${{ secrets.READER_TOKEN }}
+
+      - name: Build frontend
+        run: ./scripts/build-frontend.sh
+
+      - name: Print web resources
+        run: ls -al src/main/resources/static
+
       - uses: navikt/tsm-workflows/actions/gradle/build@main
         id: build
         with:
@@ -63,6 +64,7 @@ jobs:
       url: https://dr-zara.ansatt.dev.nav.no
     steps:
       - uses: actions/checkout@v6
+
       - uses: nais/deploy/actions/deploy@v2
         env:
           CLUSTER: "dev-gcp"

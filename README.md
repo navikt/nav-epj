@@ -44,8 +44,9 @@ cp scripts/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 Frontend can be run separate from backend when developing locally. To do this, run the following
 commands in the terminal:
 
-`cd frontend`
-`yarn dev`
+1. `cd frontend`
+2. `yarn --immutable`
+3. `yarn dev`
 
 TODO: Add functionality to proxy API calls to backend when running frontend locally.
 

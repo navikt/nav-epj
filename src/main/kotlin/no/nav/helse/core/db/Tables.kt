@@ -38,7 +38,7 @@ object HelsepersonellTable : Table("helsepersonell") {
 object KonsultasjonTable : Table("konsultasjon") {
   val id = uuid("id")
   val pasientId = reference("pasient_id", refColumn = PasientTable.id)
-  val fastlegeId = reference("helsepersonell_id", refColumn = HelsepersonellTable.id)
+  val helsepersonellId = reference("helsepersonell_id", refColumn = HelsepersonellTable.id)
   val startetTidspunkt = datetime("startet_tidspunkt")
   val avsluttetTidspunkt = datetime("avsluttet_tidspunkt")
   val type = text("type")

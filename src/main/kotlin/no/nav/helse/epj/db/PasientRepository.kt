@@ -2,14 +2,14 @@ package no.nav.helse.epj.db
 
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import no.nav.helse.core.db.KonsultasjonTable
 import no.nav.helse.core.db.PasientTable
 import no.nav.helse.core.db.dbQuery
 import no.nav.helse.core.utils.logger
-import no.nav.helse.epj.api.pasient.Pasient
+import no.nav.helse.epj.api.Konsultasjon
+import no.nav.helse.epj.api.Pasient
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.deleteAll
-import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 
@@ -17,14 +17,6 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 class PasientRepository {
 
   private val logger = logger()
-
-  private fun ResultRow.toPasient() =
-    Pasient(
-      id = this[PasientTable.id].toString(),
-      legekontorId = this[PasientTable.legekontorId].toString(),
-      fastlegeId = this[PasientTable.fastlegeId].toString(),
-      navn = this[PasientTable.navn],
-    )
 
   suspend fun getPasient(id: String) = dbQuery {
     logger.info("Looking up pasient: $id")
@@ -46,13 +38,50 @@ class PasientRepository {
     }
   }
 
-  suspend fun deletePasient(id: String) = dbQuery {
-    logger.info("Deleting pasient: $id")
-    PasientTable.deleteWhere { PasientTable.id eq Uuid.parse(id) }
-  }
+  /*suspend fun createKonsultasjon(pasientId: String): Konsultasjon = dbQuery {
+      KonsultasjonTable.insert {
+        it[pasientId] = Uuid.parse(pasientId)
+        it[helsepersonellId] =
+        it[startetTidspunkt]
+        it[avsluttetTidspunkt]
+        it[type]
+        it[status]
+        it[problemstilling]
+        it[journalnotat]
 
-  suspend fun deleteAllPasients() = dbQuery {
-    logger.info("Deleting all pasients")
-    PasientTable.deleteAll()
-  }
+
+      }
+    }
+  */
+
+  /*
+    suspend fun getKonsultasjon(pasientId: String): List<Konsultasjon> = dbQuery {
+      KonsultasjonTable
+        .selectAll()
+        .where { KonsultasjonTable.pasientId eq Uuid.parse(pasientId) }
+        .orderBy(KonsultasjonTable.startetTidspunkt, SortOrder.DESC)
+        .map { it.toKonsultasjon() }
+    }
+  */
+
+  private fun ResultRow.toPasient() =
+    Pasient(
+      id = this[PasientTable.id].toString(),
+      legekontorId = this[PasientTable.legekontorId].toString(),
+      fastlegeId = this[PasientTable.fastlegeId].toString(),
+      navn = this[PasientTable.navn],
+    )
+
+  private fun ResultRow.toKonsultasjon() =
+    Konsultasjon(
+      id = this[KonsultasjonTable.id].toString(),
+      pasientId = this[KonsultasjonTable.pasientId].toString(),
+      helsepersonellId = this[KonsultasjonTable.helsepersonellId].toString(),
+      startetTidspunkt = this[KonsultasjonTable.startetTidspunkt],
+      avsluttetTidspunkt = this[KonsultasjonTable.avsluttetTidspunkt],
+      type = this[KonsultasjonTable.type],
+      status = this[KonsultasjonTable.status],
+      problemstilling = this[KonsultasjonTable.problemstilling],
+      journalnotat = this[KonsultasjonTable.journalnotat],
+    )
 }
