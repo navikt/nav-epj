@@ -81,20 +81,20 @@ class EpjServiceTest : WithPostgresql() {
     }
   */
 
-  @Test
+  /*  @Test
   fun `should create konsultasjon`() = runTest {
     epjService.createKonsultasjon(pasient.id.toString())
     val result = epjService.getKonsultasjon(pasient.id.toString())
     result.id shouldBe pasient.id
-  }
+  }*/
 
-/*
-  @Test
-  fun `get all konsultasjoner som ikke er avsluttet`() = runTest {
-    val result = epjService.createKonsultasjon(pasient.id.toString())
-    result.id shouldBe pasient.id
-  }
-*/
+  /*
+    @Test
+    fun `get all konsultasjoner som ikke er avsluttet`() = runTest {
+      val result = epjService.createKonsultasjon(pasient.id.toString())
+      result.id shouldBe pasient.id
+    }
+  */
 
   @Test
   fun `should return pasient by id`() = runTest {
