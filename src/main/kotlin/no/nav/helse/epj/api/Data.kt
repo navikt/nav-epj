@@ -1,7 +1,9 @@
 package no.nav.helse.epj.api
 
 import kotlinx.datetime.LocalDateTime
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class Pasient(
   val id: String,
   val legekontorId: String,
@@ -9,6 +11,7 @@ data class Pasient(
   val navn: String,
 )
 
+@Serializable
 data class Helsepersonell(
   val id: String,
   val legekontorId: String,
@@ -24,6 +27,7 @@ data class OpprettHelsepersonell(
   val autorisasjon: String,
 )
 
+@Serializable
 data class Konsultasjon(
   val id: String,
   val pasientId: String,
@@ -43,3 +47,13 @@ data class OpprettKonsultasjon(
   val type: String,
   val status: String,
 )
+
+@Serializable
+data class OppdaterKonsultasjonRequest(
+  val konsultasjonId: String,
+  val diagnoser: List<OpprettDiagnoseRequest>,
+  val journalNotat: String?,
+  val ferdigstill: Boolean,
+)
+
+@Serializable data class OpprettDiagnoseRequest(val kode: String, val system: String)

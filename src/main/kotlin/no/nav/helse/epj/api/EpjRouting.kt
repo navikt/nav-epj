@@ -5,8 +5,10 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.authenticate
 import io.ktor.server.http.content.*
 import io.ktor.server.plugins.di.*
+import io.ktor.server.request.receive
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import no.nav.helse.core.db.KonsultasjonTable.pasientId
 import no.nav.helse.epj.EpjService
 import no.nav.helse.helseIdAuth.loggedInUser
 
@@ -46,13 +48,48 @@ fun Application.configureEpjRouting() {
                 ?: return@get call.respond(HttpStatusCode.NotFound, "Pasient not found")
             call.respond(pasient)
           }
-          post("/{pasientId}/konsultasjon") {
-            val pasientId = call.parameters["pasientId"] ?: error("Missing  pasientId")
-            log.info("looking up konsultasjon for pasientId: $pasientId")
-            val principal = loggedInUser()
-            val konsultasjon = epjService.getOrCreateKonsultasjon(pasientId, principal.hpr)
+          route("/{pasientId}/konsultasjoner") {
+            get {
+              val pasientId = call.parameters["pasientId"] ?: error("Missing  pasientId")
+              log.info("looking up konsultasjoner for pasientId: $pasientId")
+              val konsultasjoner = epjService.getKonsultasjoner(pasientId)
+              log.info("konsultasjoner: $konsultasjoner")
+              call.respond(konsultasjoner)
+            }
+          }
+          route("/{pasientId}/konsultasjon") {
+            post {
+              val pasientId = call.parameters["pasientId"] ?: error("Missing  pasientId")
+              val principal = loggedInUser()
 
-            call.respond(konsultasjon)
+              runCatching { epjService.getOrCreateKonsultasjon(pasientId, principal.hpr) }
+                .onSuccess { konsultasjon -> call.respond(konsultasjon) }
+                .onFailure { exception ->
+                  log.error("Kunne ikke hente eller opprette konsultasjon", exception)
+                  call.respond(
+                    HttpStatusCode.InternalServerError,
+                    "Konsultasjon kunne ikke hentes eller opprettes",
+                  )
+                }
+            }
+            patch {
+              log.info("patching konsultasjon pasientId:")
+              val pasientId = call.parameters["pasientId"] ?: error("Missing  pasientId")
+              val request = call.receive<OppdaterKonsultasjonRequest>()
+
+              runCatching { epjService.oppdaterKonsultasjon(request, pasientId) }
+                .onSuccess { call.respond(HttpStatusCode.OK) }
+                .onFailure { exception ->
+                  log.error(
+                    "Kunne ikke oppdatere konsultasjon ${request.konsultasjonId}",
+                    exception,
+                  )
+                  call.respond(
+                    HttpStatusCode.InternalServerError,
+                    "Konsultasjon ble ikke oppdatert",
+                  )
+                }
+            }
           }
         }
       }

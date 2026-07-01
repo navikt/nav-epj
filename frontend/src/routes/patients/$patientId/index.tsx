@@ -1,26 +1,56 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { PasientSchema, type Pasient } from "@utils/mapping/epj";
+import { Button } from "@navikt/ds-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  KonsultasjonSchema,
+  PasientSchema,
+  type Pasient,
+} from "@utils/mapping/epj";
 
 export const Route = createFileRoute("/patients/$patientId/")({
   loader: async ({ params }) => {
-    return await fetchPatient(params.patientId);
+    const pasient = await fetchPatient(params.patientId);
+    const konsultasjoner = await fetchKonsultasjoner(params.patientId);
+    return { pasient, konsultasjoner };
   },
   component: RouteComponent,
 });
 
 async function fetchPatient(id: string): Promise<Pasient> {
-  const res = await fetch(`/api/patient/${id}`).then((res) => res.json());
-  return res;
+  return await fetch(`/api/patient/${id}`).then((res) => res.json());
+}
+
+async function fetchKonsultasjoner(patientId: string) {
+  return await fetch(`/api/patient/${patientId}/konsultasjoner`).then((res) =>
+    res.json(),
+  );
+}
+
+async function opprettKonsultasjon(patientId: string) {
+  return await fetch(`/api/patient/${patientId}/konsultasjon`, { method: 'POST'}).then((res) => res.json())
 }
 
 function RouteComponent() {
   const { patientId } = Route.useParams();
   const data = Route.useLoaderData();
-  const patient = PasientSchema.safeParse(data);
+  const patient = PasientSchema.safeParse(data.pasient);
+  const konsultasjoner = KonsultasjonSchema.array().safeParse(
+    data.konsultasjoner,
+  );
   return (
     <div>
-      Hello "/patient/{patientId}/"! -{" "}
-      {patient.success ? patient.data.navn : "Loading..."}
+      
+      {(patient.success && konsultasjoner.success) && 
+      <div>
+        Pasientnavn: {patient.data?.navn}
+        <ul>
+          {konsultasjoner.data.map((konsultasjon) => (
+            <li key={konsultasjon.id}><Link to="/patients/$patientId/konsultasjon/$konsultasjonId" params={{patientId, konsultasjonId: konsultasjon.id}}>{konsultasjon.startetTidspunkt} - {konsultasjon.status}</Link></li>
+          ))}
+        </ul>
+      </div>
+      }
+      <Button variant={'primary'} onClick={() => opprettKonsultasjon(patientId)}>Opprett ny konsultasjon</Button>
+      
     </div>
   );
 }

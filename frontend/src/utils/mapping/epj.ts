@@ -1,17 +1,5 @@
 import * as z from "zod";
 
-/*
-CREATE TABLE pasient
-(
-    id            UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
-    legekontor_id UUID        NOT NULL REFERENCES legekontor (id),
-    fastlege      UUID        NOT NULL REFERENCES helsepersonell (id),
-    navn          TEXT        NOT NULL,
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-*/
-
 export const LegekontorSchema = z.object({
   id: z.string(),
   navn: z.string(),
@@ -33,3 +21,26 @@ export const PasientSchema = z.object({
 });
 
 export type Pasient = z.infer<typeof PasientSchema>;
+
+export const KonsultasjonSchema = z.object({
+  id: z.string(),
+  pasientId: z.string(),
+  helsepersonellId: z.string(),
+  startetTidspunkt: z.string(),
+  avsluttetTidspunkt: z.string().nullable(),
+  type: z.string(),
+  status: z.string(),
+  problemstilling: z.string().nullable(),
+  journalnotat: z.string().nullable(),
+});
+
+export type Konsultasjon = z.infer<typeof KonsultasjonSchema>;
+
+export const DiagnoseSchema = z.object({
+  id: z.string(),
+  konsultasjon_id: z.string(),
+  diagnosekode: z.string(),
+  diagnosesystem: z.string(),
+});
+
+export type Diagnose = z.infer<typeof DiagnoseSchema>;

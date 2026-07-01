@@ -34,7 +34,6 @@ private val authCodes = ConcurrentHashMap<String, AuthCodeContext>()
 fun Application.configureSmartAuth() {
   val issuer = "http://localhost:8080/oidc"
   routing {
-    install(CORS) { allowHost("localhost:5173") }
     route("fhir") {
       get("/launch") {
         val validatorUrl = call.request.queryParameters["url"]!!

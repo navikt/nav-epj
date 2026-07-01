@@ -6,6 +6,7 @@ import kotlinx.datetime.toLocalDateTime
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.api.Helsepersonell
 import no.nav.helse.epj.api.Konsultasjon
+import no.nav.helse.epj.api.OppdaterKonsultasjonRequest
 import no.nav.helse.epj.api.OpprettHelsepersonell
 import no.nav.helse.epj.api.OpprettKonsultasjon
 import no.nav.helse.epj.api.Pasient
@@ -33,6 +34,10 @@ class EpjService(
 
   suspend fun getAktivKonsultasjon(pasientId: String): Konsultasjon? {
     return konsultasjonRepository.getAktivKonsultasjon(pasientId)
+  }
+
+  suspend fun getKonsultasjoner(pasientId: String): List<Konsultasjon> {
+    return konsultasjonRepository.getKonsultasjoner(pasientId)
   }
 
   suspend fun createKonsultasjon(opprettKonsultasjon: OpprettKonsultasjon): Boolean {
@@ -91,5 +96,18 @@ class EpjService(
         ?: throw IllegalStateException("Helspersonell ikke funnet")
     }
     throw IllegalStateException("Helspersonell ikke funnet")
+  }
+
+  suspend fun oppdaterKonsultasjon(
+    oppdaterKonsultasjon: OppdaterKonsultasjonRequest,
+    pasientId: String,
+  ) {
+    logger.info("oppdater konsultasjon på pasientId: $pasientId")
+    val updatedRows = konsultasjonRepository.oppdaterKonsultasjon(oppdaterKonsultasjon, pasientId)
+    if (updatedRows != 1) {
+      throw IllegalStateException(
+        "Fant ikke konsultasjon med id=${oppdaterKonsultasjon.konsultasjonId} på pasientId: $pasientId"
+      )
+    }
   }
 }
