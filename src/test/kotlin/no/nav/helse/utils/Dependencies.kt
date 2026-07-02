@@ -23,5 +23,6 @@ fun createIntegrationEnvironment(postgres: PostgreSQLContainer) =
       SmartConfig(
         issuerBaseUrl = "http://localhost:8080/oidc",
         fhirServerUrl = "http://localhost:8080/fhir",
+        clients = emptyList(),
       ),
   )
