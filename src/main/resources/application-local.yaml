@@ -16,3 +16,8 @@ database:
 smart:
   issuerBaseUrl: "http://localhost:8080/oidc"
   fhirServerUrl: "http://localhost:8080/fhir"
+  clients:
+    - clientId: "syk-inn"
+      redirectUris: ["http://localhost:3000"]
+    - clientId: "NAV_SMART_on_FHIR_example"
+      redirectUris: ["http://localhost:5174"]
