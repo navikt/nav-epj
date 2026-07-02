@@ -12,5 +12,6 @@ fun Application.configureEpjDependencies() {
     provide(HelsepersonellRepository::class)
     provide(KonsultasjonRepository::class)
     provide(EpjService::class)
+    provide<ClinicianContextStore> { InMemoryClinicianContextStore() } // TODO replace with valkey
   }
 }

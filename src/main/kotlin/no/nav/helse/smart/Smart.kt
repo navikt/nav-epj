@@ -25,13 +25,13 @@ data class SmartDiscoveryDocument(
 @Serializable
 data class TokenResponse(
   @SerialName("access_token") val accessToken: String,
-  @SerialName("id_token") val id_token: String,
+  @SerialName("id_token") val idToken: String,
   @SerialName("patient") val patient: String,
   @SerialName("encounter") val encounter: String,
-  @SerialName("refresh_token") val refresh_token: String,
-  @SerialName("token_type") val token_type: String = "Bearer",
+  @SerialName("refresh_token") val refreshToken: String,
+  @SerialName("token_type") val tokenType: String = "Bearer",
   @SerialName("expires_in") val expiresIn: Int = 3600,
   @SerialName("scope")
   val scope: String = "openid profile launch fhirUser patient/*.* user/*.* offline_access",
-  @SerialName("need_patient_banner") val need_patient_banner: Boolean = true,
+  @SerialName("need_patient_banner") val needPatientBanner: Boolean = true,
 )

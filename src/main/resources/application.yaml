@@ -14,3 +14,7 @@ auth:
   helseId:
     wellKnownUrl: ${WONDERWALL_OPENID_WELL_KNOWN_URL}
     clientId: ${WONDERWALL_OPENID_CLIENT_ID}
+
+smart:
+  issuerBaseUrl: ${SMART_ISSUER_BASE_URL}
+  fhirServerUrl: ${FHIR_SERVER_URL}

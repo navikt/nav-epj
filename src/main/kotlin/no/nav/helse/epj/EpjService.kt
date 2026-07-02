@@ -32,12 +32,16 @@ class EpjService(
     return pasientRepository.getPasient(id)
   }
 
-  suspend fun getAktivKonsultasjon(pasientId: String): Konsultasjon? {
-    return konsultasjonRepository.getAktivKonsultasjon(pasientId)
+  suspend fun getKonsultasjon(id: String): Konsultasjon? {
+    return konsultasjonRepository.getKonsultasjon(id)
   }
 
   suspend fun getKonsultasjoner(pasientId: String): List<Konsultasjon> {
     return konsultasjonRepository.getKonsultasjoner(pasientId)
+  }
+
+  suspend fun getAktivKonsultasjon(pasientId: String): Konsultasjon? {
+    return konsultasjonRepository.getAktivKonsultasjon(pasientId)
   }
 
   suspend fun createKonsultasjon(opprettKonsultasjon: OpprettKonsultasjon): Boolean {
@@ -57,7 +61,7 @@ class EpjService(
         helsepersonellId = helsepersonell.id,
         startetTidspunkt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
         type = "fysisk",
-        status = "pagaende",
+        status = "pågående",
       )
     if (createKonsultasjon(opprettKonsultasjon)) {
       val nyKonsultasjon = getAktivKonsultasjon(pasientId)

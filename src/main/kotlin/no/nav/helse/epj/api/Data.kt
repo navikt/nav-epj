@@ -34,8 +34,8 @@ data class Konsultasjon(
   val helsepersonellId: String,
   val startetTidspunkt: LocalDateTime,
   val avsluttetTidspunkt: LocalDateTime?,
-  val type: String,
-  val status: String,
+  val type: String, // -- fysisk, video, telefon
+  val status: String, // -- planlagt, pågående, fullført, avlyst
   val problemstilling: String?,
   val journalnotat: String?,
 )

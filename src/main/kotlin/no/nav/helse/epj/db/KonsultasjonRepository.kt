@@ -40,7 +40,7 @@ class KonsultasjonRepository {
 
   suspend fun getKonsultasjoner(pasientId: String): List<Konsultasjon> = dbQuery {
     KonsultasjonTable.selectAll()
-      .where { KonsultasjonTable.pasientId eq Uuid.parse(pasientId) }
+      .where { (KonsultasjonTable.pasientId eq Uuid.parse(pasientId)) }
       .orderBy(KonsultasjonTable.startetTidspunkt, SortOrder.DESC)
       .map { it.toKonsultasjon() }
   }
@@ -55,6 +55,16 @@ class KonsultasjonRepository {
       .limit(1)
       .map { it.toKonsultasjon() }
       .singleOrNull()
+  }
+
+  suspend fun getKonsultasjon(id: String): Konsultasjon? {
+    val uuid = runCatching { Uuid.parse(id) }.getOrNull() ?: return null
+    return dbQuery {
+      KonsultasjonTable.selectAll()
+        .where { KonsultasjonTable.id eq uuid }
+        .map { it.toKonsultasjon() }
+        .singleOrNull()
+    }
   }
 
   private fun ResultRow.toKonsultasjon() =

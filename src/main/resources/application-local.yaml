@@ -12,3 +12,7 @@ database:
   url: "jdbc:postgresql://localhost:5433/dr-zara"
   user: "postgres"
   password: "postgres"
+
+smart:
+  issuerBaseUrl: "http://localhost:8080/oidc"
+  fhirServerUrl: "http://localhost:8080/fhir"
