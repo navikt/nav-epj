@@ -1,5 +1,5 @@
 import { Button } from "@navikt/ds-react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import {
   KonsultasjonSchema,
   PasientSchema,
@@ -30,12 +30,20 @@ async function opprettKonsultasjon(patientId: string) {
 }
 
 function RouteComponent() {
+  const router = useRouter()
   const { patientId } = Route.useParams();
   const data = Route.useLoaderData();
   const patient = PasientSchema.safeParse(data.pasient);
   const konsultasjoner = KonsultasjonSchema.array().safeParse(
     data.konsultasjoner,
   );
+
+  async function handleOnClickOpprettKonsultasjon() {
+    await opprettKonsultasjon(patientId)
+    router.invalidate()
+  }
+
+  
   return (
     <div>
       
@@ -49,7 +57,7 @@ function RouteComponent() {
         </ul>
       </div>
       }
-      <Button variant={'primary'} onClick={() => opprettKonsultasjon(patientId)}>Opprett ny konsultasjon</Button>
+      <Button variant={'primary'} onClick={() => handleOnClickOpprettKonsultasjon()}>Opprett ny konsultasjon</Button>
       
     </div>
   );
