@@ -19,5 +19,7 @@ smart:
   clients:
     - clientId: "syk-inn"
       redirectUris: ["http://localhost:3000"]
+      launchUris: ["http://localhost:3000/fhir/launch"]
     - clientId: "NAV_SMART_on_FHIR_example"
       redirectUris: ["http://localhost:5174"]
+      launchUris: ["http://localhost:5174/launch"]

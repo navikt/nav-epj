@@ -10,8 +10,8 @@ export const Route = createFileRoute(
 function RouteComponent() {
   return (
     <div>
-      <Heading level="1" size="large">TODO: Launch syk-inn</Heading>
-      
+      <Heading level="1" size="large">(ny) Sykmelding</Heading>
+      <iframe width="100%" height="800px" src='/fhir/launch?url=http://localhost:3000/fhir/launch' />
     </div>
   )
 }

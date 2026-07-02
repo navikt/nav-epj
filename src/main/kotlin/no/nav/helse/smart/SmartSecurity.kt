@@ -7,14 +7,21 @@ import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.plugins.di.dependencies
 import no.nav.helse.core.Environment
 
+/**
+ * Step 6 ("Access FHIR API"): the `"smart-access-token"` JWT auth provider that guards this
+ * server's FHIR routes, verifying access tokens minted by `/oidc/token`.
+ */
 fun Application.configureSmartSecurity() {
   val env: Environment by dependencies
 
   authentication {
     jwt("smart-access-token") {
       realm = "fhir"
+      // Verifies signature (this process's own key, see [SmartKeys]), issuer, and expiry.
       verifier(JWT.require(SmartKeys.algorithm).withIssuer(env.smart.issuerBaseUrl).build())
       validate { credentials ->
+        // Require at least one FHIR scope (patient/, user/, or system/); pure sign-in tokens are
+        // rejected since this provider only guards FHIR routes.
         val scope = credentials.payload.getClaim("scope").asString() ?: return@validate null
         val hasFhirScope =
           scope.contains("patient/") || scope.contains("user/") || scope.contains("system/")

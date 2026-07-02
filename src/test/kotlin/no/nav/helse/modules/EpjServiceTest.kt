@@ -22,10 +22,10 @@ import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.junit.Test
 
-// TODO: finn en annen måte å gjøre dette på med disse id greiene ..
-val legekontorId = "a1000000-0000-0000-0000-000000000001"
-val fastlegeId = "b2000000-0000-0000-0000-000000000001"
-val fastlege2Id = "b2000000-0000-0000-0000-000000000002"
+// TODO finn en annen måte å gjøre dette på med disse id greiene ..
+const val LEGEKONTOR_ID = "a1000000-0000-0000-0000-000000000001"
+const val FASTLEGE_ID = "b2000000-0000-0000-0000-000000000001"
+const val FASTLEGE2_ID = "b2000000-0000-0000-0000-000000000002"
 
 @OptIn(ExperimentalUuidApi::class)
 class EpjServiceTest : WithPostgresql() {
@@ -33,8 +33,8 @@ class EpjServiceTest : WithPostgresql() {
   val pasient =
     Pasient(
       id = Uuid.generateV4().toString(),
-      legekontorId = legekontorId,
-      fastlegeId = fastlegeId,
+      legekontorId = LEGEKONTOR_ID,
+      fastlegeId = FASTLEGE_ID,
       navn = "pasientnavn",
     )
 
@@ -56,7 +56,7 @@ class EpjServiceTest : WithPostgresql() {
   fun `should insert helsepersonell`() = runTest {
     val helsepersonell =
       OpprettHelsepersonell(
-        legekontorId = legekontorId,
+        legekontorId = LEGEKONTOR_ID,
         hpr = "123",
         navn = "grizzly",
         autorisasjon = "grizzlys-autorisasjon",
@@ -96,8 +96,8 @@ class EpjServiceTest : WithPostgresql() {
     val pasient2 =
       Pasient(
         id = UUID.randomUUID().toString(),
-        legekontorId = legekontorId,
-        fastlegeId = fastlege2Id,
+        legekontorId = LEGEKONTOR_ID,
+        fastlegeId = FASTLEGE2_ID,
         navn = "annen pasient",
       )
     dbQuery {

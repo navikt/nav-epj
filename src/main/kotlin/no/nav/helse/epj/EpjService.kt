@@ -6,11 +6,11 @@ import kotlinx.datetime.toLocalDateTime
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.api.Helsepersonell
 import no.nav.helse.epj.api.Konsultasjon
+import no.nav.helse.epj.api.LEGEKONTOR_ID
 import no.nav.helse.epj.api.OppdaterKonsultasjonRequest
 import no.nav.helse.epj.api.OpprettHelsepersonell
 import no.nav.helse.epj.api.OpprettKonsultasjon
 import no.nav.helse.epj.api.Pasient
-import no.nav.helse.epj.api.legekontorId
 import no.nav.helse.epj.db.HelsepersonellRepository
 import no.nav.helse.epj.db.KonsultasjonRepository
 import no.nav.helse.epj.db.PasientRepository
@@ -53,8 +53,7 @@ class EpjService(
   suspend fun getOrCreateKonsultasjon(pasientId: String, hpr: String): Konsultasjon {
     val aktivKonsultasjon = getAktivKonsultasjon(pasientId)
     if (aktivKonsultasjon != null) return aktivKonsultasjon
-    val helsepersonell =
-      getHelspersonell(hpr) ?: throw IllegalStateException("Helspersonell ikke funnet")
+    val helsepersonell = getHelspersonell(hpr) ?: error("Helspersonell ikke funnet")
     val opprettKonsultasjon =
       OpprettKonsultasjon(
         pasientId = pasientId,
@@ -66,10 +65,9 @@ class EpjService(
     if (createKonsultasjon(opprettKonsultasjon)) {
       val nyKonsultasjon = getAktivKonsultasjon(pasientId)
       logger.info("ny konstultasjon: $nyKonsultasjon")
-      return nyKonsultasjon
-        ?: throw IllegalStateException("Konsultasjon på pasientId $pasientId ikke funnet")
+      return nyKonsultasjon ?: error("Konsultasjon på pasientId $pasientId ikke funnet")
     }
-    throw IllegalStateException("Konsultasjon på pasientId $pasientId ikke funnet")
+    error("Konsultasjon på pasientId $pasientId ikke funnet")
   }
 
   suspend fun insertHelsepersonell(helsepersonell: OpprettHelsepersonell): Boolean {
@@ -89,10 +87,10 @@ class EpjService(
     }
     val opprettHelsepersonell =
       OpprettHelsepersonell(
-        legekontorId = legekontorId,
+        legekontorId = LEGEKONTOR_ID,
         hpr = principal.hpr,
         navn = principal.name,
-        autorisasjon = "Lege", // TODO: hent fra UserInfo
+        autorisasjon = "Lege", // TODO hent fra UserInfo
       )
     val insertHelsepersonell = insertHelsepersonell(opprettHelsepersonell)
     if (insertHelsepersonell) {

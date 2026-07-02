@@ -2,7 +2,7 @@ package no.nav.helse.smart.db
 
 import org.junit.Test
 
-class LaunchStoreTest {
+class SingleUseStoreTest {
 
   @Test
   fun `should return null when taking an unknown launch id`() {

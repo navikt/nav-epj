@@ -1,0 +1,20 @@
+package no.nav.helse.smart
+
+import java.security.MessageDigest
+import java.util.Base64
+
+/**
+ * PKCE S256 code challenge (RFC 7636): `BASE64URL-ENCODE(SHA256(ASCII(code_verifier)))`, unpadded.
+ *
+ * Only `/oidc/token` calls this, recomputing the challenge from the app's `code_verifier` and
+ * comparing it to the `code_challenge` stored at `/oidc/authorize`. That comparison is what makes
+ * PKCE effective.
+ *
+ * Matches the RFC 7636 Appendix B vector: verifier `dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk`
+ * yields challenge `E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM`.
+ */
+fun codeChallengeS256(codeVerifier: String): String {
+  val digest =
+    MessageDigest.getInstance("SHA-256").digest(codeVerifier.toByteArray(Charsets.US_ASCII))
+  return Base64.getUrlEncoder().withoutPadding().encodeToString(digest)
+}

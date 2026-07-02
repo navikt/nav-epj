@@ -30,6 +30,8 @@ fun initEnvironment(config: ApplicationConfig): Environment {
             SmartClient(
               clientId = c.property("clientId").getString(),
               redirectUris = c.property("redirectUris").getList(),
+              launchUris = c.property("launchUris").getList(),
+              c.propertyOrNull("clientSecret")?.getString(),
             )
           },
       ),
