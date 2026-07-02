@@ -84,7 +84,7 @@ fun Application.configureEpjRouting() {
                 )
               }
           }
-          patch {
+          patch("/{pasientId}/konsultasjon") {
             log.info("patching konsultasjon pasientId:")
             val pasientId = call.parameters["pasientId"] ?: error("Missing  pasientId")
             val request = call.receive<OppdaterKonsultasjonRequest>()

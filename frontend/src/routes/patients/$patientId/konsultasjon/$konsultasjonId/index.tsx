@@ -1,5 +1,5 @@
 import { Button, Textarea, UNSAFE_Combobox } from '@navikt/ds-react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { useState, type MouseEvent } from 'react'
 
 export const Route = createFileRoute(
@@ -18,6 +18,7 @@ type PostKonsultasjonBody = {
 const diagnoseOptions: {label: string, value: string, system: 'ICD10' | 'ICPC2'}[] = [{label: 'Testdiagnose 1', value: 'P01', system: 'ICD10'}, {label: 'Testdiagnose 2', value: 'P02', system: 'ICPC2'}]
 
 function RouteComponent() {
+    const navigate = useNavigate()
     const { patientId, konsultasjonId } = Route.useParams();
     const [diagnoser, setDiagnoser] = useState<{kode: string, system: string}[]>([])
     const [journalnotat, setJournalnotat] = useState<string>('')
@@ -62,6 +63,9 @@ function RouteComponent() {
     <Button onClick={(e) => handleSubmit(e, false)}>Lagre konsultasjon</Button><Button variant={'secondary'} onClick={(e) => handleSubmit(e, true)}>Fullfør konsultasjon</Button>
     </form>
 
-    <div><Button onClick={() => {}}>Start sykmelding (not implemented)</Button><Button onClick={() => {}}>Start FHIR validering (not implemented)</Button></div>
+    <div>
+        <Button onClick={() => {navigate({ to: `/patients/$patientId/konsultasjon/$konsultasjonId/sykmelding`, params: {patientId, konsultasjonId}})}}>Start sykmelding (not implemented)</Button>
+        <Button onClick={() => {navigate({ to: `/patients/$patientId/konsultasjon/$konsultasjonId/validator`, params: {patientId, konsultasjonId}})}}>Start valideringsapp</Button>
+    </div>
   </div>
 }
