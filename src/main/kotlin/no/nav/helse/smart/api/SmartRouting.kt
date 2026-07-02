@@ -206,7 +206,7 @@ fun Application.configureSmartRouting() {
               .apply {
                 val client = clients.find { client -> client.clientId == ctx.clientId }
                 if (client != null) {
-                  withAudience(client.redirectUri.joinToString())
+                  withAudience(client.redirectUris.joinToString())
                 }
               }
               .withSubject(ctx.hpr!!)
