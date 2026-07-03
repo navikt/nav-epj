@@ -1,5 +1,7 @@
 smart configuration
 - valkey
+- legge til logger.debug for hvert steg i SMART auth, f.eks. logger.debug("STEP 1: successful. Args: {}", args)
+- granulær lese, skrive, slette, søke scopes
 
 
 dokumentasjon

@@ -1,8 +1,11 @@
 package no.nav.helse.smart.db
 
 /**
- * A statically registered SMART app client (no dynamic client registration, despite the advertised
- * `registration_endpoint`). Loaded from `application*.yaml` via `no.nav.helse.core.Environment`.
+ * A statically registered SMART app client. Loaded from `application*.yaml` via
+ * `no.nav.helse.core.Environment`.
+ *
+ * TODO ideally we should have dynamic registration (as advertised by registration_endpoint in TODO
+ * .well-known/smart-configuration)
  */
 data class SmartClient(
   /** Value the app sends as `client_id` at `/oidc/authorize`. */

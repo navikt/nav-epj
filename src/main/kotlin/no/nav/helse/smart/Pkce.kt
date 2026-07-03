@@ -9,9 +9,6 @@ import java.util.Base64
  * Only `/oidc/token` calls this, recomputing the challenge from the app's `code_verifier` and
  * comparing it to the `code_challenge` stored at `/oidc/authorize`. That comparison is what makes
  * PKCE effective.
- *
- * Matches the RFC 7636 Appendix B vector: verifier `dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk`
- * yields challenge `E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM`.
  */
 fun codeChallengeS256(codeVerifier: String): String {
   val digest =

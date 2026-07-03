@@ -239,11 +239,6 @@ fun Application.configureSmartRouting() {
 
     // NO AUTH
     route("/oidc") {
-      // Step 5: JWKS. Exposes the public signing key (see [SmartKeys]) so resource servers/apps can
-      // verify token signatures, per the `jwks_uri` advertised in the discovery document.
-      get("/jwks") {
-        call.respondText(SmartKeys.jwk.toPublicJWK().toString(), ContentType.Application.Json)
-      }
       // Step 4: exchange the authorization code for an access token.
       post("/token") {
         val params = call.receiveParameters()
@@ -261,14 +256,13 @@ fun Application.configureSmartRouting() {
           )
         }
         // `redirect_uri`: REQUIRED, since it was in the /authorize request. Must be identical to
-        // the
-        // one stored on the code; compared against `ctx.redirectUrl` below.
+        // the one stored on the code; compared against `ctx.redirectUrl` below.
         val redirectUri = params["redirect_uri"] ?: return@post rejectMissingToken("redirect_uri")
         // `code_verifier`: REQUIRED by PKCE. Verified against the stored `code_challenge` below.
         val codeVerifier =
           params["code_verifier"] ?: return@post rejectMissingToken("code_verifier")
 
-        // Resolves and consumes the single-use code minted at /oidc/authorize.
+        // Resolves and consumes the single-use code created at /oidc/authorize.
         val ctx =
           authCodesStore.take(code)
             ?: return@post rejectToken(
@@ -277,7 +271,7 @@ fun Application.configureSmartRouting() {
             )
 
         // We use `ctx.clientId` (captured at /authorize), not a client-supplied `client_id`.
-        // Rejecting an unknown/deregistered client here closes a gap: without it, a client removed
+        // Rejecting an unknown/deregistered client here closes a gap. Without it, a client removed
         // from config after code issuance would skip the secret check below entirely.
         val acceptedClient =
           clients.find { it.clientId == ctx.clientId }
@@ -312,8 +306,8 @@ fun Application.configureSmartRouting() {
         }
 
         // PKCE verification: recompute the challenge from `code_verifier` and compare to the stored
-        // `code_challenge`. Without this, an intercepted authorization code could be redeemed with
-        // any verifier.
+        // `code_challenge`.
+        // Without this, an intercepted authorization code could be redeemed with any verifier.
         if (codeChallengeS256(codeVerifier) != ctx.codeChallenge) {
           return@post rejectToken(
             HttpStatusCode.BadRequest,
@@ -341,7 +335,7 @@ fun Application.configureSmartRouting() {
 
         val now = Date()
         val expiresAt = Date(now.time + 3600_000)
-        // No narrowing/consent step exists: the clinician's HelseID session implies authorization,
+        // No consent step exists: the clinician's HelseID session implies authorization,
         // so whatever the app requested at /authorize is granted.
         val grantedScope = ctx.scope
 
@@ -358,14 +352,20 @@ fun Application.configureSmartRouting() {
             // SMART launch context, present only when a `launch` scope was granted.
             patient = if ("launch" in grantedScope) ctx.launch.patientId.orEmpty() else "",
             encounter = if ("launch" in grantedScope) ctx.launch.encounterId.orEmpty() else "",
-            // Only issued when `offline_access` was granted. NOTE: a random UUID that is never
-            // persisted or validated; token refresh is not actually implemented yet.
+            // Only issued when `offline_access` was granted.
+            // TODO token refresh is not implemented yet.
             refreshToken =
               if ("offline_access" in grantedScope) UUID.randomUUID().toString() else "",
-            // Always identical to the requested scope, since we never narrow it.
+            // Always identical to the requested scope, since no consent is requested.
             scope = grantedScope,
           )
         call.respond(tokenResponse)
+      }
+
+      // Step 5: JWKS. Exposes the public signing key (see [SmartKeys]) so resource servers/apps can
+      // verify token signatures, per the `jwks_uri` advertised in the discovery document.
+      get("/jwks") {
+        call.respondText(SmartKeys.jwk.toPublicJWK().toString(), ContentType.Application.Json)
       }
     }
 
@@ -389,8 +389,8 @@ fun Application.configureSmartRouting() {
               grantTypesSupported = listOf("authorization_code"),
               // `registration_endpoint`: advertised only; clients are registered statically.
               registrationEndpoint = "$issuerUrl/register",
-              // `scopes_supported`: SMART v2 scope syntax (`.cruds` = create/read/update/delete/
-              // search), matching the advertised `permission-v2` capability.
+              // `scopes_supported`: SMART v2 scope syntax (`.cruds` =
+              // create/read/update/delete/search)
               scopesSupported =
                 listOf(
                   "openid",
@@ -403,13 +403,12 @@ fun Application.configureSmartRouting() {
                 ),
               // `response_types_supported`: only "code"; no implicit grant.
               responseTypesSupported = listOf("code"),
-              // `management_endpoint`: advertised but not implemented.
+              // `management_endpoint`: TODO advertised but not implemented.
               managementEndpoint = "$issuerUrl/user/manage",
-              // `introspection_endpoint`: advertised but not implemented.
+              // `introspection_endpoint`: TODO advertised but not implemented.
               introspectionEndpoint = "$issuerUrl/user/introspect",
-              // `revocation_endpoint`: advertised but not implemented (path also misspelled
-              // "reovke"; left as-is since the endpoint doesn't exist).
-              revocationEndpoint = "$issuerUrl/user/reovke",
+              // `revocation_endpoint`: TODO advertised but not implemented
+              revocationEndpoint = "$issuerUrl/user/revoke",
               // `code_challenge_methods_supported`: only "S256"; "plain" is rejected at /authorize.
               codeChallengeMethodsSupported = listOf("S256"),
               // `capabilities`: SMART capability strings apps use to decide if they can work here.
@@ -424,7 +423,6 @@ fun Application.configureSmartRouting() {
                   "sso-openid-connect",
                 ),
               // `token_endpoint_auth_methods_supported`: only `client_secret_basic` is implemented.
-              // `private_key_jwt` is deferred and must not be advertised until implemented.
               tokenEndpointAuthMethodsSupported =
                 listOf("client_secret_basic"), // TODO add private_key_jwt
             ),
@@ -477,7 +475,7 @@ private fun buildIdToken(
 ): String =
   JWT.create()
     .apply {
-      // `profile`: only when a `profile` scope was granted. The clinician's Practitioner.
+      // `profile`: only when a `profile` scope was granted. The Practitioner.
       if ("profile" in grantedScope) withClaim("profile", "Practitioner/${ctx.hpr}")
       // `fhirUser`: SMART's "which FHIR resource is the user" claim; same value as profile.
       if ("fhirUser" in grantedScope) withClaim("fhirUser", "Practitioner/${ctx.hpr}")

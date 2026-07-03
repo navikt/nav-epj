@@ -16,18 +16,21 @@ import java.util.*
  * Generated fresh in memory once per process; never persisted or shared. Fine for a single instance
  * that both issues (`/oidc/token`) and verifies ([configureSmartSecurity]) tokens.
  *
- * Caveat for horizontal scaling: each replica would generate its own key, so tokens issued by one
- * replica could not be verified by another (nor would its `/oidc/jwks` list the other's key).
+ * TODO Kubernetes: each replica would generate its own key, so tokens issued by one TODO replica
+ * could not be verified by another (nor would its `/oidc/jwks` list the other's key).
  */
 internal object SmartKeys {
   private val keyPair = KeyPairGenerator.getInstance("RSA").apply { initialize(2048) }.genKeyPair()
+
   /** JOSE `kid`, so a verifier holding multiple keys can pick the right one. */
   val keyId: String = UUID.randomUUID().toString()
   val rsaPublic: RSAPublicKey = keyPair.public as RSAPublicKey
+
   /**
    * RS256 signer/verifier used to both sign (`/oidc/token`) and verify (`configureSmartSecurity`).
    */
   val algorithm: Algorithm = Algorithm.RSA256(rsaPublic, keyPair.private as RSAPrivateKey)
+
   /** Public JWK served (public key only) at `GET /oidc/jwks`. */
   val jwk: RSAKey =
     RSAKey.Builder(rsaPublic)

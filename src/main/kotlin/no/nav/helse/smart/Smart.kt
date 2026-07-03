@@ -23,19 +23,19 @@ data class SmartDiscoveryDocument(
   val tokenEndpointAuthMethodsSupported: List<String>,
   /** RECOMMENDED. Grant types the token endpoint accepts. */
   @SerialName("grant_types_supported") val grantTypesSupported: List<String>,
-  /** OPTIONAL. Dynamic client registration endpoint; advertised but not implemented. */
+  /** OPTIONAL. Dynamic client registration endpoint. */
   @SerialName("registration_endpoint") val registrationEndpoint: String,
   /** RECOMMENDED. Scope values this server understands. */
   @SerialName("scopes_supported") val scopesSupported: List<String>,
   /** REQUIRED. Supported `response_type` values; only the authorization code flow. */
   @SerialName("response_types_supported") val responseTypesSupported: List<String>,
-  /** OPTIONAL. User-access-consent management endpoint; advertised but not implemented. */
+  /** OPTIONAL. User-access-consent management endpoint. */
   @SerialName("management_endpoint") val managementEndpoint: String,
-  /** OPTIONAL. Token introspection endpoint; advertised but not implemented. */
+  /** OPTIONAL. Token introspection endpoint. */
   @SerialName("introspection_endpoint") val introspectionEndpoint: String,
-  /** OPTIONAL. Token revocation endpoint; advertised but not implemented. */
+  /** OPTIONAL. Token revocation endpoint. */
   @SerialName("revocation_endpoint") val revocationEndpoint: String,
-  /** REQUIRED (PKCE is mandatory). Only "S256" is accepted; "plain" is rejected. */
+  /** REQUIRED (PKCE is mandatory). Only "S256" is accepted. */
   @SerialName("code_challenge_methods_supported") val codeChallengeMethodsSupported: List<String>,
   /** REQUIRED. SMART capability strings describing what this server supports. */
   @SerialName("capabilities") val capabilities: List<String>,
@@ -52,28 +52,22 @@ data class TokenResponse(
   @SerialName("access_token") val accessToken: String,
   /** OIDC extension. Empty when `openid` scope wasn't granted. */
   @SerialName("id_token") val idToken: String,
-  /** SMART launch context. The patient in context; empty unless a `launch` scope. */
+  /** SMART launch context. The patient in context; empty if `launch` scope missing. */
   @SerialName("patient") val patient: String,
-  /** SMART launch context. The encounter in context; empty unless a `launch` scope. */
+  /** SMART launch context. The encounter in context; empty if `launch` scope missing. */
   @SerialName("encounter") val encounter: String,
-  /**
-   * OPTIONAL. Only issued when `offline_access` was granted. NOTE: currently a random value that is
-   * never persisted or validated; token refresh is not actually implemented.
-   */
+  /** OPTIONAL. Only issued when `offline_access` was granted. */
   @SerialName("refresh_token") val refreshToken: String,
   /** REQUIRED, case-insensitive. Always "Bearer". */
   @SerialName("token_type") val tokenType: String = "Bearer",
   /** RECOMMENDED. Matches the access token's 1-hour lifetime, in seconds. */
   @SerialName("expires_in") val expiresIn: Int = 3600,
   /**
-   * OPTIONAL if identical to the requested scope, which it always is here (scope is never
-   * narrowed). The default is only a fallback; callers always pass the actual granted scope.
+   * OPTIONAL if identical to the requested scope. TODO remove default values. Available scopes are
+   * shown in the discovery document.
    */
   @SerialName("scope")
   val scope: String = "openid profile launch fhirUser patient/*.* user/*.* offline_access",
-  /**
-   * SMART `context-banner` extension. Tells the app whether to render its own patient banner
-   * (always `true` here, since this server has no UI opt-out).
-   */
+  /** SMART `context-banner` extension. Tells the app whether to render its own patient banner */
   @SerialName("need_patient_banner") val needPatientBanner: Boolean = true,
 )
