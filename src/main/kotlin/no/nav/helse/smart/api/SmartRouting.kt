@@ -28,15 +28,6 @@ import no.nav.helse.smart.db.AuthCodeContext
 import no.nav.helse.smart.db.LaunchContext
 import no.nav.helse.smart.db.SingleUseStore
 
-/**
- * Routes used for the SMART on FHIR authorization flow. Flow:
- * 1. `/fhir/launch` – Starts the SMART launch and redirects the user to the app.
- * 2. `/.well-known/smart-configuration` – Publishes the SMART configuration.
- * 3. `/oidc/authorize` – Issues an authorization code.
- * 4. `/oidc/token` – Exchanges the authorization code for an access token.
- * 5. `/oidc/jwks` – Exposes the public signing key. Access to the FHIR API is configured in
- *    `configureSmartSecurity`.
- */
 @OptIn(ExperimentalKtorApi::class)
 fun Application.configureSmartRouting() {
   val env: Environment by dependencies

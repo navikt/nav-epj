@@ -46,6 +46,7 @@ class KonsultasjonRepository {
   }
 
   suspend fun getAktivKonsultasjon(pasientId: String): Konsultasjon? = dbQuery {
+    // TODO: send inn pasientId som Uuid, og gjør en valideringssjekk tidligere i koden
     KonsultasjonTable.selectAll()
       .where {
         (KonsultasjonTable.pasientId eq Uuid.parse(pasientId)) and

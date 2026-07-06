@@ -13,7 +13,7 @@ import no.nav.helse.epj.ClinicianContextStore
 import no.nav.helse.epj.EpjService
 import no.nav.helse.helseIdAuth.loggedInUser
 
-// TODO fjern denne og lagre legekontor i bd
+// TODO fjern denne og lagre legekontor i db
 const val LEGEKONTOR_ID = "a1000000-0000-0000-0000-000000000001"
 
 fun Application.configureEpjRouting() {

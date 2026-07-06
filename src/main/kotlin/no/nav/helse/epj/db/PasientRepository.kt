@@ -21,7 +21,7 @@ class PasientRepository {
     PasientTable.selectAll().where { PasientTable.id eq Uuid.parse(id) }.singleOrNull()?.toPasient()
   }
 
-  suspend fun getAllPasients() = dbQuery {
+  suspend fun getAllPatients() = dbQuery {
     logger.info("Looking up all pasients")
     PasientTable.selectAll().map { it.toPasient() }
   }

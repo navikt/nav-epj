@@ -25,7 +25,7 @@ class EpjService(
   private val logger = logger()
 
   suspend fun getPasienter(): List<Pasient> {
-    return pasientRepository.getAllPasients()
+    return pasientRepository.getAllPatients()
   }
 
   suspend fun getPasient(id: String): Pasient? {
