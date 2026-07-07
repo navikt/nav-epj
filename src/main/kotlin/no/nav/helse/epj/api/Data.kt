@@ -18,7 +18,6 @@ data class Helsepersonell(
   val id: String,
   val legekontorId: String,
   val hpr: String,
-  val herId: String?,
   val navn: String,
   val autorisasjon: String,
 )
