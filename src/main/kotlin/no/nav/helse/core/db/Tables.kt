@@ -64,3 +64,9 @@ object KonsultasjonHelsepersonell : Table("konsultasjon_helsepersonell") {
   val konsultasjonId = reference("konsultasjon_id", refColumn = KonsultasjonTable.id)
   val hpr = text("hpr")
 }
+
+@OptIn(ExperimentalUuidApi::class)
+object KonsultasjonHelsepersonell : Table("konsultasjon_helsepersonell") {
+  val konsultasjonId = reference("konsultasjon_id", refColumn = KonsultasjonTable.id)
+  val hpr = text("hpr")
+}
