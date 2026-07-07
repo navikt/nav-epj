@@ -13,7 +13,6 @@ import com.google.fhir.model.r4.Identifier
 import com.google.fhir.model.r4.Meta
 import com.google.fhir.model.r4.Organization
 import com.google.fhir.model.r4.Patient
-import com.google.fhir.model.r4.Practitioner
 import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.Uri
 import no.nav.helse.epj.api.Diagnose
