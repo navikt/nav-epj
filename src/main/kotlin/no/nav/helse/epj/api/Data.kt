@@ -16,6 +16,7 @@ data class Helsepersonell(
   val id: String,
   val legekontorId: String,
   val hpr: String,
+  val herId: String?,
   val navn: String,
   val autorisasjon: String,
 )
@@ -31,7 +32,7 @@ data class OpprettHelsepersonell(
 data class Konsultasjon(
   val id: String,
   val pasientId: String,
-  val helsepersonellId: String,
+  val hpr: List<String>,
   val startetTidspunkt: LocalDateTime,
   val avsluttetTidspunkt: LocalDateTime?,
   val type: String, // -- fysisk, video, telefon
@@ -42,7 +43,7 @@ data class Konsultasjon(
 
 data class OpprettKonsultasjon(
   val pasientId: String,
-  val helsepersonellId: String,
+  val hpr: List<String>,
   val startetTidspunkt: LocalDateTime,
   val type: String,
   val status: String,

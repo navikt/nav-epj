@@ -1,9 +1,7 @@
 package no.nav.helse.epj
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.mockk
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -24,14 +22,13 @@ class EpjServiceTest {
   val epjService = EpjService(pasientRepository, helsepersonellRepository, konsultasjonRepository)
 
   private val pasientId = Uuid.generateV4().toString()
-  private val helsepersonellId = Uuid.generateV4().toString()
   val konsultasjonId = Uuid.generateV4().toString()
   private val hpr = "1234567"
   private val aktivKonsultasjon =
     Konsultasjon(
       id = konsultasjonId,
       pasientId = pasientId,
-      helsepersonellId = helsepersonellId,
+      hpr = listOf(hpr),
       startetTidspunkt = LocalDateTime(2026, 7, 6, 12, 0),
       avsluttetTidspunkt = null,
       type = "fysisk",
@@ -45,15 +42,5 @@ class EpjServiceTest {
     coEvery { konsultasjonRepository.getAktivKonsultasjon(pasientId) } returns aktivKonsultasjon
     val konsultasjon = epjService.getOrCreateKonsultasjon(pasientId, hpr)
     konsultasjon shouldBe aktivKonsultasjon
-  }
-
-  @Test
-  fun `kaster exception hvis helsepersonell ikke finnes`() = runTest {
-    coEvery { konsultasjonRepository.getAktivKonsultasjon(pasientId) } returns null
-
-    coEvery { helsepersonellRepository.getHelsepersonell(hpr) } returns null
-
-    shouldThrow<IllegalStateException> { epjService.getOrCreateKonsultasjon(pasientId, hpr) }
-    coVerify(exactly = 0) { konsultasjonRepository.createKonsultasjon(any()) }
   }
 }

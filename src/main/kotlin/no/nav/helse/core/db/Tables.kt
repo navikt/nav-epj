@@ -27,6 +27,7 @@ object HelsepersonellTable : Table("helsepersonell") {
   val id = uuid("id")
   val legekontorId = reference("legekontor_id", refColumn = LegekontorTable.id)
   val hpr = text("hpr")
+  val herId = text("her_id")
   val helseidSub = text("helseid_sub")
   val navn = text("navn")
   val autorisasjon = text("autorisasjon")
@@ -38,7 +39,6 @@ object HelsepersonellTable : Table("helsepersonell") {
 object KonsultasjonTable : Table("konsultasjon") {
   val id = uuid("id")
   val pasientId = reference("pasient_id", refColumn = PasientTable.id)
-  val helsepersonellId = reference("helsepersonell_id", refColumn = HelsepersonellTable.id)
   val startetTidspunkt = datetime("startet_tidspunkt")
   val avsluttetTidspunkt = datetime("avsluttet_tidspunkt")
   val type = text("type")
@@ -55,4 +55,10 @@ object DiagnoseTable : Table("diagnose") {
   val konsultasjonId = reference("konsultasjon_id", refColumn = KonsultasjonTable.id)
   val diagnosekode = text("diagnosekode")
   val diagnosesystem = text("diagnosesystem")
+}
+
+@OptIn(ExperimentalUuidApi::class)
+object KonsultasjonHelsepersonell : Table("konsultasjon_helsepersonell") {
+  val konsultasjonId = reference("konsultasjon_id", refColumn = KonsultasjonTable.id)
+  val hpr = text("hpr")
 }

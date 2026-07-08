@@ -2,12 +2,13 @@ package no.nav.helse.utils
 
 import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import no.nav.helse.core.db.dbQuery
 import no.nav.helse.epj.api.Helsepersonell
-import no.nav.helse.epj.api.Konsultasjon
+import no.nav.helse.epj.api.OpprettKonsultasjon
 import no.nav.helse.epj.api.Pasient
+import no.nav.helse.epj.db.KonsultasjonRepository
 import no.nav.helse.epj.db.PasientRepository
 
 const val LEGEKONTOR_ID = "a1000000-0000-0000-0000-000000000001"
@@ -15,6 +16,7 @@ const val LEGEKONTOR_ID = "a1000000-0000-0000-0000-000000000001"
 class TestHelper : TestRepository() {
 
   val pasientRepository = PasientRepository()
+  val konsultasjonRepository = KonsultasjonRepository()
 
   @OptIn(ExperimentalUuidApi::class)
   suspend fun insertHelsepersonellOgPasientTestData(pasientId: String, legeId: String) {
@@ -23,6 +25,7 @@ class TestHelper : TestRepository() {
         id = legeId,
         legekontorId = LEGEKONTOR_ID,
         hpr = "hpr",
+        herId = "her-id",
         navn = "Legem",
         autorisasjon = "lege",
       )
@@ -38,20 +41,32 @@ class TestHelper : TestRepository() {
     pasientRepository.insertPasient(pasient)
   }
 
-  suspend fun insertKonsultasjon(konsultasjonId: String, legeId: String, pasientId: String) =
-    dbQuery {
-      val konsultasjon =
-        Konsultasjon(
-          id = konsultasjonId,
-          pasientId = pasientId,
-          helsepersonellId = legeId,
-          startetTidspunkt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
-          avsluttetTidspunkt = null,
-          type = "pågående",
-          status = "",
-          problemstilling = null,
-          journalnotat = null,
-        )
-      insert(konsultasjon)
-    }
+  suspend fun createKonsultasjon(legeId: String, pasientId: String) {
+    val konsultasjon =
+      OpprettKonsultasjon(
+        pasientId = pasientId,
+        hpr = listOf(legeId),
+        startetTidspunkt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+        type = "pågående",
+        status = "",
+      )
+    konsultasjonRepository.createKonsultasjon(konsultasjon)
+  }
+
+  @OptIn(ExperimentalUuidApi::class)
+  suspend fun insertKonsultasjonWithPredefinedId(
+    legeId: String,
+    pasientId: String,
+    konsultasjonId: Uuid,
+  ) {
+    val konsultasjon =
+      OpprettKonsultasjon(
+        pasientId = pasientId,
+        hpr = listOf(legeId),
+        startetTidspunkt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+        type = "pågående",
+        status = "",
+      )
+    insert(konsultasjon, konsultasjonId)
+  }
 }

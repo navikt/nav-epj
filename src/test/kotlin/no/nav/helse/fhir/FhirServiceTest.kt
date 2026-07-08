@@ -9,15 +9,21 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDateTime
-import no.nav.helse.epj.EpjService
 import no.nav.helse.epj.api.Konsultasjon
 import no.nav.helse.epj.api.Pasient
+import no.nav.helse.epj.db.HelsepersonellRepository
+import no.nav.helse.epj.db.KonsultasjonRepository
+import no.nav.helse.epj.db.PasientRepository
 import org.junit.Test
 
 class FhirServiceTest {
 
-  private val epjService = mockk<EpjService>()
-  private val fhirService = FhirService(epjService)
+  private val pasientRepository = mockk<PasientRepository>()
+  private val konsultasjonRepository = mockk<KonsultasjonRepository>()
+  private val helsepersonellRepository = mockk<HelsepersonellRepository>()
+
+  private val fhirService =
+    FhirService(pasientRepository, helsepersonellRepository, konsultasjonRepository)
 
   private val pasient =
     Pasient(
@@ -31,7 +37,7 @@ class FhirServiceTest {
     Konsultasjon(
       id = "konsultasjon-1",
       pasientId = "pasient-1",
-      helsepersonellId = "fastlege-1",
+      hpr = listOf("111"),
       startetTidspunkt = LocalDateTime.parse("2021-01-01T12:00:00"),
       avsluttetTidspunkt = LocalDateTime.parse("2021-01-01T13:00:00"),
       type = "fysisk",
@@ -41,27 +47,30 @@ class FhirServiceTest {
     )
 
   @Test
-  fun `should return null when patient not found in epj`() = runTest {
-    coEvery { epjService.getPasient("missing-id") } returns null
-
+  fun `should return null when patient not found`() = runTest {
+    coEvery { pasientRepository.getPasient("missing-id") } returns null
     val result = fhirService.getPatient("missing-id")
-
     result.shouldBeNull()
   }
 
   @Test
   fun `should map pasient to fhir patient`() = runTest {
-    coEvery { epjService.getPasient(pasient.id) } returns pasient
+    coEvery { pasientRepository.getPasient(pasient.id) } returns pasient
 
     val fhirPatient = fhirService.getPatient(pasient.id)
     fhirPatient.shouldNotBeNull()
     fhirPatient.id shouldBe pasient.id
-    fhirPatient.name.first().text?.value shouldBe pasient.navn
+    fhirPatient.meta?.profile?.first()?.value shouldBe
+      "http://hl7.no/fhir/StructureDefinition/no-basis-Patient"
+    fhirPatient.identifier.first().system?.value shouldBe "urn:oid:2.16.578.1.12.4.1.4.1"
+    fhirPatient.identifier.first().value?.value shouldBe "fødselsnummer"
+    fhirPatient.name.first().family?.value shouldBe pasient.navn
+    fhirPatient.name.first().given.first().value shouldBe pasient.navn
   }
 
   @Test
   fun `should return null when konsultasjon not found`() = runTest {
-    coEvery { epjService.getKonsultasjon("not-found-id") } returns null
+    coEvery { konsultasjonRepository.getKonsultasjon("not-found-id") } returns null
 
     val encounter = fhirService.getEncounter("not-found-id", "not-found-authorized-patient-id")
     encounter.shouldBeNull()
@@ -69,7 +78,7 @@ class FhirServiceTest {
 
   @Test
   fun `should return null when encounter belongs to a different patient`() = runTest {
-    coEvery { epjService.getKonsultasjon("konsultasjon-1") } returns konsultasjon
+    coEvery { konsultasjonRepository.getKonsultasjon("konsultasjon-1") } returns konsultasjon
 
     val encounter = fhirService.getEncounter("konsultasjon-1", "someone-else")
     encounter.shouldBeNull()
@@ -77,7 +86,7 @@ class FhirServiceTest {
 
   @Test
   fun `should map konsultasjon to encounter for authorized patient`() = runTest {
-    coEvery { epjService.getKonsultasjon("konsultasjon-1") } returns konsultasjon
+    coEvery { konsultasjonRepository.getKonsultasjon("konsultasjon-1") } returns konsultasjon
 
     val encounter = fhirService.getEncounter("konsultasjon-1", "pasient-1")
     encounter.shouldNotBeNull()
@@ -89,7 +98,7 @@ class FhirServiceTest {
 
   @Test
   fun `should map pågående status to in-progress encounter status`() = runTest {
-    coEvery { epjService.getKonsultasjon("konsultasjon-1") } returns konsultasjon
+    coEvery { konsultasjonRepository.getKonsultasjon("konsultasjon-1") } returns konsultasjon
 
     val encounter = fhirService.getEncounter("konsultasjon-1", "pasient-1")
     encounter.shouldNotBeNull()
@@ -98,7 +107,7 @@ class FhirServiceTest {
 
   @Test
   fun `should map avsluttet status to finished encounter status`() = runTest {
-    coEvery { epjService.getKonsultasjon("konsultasjon-1") } returns
+    coEvery { konsultasjonRepository.getKonsultasjon("konsultasjon-1") } returns
       konsultasjon.copy(status = "fullført")
 
     val encounter = fhirService.getEncounter("konsultasjon-1", "pasient-1")
@@ -108,7 +117,7 @@ class FhirServiceTest {
 
   @Test
   fun `should return null active encounter when patient has none`() = runTest {
-    coEvery { epjService.getAktivKonsultasjon(pasient.id) } returns null
+    coEvery { konsultasjonRepository.getAktivKonsultasjon(pasient.id) } returns null
 
     val encounter = fhirService.getActiveEncounterForPatient(pasient.id)
     encounter.shouldBeNull()
@@ -116,7 +125,7 @@ class FhirServiceTest {
 
   @Test
   fun `should return active encounter for patient`() = runTest {
-    coEvery { epjService.getAktivKonsultasjon(pasient.id) } returns konsultasjon
+    coEvery { konsultasjonRepository.getAktivKonsultasjon(pasient.id) } returns konsultasjon
 
     val encounter = fhirService.getActiveEncounterForPatient(pasient.id)
     encounter.shouldNotBeNull()
@@ -126,7 +135,7 @@ class FhirServiceTest {
 
   @Test
   fun `should return empty bundle when patient has no active encounter`() = runTest {
-    coEvery { epjService.getKonsultasjoner(pasient.id) } returns emptyList()
+    coEvery { konsultasjonRepository.getKonsultasjoner(pasient.id) } returns emptyList()
 
     val bundle = fhirService.searchEncounters(pasient.id)
     bundle.entry.size shouldBe 0
@@ -134,7 +143,7 @@ class FhirServiceTest {
 
   @Test
   fun `should return bundle containing active encounter when one exists`() = runTest {
-    coEvery { epjService.getKonsultasjoner(pasient.id) } returns
+    coEvery { konsultasjonRepository.getKonsultasjoner(pasient.id) } returns
       listOf(
         konsultasjon.copy(id = "konsultasjon-1", status = "pågående", avsluttetTidspunkt = null),
         konsultasjon.copy(

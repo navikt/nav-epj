@@ -75,3 +75,4 @@ spec:
 
   envFrom:
     - secret: login-config-dr-zara
+    - secret: smart-config-dr-zara

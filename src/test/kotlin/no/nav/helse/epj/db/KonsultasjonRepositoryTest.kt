@@ -32,7 +32,7 @@ class KonsultasjonRepositoryTest : TestRepository() {
     val opprettKonsultasjon =
       OpprettKonsultasjon(
         pasientId = pasientId,
-        helsepersonellId = legeId,
+        hpr = listOf("111"),
         startetTidspunkt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
         type = "fysisk",
         status = "pågående",
@@ -41,18 +41,19 @@ class KonsultasjonRepositoryTest : TestRepository() {
     val konsultasjon = konsultasjonRepository.getAktivKonsultasjon(pasientId)
     konsultasjon shouldNotBe null
     konsultasjon?.pasientId shouldBe pasientId
+    konsultasjon?.hpr shouldBe listOf("111")
   }
 
   @Test
   fun `should not return an avsluttet konsultasjon as active`() = runTest {
     val pasientId = Uuid.generateV4().toString()
     val legeId = Uuid.generateV4().toString()
-    val konsultasjonid = Uuid.generateV4().toString()
+    val konsultasjonid = Uuid.generateV4()
     testHelper.insertHelsepersonellOgPasientTestData(pasientId, legeId)
-    testHelper.insertKonsultasjon(konsultasjonid, legeId, pasientId)
+    testHelper.insertKonsultasjonWithPredefinedId(legeId, pasientId, konsultasjonid)
     konsultasjonRepository.oppdaterKonsultasjon(
       OppdaterKonsultasjonRequest(
-        konsultasjonId = konsultasjonid,
+        konsultasjonId = konsultasjonid.toString(),
         diagnoser = emptyList(),
         journalNotat = "notat",
         ferdigstill = true,
@@ -61,5 +62,18 @@ class KonsultasjonRepositoryTest : TestRepository() {
     )
     val konsultasjon = konsultasjonRepository.getAktivKonsultasjon(pasientId)
     konsultasjon shouldBe null
+  }
+
+  @Test
+  fun `should return konsultasjoner with hpr list`() = runTest {
+    val pasientId = Uuid.generateV4().toString()
+    val legeId = Uuid.generateV4().toString()
+    testHelper.insertHelsepersonellOgPasientTestData(pasientId, legeId)
+    testHelper.createKonsultasjon(legeId, pasientId)
+    testHelper.createKonsultasjon(legeId, pasientId)
+
+    val result = konsultasjonRepository.getKonsultasjoner(pasientId)
+
+    result.map { it.pasientId } shouldBe listOf(pasientId, pasientId)
   }
 }

@@ -39,6 +39,13 @@ fun Application.configureFhirRouting() {
             fhirService.getPatient(id) ?: return@get call.respond(HttpStatusCode.NotFound)
           call.respondText(fhirJson.encodeToString(patient), fhirContentType)
         }
+        get("/Practitioner/{id}") {
+          val hprNummer = call.parameters["id"]!!
+          val practitioner =
+            fhirService.getPractitioner(hprNummer)
+              ?: return@get call.respond(HttpStatusCode.NotFound)
+          call.respondText(fhirJson.encodeToString(practitioner), fhirContentType)
+        }
 
         /**
          * TODO This is just an example of fetching encounters for a given patient-id. Read the

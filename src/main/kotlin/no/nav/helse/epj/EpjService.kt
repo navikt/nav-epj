@@ -44,30 +44,32 @@ class EpjService(
     return konsultasjonRepository.getAktivKonsultasjon(pasientId)
   }
 
-  suspend fun createKonsultasjon(opprettKonsultasjon: OpprettKonsultasjon): Boolean {
-    val created = konsultasjonRepository.createKonsultasjon(opprettKonsultasjon)
-    logger.info("created konsultasjon på pasient: '${opprettKonsultasjon.pasientId}'")
-    return (created.insertedCount == 1)
+  suspend fun createKonsultasjon(opprettKonsultasjon: OpprettKonsultasjon): Konsultasjon {
+    val createdId = konsultasjonRepository.createKonsultasjon(opprettKonsultasjon)
+    val createdKonsultasjon =
+      konsultasjonRepository.getKonsultasjon(createdId)
+        ?: throw IllegalStateException("Konsultasjon ble ikke opprettet")
+
+    logger.info(
+      "Created konsultasjon id={} for pasientId={}",
+      createdKonsultasjon.id,
+      opprettKonsultasjon.pasientId,
+    )
+    return createdKonsultasjon
   }
 
   suspend fun getOrCreateKonsultasjon(pasientId: String, hpr: String): Konsultasjon {
     val aktivKonsultasjon = getAktivKonsultasjon(pasientId)
     if (aktivKonsultasjon != null) return aktivKonsultasjon
-    val helsepersonell = getHelspersonell(hpr) ?: error("Helspersonell ikke funnet")
     val opprettKonsultasjon =
       OpprettKonsultasjon(
         pasientId = pasientId,
-        helsepersonellId = helsepersonell.id,
+        hpr = listOf(hpr), // TODO: send inn liste med hpr i funksjonen - ikke kun en
         startetTidspunkt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
         type = "fysisk",
         status = "pågående",
       )
-    if (createKonsultasjon(opprettKonsultasjon)) {
-      val nyKonsultasjon = getAktivKonsultasjon(pasientId)
-      logger.info("ny konstultasjon: $nyKonsultasjon")
-      return nyKonsultasjon ?: error("Konsultasjon på pasientId $pasientId ikke funnet")
-    }
-    error("Konsultasjon på pasientId $pasientId ikke funnet")
+    return createKonsultasjon(opprettKonsultasjon)
   }
 
   suspend fun insertHelsepersonell(helsepersonell: OpprettHelsepersonell): Boolean {

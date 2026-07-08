@@ -17,11 +17,8 @@ fun Application.configureSmartSecurity() {
   authentication {
     jwt("smart-access-token") {
       realm = "fhir"
-      // Verifies signature (this process's own key, see [SmartKeys]), issuer, and expiry.
       verifier(JWT.require(SmartKeys.algorithm).withIssuer(env.smart.issuerBaseUrl).build())
       validate { credentials ->
-        // Require at least one FHIR scope (patient/, user/, or system/); pure sign-in tokens are
-        // rejected since this provider only guards FHIR routes.
         val scope = credentials.payload.getClaim("scope").asString() ?: return@validate null
         val hasFhirScope =
           scope.contains("patient/") || scope.contains("user/") || scope.contains("system/")

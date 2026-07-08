@@ -6,6 +6,7 @@ import kotlin.uuid.Uuid
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import no.nav.helse.core.db.DiagnoseTable
+import no.nav.helse.core.db.KonsultasjonHelsepersonell
 import no.nav.helse.core.db.KonsultasjonTable
 import no.nav.helse.core.db.dbQuery
 import no.nav.helse.core.utils.logger
@@ -17,8 +18,11 @@ import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.insertReturning
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 
@@ -27,52 +31,88 @@ class KonsultasjonRepository {
   private val logger = logger()
 
   suspend fun createKonsultasjon(opprettKonsultasjon: OpprettKonsultasjon) = dbQuery {
-    logger.info("creating konsultasjon: ${opprettKonsultasjon.pasientId}")
-    KonsultasjonTable.insert {
-      it[pasientId] = Uuid.parse(opprettKonsultasjon.pasientId)
-      it[helsepersonellId] = Uuid.parse(opprettKonsultasjon.helsepersonellId)
-      it[startetTidspunkt] = opprettKonsultasjon.startetTidspunkt
-      it[problemstilling] = null
-      it[type] = opprettKonsultasjon.type
-      it[status] = opprettKonsultasjon.status
+    val konsultasjon =
+      KonsultasjonTable.insertReturning {
+          it[pasientId] = Uuid.parse(opprettKonsultasjon.pasientId)
+          it[startetTidspunkt] = opprettKonsultasjon.startetTidspunkt
+          it[type] = opprettKonsultasjon.type
+          it[status] = opprettKonsultasjon.status
+        }
+        .single()
+    val id = konsultasjon[KonsultasjonTable.id]
+    opprettKonsultasjon.hpr.forEach { hprValue ->
+      KonsultasjonHelsepersonell.insert {
+        it[konsultasjonId] = id
+        it[hpr] = hprValue
+      }
     }
+    konsultasjon[KonsultasjonTable.id].toString()
   }
 
   suspend fun getKonsultasjoner(pasientId: String): List<Konsultasjon> = dbQuery {
-    KonsultasjonTable.selectAll()
-      .where { (KonsultasjonTable.pasientId eq Uuid.parse(pasientId)) }
-      .orderBy(KonsultasjonTable.startetTidspunkt, SortOrder.DESC)
-      .map { it.toKonsultasjon() }
+    val konsultasjoner =
+      KonsultasjonTable.selectAll()
+        .where { (KonsultasjonTable.pasientId eq Uuid.parse(pasientId)) }
+        .orderBy(KonsultasjonTable.startetTidspunkt, SortOrder.DESC)
+        .toList()
+
+    val konsultasjonIder = konsultasjoner.map { it[KonsultasjonTable.id] }
+    val hprByKonsultasjonId =
+      KonsultasjonHelsepersonell.selectAll()
+        .where { KonsultasjonHelsepersonell.konsultasjonId inList konsultasjonIder }
+        .groupBy(
+          keySelector = { it[KonsultasjonHelsepersonell.konsultasjonId] },
+          valueTransform = { it[KonsultasjonHelsepersonell.hpr] },
+        )
+
+    konsultasjoner.map { row ->
+      val konsultasjonId = row[KonsultasjonTable.id]
+      val hprListe = hprByKonsultasjonId[konsultasjonId].orEmpty()
+      row.toKonsultasjon(hprListe)
+    }
   }
 
-  suspend fun getAktivKonsultasjon(pasientId: String): Konsultasjon? = dbQuery {
-    // TODO: send inn pasientId som Uuid, og gjør en valideringssjekk tidligere i koden
-    KonsultasjonTable.selectAll()
-      .where {
-        (KonsultasjonTable.pasientId eq Uuid.parse(pasientId)) and
-          KonsultasjonTable.avsluttetTidspunkt.isNull()
-      }
-      .orderBy(KonsultasjonTable.startetTidspunkt, SortOrder.DESC)
-      .limit(1)
-      .map { it.toKonsultasjon() }
-      .singleOrNull()
+  suspend fun getAktivKonsultasjon(pasientId: String): Konsultasjon? {
+    val pasientUuid = runCatching { Uuid.parse(pasientId) }.getOrNull() ?: return null
+    return dbQuery {
+      val konsultasjon =
+        KonsultasjonTable.selectAll()
+          .where {
+            (KonsultasjonTable.pasientId eq pasientUuid) and
+              KonsultasjonTable.avsluttetTidspunkt.isNull()
+          }
+          .orderBy(KonsultasjonTable.startetTidspunkt, SortOrder.DESC)
+          .limit(1)
+          .singleOrNull() ?: return@dbQuery null
+
+      val hprListe =
+        KonsultasjonHelsepersonell.select(KonsultasjonHelsepersonell.hpr)
+          .where { KonsultasjonHelsepersonell.konsultasjonId eq konsultasjon[KonsultasjonTable.id] }
+          .map { it[KonsultasjonHelsepersonell.hpr] }
+      konsultasjon.toKonsultasjon(hprListe)
+    }
   }
 
   suspend fun getKonsultasjon(id: String): Konsultasjon? {
     val uuid = runCatching { Uuid.parse(id) }.getOrNull() ?: return null
     return dbQuery {
-      KonsultasjonTable.selectAll()
-        .where { KonsultasjonTable.id eq uuid }
-        .map { it.toKonsultasjon() }
-        .singleOrNull()
+      val konsultasjon =
+        KonsultasjonTable.selectAll().where { KonsultasjonTable.id eq uuid }.singleOrNull()
+          ?: return@dbQuery null
+
+      val hprListe =
+        KonsultasjonHelsepersonell.select(KonsultasjonHelsepersonell.hpr)
+          .where { KonsultasjonHelsepersonell.konsultasjonId eq konsultasjon[KonsultasjonTable.id] }
+          .map { it[KonsultasjonHelsepersonell.hpr] }
+      konsultasjon.toKonsultasjon(hprListe)
     }
   }
 
-  private fun ResultRow.toKonsultasjon() =
+  private fun ResultRow.toKonsultasjon(hprListe: List<String>): Konsultasjon =
     Konsultasjon(
       id = this[KonsultasjonTable.id].toString(),
       pasientId = this[KonsultasjonTable.pasientId].toString(),
-      helsepersonellId = this[KonsultasjonTable.helsepersonellId].toString(),
+      hpr = hprListe,
       startetTidspunkt = this[KonsultasjonTable.startetTidspunkt],
       avsluttetTidspunkt = this[KonsultasjonTable.avsluttetTidspunkt],
       type = this[KonsultasjonTable.type],
