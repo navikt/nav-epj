@@ -3,9 +3,11 @@ package no.nav.helse.epj.db
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import no.nav.helse.core.db.HelsepersonellTable
+import no.nav.helse.core.db.LegekontorTable
 import no.nav.helse.core.db.dbQuery
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.api.Helsepersonell
+import no.nav.helse.epj.api.Legekontor
 import no.nav.helse.epj.api.OpprettHelsepersonell
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.eq
@@ -35,6 +37,10 @@ class HelsepersonellRepository {
       ?.toHelsepersonell()
   }
 
+  suspend fun getLegekontor() = dbQuery {
+    LegekontorTable.selectAll().singleOrNull()?.toLegekontor()
+  }
+
   @OptIn(ExperimentalUuidApi::class)
   private fun ResultRow.toHelsepersonell() =
     Helsepersonell(
@@ -44,5 +50,13 @@ class HelsepersonellRepository {
       herId = this[HelsepersonellTable.herId],
       navn = this[HelsepersonellTable.navn],
       autorisasjon = this[HelsepersonellTable.autorisasjon],
+    )
+
+  @OptIn(ExperimentalUuidApi::class)
+  private fun ResultRow.toLegekontor() =
+    Legekontor(
+      id = this[LegekontorTable.id].toString(),
+      navn = this[LegekontorTable.navn],
+      tlf = this[LegekontorTable.tlf],
     )
 }

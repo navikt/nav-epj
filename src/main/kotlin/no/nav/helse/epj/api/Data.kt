@@ -11,6 +11,8 @@ data class Pasient(
   val navn: String,
 )
 
+data class Legekontor(val id: String, val navn: String, val tlf: String?)
+
 @Serializable
 data class Helsepersonell(
   val id: String,
@@ -57,4 +59,7 @@ data class OppdaterKonsultasjonRequest(
   val ferdigstill: Boolean,
 )
 
-@Serializable data class OpprettDiagnoseRequest(val kode: String, val system: String)
+@Serializable
+data class OpprettDiagnoseRequest(val kode: String, val system: String, val beskrivelse: String)
+
+data class Diagnose(val kode: String, val system: String, val beskrivelse: String)

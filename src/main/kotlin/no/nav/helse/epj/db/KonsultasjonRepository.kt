@@ -10,6 +10,7 @@ import no.nav.helse.core.db.KonsultasjonHelsepersonell
 import no.nav.helse.core.db.KonsultasjonTable
 import no.nav.helse.core.db.dbQuery
 import no.nav.helse.core.utils.logger
+import no.nav.helse.epj.api.Diagnose
 import no.nav.helse.epj.api.Konsultasjon
 import no.nav.helse.epj.api.OppdaterKonsultasjonRequest
 import no.nav.helse.epj.api.OpprettDiagnoseRequest
@@ -108,6 +109,22 @@ class KonsultasjonRepository {
     }
   }
 
+  suspend fun getDiagnoser(konsultasjonId: String): List<Diagnose>? {
+    val uuid = runCatching { Uuid.parse(konsultasjonId) }.getOrNull() ?: return null
+    return dbQuery {
+      DiagnoseTable.selectAll()
+        .where { DiagnoseTable.konsultasjonId eq uuid }
+        .map { it.toDiagnose() }
+    }
+  }
+
+  private fun ResultRow.toDiagnose() =
+    Diagnose(
+      kode = this[DiagnoseTable.diagnosekode],
+      system = this[DiagnoseTable.diagnosesystem],
+      beskrivelse = this[DiagnoseTable.beskrivelse],
+    )
+
   private fun ResultRow.toKonsultasjon(hprListe: List<String>): Konsultasjon =
     Konsultasjon(
       id = this[KonsultasjonTable.id].toString(),
@@ -150,10 +167,10 @@ class KonsultasjonRepository {
     updatedRows
   }
 
-  private fun insertDiagnoseIfNotExists(
+  suspend fun insertDiagnoseIfNotExists(
     diagnose: OpprettDiagnoseRequest,
     konsultasjonId: String,
-  ): Int {
+  ): Int = dbQuery {
     val exists =
       DiagnoseTable.selectAll()
         .where {
@@ -166,14 +183,15 @@ class KonsultasjonRepository {
 
     if (exists) {
       logger.info("Diagnose finnes allerede: ${diagnose.kode}")
-      return 0
+      return@dbQuery 0
     }
     DiagnoseTable.insert {
       it[DiagnoseTable.konsultasjonId] = Uuid.parse(konsultasjonId)
       it[diagnosekode] = diagnose.kode
       it[diagnosesystem] = diagnose.system
+      it[beskrivelse] = diagnose.beskrivelse
     }
-    return 1
+    1
   }
 
   private fun ferdigstillKonsultasjon(konsultasjonId: String, pasientId: String) {

@@ -18,6 +18,7 @@ object PasientTable : Table("pasient") {
 object LegekontorTable : Table("legekontor") {
   val id = uuid("id")
   val navn = text("navn")
+  val tlf = text("tlf")
   val created = datetime("created_at")
   val updated = datetime("updated_at")
 }
@@ -55,6 +56,7 @@ object DiagnoseTable : Table("diagnose") {
   val konsultasjonId = reference("konsultasjon_id", refColumn = KonsultasjonTable.id)
   val diagnosekode = text("diagnosekode")
   val diagnosesystem = text("diagnosesystem")
+  val beskrivelse = text("beskrivelse")
 }
 
 @OptIn(ExperimentalUuidApi::class)

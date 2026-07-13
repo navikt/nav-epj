@@ -10,7 +10,9 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import no.nav.helse.core.db.dbQuery
+import no.nav.helse.epj.api.Diagnose
 import no.nav.helse.epj.api.OppdaterKonsultasjonRequest
+import no.nav.helse.epj.api.OpprettDiagnoseRequest
 import no.nav.helse.epj.api.OpprettKonsultasjon
 import no.nav.helse.utils.TestHelper
 import no.nav.helse.utils.TestRepository
@@ -75,5 +77,30 @@ class KonsultasjonRepositoryTest : TestRepository() {
     val result = konsultasjonRepository.getKonsultasjoner(pasientId)
 
     result.map { it.pasientId } shouldBe listOf(pasientId, pasientId)
+  }
+
+  @Test
+  fun `should get diagnoser`() = runTest {
+    val konsultasjonId = Uuid.generateV4()
+    val pasientId = Uuid.generateV4().toString()
+    val legeId = Uuid.generateV4().toString()
+    testHelper.insertHelsepersonellOgPasientTestData(pasientId, legeId)
+    testHelper.insertKonsultasjonWithPredefinedId(legeId, pasientId, konsultasjonId)
+    val diagnoser =
+      listOf(
+        OpprettDiagnoseRequest(kode = "kode", system = "system", beskrivelse = "beskrivelse"),
+        OpprettDiagnoseRequest(kode = "kode2", system = "system2", beskrivelse = "beskrivelse2"),
+      )
+    diagnoser.forEach {
+      konsultasjonRepository.insertDiagnoseIfNotExists(it, konsultasjonId.toString())
+    }
+
+    val result = konsultasjonRepository.getDiagnoser(konsultasjonId.toString())
+
+    result shouldBe
+      listOf(
+        Diagnose(kode = "kode", system = "system", beskrivelse = "beskrivelse"),
+        Diagnose(kode = "kode2", system = "system2", beskrivelse = "beskrivelse2"),
+      )
   }
 }

@@ -10,7 +10,7 @@ export const Route = createFileRoute(
 
 type PostKonsultasjonBody = {
     konsultasjonId: string
-    diagnoser: {kode: string, system: string}[];
+    diagnoser: {kode: string, system: string, beskrivelse: string}[];
     journalNotat: string | null;
     ferdigstill: boolean;
 }
@@ -20,7 +20,7 @@ const diagnoseOptions: {label: string, value: string, system: 'ICD10' | 'ICPC2'}
 function RouteComponent() {
     const navigate = useNavigate()
     const { patientId, konsultasjonId } = Route.useParams();
-    const [diagnoser, setDiagnoser] = useState<{kode: string, system: string}[]>([])
+    const [diagnoser, setDiagnoser] = useState<{kode: string, system: string, beskrivelse: string}[]>([])
     const [journalnotat, setJournalnotat] = useState<string>('')
 
     function handleToggleSelect(option: string, isSelected: boolean) {
@@ -29,7 +29,7 @@ function RouteComponent() {
             if (!newOption) {
                 return
             }
-            setDiagnoser([...diagnoser, {kode: newOption.value, system: newOption.system}])
+            setDiagnoser([...diagnoser, {kode: newOption.value, system: newOption.system, beskrivelse: newOption.label}])
         } else {
             const newDiagnoser = diagnoser.filter((diagnose) => diagnose.kode != option)
             setDiagnoser(newDiagnoser)

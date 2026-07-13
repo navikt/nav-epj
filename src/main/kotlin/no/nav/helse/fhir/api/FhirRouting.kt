@@ -1,6 +1,9 @@
 package no.nav.helse.fhir.api
 
+import com.google.fhir.model.r4.Bundle
+import com.google.fhir.model.r4.Enumeration
 import com.google.fhir.model.r4.FhirR4Json
+import com.google.fhir.model.r4.Uri
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
@@ -47,14 +50,6 @@ fun Application.configureFhirRouting() {
           call.respondText(fhirJson.encodeToString(practitioner), fhirContentType)
         }
 
-        /**
-         * TODO This is just an example of fetching encounters for a given patient-id. Read the
-         * Encounter R4 FHIR spec in order to understand all variables of fetching a resource via
-         * another resource. This can for example be extended to find all Encounters for a
-         * Practitioner within a certain time period.
-         *
-         * Example request: https://dr-zara.no/fhir/Encounter?patient={patient-id}
-         */
         get("/Encounter") {
           val principal = call.principal<SmartPrincipal>()!!
           val authorizedPatient =
@@ -80,15 +75,61 @@ fun Application.configureFhirRouting() {
         }
 
         get("/Encounter/{id}") {
+          val id =
+            call.parameters["id"]
+              ?: return@get call.respondText(
+                "Missing condition id",
+                status = HttpStatusCode.BadRequest,
+              )
           val principal = call.principal<SmartPrincipal>()!!
           val authorizedPatient =
             principal.patient
               ?: return@get call.respond(HttpStatusCode.Forbidden, "Token has no patient context")
 
           val encounter =
-            fhirService.getEncounter(call.parameters["id"]!!, authorizedPatient)
+            fhirService.getEncounter(id, authorizedPatient)
               ?: return@get call.respond(HttpStatusCode.NotFound)
           call.respondText(fhirJson.encodeToString(encounter), fhirContentType)
+        }
+
+        // TODO: for øyeblikket kun en organization
+        get("/Organization") {
+          val organization = fhirService.getOrganization()
+          val bundle =
+            Bundle(
+              type = Enumeration(value = Bundle.BundleType.Searchset),
+              entry =
+                listOf(Bundle.Entry(fullUrl = Uri(value = "Organization"), resource = organization)),
+            )
+          call.respondText(fhirJson.encodeToString(bundle), fhirContentType)
+        }
+
+        get("/Condition/{id}") {
+          val id =
+            call.parameters["id"]
+              ?: return@get call.respondText(
+                "Missing condition id",
+                status = HttpStatusCode.BadRequest,
+              )
+          val principal = call.principal<SmartPrincipal>()!!
+          val authorizedPatient =
+            principal.patient
+              ?: return@get call.respond(HttpStatusCode.Forbidden, "Token has no patient context")
+          val conditions =
+            fhirService.getConditions(id, authorizedPatient)
+              ?: return@get call.respond(HttpStatusCode.NotFound)
+          val bundle =
+            Bundle(
+              type = Enumeration(value = Bundle.BundleType.Searchset),
+              entry =
+                conditions.map { condition ->
+                  Bundle.Entry(
+                    fullUrl = Uri(value = "Condition/${condition.id}"),
+                    resource = condition,
+                  )
+                },
+            )
+          call.respondText(fhirJson.encodeToString(bundle), fhirContentType)
         }
       }
     }
