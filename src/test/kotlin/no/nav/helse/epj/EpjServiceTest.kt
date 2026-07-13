@@ -8,6 +8,7 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDateTime
 import no.nav.helse.epj.api.Konsultasjon
+import no.nav.helse.epj.api.KonsultasjonStatus
 import no.nav.helse.epj.db.HelsepersonellRepository
 import no.nav.helse.epj.db.KonsultasjonRepository
 import no.nav.helse.epj.db.PasientRepository
@@ -31,8 +32,7 @@ class EpjServiceTest {
       hpr = listOf(hpr),
       startetTidspunkt = LocalDateTime(2026, 7, 6, 12, 0),
       avsluttetTidspunkt = null,
-      type = "fysisk",
-      status = "pågående",
+      status = KonsultasjonStatus.PÅGÅENDE,
       problemstilling = null,
       journalnotat = null,
     )

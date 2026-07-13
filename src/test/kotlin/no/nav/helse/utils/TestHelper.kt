@@ -6,6 +6,7 @@ import kotlin.uuid.Uuid
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import no.nav.helse.epj.api.Helsepersonell
+import no.nav.helse.epj.api.KonsultasjonStatus
 import no.nav.helse.epj.api.OpprettKonsultasjon
 import no.nav.helse.epj.api.Pasient
 import no.nav.helse.epj.db.KonsultasjonRepository
@@ -31,13 +32,25 @@ class TestHelper : TestRepository() {
       )
     insert(helsepersonell)
     val pasient =
-      Pasient(id = pasientId, legekontorId = LEGEKONTOR_ID, fastlegeId = legeId, navn = "Pasient")
+      Pasient(
+        id = pasientId,
+        legekontorId = LEGEKONTOR_ID,
+        fastlegeId = legeId,
+        navn = "Pasient",
+        fnr = "123",
+      )
     pasientRepository.insertPasient(pasient)
   }
 
   suspend fun insertPasientTestdata(pasientId: String, legeId: String) {
     val pasient =
-      Pasient(id = pasientId, legekontorId = LEGEKONTOR_ID, fastlegeId = legeId, navn = "Pasient")
+      Pasient(
+        id = pasientId,
+        legekontorId = LEGEKONTOR_ID,
+        fastlegeId = legeId,
+        navn = "Pasient",
+        fnr = "123",
+      )
     pasientRepository.insertPasient(pasient)
   }
 
@@ -47,8 +60,7 @@ class TestHelper : TestRepository() {
         pasientId = pasientId,
         hpr = listOf(legeId),
         startetTidspunkt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
-        type = "pågående",
-        status = "",
+        status = KonsultasjonStatus.PÅGÅENDE,
       )
     konsultasjonRepository.createKonsultasjon(konsultasjon)
   }
@@ -64,8 +76,7 @@ class TestHelper : TestRepository() {
         pasientId = pasientId,
         hpr = listOf(legeId),
         startetTidspunkt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
-        type = "pågående",
-        status = "",
+        status = KonsultasjonStatus.PÅGÅENDE,
       )
     insert(konsultasjon, konsultasjonId)
   }

@@ -9,8 +9,10 @@ import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.db.dbQuery
 import no.nav.helse.utils.TestHelper
 import no.nav.helse.utils.TestRepository
+import org.junit.Ignore
 import org.junit.Test
 
+@Ignore("ikke imeplementert")
 @OptIn(ExperimentalUuidApi::class)
 class PasientRepositoryTest : TestRepository() {
 

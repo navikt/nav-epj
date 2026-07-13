@@ -12,6 +12,7 @@ import no.nav.helse.core.db.dbQuery
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.api.Diagnose
 import no.nav.helse.epj.api.Konsultasjon
+import no.nav.helse.epj.api.KonsultasjonStatus
 import no.nav.helse.epj.api.OppdaterKonsultasjonRequest
 import no.nav.helse.epj.api.OpprettDiagnoseRequest
 import no.nav.helse.epj.api.OpprettKonsultasjon
@@ -36,7 +37,6 @@ class KonsultasjonRepository {
       KonsultasjonTable.insertReturning {
           it[pasientId] = Uuid.parse(opprettKonsultasjon.pasientId)
           it[startetTidspunkt] = opprettKonsultasjon.startetTidspunkt
-          it[type] = opprettKonsultasjon.type
           it[status] = opprettKonsultasjon.status
         }
         .single()
@@ -132,7 +132,6 @@ class KonsultasjonRepository {
       hpr = hprListe,
       startetTidspunkt = this[KonsultasjonTable.startetTidspunkt],
       avsluttetTidspunkt = this[KonsultasjonTable.avsluttetTidspunkt],
-      type = this[KonsultasjonTable.type],
       status = this[KonsultasjonTable.status],
       problemstilling = this[KonsultasjonTable.problemstilling],
       journalnotat = this[KonsultasjonTable.journalnotat],
@@ -200,7 +199,7 @@ class KonsultasjonRepository {
         (KonsultasjonTable.pasientId eq Uuid.parse(pasientId))
     }) {
       it[avsluttetTidspunkt] = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-      it[status] = "ferdigstilt"
+      it[status] = KonsultasjonStatus.FULLFØRT
     }
   }
 }

@@ -42,5 +42,6 @@ class PasientRepository {
       legekontorId = this[PasientTable.legekontorId].toString(),
       fastlegeId = this[PasientTable.fastlegeId].toString(),
       navn = this[PasientTable.navn],
+      fnr = this[PasientTable.fnr],
     )
 }

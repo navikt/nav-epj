@@ -58,5 +58,6 @@ class HelsepersonellRepository {
       id = this[LegekontorTable.id].toString(),
       navn = this[LegekontorTable.navn],
       tlf = this[LegekontorTable.tlf],
+      orgnummer = this[LegekontorTable.orgnummer],
     )
 }

@@ -9,9 +9,10 @@ data class Pasient(
   val legekontorId: String,
   val fastlegeId: String,
   val navn: String,
+  val fnr: String,
 )
 
-data class Legekontor(val id: String, val navn: String, val tlf: String?)
+data class Legekontor(val id: String, val navn: String, val orgnummer: String?, val tlf: String?)
 
 @Serializable
 data class Helsepersonell(
@@ -29,6 +30,13 @@ data class OpprettHelsepersonell(
   val autorisasjon: String,
 )
 
+enum class KonsultasjonStatus {
+  PLANLAGT,
+  PÅGÅENDE,
+  FULLFØRT,
+  AVLYST,
+}
+
 @Serializable
 data class Konsultasjon(
   val id: String,
@@ -36,8 +44,7 @@ data class Konsultasjon(
   val hpr: List<String>,
   val startetTidspunkt: LocalDateTime,
   val avsluttetTidspunkt: LocalDateTime?,
-  val type: String, // -- fysisk, video, telefon
-  val status: String, // -- planlagt, pågående, fullført, avlyst
+  val status: KonsultasjonStatus,
   val problemstilling: String?,
   val journalnotat: String?,
 )
@@ -46,8 +53,7 @@ data class OpprettKonsultasjon(
   val pasientId: String,
   val hpr: List<String>,
   val startetTidspunkt: LocalDateTime,
-  val type: String,
-  val status: String,
+  val status: KonsultasjonStatus,
 )
 
 @Serializable

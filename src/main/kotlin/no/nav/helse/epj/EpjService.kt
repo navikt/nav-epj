@@ -6,6 +6,7 @@ import kotlinx.datetime.toLocalDateTime
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.api.Helsepersonell
 import no.nav.helse.epj.api.Konsultasjon
+import no.nav.helse.epj.api.KonsultasjonStatus
 import no.nav.helse.epj.api.LEGEKONTOR_ID
 import no.nav.helse.epj.api.OppdaterKonsultasjonRequest
 import no.nav.helse.epj.api.OpprettHelsepersonell
@@ -66,8 +67,7 @@ class EpjService(
         pasientId = pasientId,
         hpr = listOf(hpr), // TODO: send inn liste med hpr i funksjonen - ikke kun en
         startetTidspunkt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
-        type = "fysisk",
-        status = "pågående",
+        status = KonsultasjonStatus.PÅGÅENDE,
       )
     return createKonsultasjon(opprettKonsultasjon)
   }

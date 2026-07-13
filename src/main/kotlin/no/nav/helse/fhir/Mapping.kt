@@ -18,15 +18,17 @@ import com.google.fhir.model.r4.Uri
 import no.nav.helse.epj.api.Diagnose
 import no.nav.helse.epj.api.Helsepersonell
 import no.nav.helse.epj.api.Konsultasjon
+import no.nav.helse.epj.api.KonsultasjonStatus
 import no.nav.helse.epj.api.Legekontor
 import no.nav.helse.epj.api.Pasient
 
 fun Konsultasjon.toEncounter(): Encounter {
   val status =
     when (this.status) {
-      "pågående" -> Encounter.EncounterStatus.In_Progress
-      "fullført" -> Encounter.EncounterStatus.Finished
-      else -> Encounter.EncounterStatus.In_Progress
+      KonsultasjonStatus.PLANLAGT -> Encounter.EncounterStatus.Planned
+      KonsultasjonStatus.PÅGÅENDE -> Encounter.EncounterStatus.In_Progress
+      KonsultasjonStatus.FULLFØRT -> Encounter.EncounterStatus.Finished
+      KonsultasjonStatus.AVLYST -> Encounter.EncounterStatus.Cancelled
     }
 
   return Encounter(
@@ -79,7 +81,7 @@ fun Pasient.toFhirPatient(): Patient {
       listOf(
         Identifier(
           system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.1"),
-          value = com.google.fhir.model.r4.String(value = "fødselsnummer"),
+          value = com.google.fhir.model.r4.String(value = this.fnr),
         )
       ),
     name =

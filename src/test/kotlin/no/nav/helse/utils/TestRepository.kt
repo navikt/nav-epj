@@ -5,13 +5,7 @@ import kotlin.uuid.Uuid
 import no.nav.helse.core.db.DiagnoseTable
 import no.nav.helse.core.db.HelsepersonellTable
 import no.nav.helse.core.db.KonsultasjonHelsepersonell
-import no.nav.helse.core.db.KonsultasjonHelsepersonell.hpr
-import no.nav.helse.core.db.KonsultasjonHelsepersonell.konsultasjonId
 import no.nav.helse.core.db.KonsultasjonTable
-import no.nav.helse.core.db.KonsultasjonTable.pasientId
-import no.nav.helse.core.db.KonsultasjonTable.startetTidspunkt
-import no.nav.helse.core.db.KonsultasjonTable.status
-import no.nav.helse.core.db.KonsultasjonTable.type
 import no.nav.helse.core.db.PasientTable
 import no.nav.helse.core.db.dbQuery
 import no.nav.helse.epj.api.Helsepersonell
@@ -45,7 +39,6 @@ abstract class TestRepository : WithPostgresql() {
       it[pasientId] = Uuid.parse(konsultasjon.pasientId)
       it[startetTidspunkt] = konsultasjon.startetTidspunkt
       it[problemstilling] = null
-      it[type] = konsultasjon.type
       it[status] = konsultasjon.status
     }
   }
@@ -57,7 +50,6 @@ abstract class TestRepository : WithPostgresql() {
           it[id] = tulleId
           it[pasientId] = Uuid.parse(opprettKonsultasjon.pasientId)
           it[startetTidspunkt] = opprettKonsultasjon.startetTidspunkt
-          it[type] = opprettKonsultasjon.type
           it[status] = opprettKonsultasjon.status
         }
         .single()

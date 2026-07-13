@@ -1,6 +1,7 @@
 package no.nav.helse.core.db
 
 import kotlin.uuid.ExperimentalUuidApi
+import no.nav.helse.epj.api.KonsultasjonStatus
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.datetime.datetime
 
@@ -10,6 +11,7 @@ object PasientTable : Table("pasient") {
   val legekontorId = reference("legekontor_id", refColumn = LegekontorTable.id)
   val fastlegeId = reference("fastlege", refColumn = HelsepersonellTable.id)
   val navn = text("navn")
+  val fnr = text("fnr")
   val created = datetime("created_at")
   val updated = datetime("updated_at")
 }
@@ -19,6 +21,7 @@ object LegekontorTable : Table("legekontor") {
   val id = uuid("id")
   val navn = text("navn")
   val tlf = text("tlf")
+  val orgnummer = text("orgnummer")
   val created = datetime("created_at")
   val updated = datetime("updated_at")
 }
@@ -29,7 +32,6 @@ object HelsepersonellTable : Table("helsepersonell") {
   val legekontorId = reference("legekontor_id", refColumn = LegekontorTable.id)
   val hpr = text("hpr")
   val herId = text("her_id")
-  val helseidSub = text("helseid_sub")
   val navn = text("navn")
   val autorisasjon = text("autorisasjon")
   val created = datetime("created_at")
@@ -42,8 +44,7 @@ object KonsultasjonTable : Table("konsultasjon") {
   val pasientId = reference("pasient_id", refColumn = PasientTable.id)
   val startetTidspunkt = datetime("startet_tidspunkt")
   val avsluttetTidspunkt = datetime("avsluttet_tidspunkt")
-  val type = text("type")
-  val status = text("status")
+  val status = enumerationByName<KonsultasjonStatus>("status", 20)
   val problemstilling = text("problemstilling").nullable()
   val journalnotat = text("journalnotat").nullable()
   val created = datetime("created_at")
