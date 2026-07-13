@@ -59,5 +59,5 @@ CREATE TABLE konsultasjon_helsepersonell
     hpr               TEXT NOT NULL
 );
 
-INSERT INTO legekontor (id, navn)
+INSERT INTO legekontor (id, navn, tlf, orgnummer)
 VALUES ('a1000000-0000-0000-0000-000000000001', 'Tonsberg Legesenter', 'tulletlf', '123');
