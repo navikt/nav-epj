@@ -8,7 +8,6 @@ import com.google.fhir.model.r4.Organization
 import com.google.fhir.model.r4.Patient
 import com.google.fhir.model.r4.Practitioner
 import com.google.fhir.model.r4.UnsignedInt
-import no.nav.helse.core.Environment
 import no.nav.helse.epj.db.HelsepersonellRepository
 import no.nav.helse.epj.db.KonsultasjonRepository
 import no.nav.helse.epj.db.PasientRepository

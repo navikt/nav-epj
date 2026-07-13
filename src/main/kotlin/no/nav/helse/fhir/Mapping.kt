@@ -13,6 +13,7 @@ import com.google.fhir.model.r4.Identifier
 import com.google.fhir.model.r4.Meta
 import com.google.fhir.model.r4.Organization
 import com.google.fhir.model.r4.Patient
+import com.google.fhir.model.r4.Practitioner
 import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.Uri
 import no.nav.helse.epj.api.Diagnose
@@ -107,11 +108,7 @@ fun Helsepersonell.toPractitioner(): Practitioner {
         Identifier(
           system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.4"),
           value = com.google.fhir.model.r4.String(value = this.hpr),
-        ),
-        Identifier(
-          system = Uri(value = "urn:oid:2.16.578.1.12.4.1.2"),
-          value = com.google.fhir.model.r4.String(value = this.herId),
-        ),
+        )
       ),
   )
 }
@@ -159,7 +156,10 @@ fun Legekontor.toOrganization(): Organization {
       listOf(
         ContactPoint(
           system = Enumeration(value = ContactPoint.ContactPointSystem.Phone),
-          value = com.google.fhir.model.r4.String(value = this.tlf ?: "+47 tulletlf"), // TODO: tlf til legekontoret er nå null
+          value =
+            com.google.fhir.model.r4.String(
+              value = this.tlf ?: "+47 tulletlf"
+            ), // TODO: tlf til legekontoret er nå null
         )
       ),
   )

@@ -26,11 +26,7 @@ class FhirServiceTest {
   private val helsepersonellRepository = mockk<HelsepersonellRepository>()
 
   private val fhirService =
-    FhirService(
-      pasientRepository,
-      helsepersonellRepository,
-      konsultasjonRepository,
-    )
+    FhirService(pasientRepository, helsepersonellRepository, konsultasjonRepository)
 
   private val pasient =
     Pasient(

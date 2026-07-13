@@ -26,7 +26,6 @@ class TestHelper : TestRepository() {
         id = legeId,
         legekontorId = LEGEKONTOR_ID,
         hpr = "hpr",
-        herId = "her-id",
         navn = "Legem",
         autorisasjon = "lege",
       )

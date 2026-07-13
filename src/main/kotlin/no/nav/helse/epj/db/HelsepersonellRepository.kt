@@ -47,7 +47,6 @@ class HelsepersonellRepository {
       id = this[HelsepersonellTable.id].toString(),
       legekontorId = this[HelsepersonellTable.legekontorId].toString(),
       hpr = this[HelsepersonellTable.hpr],
-      herId = this[HelsepersonellTable.herId],
       navn = this[HelsepersonellTable.navn],
       autorisasjon = this[HelsepersonellTable.autorisasjon],
     )
