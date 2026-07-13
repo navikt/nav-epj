@@ -1,0 +1,10 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: dr-zara-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: dr-zara
+    ports:
+      - "5433:5432"

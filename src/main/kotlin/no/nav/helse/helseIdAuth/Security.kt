@@ -1,0 +1,76 @@
+package no.nav.helse.helseIdAuth
+
+import com.auth0.jwk.JwkProviderBuilder
+import com.auth0.jwt.JWT
+import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.jwt
+import java.net.URI
+import kotlin.text.replace
+import no.nav.helse.core.utils.logger
+
+fun Application.configureHelseIdAuth() {
+  val log = logger()
+
+  if (developmentMode) {
+    log.error("Local development security, if you see this in production, something is very wrong!")
+    configureLocalDevelopmentSecurity()
+    return
+  }
+  val wellKnownUrl = environment.config.property("auth.helseId.wellKnownUrl").getString()
+
+  val metadata = OIDCProviderMetadata.parse(URI(wellKnownUrl).toURL().readText())
+  val jwkProvider = JwkProviderBuilder(metadata.jwkSetURI.toURL()).build()
+
+  authentication {
+    jwt("wonderwall-helseid") {
+      realm = "nav-epj"
+      verifier(jwkProvider, metadata.issuer.value)
+      validate { credential ->
+        val idToken = request.headers["X-Wonderwall-Id-Token"]
+        if (idToken == null) {
+          log.warn("Missing X-Wonderwall-Id-Token header")
+          return@validate null
+        }
+
+        val decodedIdToken = JWT.decode(idToken)
+        val hpr = decodedIdToken.getClaim("helseid://claims/hpr/hpr_number").asString()
+        if (hpr == null) {
+          log.warn(
+            "Missing hpr_number claim in id_token, available claims: {}",
+            decodedIdToken.claims.keys,
+          )
+          return@validate null
+        }
+
+        HelseIdPrincipal(
+          user = User(name = decodedIdToken.getClaim("name").asString(), hpr = hpr),
+          debug =
+            DebugInfo(
+              idToken = idToken,
+              accessToken = request.headers["Authorization"]?.replace("Bearer ", "") ?: "missing",
+            ),
+        )
+      }
+    }
+  }
+}
+
+private fun Application.configureLocalDevelopmentSecurity() {
+  log.error("Local development security, if you see this in production, something is very wrong!")
+
+  val stubPrincipal =
+    HelseIdPrincipal(
+      user = User(name = "Local Dev", hpr = "111"),
+      debug =
+        DebugInfo(
+          accessToken = "eyJhbGciOiJub25lIn0.eyJzdWIiOiJsb2NhbC1kZXYifQ.",
+          idToken = "eyJhbGciOiJub25lIn0.eyJzdWIiOiJsb2NhbC1kZXYifQ.",
+        ),
+    )
+
+  authentication {
+    provider("wonderwall-helseid") { authenticate { ctx -> ctx.principal(stubPrincipal) } }
+  }
+}
