@@ -1,13 +1,21 @@
 <configuration>
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    <!-- Reduces the spammy logback logging during startup -->
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT_JSON"/>
+    </root>
+
+    <!-- Stuff we wanna squelch, use sparingly -->
+    <logger name="ch.qos.logback" level="WARN"/>
+    <logger name="io.swagger.codegen.v3.generators" level="WARN"/>
+    <logger name="org.apache.kafka" level="WARN"/>
+
+    <appender name="STDOUT_JSON" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeMdcKeyName>x_request_id</includeMdcKeyName>
+            <includeMdcKeyName>trace_id</includeMdcKeyName>
+            <includeMdcKeyName>span_id</includeMdcKeyName>
         </encoder>
     </appender>
-    <root level="INFO">
-        <appender-ref ref="STDOUT"/>
-    </root>
-    <logger name="io.ktor" level="INFO"/>
-    <logger name="org.eclipse.jetty" level="INFO"/>
-    <logger name="io.netty" level="INFO"/>
 </configuration>
