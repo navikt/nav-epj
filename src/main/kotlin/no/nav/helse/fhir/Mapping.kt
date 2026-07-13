@@ -145,12 +145,12 @@ fun Legekontor.toOrganization(): Organization {
     identifier =
       listOf(
         Identifier(
-          system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.101"), // TODO: hva skal være her
-          value = com.google.fhir.model.r4.String("organisasjonsnummer / ENH"),
+          system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.101"),
+          value = com.google.fhir.model.r4.String(this.id),
         ),
         Identifier(
-          system = Uri(value = "urn:oid:2.16.578.1.12.4.1.2"), // TODO: hva skal være her
-          value = com.google.fhir.model.r4.String("organisasjonsnummer / ENH"),
+          system = Uri(value = "urn:oid:2.16.578.1.12.4.1.2"),
+          value = com.google.fhir.model.r4.String("organisasjonsnummer / HER"),
         ),
       ),
     telecom =
