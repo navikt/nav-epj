@@ -3,7 +3,7 @@ package no.nav.helse.core
 import io.ktor.server.config.ApplicationConfig
 import no.nav.helse.smart.db.SmartClient
 
-class PostgresConfig(val url: String, val username: String, val password: String)
+data class PostgresConfig(val url: String, val username: String, val password: String)
 
 class Environment(val postgres: PostgresConfig, val smart: SmartConfig)
 

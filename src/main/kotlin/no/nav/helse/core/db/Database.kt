@@ -15,7 +15,11 @@ fun Application.configureDatabases() {
   flyway.clean()
   flyway.migrate()
 
-  Database.connect(env.postgres.url, env.postgres.username, env.postgres.password)
+  Database.connect(
+    url = env.postgres.url,
+    user = env.postgres.username,
+    password = env.postgres.password,
+  )
 }
 
 fun getFlyway(postgresConfig: PostgresConfig): Flyway =
