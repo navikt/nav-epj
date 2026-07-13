@@ -75,4 +75,9 @@ spec:
 
   envFrom:
     - secret: login-config-nav-epj
-    - secret: smart-config-nav-epj
+
+  env:
+    - name: FHIR_SERVER_URL
+      value: https://epj.ansatt.dev.nav.no/fhir
+    - name: SMART_ISSUER_BASE_URL
+      value: https://epj.ansatt.dev.nav.no/oidc
