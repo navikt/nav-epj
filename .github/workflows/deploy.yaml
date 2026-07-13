@@ -1,0 +1,70 @@
+on:
+  push:
+    branches-ignore:
+      - 'dependabot/**'
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+  packages: write
+  id-token: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    if: github.ref_name != 'main' && !startsWith(github.ref_name, 'dev')
+    steps:
+      - uses: actions/checkout@v7
+      - uses: navikt/tsm-workflows/actions/gradle/test@main
+
+  build:
+    runs-on: ubuntu-latest
+    if: github.ref_name == 'main' || startsWith(github.ref_name, 'dev')
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - run: corepack enable
+      - run: yarn --immutable
+        env:
+          NPM_AUTH_TOKEN: ${{ secrets.READER_TOKEN }}
+        working-directory: frontend
+      - run: ./scripts/build-frontend.sh
+      - run: ls -al src/main/resources/static
+
+      - uses: navikt/tsm-workflows/actions/gradle/build@main
+        id: build
+        with:
+          app: "dr-zara"
+          team: "tsm"
+          salsa: false
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    outputs:
+      image: ${{ steps.build.outputs.image }}
+
+  sbom:
+    name: Upload SBOM for build
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: navikt/tsm-workflows/actions/attest-sign@main
+        with:
+          image_ref: ${{ needs.build.outputs.image }}
+          team: tsm
+
+  deploy-dev:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: dev
+      url: https://dr-zara.ansatt.dev.nav.no
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: nais/deploy/actions/deploy@v2
+        env:
+          CLUSTER: "dev-gcp"
+          RESOURCE: ".nais/nais-dev.yaml"
+          VAR: image=${{ needs.build.outputs.image }},sourceVersionURL=https://github.com/${{ github.repository }}/tree/${{ github.sha }}

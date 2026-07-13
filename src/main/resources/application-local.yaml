@@ -1,7 +1,7 @@
 ktor:
   application:
     modules:
-      - no.nav.tsm.ApplicationKt.module
+      - no.nav.helse.ApplicationKt.module
   deployment:
     port: 8080
     watch:
@@ -9,6 +9,17 @@ ktor:
       - resources
 
 database:
-  url: jdbc:postgresql://localhost:6954/nav-epj
-  user: postgres
-  password: password
+  url: "jdbc:postgresql://localhost:5433/dr-zara"
+  user: "postgres"
+  password: "postgres"
+
+smart:
+  issuerBaseUrl: "http://localhost:8080/oidc"
+  fhirServerUrl: "http://localhost:8080/fhir"
+  clients:
+    - clientId: "syk-inn"
+      redirectUris: ["http://localhost:3000"]
+      launchUris: ["http://localhost:3000/fhir/launch"]
+    - clientId: "NAV_SMART_on_FHIR_example"
+      redirectUris: ["http://localhost:5174/"]
+      launchUris: ["http://localhost:5174/launch"]

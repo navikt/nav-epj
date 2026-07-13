@@ -1,0 +1,8 @@
+#!/bin/sh
+# Pre-commit hook: format Kotlin files with Spotless before committing
+
+echo "Running spotlessApply..."
+./gradlew spotlessApply --quiet
+
+# Stage any reformatted files
+git diff --name-only | xargs -I {} git add {}

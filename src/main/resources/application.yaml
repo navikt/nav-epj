@@ -1,16 +1,24 @@
 ktor:
   application:
     modules:
-      - no.nav.tsm.ApplicationKt.module
+      - no.nav.helse.ApplicationKt.module
   deployment:
     port: 8080
 
 database:
-  url: ${PGJDBCURL}
-  user: ${PGUSER}
-  password: ${PGPASSWORD}
+  url: ${DB_JDBC_URL}
+  user: ${DB_USERNAME}
+  password: ${DB_PASSWORD}
 
 auth:
   helseId:
     wellKnownUrl: ${WONDERWALL_OPENID_WELL_KNOWN_URL}
     clientId: ${WONDERWALL_OPENID_CLIENT_ID}
+
+smart:
+  issuerBaseUrl: ${SMART_ISSUER_BASE_URL}
+  fhirServerUrl: ${FHIR_SERVER_URL}
+  clients:
+    - clientId: "NAV_SMART_on_FHIR_example"
+      redirectUris: [ "https://nav-on-fhir.ekstern.dev.nav.no" ]
+      launchUris: [ "https://nav-on-fhir.ekstern.dev.nav.no/launch" ]

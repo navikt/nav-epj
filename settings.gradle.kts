@@ -1,8 +1,7 @@
-rootProject.name = "epj"
+rootProject.name = "dr-zara"
 
 dependencyResolutionManagement {
-    repositories {
-        mavenCentral()
-        maven("https://jitpack.io")
-    }
+  repositories {
+    mavenCentral()
+  }
 }

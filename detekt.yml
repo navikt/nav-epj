@@ -1,0 +1,27 @@
+naming:
+  active: true
+  InvalidPackageDeclaration:
+    active: true
+    aliases: ['PackageDirectoryMismatch']
+    rootPackage: 'no.nav.helse'
+    requireRootInDeclaration: false
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: false
+
+complexity:
+  LongMethod:
+    active: false
+  TooManyFunctions:
+    active: false
+  CyclomaticComplexMethod:
+    active: false
+
+style:
+  MaxLineLength:
+    active: false
+  ReturnCount:
+    max: 5
+  WildcardImport:
+    active: false

@@ -1,0 +1,9 @@
+@import "@navikt/ds-css";
+
+:root {
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+  }
+}
