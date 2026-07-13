@@ -37,8 +37,8 @@ jobs:
       - uses: navikt/tsm-workflows/actions/gradle/build@main
         id: build
         with:
-          app: "dr-zara"
-          team: "tsm"
+          app: "nav-epj"
+          team: "helseopplysninger"
           salsa: false
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     outputs:
@@ -52,14 +52,14 @@ jobs:
       - uses: navikt/tsm-workflows/actions/attest-sign@main
         with:
           image_ref: ${{ needs.build.outputs.image }}
-          team: tsm
+          team: helseopplysninger
 
   deploy-dev:
     needs: build
     runs-on: ubuntu-latest
     environment:
       name: dev
-      url: https://dr-zara.ansatt.dev.nav.no
+      url: https://epj.ansatt.dev.nav.no
     steps:
       - uses: actions/checkout@v7
 

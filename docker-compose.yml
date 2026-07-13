@@ -1,10 +1,10 @@
 services:
   postgres:
     image: postgres:17
-    container_name: dr-zara-postgres
+    container_name: nav-epj-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: dr-zara
+      POSTGRES_DB: nav-epj
     ports:
       - "5433:5432"

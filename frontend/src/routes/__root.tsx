@@ -29,7 +29,7 @@ function RootComponent() {
   return (
     <React.Fragment>
       <InternalHeader>
-        <InternalHeader.Title>Dr. Zara</InternalHeader.Title>
+        <InternalHeader.Title>Nav EPJ</InternalHeader.Title>
         <Spacer />
         <HStack
           as="form"

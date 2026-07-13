@@ -1,20 +1,20 @@
 apiVersion: nais.io/v1alpha1
 kind: Application
 metadata:
-  name: dr-zara
-  namespace: tsm
+  name: nav-epj
+  namespace: helseopplysninger
   labels:
-    team: tsm
+    team: helseopplysninger
 spec:
   image: {{image}}
   gcp:
     sqlInstances:
       - type: POSTGRES_17
-        name: dr-zara-db-instance
+        name: nav-epj-db-instance
         cascadingDelete: false
         tier: db-f1-micro
         databases:
-          - name: dr-zara
+          - name: nav-epj
             envVarPrefix: DB
         diskAutoresize: true
         highAvailability: false
@@ -58,7 +58,7 @@ spec:
       runtime: java
 
   ingresses:
-    - 'https://dr-zara.ansatt.dev.nav.no'
+    - 'https://epj.ansatt.dev.nav.no'
 
   login:
     provider: openid
@@ -74,5 +74,5 @@ spec:
         - host: 'helseid-sts.test.nhn.no'
 
   envFrom:
-    - secret: login-config-dr-zara
-    - secret: smart-config-dr-zara
+    - secret: login-config-nav-epj
+    - secret: smart-config-nav-epj

@@ -1,4 +1,4 @@
-rootProject.name = "dr-zara"
+rootProject.name = "nav-epj"
 
 dependencyResolutionManagement {
   repositories {

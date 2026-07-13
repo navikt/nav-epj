@@ -9,7 +9,7 @@ ktor:
       - resources
 
 database:
-  url: "jdbc:postgresql://localhost:5433/dr-zara"
+  url: "jdbc:postgresql://localhost:5433/nav-epj"
   user: "postgres"
   password: "postgres"
 
