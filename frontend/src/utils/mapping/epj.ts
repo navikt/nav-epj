@@ -22,13 +22,21 @@ export const PasientSchema = z.object({
 
 export type Pasient = z.infer<typeof PasientSchema>;
 
+export const OpprettPasientSchema = z.object({
+    navn: z.string().min(1, "Navn er påkrevd"),
+    fnr: z
+        .string()
+        .regex(/^\d{11}$/, "Fødselsnummer må bestå av 11 siffer"),
+});
+
+export type OpprettPasientRequest = z.infer<typeof OpprettPasientSchema>;
+
 export const KonsultasjonSchema = z.object({
     id: z.string(),
     pasientId: z.string(),
     hpr: z.array(z.string()),
     startetTidspunkt: z.string(),
     avsluttetTidspunkt: z.string().nullable(),
-    type: z.string(),
     status: z.string(),
     problemstilling: z.string().nullable(),
     journalnotat: z.string().nullable(),

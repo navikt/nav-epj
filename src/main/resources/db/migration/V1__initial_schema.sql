@@ -26,7 +26,7 @@ CREATE TABLE pasient
     legekontor_id UUID        NOT NULL REFERENCES legekontor (id),
     fastlege      UUID        NOT NULL REFERENCES helsepersonell (id),
     navn          TEXT        NOT NULL,
-    fnr           TEXT        NOT NULL,
+    fnr           TEXT        NOT NULL UNIQUE ,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );

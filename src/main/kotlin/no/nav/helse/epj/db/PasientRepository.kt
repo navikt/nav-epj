@@ -8,7 +8,7 @@ import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.api.Pasient
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.selectAll
 
 @OptIn(ExperimentalUuidApi::class)
@@ -21,18 +21,26 @@ class PasientRepository {
     PasientTable.selectAll().where { PasientTable.id eq Uuid.parse(id) }.singleOrNull()?.toPasient()
   }
 
-  suspend fun getAllPatients() = dbQuery {
-    logger.info("Looking up all pasients")
-    PasientTable.selectAll().map { it.toPasient() }
+  suspend fun getPasientByFnr(fnr: String) = dbQuery {
+    logger.info("Looking up pasient by fnr")
+    PasientTable.selectAll().where { PasientTable.fnr eq fnr }.singleOrNull()?.toPasient()
+  }
+
+  suspend fun getPasienterByFastlege(fastlegeId: String) = dbQuery {
+    logger.info("Looking up pasients for fastlegeId: $fastlegeId")
+    PasientTable.selectAll()
+      .where { PasientTable.fastlegeId eq Uuid.parse(fastlegeId) }
+      .map { it.toPasient() }
   }
 
   suspend fun insertPasient(pasient: Pasient) = dbQuery {
-    logger.info("Inserting pasient: $pasient")
-    PasientTable.insert {
+    logger.info("Inserting pasient: ${pasient.navn}")
+    PasientTable.insertIgnore {
       it[id] = Uuid.parse(pasient.id)
       it[legekontorId] = Uuid.parse(pasient.legekontorId)
       it[fastlegeId] = Uuid.parse(pasient.fastlegeId)
       it[navn] = pasient.navn
+      it[fnr] = pasient.fnr
     }
   }
 

@@ -39,8 +39,19 @@ fun Application.configureEpjRouting() {
 
         route("/patient") {
           get {
-            val pasient = epjService.getPasienter()
+            val principal = loggedInUser()
+            val pasient = epjService.getPasienterForInnloggetLege(principal.hpr)
             call.respond(pasient)
+          }
+          post {
+            val principal = loggedInUser()
+            val request = call.receive<OpprettPasientRequest>()
+            runCatching { epjService.opprettPasient(request, principal.hpr) }
+              .onSuccess { pasient -> call.respond(HttpStatusCode.Created, pasient) }
+              .onFailure { exception ->
+                log.error("Kunne ikke opprette pasient", exception)
+                call.respond(HttpStatusCode.InternalServerError, "Pasient ble ikke opprettet")
+              }
           }
           get("/{id}") {
             val id =

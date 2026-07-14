@@ -32,18 +32,18 @@ class PasientRepositoryTest : TestRepository() {
 
   @Test
   fun `should return empty list when no pasienter exist`() = runTest {
-    val result = pasientRepository.getAllPatients()
+    val result = pasientRepository.getPasienterByFastlege(Uuid.generateV4().toString())
     result shouldHaveSize 0
   }
 
   @Test
-  fun `should return all pasienter when multiple are inserted`() = runTest {
+  fun `should return all pasienter for fastlege when multiple are inserted`() = runTest {
     val pasientId1 = Uuid.generateV4().toString()
     val pasientId2 = Uuid.generateV4().toString()
     val legeId = Uuid.generateV4().toString()
     testHelper.insertHelsepersonellOgPasientTestData(pasientId1, legeId)
     testHelper.insertPasientTestdata(pasientId2, legeId)
-    val result = pasientRepository.getAllPatients()
+    val result = pasientRepository.getPasienterByFastlege(legeId)
     result shouldHaveSize 2
     result[0].id shouldBe pasientId1
     result[1].id shouldBe pasientId2

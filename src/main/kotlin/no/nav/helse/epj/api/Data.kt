@@ -12,6 +12,8 @@ data class Pasient(
   val fnr: String,
 )
 
+@Serializable data class OpprettPasientRequest(val navn: String, val fnr: String)
+
 data class Legekontor(val id: String, val navn: String, val orgnummer: String?, val tlf: String?)
 
 @Serializable

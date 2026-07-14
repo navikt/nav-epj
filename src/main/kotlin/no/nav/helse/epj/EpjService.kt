@@ -11,6 +11,7 @@ import no.nav.helse.epj.api.LEGEKONTOR_ID
 import no.nav.helse.epj.api.OppdaterKonsultasjonRequest
 import no.nav.helse.epj.api.OpprettHelsepersonell
 import no.nav.helse.epj.api.OpprettKonsultasjon
+import no.nav.helse.epj.api.OpprettPasientRequest
 import no.nav.helse.epj.api.Pasient
 import no.nav.helse.epj.db.HelsepersonellRepository
 import no.nav.helse.epj.db.KonsultasjonRepository
@@ -25,12 +26,32 @@ class EpjService(
 
   private val logger = logger()
 
-  suspend fun getPasienter(): List<Pasient> {
-    return pasientRepository.getAllPatients()
+  suspend fun getPasienterForInnloggetLege(hpr: String): List<Pasient> {
+    val fastlege =
+      getHelspersonell(hpr) ?: throw IllegalStateException("Fant ikke innlogget helsepersonell")
+    return pasientRepository.getPasienterByFastlege(fastlege.id)
   }
 
   suspend fun getPasient(id: String): Pasient? {
     return pasientRepository.getPasient(id)
+  }
+
+  @OptIn(kotlin.uuid.ExperimentalUuidApi::class)
+  suspend fun opprettPasient(request: OpprettPasientRequest, hpr: String): Pasient {
+    val fastlege =
+      getHelspersonell(hpr) ?: throw IllegalStateException("Fant ikke innlogget helsepersonell")
+    val nyPasient =
+      Pasient(
+        id = kotlin.uuid.Uuid.random().toString(),
+        legekontorId = fastlege.legekontorId,
+        fastlegeId = fastlege.id,
+        navn = request.navn,
+        fnr = request.fnr,
+      )
+    val insertPasient = pasientRepository.insertPasient(nyPasient)
+    logger.info("inserted count: ${insertPasient.insertedCount}")
+    return pasientRepository.getPasientByFnr(request.fnr)
+      ?: throw IllegalStateException("Pasient ble ikke opprettet")
   }
 
   suspend fun getKonsultasjon(id: String): Konsultasjon? {
