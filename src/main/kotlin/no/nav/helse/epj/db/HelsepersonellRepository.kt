@@ -11,7 +11,7 @@ import no.nav.helse.epj.api.Legekontor
 import no.nav.helse.epj.api.OpprettHelsepersonell
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.selectAll
 
 class HelsepersonellRepository {
@@ -21,7 +21,7 @@ class HelsepersonellRepository {
   @OptIn(ExperimentalUuidApi::class)
   suspend fun insertHelsepersonell(helsePersonell: OpprettHelsepersonell) = dbQuery {
     logger.info("Inserting helsepersonell: ${helsePersonell.navn}")
-    HelsepersonellTable.insert {
+    HelsepersonellTable.insertIgnore {
       it[legekontorId] = Uuid.parse(helsePersonell.legekontorId)
       it[hpr] = helsePersonell.hpr
       it[navn] = helsePersonell.navn
