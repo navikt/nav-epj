@@ -34,11 +34,6 @@ class FhirService(
     return konsultasjon.toEncounter()
   }
 
-  suspend fun getConditions(konsultasjonId: String, patientId: String): List<Condition>? {
-    val diagnoser = konsultasjonRepository.getDiagnoser(konsultasjonId) ?: return null
-    return diagnoser.map { it.ToCondition(konsultasjonId, patientId) }
-  }
-
   suspend fun getActiveEncounterForPatient(patientId: String): Encounter? =
     konsultasjonRepository.getAktivKonsultasjon(patientId)?.toEncounter()
 
@@ -49,6 +44,11 @@ class FhirService(
       total = UnsignedInt(value = encounters.size),
       entry = encounters.map { Bundle.Entry(resource = it) },
     )
+  }
+
+  suspend fun getConditions(konsultasjonId: String, patientId: String): List<Condition>? {
+    val diagnoser = konsultasjonRepository.getDiagnoser(konsultasjonId) ?: return null
+    return diagnoser.map { it.ToCondition(konsultasjonId, patientId) }
   }
 
   suspend fun getOrganization(): Organization? =

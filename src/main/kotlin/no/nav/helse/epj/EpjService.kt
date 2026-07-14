@@ -3,6 +3,9 @@ package no.nav.helse.epj
 import kotlin.time.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import no.nav.helse.core.utils.HelsepersonellNotFoundException
+import no.nav.helse.core.utils.KonsultasjonNotFoundException
+import no.nav.helse.core.utils.PasientCreationException
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.api.Helsepersonell
 import no.nav.helse.epj.api.Konsultasjon
@@ -18,6 +21,7 @@ import no.nav.helse.epj.db.KonsultasjonRepository
 import no.nav.helse.epj.db.PasientRepository
 import no.nav.helse.helseIdAuth.User
 
+@OptIn(kotlin.uuid.ExperimentalUuidApi::class)
 class EpjService(
   private val pasientRepository: PasientRepository,
   private val helsepersonellRepository: HelsepersonellRepository,
@@ -28,7 +32,7 @@ class EpjService(
 
   suspend fun getPasienterForInnloggetLege(hpr: String): List<Pasient> {
     val fastlege =
-      getHelspersonell(hpr) ?: throw IllegalStateException("Fant ikke innlogget helsepersonell")
+      getHelsepersonell(hpr) ?: throw IllegalStateException("Fant ikke innlogget helsepersonell")
     return pasientRepository.getPasienterByFastlege(fastlege.id)
   }
 
@@ -36,10 +40,9 @@ class EpjService(
     return pasientRepository.getPasient(id)
   }
 
-  @OptIn(kotlin.uuid.ExperimentalUuidApi::class)
   suspend fun opprettPasient(request: OpprettPasientRequest, hpr: String): Pasient {
     val fastlege =
-      getHelspersonell(hpr) ?: throw IllegalStateException("Fant ikke innlogget helsepersonell")
+      getHelsepersonell(hpr) ?: throw IllegalStateException("Fant ikke innlogget helsepersonell")
     val nyPasient =
       Pasient(
         id = kotlin.uuid.Uuid.random().toString(),
@@ -50,8 +53,7 @@ class EpjService(
       )
     val insertPasient = pasientRepository.insertPasient(nyPasient)
     logger.info("inserted count: ${insertPasient.insertedCount}")
-    return pasientRepository.getPasientByFnr(request.fnr)
-      ?: throw IllegalStateException("Pasient ble ikke opprettet")
+    return pasientRepository.getPasientByFnr(request.fnr) ?: throw PasientCreationException()
   }
 
   suspend fun getKonsultasjon(id: String): Konsultasjon? {
@@ -93,18 +95,29 @@ class EpjService(
     return createKonsultasjon(opprettKonsultasjon)
   }
 
+  suspend fun oppdaterKonsultasjon(
+    oppdaterKonsultasjon: OppdaterKonsultasjonRequest,
+    pasientId: String,
+  ) {
+    logger.info("oppdater konsultasjon på pasientId: $pasientId")
+    val updatedRows = konsultasjonRepository.oppdaterKonsultasjon(oppdaterKonsultasjon, pasientId)
+    if (updatedRows != 1) {
+      throw KonsultasjonNotFoundException(oppdaterKonsultasjon.konsultasjonId, pasientId)
+    }
+  }
+
   suspend fun insertHelsepersonell(helsepersonell: OpprettHelsepersonell): Boolean {
     val insertHelsepersonell = helsepersonellRepository.insertHelsepersonell(helsepersonell)
     logger.info("inserted count: ${insertHelsepersonell.insertedCount}")
     return (insertHelsepersonell.insertedCount == 1)
   }
 
-  suspend fun getHelspersonell(hpr: String): Helsepersonell? {
+  suspend fun getHelsepersonell(hpr: String): Helsepersonell? {
     return helsepersonellRepository.getHelsepersonell(hpr)
   }
 
   suspend fun findOrCreateHelsepersonell(principal: User): Helsepersonell {
-    val helsepersonell = getHelspersonell(principal.hpr)
+    val helsepersonell = getHelsepersonell(principal.hpr)
     if (helsepersonell != null) {
       return helsepersonell
     }
@@ -117,22 +130,9 @@ class EpjService(
       )
     val insertHelsepersonell = insertHelsepersonell(opprettHelsepersonell)
     if (insertHelsepersonell) {
-      return getHelspersonell(principal.hpr)
+      return getHelsepersonell(principal.hpr)
         ?: throw IllegalStateException("Helspersonell ikke funnet")
     }
-    throw IllegalStateException("Helspersonell ikke funnet")
-  }
-
-  suspend fun oppdaterKonsultasjon(
-    oppdaterKonsultasjon: OppdaterKonsultasjonRequest,
-    pasientId: String,
-  ) {
-    logger.info("oppdater konsultasjon på pasientId: $pasientId")
-    val updatedRows = konsultasjonRepository.oppdaterKonsultasjon(oppdaterKonsultasjon, pasientId)
-    if (updatedRows != 1) {
-      throw IllegalStateException(
-        "Fant ikke konsultasjon med id=${oppdaterKonsultasjon.konsultasjonId} på pasientId: $pasientId"
-      )
-    }
+    throw HelsepersonellNotFoundException(principal.hpr)
   }
 }
