@@ -6,6 +6,9 @@ metadata:
   labels:
     team: helseopplysninger
 spec:
+  valkey:
+    - instance: nav-epj
+      access: readwrite
   image: {{image}}
   gcp:
     sqlInstances:
