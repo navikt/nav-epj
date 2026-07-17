@@ -11,6 +11,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import no.nav.helse.core.db.dbQuery
 import no.nav.helse.epj.api.Diagnose
+import no.nav.helse.epj.api.DiagnoseSystem
 import no.nav.helse.epj.api.KonsultasjonStatus
 import no.nav.helse.epj.api.OppdaterKonsultasjonRequest
 import no.nav.helse.epj.api.OpprettDiagnoseRequest
@@ -90,8 +91,16 @@ class KonsultasjonRepositoryTest : TestRepository() {
     testHelper.insertKonsultasjonWithPredefinedId(legeId, pasientId, konsultasjonId)
     val diagnoser =
       listOf(
-        OpprettDiagnoseRequest(kode = "kode", system = "system", beskrivelse = "beskrivelse"),
-        OpprettDiagnoseRequest(kode = "kode2", system = "system2", beskrivelse = "beskrivelse2"),
+        OpprettDiagnoseRequest(
+          kode = "kode",
+          system = DiagnoseSystem.ICD10,
+          beskrivelse = "beskrivelse",
+        ),
+        OpprettDiagnoseRequest(
+          kode = "kode2",
+          system = DiagnoseSystem.ICD10,
+          beskrivelse = "beskrivelse2",
+        ),
       )
     diagnoser.forEach {
       konsultasjonRepository.insertDiagnoseIfNotExists(it, konsultasjonId.toString())
@@ -101,8 +110,8 @@ class KonsultasjonRepositoryTest : TestRepository() {
 
     result shouldBe
       listOf(
-        Diagnose(kode = "kode", system = "system", beskrivelse = "beskrivelse"),
-        Diagnose(kode = "kode2", system = "system2", beskrivelse = "beskrivelse2"),
+        Diagnose(kode = "kode", system = DiagnoseSystem.ICD10, beskrivelse = "beskrivelse"),
+        Diagnose(kode = "kode2", system = DiagnoseSystem.ICD10, beskrivelse = "beskrivelse2"),
       )
   }
 }

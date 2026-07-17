@@ -14,6 +14,7 @@ spotless = "8.4.0"
 detekt = "2.0.0-alpha.3"
 fhir = "1.0.0-beta02"
 otel = "2.28.1"
+tsm-diagnoser = "2026.1.13"
 
 [libraries]
 # Ktor server
@@ -51,6 +52,7 @@ nimbus-oauth2-oidc-sdk = { module = "com.nimbusds:oauth2-oidc-sdk", version.ref 
 
 
 fhir-model = { module = "com.google.fhir:fhir-model", version.ref = "fhir" }
+tsm-diagnoser = { module = "no.nav.tsm:diagnoser", version.ref = "tsm-diagnoser" }
 
 # Testing
 ktor-client-test-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }

@@ -28,6 +28,8 @@ kotlin {
 repositories {
   mavenCentral()
   google()
+  maven { url = uri("https://jitpack.io") }
+  maven { url = uri("https://github-package-registry-mirror.gc.nav.no/cached/maven-release") }
 }
 
 dependencies {
@@ -57,6 +59,7 @@ dependencies {
   implementation(libs.nimbus.oauth2.oidc.sdk)
   implementation(libs.fhir.model)
   implementation(libs.otel.annotations)
+  implementation(libs.tsm.diagnoser)
 
   testImplementation(libs.ktor.server.test.host)
   testImplementation(libs.ktor.client.test.mock)

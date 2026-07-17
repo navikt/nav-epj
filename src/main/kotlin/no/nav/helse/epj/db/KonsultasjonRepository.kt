@@ -9,8 +9,11 @@ import no.nav.helse.core.db.DiagnoseTable
 import no.nav.helse.core.db.KonsultasjonHelsepersonell
 import no.nav.helse.core.db.KonsultasjonTable
 import no.nav.helse.core.db.dbQuery
+import no.nav.helse.core.diagnose.lookupDiagnose
+import no.nav.helse.core.utils.UgyldigDiagnoseException
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.api.Diagnose
+import no.nav.helse.epj.api.DiagnoseSystem
 import no.nav.helse.epj.api.Konsultasjon
 import no.nav.helse.epj.api.KonsultasjonStatus
 import no.nav.helse.epj.api.OppdaterKonsultasjonRequest
@@ -121,7 +124,7 @@ class KonsultasjonRepository {
   private fun ResultRow.toDiagnose() =
     Diagnose(
       kode = this[DiagnoseTable.diagnosekode],
-      system = this[DiagnoseTable.diagnosesystem],
+      system = DiagnoseSystem.valueOf(this[DiagnoseTable.diagnosesystem]),
       beskrivelse = this[DiagnoseTable.beskrivelse],
     )
 
@@ -170,12 +173,16 @@ class KonsultasjonRepository {
     diagnose: OpprettDiagnoseRequest,
     konsultasjonId: String,
   ): Int = dbQuery {
+    val kodeverkDiagnose =
+      lookupDiagnose(diagnose.system, diagnose.kode)
+        ?: throw UgyldigDiagnoseException(diagnose.kode, diagnose.system.toString())
+
     val exists =
       DiagnoseTable.selectAll()
         .where {
           (DiagnoseTable.konsultasjonId eq Uuid.parse(konsultasjonId)) and
             (DiagnoseTable.diagnosekode eq diagnose.kode) and
-            (DiagnoseTable.diagnosesystem eq diagnose.system)
+            (DiagnoseTable.diagnosesystem eq diagnose.system.toString())
         }
         .limit(1)
         .any()
@@ -187,8 +194,8 @@ class KonsultasjonRepository {
     DiagnoseTable.insert {
       it[DiagnoseTable.konsultasjonId] = Uuid.parse(konsultasjonId)
       it[diagnosekode] = diagnose.kode
-      it[diagnosesystem] = diagnose.system
-      it[beskrivelse] = diagnose.beskrivelse
+      it[diagnosesystem] = diagnose.system.toString()
+      it[beskrivelse] = kodeverkDiagnose.text
     }
     1
   }

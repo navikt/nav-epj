@@ -67,6 +67,15 @@ data class OppdaterKonsultasjonRequest(
 )
 
 @Serializable
-data class OpprettDiagnoseRequest(val kode: String, val system: String, val beskrivelse: String)
+data class OpprettDiagnoseRequest(
+  val kode: String,
+  val system: DiagnoseSystem,
+  val beskrivelse: String,
+)
 
-data class Diagnose(val kode: String, val system: String, val beskrivelse: String)
+data class Diagnose(val kode: String, val system: DiagnoseSystem, val beskrivelse: String)
+
+enum class DiagnoseSystem {
+  ICPC2,
+  ICD10,
+}

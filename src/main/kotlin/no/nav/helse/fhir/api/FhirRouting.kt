@@ -131,6 +131,32 @@ fun Application.configureFhirRouting() {
             )
           call.respondText(fhirJson.encodeToString(bundle), fhirContentType)
         }
+
+        get("/Condition") {
+          val principal = call.principal<SmartPrincipal>()!!
+          val encounter =
+            principal.encounter
+              ?: return@get call.respond(HttpStatusCode.Forbidden, "Token has no encounter context")
+
+          val patient =
+            principal.patient
+              ?: return@get call.respond(HttpStatusCode.Forbidden, "Token has no patient context")
+          val conditions =
+            fhirService.getConditions(encounter, patient)
+              ?: return@get call.respond(HttpStatusCode.NotFound)
+          val bundle =
+            Bundle(
+              type = Enumeration(value = Bundle.BundleType.Searchset),
+              entry =
+                conditions.map { condition ->
+                  Bundle.Entry(
+                    fullUrl = Uri(value = "Condition/${condition.id}"),
+                    resource = condition,
+                  )
+                },
+            )
+          call.respondText(fhirJson.encodeToString(bundle), fhirContentType)
+        }
       }
     }
   }

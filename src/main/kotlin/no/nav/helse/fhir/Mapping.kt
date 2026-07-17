@@ -16,6 +16,8 @@ import com.google.fhir.model.r4.Patient
 import com.google.fhir.model.r4.Practitioner
 import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.Uri
+import no.nav.helse.core.diagnose.lookupDiagnose
+import no.nav.helse.core.diagnose.oid
 import no.nav.helse.epj.api.Diagnose
 import no.nav.helse.epj.api.Helsepersonell
 import no.nav.helse.epj.api.Konsultasjon
@@ -113,8 +115,9 @@ fun Helsepersonell.toPractitioner(): Practitioner {
   )
 }
 
-// TODO: sender med konsultasjonId som unik Condition ident, dette er jeg usikker på
 fun Diagnose.ToCondition(konsultasjonId: String, patientId: String): Condition {
+  val kodeverkDiagnose = lookupDiagnose(this.system, this.kode)
+
   return Condition(
     id = konsultasjonId,
     subject =
@@ -124,9 +127,10 @@ fun Diagnose.ToCondition(konsultasjonId: String, patientId: String): Condition {
         coding =
           listOf(
             Coding(
-              system = Uri(value = this.system),
+              system = Uri(value = "urn:oid:${this.system.oid}"),
               code = Code(value = this.kode),
-              display = com.google.fhir.model.r4.String(value = this.beskrivelse),
+              display =
+                com.google.fhir.model.r4.String(value = kodeverkDiagnose?.text ?: this.beskrivelse),
             )
           )
       ),
@@ -156,10 +160,7 @@ fun Legekontor.toOrganization(): Organization {
       listOf(
         ContactPoint(
           system = Enumeration(value = ContactPoint.ContactPointSystem.Phone),
-          value =
-            com.google.fhir.model.r4.String(
-              value = this.tlf ?: "+47 tulletlf"
-            ), // TODO: tlf til legekontoret er nå null
+          value = com.google.fhir.model.r4.String(value = this.tlf ?: "+47 tulletlf"),
         )
       ),
   )

@@ -8,6 +8,8 @@ import io.ktor.server.plugins.di.*
 import io.ktor.server.request.receive
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import no.nav.helse.core.utils.KonsultasjonNotFoundException
+import no.nav.helse.core.utils.UgyldigDiagnoseException
 import no.nav.helse.epj.ClinicianContext
 import no.nav.helse.epj.ClinicianContextStore
 import no.nav.helse.epj.EpjService
@@ -104,7 +106,16 @@ fun Application.configureEpjRouting() {
               .onSuccess { call.respond(HttpStatusCode.OK) }
               .onFailure { exception ->
                 log.error("Kunne ikke oppdatere konsultasjon ${request.konsultasjonId}", exception)
-                call.respond(HttpStatusCode.InternalServerError, "Konsultasjon ble ikke oppdatert")
+                when (exception) {
+                  is KonsultasjonNotFoundException -> call.respond(HttpStatusCode.NotFound)
+                  is UgyldigDiagnoseException ->
+                    call.respond(HttpStatusCode.BadRequest, exception.message ?: "Ugyldig diagnose")
+                  else ->
+                    call.respond(
+                      HttpStatusCode.InternalServerError,
+                      "Konsultasjon ble ikke oppdatert",
+                    )
+                }
               }
           }
         }
