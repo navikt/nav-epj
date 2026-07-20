@@ -11,12 +11,11 @@ import org.testcontainers.utility.DockerImageName
 abstract class WithValkey protected constructor() {
   companion object {
     val valkey =
-      GenericContainer(DockerImageName.parse("valkey/valkey:8-alpine"))
-        .apply {
-          withExposedPorts(6379)
-          waitingFor(Wait.forListeningPort())
-          start()
-        }
+      GenericContainer(DockerImageName.parse("valkey/valkey:8-alpine")).apply {
+        withExposedPorts(6379)
+        waitingFor(Wait.forListeningPort())
+        start()
+      }
 
     private val glideClientConfiguration: GlideClientConfiguration =
       GlideClientConfiguration.builder()

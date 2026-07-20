@@ -57,7 +57,7 @@ fun createIntegrationEnvironment(postgres: PostgreSQLContainer) =
             )
           ),
       ),
-    valkey = ValkeyConfig("valkey", 8080),
+    valkey = ValkeyConfig("valkey", 8080, null, null),
   )
 
 val simpleTestEnvironment =
@@ -76,5 +76,5 @@ val simpleTestEnvironment =
             )
           ),
       ),
-    valkey = ValkeyConfig("valkey", 8080),
+    valkey = ValkeyConfig("valkey", 8080, null, null),
   )

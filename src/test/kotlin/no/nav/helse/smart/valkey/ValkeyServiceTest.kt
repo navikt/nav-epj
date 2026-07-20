@@ -82,7 +82,5 @@ class ValkeyServiceTest : WithValkey() {
   }
 
   @Test
-  fun `get på ukjent nøkkel gir null`() = runTest {
-    assertNull(valkeyService.get("ukjent-nokkel"))
-  }
+  fun `get på ukjent nøkkel gir null`() = runTest { assertNull(valkeyService.get("ukjent-nokkel")) }
 }

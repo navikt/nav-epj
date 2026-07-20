@@ -26,3 +26,5 @@ smart:
 valkey:
   host: ${VALKEY_HOST_NAV_EPJ}
   port: ${VALKEY_PORT_NAV_EPJ}
+  username: ${VALKEY_USERNAME_NAV_EPJ}
+  password: ${VALKEY_PASSWORD_NAV_EPJ}
