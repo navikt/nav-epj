@@ -8,7 +8,6 @@ import no.nav.helse.core.Environment
 fun createGlideClientConfiguration(env: Environment): GlideClientConfiguration {
   return GlideClientConfiguration.builder()
     .address(NodeAddress.builder().host(env.valkey.host).port(env.valkey.port).build())
-    .requestTimeout(1000)
     .useTLS(false)
     .clientName("nav-epj")
     .build()
