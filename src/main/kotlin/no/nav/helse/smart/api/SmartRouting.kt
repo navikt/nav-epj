@@ -17,24 +17,21 @@ import java.security.MessageDigest
 import java.util.*
 import no.nav.helse.core.Environment
 import no.nav.helse.core.utils.logger
-import no.nav.helse.epj.ClinicianContextStore
 import no.nav.helse.fhir.FhirService
 import no.nav.helse.helseIdAuth.loggedInUser
 import no.nav.helse.smart.SmartDiscoveryDocument
-import no.nav.helse.smart.SmartKeys
 import no.nav.helse.smart.TokenResponse
-import no.nav.helse.smart.codeChallengeS256
-import no.nav.helse.smart.db.AuthCodeContext
-import no.nav.helse.smart.db.LaunchContext
-import no.nav.helse.smart.db.SingleUseStore
+import no.nav.helse.smart.security.SmartKeys
+import no.nav.helse.smart.security.codeChallengeS256
+import no.nav.helse.smart.valkey.AuthCodeContext
+import no.nav.helse.smart.valkey.LaunchContext
+import no.nav.helse.smart.valkey.ValkeyService
 
 @OptIn(ExperimentalKtorApi::class)
 fun Application.configureSmartRouting() {
   val env: Environment by dependencies
   val fhirService: FhirService by dependencies
-  val launchStore: SingleUseStore<LaunchContext> by dependencies
-  val authCodesStore: SingleUseStore<AuthCodeContext> by dependencies
-  val clinicianContextStore: ClinicianContextStore by dependencies
+  val valkeyService: ValkeyService by dependencies
 
   val issuerUrl = env.smart.issuerBaseUrl
   val clients = env.smart.clients
@@ -54,24 +51,21 @@ fun Application.configureSmartRouting() {
             )
           val user = loggedInUser()
 
-          // TODO: bytte ut med valkey
-          val context =
-            clinicianContextStore.get(user.hpr)
+          val patientId =
+            valkeyService.get(user.hpr)
               ?: return@get call.respond(
                 HttpStatusCode.Conflict,
                 "No active patient context for clinician",
               )
 
           val patient =
-            fhirService.getPatient(context.patientId)
+            fhirService.getPatient(patientId)
               ?: return@get call.respond(HttpStatusCode.NotFound, "Unknown patient")
 
-          val encounter = fhirService.getActiveEncounterForPatient(context.patientId)
-
+          val encounter = fhirService.getActiveEncounterForPatient(patientId)
           val launchId = UUID.randomUUID().toString()
 
-          // TODO: bytte ut med valkey
-          launchStore.save(launchId, LaunchContext(patient.id, encounter?.id))
+          valkeyService.saveLaunchContext(launchId, LaunchContext(patient.id, encounter?.id))
 
           val iss = env.smart.fhirServerUrl
           call.respondRedirect("$appUrl/?iss=$iss&launch=$launchId")
@@ -90,7 +84,6 @@ fun Application.configureSmartRouting() {
           val state =
             query["state"] ?: return@get rejectDirect(HttpStatusCode.BadRequest, "missing state")
 
-          // TODO: check valid scopes? (patient/Patient.read ...)
           val scope =
             query["scope"] ?: return@get rejectMissingViaRedirect(redirectUri, state, "scope")
 
@@ -156,8 +149,8 @@ fun Application.configureSmartRouting() {
                 ),
             )
           }
-          val launch =
-            launchStore.take(launchId)
+          val launchContext =
+            valkeyService.getLaunchContext(launchId)
               ?: return@get rejectViaRedirect(
                 redirectUri = redirectUri,
                 state = state,
@@ -170,12 +163,12 @@ fun Application.configureSmartRouting() {
           val code = UUID.randomUUID().toString()
 
           val user = loggedInUser()
-          authCodesStore.save(
+          valkeyService.saveAuthCode(
             code,
             AuthCodeContext(
               username = user.name,
               redirectUrl = redirectUri,
-              launch = LaunchContext(launch.patientId, launch.encounterId),
+              launch = launchContext,
               hpr = user.hpr,
               scope = scope,
               clientId = clientId,
@@ -208,7 +201,7 @@ fun Application.configureSmartRouting() {
           params["code_verifier"] ?: return@post rejectMissingToken("code_verifier")
 
         val ctx =
-          authCodesStore.take(code)
+          valkeyService.getAndDeleteAuthCode(code)
             ?: return@post rejectToken(
               HttpStatusCode.BadRequest,
               OAuth2Error.INVALID_GRANT.appendDescription("unknown or already used code"),
@@ -333,10 +326,6 @@ fun Application.configureSmartRouting() {
   }
 }
 
-/**
- * The SMART/FHIR access token: a self-contained signed JWT, so [configureSmartSecurity]'s
- * resource-server side can validate it without a network round-trip.
- */
 private fun buildAccessToken(
   issuerUrl: String,
   ctx: AuthCodeContext,
@@ -355,10 +344,6 @@ private fun buildAccessToken(
     .withClaim("encounter", ctx.launch.encounterId)
     .sign(SmartKeys.algorithm)
 
-/**
- * OIDC id_token, built only when `openid` was granted. Consumed by the app itself (not the FHIR
- * server) to learn who is using it.
- */
 private fun buildIdToken(
   issuerUrl: String,
   ctx: AuthCodeContext,

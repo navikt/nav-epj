@@ -22,3 +22,7 @@ smart:
     - clientId: "NAV_SMART_on_FHIR_example"
       redirectUris: [ "https://nav-on-fhir.ekstern.dev.nav.no" ]
       launchUris: [ "https://nav-on-fhir.ekstern.dev.nav.no/launch" ]
+
+valkey:
+  host: ${VALKEY_HOST_NAV_EPJ}
+  port: ${VALKEY_PORT_NAV_EPJ}

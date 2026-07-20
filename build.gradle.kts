@@ -60,6 +60,7 @@ dependencies {
   implementation(libs.fhir.model)
   implementation(libs.otel.annotations)
   implementation(libs.tsm.diagnoser)
+  implementation(libs.valkey)
 
   testImplementation(libs.ktor.server.test.host)
   testImplementation(libs.ktor.client.test.mock)

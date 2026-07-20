@@ -7,30 +7,24 @@ import io.mockk.mockk
 import no.nav.helse.core.Environment
 import no.nav.helse.core.PostgresConfig
 import no.nav.helse.core.SmartConfig
-import no.nav.helse.epj.ClinicianContextStore
+import no.nav.helse.core.ValkeyConfig
 import no.nav.helse.fhir.FhirService
 import no.nav.helse.helseIdAuth.DebugInfo
 import no.nav.helse.helseIdAuth.HelseIdPrincipal
 import no.nav.helse.helseIdAuth.User
 import no.nav.helse.smart.api.configureSmartRouting
-import no.nav.helse.smart.db.AuthCodeContext
-import no.nav.helse.smart.db.LaunchContext
-import no.nav.helse.smart.db.SingleUseStore
-import no.nav.helse.smart.db.SmartClient
+import no.nav.helse.smart.security.SmartClient
+import no.nav.helse.smart.valkey.ValkeyService
 import org.testcontainers.postgresql.PostgreSQLContainer
 
 private val fhirService = mockk<FhirService>()
-private val launchStore = mockk<SingleUseStore<LaunchContext>>(relaxed = true)
-private val authCodesStore = mockk<SingleUseStore<AuthCodeContext>>(relaxed = true)
-private val clinicianContextStore = mockk<ClinicianContextStore>()
+private val valkeyService = mockk<ValkeyService>(relaxed = true)
 
 fun Application.configureTestSmartDependencies() {
   dependencies {
     provide<Environment>() { simpleTestEnvironment }
     provide<FhirService> { fhirService }
-    provide<SingleUseStore<LaunchContext>> { launchStore }
-    provide<SingleUseStore<AuthCodeContext>> { authCodesStore }
-    provide<ClinicianContextStore> { clinicianContextStore }
+    provide<ValkeyService> { valkeyService }
   }
   authentication {
     provider("wonderwall-helseid") {
@@ -63,6 +57,7 @@ fun createIntegrationEnvironment(postgres: PostgreSQLContainer) =
             )
           ),
       ),
+    valkey = ValkeyConfig("valkey", 8080),
   )
 
 val simpleTestEnvironment =
@@ -81,4 +76,5 @@ val simpleTestEnvironment =
             )
           ),
       ),
+    valkey = ValkeyConfig("valkey", 8080),
   )

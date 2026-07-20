@@ -1,4 +1,4 @@
-package no.nav.helse.smart
+package no.nav.helse.smart.security
 
 import com.auth0.jwt.JWT
 import io.ktor.server.application.*

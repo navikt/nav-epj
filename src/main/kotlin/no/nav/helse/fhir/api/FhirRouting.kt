@@ -16,7 +16,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.nav.helse.fhir.FhirService
-import no.nav.helse.smart.SmartPrincipal
+import no.nav.helse.smart.security.SmartPrincipal
 
 fun Application.configureFhirRouting() {
 

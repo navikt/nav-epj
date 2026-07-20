@@ -1,4 +1,4 @@
-package no.nav.helse.smart
+package no.nav.helse.smart.security
 
 import com.auth0.jwt.algorithms.Algorithm
 import com.nimbusds.jose.JWSAlgorithm
@@ -7,7 +7,7 @@ import com.nimbusds.jose.jwk.RSAKey
 import java.security.KeyPairGenerator
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
-import java.util.*
+import java.util.UUID
 
 /**
  * This app's own RSA signing key for SMART access/id tokens, exposed as a public JWK at
