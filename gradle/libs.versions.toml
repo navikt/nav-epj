@@ -54,7 +54,7 @@ nimbus-oauth2-oidc-sdk = { module = "com.nimbusds:oauth2-oidc-sdk", version.ref 
 
 fhir-model = { module = "com.google.fhir:fhir-model", version.ref = "fhir" }
 tsm-diagnoser = { module = "no.nav.tsm:diagnoser", version.ref = "tsm-diagnoser" }
-valkey = { module = "io.valkey:valkey-glide", version.ref = "valkey" }
+valkey-glide = { module = "io.valkey:valkey-glide", version.ref = "valkey" }
 
 # Testing
 ktor-client-test-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }

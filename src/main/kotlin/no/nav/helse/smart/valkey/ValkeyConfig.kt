@@ -4,7 +4,6 @@ import glide.api.GlideClient
 import glide.api.models.configuration.GlideClientConfiguration
 import glide.api.models.configuration.NodeAddress
 import no.nav.helse.core.Environment
-import no.nav.helse.core.utils.logger
 
 fun createGlideClientConfiguration(env: Environment): GlideClientConfiguration {
   return GlideClientConfiguration.builder()
