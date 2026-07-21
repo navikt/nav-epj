@@ -10,8 +10,7 @@ import no.nav.helse.plugins.configureCors
 import no.nav.helse.plugins.configureHealthCheck
 import no.nav.helse.plugins.configureSerialization
 import no.nav.helse.smart.api.configureSmartRouting
-import no.nav.helse.smart.configureSmartDependencies
-import no.nav.helse.smart.configureSmartSecurity
+import no.nav.helse.smart.security.configureSmartSecurity
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
@@ -23,7 +22,6 @@ fun Application.module() {
   configureCors()
 
   configureHelseIdAuth()
-  configureSmartDependencies()
   configureSmartSecurity()
   configureSmartRouting()
   configureFhirRouting()

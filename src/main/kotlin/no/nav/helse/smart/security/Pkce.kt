@@ -1,4 +1,4 @@
-package no.nav.helse.smart
+package no.nav.helse.smart.security
 
 import java.security.MessageDigest
 import java.util.Base64

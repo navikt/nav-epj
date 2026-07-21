@@ -19,7 +19,6 @@ class SmartRoutingTest() {
   }
 
   // TODO: fullføre tester under
-
   @Test
   fun `GET fhir launch med ukjent app-url `() = testApplication {
     application { configureTestSmartDependencies() }

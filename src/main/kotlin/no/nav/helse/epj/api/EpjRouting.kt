@@ -10,17 +10,16 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.UgyldigDiagnoseException
-import no.nav.helse.epj.ClinicianContext
-import no.nav.helse.epj.ClinicianContextStore
 import no.nav.helse.epj.EpjService
 import no.nav.helse.helseIdAuth.loggedInUser
+import no.nav.helse.smart.valkey.ValkeyService
 
 // TODO fjern denne og lagre legekontor i db
 const val LEGEKONTOR_ID = "a1000000-0000-0000-0000-000000000001"
 
 fun Application.configureEpjRouting() {
   val epjService: EpjService by dependencies
-  val clinicianContextStore: ClinicianContextStore by dependencies
+  val valkeyService: ValkeyService by dependencies
 
   routing {
     authenticate("wonderwall-helseid") {
@@ -86,7 +85,7 @@ fun Application.configureEpjRouting() {
                  * tabs shares a single context and the second overwrites the first. Key by a
                  * per-tab session id instead once we have session handling.
                  */
-                clinicianContextStore.set(principal.hpr, ClinicianContext(pasientId))
+                valkeyService.set(principal.hpr, pasientId)
                 call.respond(konsultasjon)
               }
               .onFailure { exception ->

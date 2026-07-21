@@ -1,16 +1,24 @@
 package no.nav.helse.core
 
 import io.ktor.server.config.ApplicationConfig
-import no.nav.helse.smart.db.SmartClient
+import no.nav.helse.smart.security.SmartClient
+
+class Environment(val postgres: PostgresConfig, val smart: SmartConfig, val valkey: ValkeyConfig) {}
 
 data class PostgresConfig(val url: String, val username: String, val password: String)
-
-class Environment(val postgres: PostgresConfig, val smart: SmartConfig)
 
 class SmartConfig(
   val issuerBaseUrl: String,
   val fhirServerUrl: String,
   val clients: List<SmartClient>,
+)
+
+data class ValkeyConfig(
+  val host: String,
+  val port: Int,
+  val useTLS: Boolean,
+  val username: String?,
+  val password: String?,
 )
 
 fun initEnvironment(config: ApplicationConfig): Environment {
@@ -34,6 +42,14 @@ fun initEnvironment(config: ApplicationConfig): Environment {
               c.propertyOrNull("clientSecret")?.getString(),
             )
           },
+      ),
+    valkey =
+      ValkeyConfig(
+        host = config.property("valkey.host").getString(),
+        port = config.property("valkey.port").getString().toInt(),
+        useTLS = config.property("valkey.useTLS").getString().toBoolean(),
+        username = config.propertyOrNull("valkey.username")?.getString(),
+        password = config.propertyOrNull("valkey.password")?.getString(),
       ),
   )
 }
