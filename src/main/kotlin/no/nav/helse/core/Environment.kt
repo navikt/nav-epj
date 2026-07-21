@@ -16,6 +16,7 @@ class SmartConfig(
 data class ValkeyConfig(
   val host: String,
   val port: Int,
+  val useTLS: Boolean,
   val username: String?,
   val password: String?,
 )
@@ -46,6 +47,7 @@ fun initEnvironment(config: ApplicationConfig): Environment {
       ValkeyConfig(
         host = config.property("valkey.host").getString(),
         port = config.property("valkey.port").getString().toInt(),
+        useTLS = config.property("valkey.useTLS").getString().toBoolean(),
         username = config.propertyOrNull("valkey.username")?.getString(),
         password = config.propertyOrNull("valkey.password")?.getString(),
       ),

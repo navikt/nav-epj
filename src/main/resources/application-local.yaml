@@ -27,3 +27,4 @@ smart:
 valkey:
   host: localhost
   port: 6379
+  useTLS: false
