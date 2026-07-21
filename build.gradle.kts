@@ -48,6 +48,7 @@ dependencies {
   implementation(libs.ktor.server.routing.openapi)
   implementation(libs.ktor.server.cors)
   implementation(libs.logback.classic)
+  implementation(libs.logback.encoder)
   implementation(libs.exposed.core)
   implementation(libs.exposed.jdbc)
   implementation(libs.exposed.json)
