@@ -1,6 +1,7 @@
 import { Button, Textarea, UNSAFE_Combobox } from '@navikt/ds-react'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
-import { useState, type MouseEvent } from 'react'
+import { useEffect, useState, type MouseEvent } from 'react'
+import { epjDiagnoser } from '@data/diagnoses'
 
 export const Route = createFileRoute(
   '/patients/$patientId/konsultasjon/$konsultasjonId/',
@@ -15,13 +16,24 @@ type PostKonsultasjonBody = {
     ferdigstill: boolean;
 }
 
-const diagnoseOptions: {label: string, value: string, system: 'ICD10' | 'ICPC2'}[] = [{label: 'Testdiagnose 1', value: 'P01', system: 'ICD10'}, {label: 'Testdiagnose 2', value: 'P02', system: 'ICPC2'}]
-
 function RouteComponent() {
     const navigate = useNavigate()
     const { patientId, konsultasjonId } = Route.useParams();
     const [diagnoser, setDiagnoser] = useState<{kode: string, system: string, beskrivelse: string}[]>([])
     const [journalnotat, setJournalnotat] = useState<string>('')
+
+    const [diagnoseOptions, setDiagnoseOptions] = useState<{label: string, system: string, value: string}[]>([])
+
+    useEffect(() => {
+        const mappedDiagnoser = epjDiagnoser.map((diagnose) => {
+            return {
+                label: diagnose.beskrivelse,
+                value: diagnose.kode,
+                system: diagnose.diagnosesystem
+            }
+        })
+        setDiagnoseOptions(mappedDiagnoser)
+    }, [])
 
     function handleToggleSelect(option: string, isSelected: boolean) {
         if (isSelected) {

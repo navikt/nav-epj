@@ -14,6 +14,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@utils": "/src/utils",
+      "@data": "/src/data"
     },
   },
   server: {
