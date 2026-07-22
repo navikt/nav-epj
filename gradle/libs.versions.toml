@@ -16,7 +16,7 @@ detekt = "2.0.0-alpha.3"
 fhir = "1.0.0-beta02"
 otel = "2.28.1"
 tsm-diagnoser = "2026.1.13"
-valkey = "2.3.0"
+valkey = "2.5.0"
 
 [libraries]
 # Ktor server
