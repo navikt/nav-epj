@@ -45,6 +45,7 @@ fun Application.configureEpjRouting() {
             call.respond(pasient)
           }
           post {
+            log.info("Kommer vi hit+??")
             val principal = loggedInUser()
             log.info("HEI $principal")
             val request = call.receive<OpprettPasientRequest>()

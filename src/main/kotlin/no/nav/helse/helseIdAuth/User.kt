@@ -2,6 +2,7 @@ package no.nav.helse.helseIdAuth
 
 import io.ktor.server.auth.principal
 import io.ktor.server.routing.RoutingContext
+import no.nav.helse.core.utils.logger
 
 data class User(val name: String, val hpr: String)
 
@@ -10,6 +11,7 @@ data class HelseIdPrincipal(val user: User, val debug: DebugInfo)
 data class DebugInfo(val accessToken: String, val idToken: String)
 
 fun RoutingContext.loggedInUser(): User {
+  logger().info("Authenticating user")
   val principal =
     requireNotNull(this.call.principal<HelseIdPrincipal>()) { "User not found in principal" }
 
