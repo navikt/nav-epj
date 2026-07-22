@@ -41,8 +41,10 @@ class EpjService(
   }
 
   suspend fun opprettPasient(request: OpprettPasientRequest, hpr: String): Pasient {
+    logger.info("Oppretter pasient")
     val fastlege =
       getHelsepersonell(hpr) ?: throw IllegalStateException("Fant ikke innlogget helsepersonell")
+    logger.info("Oppretter pasient for fastlege: $fastlege")
     val nyPasient =
       Pasient(
         id = kotlin.uuid.Uuid.random().toString(),
@@ -113,6 +115,7 @@ class EpjService(
   }
 
   suspend fun getHelsepersonell(hpr: String): Helsepersonell? {
+    logger.info("Getting helsepersonell")
     return helsepersonellRepository.getHelsepersonell(hpr)
   }
 

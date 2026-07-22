@@ -46,6 +46,7 @@ fun Application.configureEpjRouting() {
           }
           post {
             val principal = loggedInUser()
+            log.info("HEI $principal")
             val request = call.receive<OpprettPasientRequest>()
             runCatching { epjService.opprettPasient(request, principal.hpr) }
               .onSuccess { pasient -> call.respond(HttpStatusCode.Created, pasient) }
