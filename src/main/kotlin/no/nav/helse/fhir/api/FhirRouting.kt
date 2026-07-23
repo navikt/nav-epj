@@ -157,6 +157,19 @@ fun Application.configureFhirRouting() {
             )
           call.respondText(fhirJson.encodeToString(bundle), fhirContentType)
         }
+        get("/DocumentReference") {
+          val principal = call.principal<SmartPrincipal>()!!
+          val encounter =
+            principal.encounter
+              ?: return@get call.respond(HttpStatusCode.Forbidden, "Token has no encounter context")
+
+          val patient =
+            principal.patient
+              ?: return@get call.respond(HttpStatusCode.Forbidden, "Token has no patient context")
+
+          val documentReference = fhirService.getDocumentReference(encounter, patient)  ?: return@get call.respond(HttpStatusCode.NotFound)
+          call.respondText(fhirJson.encodeToString(documentReference), fhirContentType)
+        }
       }
     }
   }

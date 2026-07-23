@@ -6,6 +6,7 @@ import com.google.fhir.model.r4.CodeableConcept
 import com.google.fhir.model.r4.Coding
 import com.google.fhir.model.r4.Condition
 import com.google.fhir.model.r4.ContactPoint
+import com.google.fhir.model.r4.DocumentReference
 import com.google.fhir.model.r4.Encounter
 import com.google.fhir.model.r4.Enumeration
 import com.google.fhir.model.r4.HumanName
@@ -16,6 +17,7 @@ import com.google.fhir.model.r4.Patient
 import com.google.fhir.model.r4.Practitioner
 import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.Uri
+import com.google.fhir.model.r4.terminologies.DocumentReferenceStatus
 import no.nav.helse.core.diagnose.lookupDiagnose
 import no.nav.helse.core.diagnose.oid
 import no.nav.helse.epj.api.Diagnose
@@ -163,5 +165,30 @@ fun Legekontor.toOrganization(): Organization {
           value = com.google.fhir.model.r4.String(value = this.tlf ?: "+47 tulletlf"),
         )
       ),
+  )
+}
+
+fun Konsultasjon.toDocumentReference(encounterId: String, patientId: String): DocumentReference {
+  return DocumentReference(
+    id = encounterId,
+    description = com.google.fhir.model.r4.String(value = "Journalnotat"),
+    type = CodeableConcept(
+        coding = listOf(
+          Coding(
+            system = Uri(value = "urn:oid:2.16.578.1.12.4.1.1.9602"),
+            code = Code(value = "J01-2"),
+            display = com.google.fhir.model.r4.String("Sykmeldinger og trygdesaker")
+          )
+        )
+      ),
+    content = emptyList(),
+    subject =  Reference(reference = com.google.fhir.model.r4.String(value = "Patient/${patientId}")),
+    author =  this.hpr.map { Reference(reference = com.google.fhir.model.r4.String(value = "Practitioner/${it}")) },
+    context = DocumentReference.Context(
+      encounter = listOf(
+        Reference(reference = com.google.fhir.model.r4.String(value = "Encounter/${encounterId}"))
+      )
+    ),
+    status = Enumeration(value = DocumentReferenceStatus.Current)
   )
 }

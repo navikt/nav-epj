@@ -2,6 +2,7 @@ package no.nav.helse.fhir
 
 import com.google.fhir.model.r4.Bundle
 import com.google.fhir.model.r4.Condition
+import com.google.fhir.model.r4.DocumentReference
 import com.google.fhir.model.r4.Encounter
 import com.google.fhir.model.r4.Enumeration
 import com.google.fhir.model.r4.Organization
@@ -53,4 +54,9 @@ class FhirService(
 
   suspend fun getOrganization(): Organization? =
     helsepersonellRepository.getLegekontor()?.toOrganization()
+
+  suspend fun getDocumentReference(encounter: String, patient: String): DocumentReference? {
+    val journalNotat = konsultasjonRepository.getKonsultasjon(encounter)
+    return journalNotat?.toDocumentReference(encounter, patient)
+  }
 }
