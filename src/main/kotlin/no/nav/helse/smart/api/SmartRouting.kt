@@ -44,6 +44,7 @@ fun Application.configureSmartRouting() {
           val appUrl =
             call.request.queryParameters["url"]
               ?: return@get rejectDirect(HttpStatusCode.BadRequest, "missing app url")
+          logger.info("SMART: /fhir/launch called with url={}", appUrl)
           clients.find { appUrl in it.launchUris }
             ?: return@get rejectDirect(
               HttpStatusCode.BadRequest,
@@ -57,6 +58,11 @@ fun Application.configureSmartRouting() {
                 HttpStatusCode.Conflict,
                 "No active patient context for clinician",
               )
+          logger.info(
+            "SMART: /fhir/launch found active patient context, hpr={}, patientId={}",
+            user.hpr,
+            patientId,
+          )
 
           val patient =
             fhirService.getPatient(patientId)
@@ -64,6 +70,12 @@ fun Application.configureSmartRouting() {
 
           val encounter = fhirService.getActiveEncounterForPatient(patientId)
           val launchId = UUID.randomUUID().toString()
+          logger.info(
+            "SMART: /fhir/launch created launchId={} for patient={}, encounter={}",
+            launchId,
+            patient.id,
+            encounter?.id,
+          )
 
           valkeyService.saveLaunchContext(launchId, LaunchContext(patient.id, encounter?.id))
 
@@ -161,6 +173,12 @@ fun Application.configureSmartRouting() {
               )
 
           val code = UUID.randomUUID().toString()
+          logger.info(
+            "SMART: /oidc/authorize issuing code={} for clientId={}, launchId={}",
+            code,
+            clientId,
+            launchId,
+          )
 
           val user = loggedInUser()
           valkeyService.saveAuthCode(
@@ -212,6 +230,7 @@ fun Application.configureSmartRouting() {
               HttpStatusCode.BadRequest,
               OAuth2Error.INVALID_REQUEST.appendDescription("unknown client"),
             )
+        logger.info("SMART: /oidc/token exchanging code for clientId={}", ctx.clientId)
 
         if (acceptedClient.clientSecret != null) {
           val basic = call.request.parseAuthorizationHeader() as? HttpAuthHeader.Single
