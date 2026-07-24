@@ -45,6 +45,11 @@ fun Application.configureSmartRouting() {
             call.request.queryParameters["url"]
               ?: return@get rejectDirect(HttpStatusCode.BadRequest, "missing app url")
           logger.info("SMART: /fhir/launch called with url={}", appUrl)
+          clients.flatMap { it.launchUris }.forEach {
+            logger.info("Registered launch URI: [{}], length={}", it, it.length)
+          }
+
+          logger.info("Received launch URI: [{}], length={}", appUrl, appUrl.length)
           clients.find { appUrl in it.launchUris }
             ?: return@get rejectDirect(
               HttpStatusCode.BadRequest,
