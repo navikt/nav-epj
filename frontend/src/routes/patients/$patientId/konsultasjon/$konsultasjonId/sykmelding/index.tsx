@@ -11,7 +11,7 @@ function RouteComponent() {
   return (
     <div>
       <Heading level="1" size="large">(ny) Sykmelding</Heading>
-      <iframe width="100%" height="800px" src='https://nav-on-fhir.ekstern.dev.nav.no/launch' />
+      <iframe width="100%" height="800px" src='/fhir/launch?url=https://www.ekstern.dev.nav.no/samarbeidspartner/sykmelding/fhir/launch' />
     </div>
   )
 }
