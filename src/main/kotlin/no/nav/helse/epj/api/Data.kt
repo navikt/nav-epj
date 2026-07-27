@@ -44,11 +44,19 @@ data class Konsultasjon(
   val id: String,
   val pasientId: String,
   val hpr: List<String>,
+  val journalnotat: List<Journalnotat>,
   val startetTidspunkt: LocalDateTime,
   val avsluttetTidspunkt: LocalDateTime?,
   val status: KonsultasjonStatus,
   val problemstilling: String?,
-  val journalnotat: String?,
+)
+
+@Serializable
+data class Journalnotat(
+  val id: String,
+  val konsultasjonId: String,
+  val pasientId: String,
+  val journalnotat: String,
 )
 
 data class OpprettKonsultasjon(

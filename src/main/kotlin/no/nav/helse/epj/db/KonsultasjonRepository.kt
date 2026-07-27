@@ -6,6 +6,7 @@ import kotlin.uuid.Uuid
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import no.nav.helse.core.db.DiagnoseTable
+import no.nav.helse.core.db.JournalnotatTable
 import no.nav.helse.core.db.KonsultasjonHelsepersonell
 import no.nav.helse.core.db.KonsultasjonTable
 import no.nav.helse.core.db.dbQuery
@@ -13,7 +14,7 @@ import no.nav.helse.core.diagnose.lookupDiagnose
 import no.nav.helse.core.utils.UgyldigDiagnoseException
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.api.Diagnose
-import no.nav.helse.epj.api.DiagnoseSystem
+import no.nav.helse.epj.api.Journalnotat
 import no.nav.helse.epj.api.Konsultasjon
 import no.nav.helse.epj.api.KonsultasjonStatus
 import no.nav.helse.epj.api.OppdaterKonsultasjonRequest
@@ -35,7 +36,7 @@ import org.jetbrains.exposed.v1.jdbc.update
 class KonsultasjonRepository {
   private val logger = logger()
 
-  suspend fun createKonsultasjon(opprettKonsultasjon: OpprettKonsultasjon) = dbQuery {
+  suspend fun insertKonsultasjon(opprettKonsultasjon: OpprettKonsultasjon) = dbQuery {
     val konsultasjon =
       KonsultasjonTable.insertReturning {
           it[pasientId] = Uuid.parse(opprettKonsultasjon.pasientId)
@@ -53,7 +54,7 @@ class KonsultasjonRepository {
     konsultasjon[KonsultasjonTable.id].toString()
   }
 
-  suspend fun getKonsultasjoner(pasientId: String): List<Konsultasjon> = dbQuery {
+  suspend fun getPasientKonsultasjoner(pasientId: String): List<Konsultasjon> = dbQuery {
     val konsultasjoner =
       KonsultasjonTable.selectAll()
         .where { (KonsultasjonTable.pasientId eq Uuid.parse(pasientId)) }
@@ -69,15 +70,24 @@ class KonsultasjonRepository {
           valueTransform = { it[KonsultasjonHelsepersonell.hpr] },
         )
 
+    val journalnotatByKonsultasjonId =
+      JournalnotatTable.selectAll()
+        .where { JournalnotatTable.konsultasjonId inList konsultasjonIder }
+        .groupBy(
+          keySelector = { it[JournalnotatTable.konsultasjonId] },
+          valueTransform = { it.toJournalnotat() },
+        )
+
     konsultasjoner.map { row ->
       val konsultasjonId = row[KonsultasjonTable.id]
       val hprListe = hprByKonsultasjonId[konsultasjonId].orEmpty()
-      row.toKonsultasjon(hprListe)
+      val journalnotatListe = journalnotatByKonsultasjonId[konsultasjonId].orEmpty()
+      row.toKonsultasjon(hprListe, journalnotatListe)
     }
   }
 
-  suspend fun getAktivKonsultasjon(pasientId: String): Konsultasjon? {
-    val pasientUuid = runCatching { Uuid.parse(pasientId) }.getOrNull() ?: return null
+  suspend fun getPasientAktivKonsultasjon(pasientId: String): Konsultasjon? {
+    val pasientUuid = Uuid.parse(pasientId)
     return dbQuery {
       val konsultasjon =
         KonsultasjonTable.selectAll()
@@ -88,57 +98,49 @@ class KonsultasjonRepository {
           .orderBy(KonsultasjonTable.startetTidspunkt, SortOrder.DESC)
           .limit(1)
           .singleOrNull() ?: return@dbQuery null
-
-      val hprListe =
-        KonsultasjonHelsepersonell.select(KonsultasjonHelsepersonell.hpr)
-          .where { KonsultasjonHelsepersonell.konsultasjonId eq konsultasjon[KonsultasjonTable.id] }
-          .map { it[KonsultasjonHelsepersonell.hpr] }
-      konsultasjon.toKonsultasjon(hprListe)
+      toEpjKonsultasjon(konsultasjon)
     }
   }
 
-  suspend fun getKonsultasjon(id: String): Konsultasjon? {
-    val uuid = runCatching { Uuid.parse(id) }.getOrNull() ?: return null
+  suspend fun getKonsultasjon(konsultasjonId: String): Konsultasjon? {
+    val uuid = Uuid.parse(konsultasjonId)
     return dbQuery {
       val konsultasjon =
         KonsultasjonTable.selectAll().where { KonsultasjonTable.id eq uuid }.singleOrNull()
           ?: return@dbQuery null
-
-      val hprListe =
-        KonsultasjonHelsepersonell.select(KonsultasjonHelsepersonell.hpr)
-          .where { KonsultasjonHelsepersonell.konsultasjonId eq konsultasjon[KonsultasjonTable.id] }
-          .map { it[KonsultasjonHelsepersonell.hpr] }
-      konsultasjon.toKonsultasjon(hprListe)
+      toEpjKonsultasjon(konsultasjon)
     }
   }
 
-  suspend fun getDiagnoser(konsultasjonId: String): List<Diagnose>? {
-    val uuid = runCatching { Uuid.parse(konsultasjonId) }.getOrNull() ?: return null
+  suspend fun hasJournalnotat(id: String): Boolean {
+    val uuid = Uuid.parse(id)
+    val journalnotat = dbQuery {
+      JournalnotatTable.selectAll()
+        .where { JournalnotatTable.id eq uuid }
+        .singleOrNull()
+        ?.toJournalnotat()
+    }
+    return journalnotat != null
+  }
+
+  suspend fun getAllJournalnotat(pasientId: String): Journalnotat? {
+    val uuid = Uuid.parse(pasientId)
+    return dbQuery {
+      JournalnotatTable.selectAll()
+        .where { JournalnotatTable.pasientId eq uuid }
+        .singleOrNull()
+        ?.toJournalnotat()
+    }
+  }
+
+  suspend fun getDiagnoser(konsultasjonId: String): List<Diagnose> {
+    val uuid = Uuid.parse(konsultasjonId)
     return dbQuery {
       DiagnoseTable.selectAll()
         .where { DiagnoseTable.konsultasjonId eq uuid }
         .map { it.toDiagnose() }
     }
   }
-
-  private fun ResultRow.toDiagnose() =
-    Diagnose(
-      kode = this[DiagnoseTable.diagnosekode],
-      system = DiagnoseSystem.valueOf(this[DiagnoseTable.diagnosesystem]),
-      beskrivelse = this[DiagnoseTable.beskrivelse],
-    )
-
-  private fun ResultRow.toKonsultasjon(hprListe: List<String>): Konsultasjon =
-    Konsultasjon(
-      id = this[KonsultasjonTable.id].toString(),
-      pasientId = this[KonsultasjonTable.pasientId].toString(),
-      hpr = hprListe,
-      startetTidspunkt = this[KonsultasjonTable.startetTidspunkt],
-      avsluttetTidspunkt = this[KonsultasjonTable.avsluttetTidspunkt],
-      status = this[KonsultasjonTable.status],
-      problemstilling = this[KonsultasjonTable.problemstilling],
-      journalnotat = this[KonsultasjonTable.journalnotat],
-    )
 
   suspend fun oppdaterKonsultasjon(
     oppdaterKonsultasjon: OppdaterKonsultasjonRequest,
@@ -209,4 +211,19 @@ class KonsultasjonRepository {
       it[status] = KonsultasjonStatus.FULLFØRT
     }
   }
+
+  private fun toEpjKonsultasjon(konsultasjon: ResultRow): Konsultasjon {
+    val hprListe =
+      KonsultasjonHelsepersonell.select(KonsultasjonHelsepersonell.hpr)
+        .where { KonsultasjonHelsepersonell.konsultasjonId eq konsultasjon[KonsultasjonTable.id] }
+        .map { it[KonsultasjonHelsepersonell.hpr] }
+
+    val journalnotatListe =
+      JournalnotatTable.selectAll()
+        .where { (JournalnotatTable.konsultasjonId eq konsultasjon[KonsultasjonTable.id]) }
+        .map { it.toJournalnotat() }
+
+    return konsultasjon.toKonsultasjon(hprListe, journalnotatListe)
+  }
+
 }

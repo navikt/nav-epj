@@ -171,23 +171,33 @@ fun Konsultasjon.toDocumentReference(encounterId: String, patientId: String): Do
   return DocumentReference(
     id = encounterId,
     description = com.google.fhir.model.r4.String(value = "Journalnotat"),
-    type = CodeableConcept(
-        coding = listOf(
-          Coding(
-            system = Uri(value = "urn:oid:2.16.578.1.12.4.1.1.9602"),
-            code = Code(value = "J01-2"),
-            display = com.google.fhir.model.r4.String("Sykmeldinger og trygdesaker")
+    type =
+      CodeableConcept(
+        coding =
+          listOf(
+            Coding(
+              system = Uri(value = "urn:oid:2.16.578.1.12.4.1.1.9602"),
+              code = Code(value = "J01-2"),
+              display = com.google.fhir.model.r4.String("Sykmeldinger og trygdesaker"),
+            )
           )
-        )
       ),
     content = emptyList(),
-    subject =  Reference(reference = com.google.fhir.model.r4.String(value = "Patient/${patientId}")),
-    author =  this.hpr.map { Reference(reference = com.google.fhir.model.r4.String(value = "Practitioner/${it}")) },
-    context = DocumentReference.Context(
-      encounter = listOf(
-        Reference(reference = com.google.fhir.model.r4.String(value = "Encounter/${encounterId}"))
-      )
-    ),
-    status = Enumeration(value = DocumentReferenceStatus.Current)
+    subject =
+      Reference(reference = com.google.fhir.model.r4.String(value = "Patient/${patientId}")),
+    author =
+      this.hpr.map {
+        Reference(reference = com.google.fhir.model.r4.String(value = "Practitioner/${it}"))
+      },
+    context =
+      DocumentReference.Context(
+        encounter =
+          listOf(
+            Reference(
+              reference = com.google.fhir.model.r4.String(value = "Encounter/${encounterId}")
+            )
+          )
+      ),
+    status = Enumeration(value = DocumentReferenceStatus.Current),
   )
 }

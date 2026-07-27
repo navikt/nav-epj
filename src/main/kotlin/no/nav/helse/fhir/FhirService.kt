@@ -2,7 +2,6 @@ package no.nav.helse.fhir
 
 import com.google.fhir.model.r4.Bundle
 import com.google.fhir.model.r4.Condition
-import com.google.fhir.model.r4.DocumentReference
 import com.google.fhir.model.r4.Encounter
 import com.google.fhir.model.r4.Enumeration
 import com.google.fhir.model.r4.Organization
@@ -36,10 +35,10 @@ class FhirService(
   }
 
   suspend fun getActiveEncounterForPatient(patientId: String): Encounter? =
-    konsultasjonRepository.getAktivKonsultasjon(patientId)?.toEncounter()
+    konsultasjonRepository.getPasientAktivKonsultasjon(patientId)?.toEncounter()
 
   suspend fun searchEncounters(patientId: String): Bundle {
-    val encounters = konsultasjonRepository.getKonsultasjoner(patientId).map { it.toEncounter() }
+    val encounters = konsultasjonRepository.getPasientKonsultasjoner(patientId).map { it.toEncounter() }
     return Bundle(
       type = Enumeration(value = Bundle.BundleType.Searchset),
       total = UnsignedInt(value = encounters.size),
@@ -55,8 +54,7 @@ class FhirService(
   suspend fun getOrganization(): Organization? =
     helsepersonellRepository.getLegekontor()?.toOrganization()
 
-  suspend fun getDocumentReference(encounter: String, patient: String): DocumentReference? {
-    val journalNotat = konsultasjonRepository.getKonsultasjon(encounter)
-    return journalNotat?.toDocumentReference(encounter, patient)
+  suspend fun hasCreatedDocumentreference(id: String): Boolean {
+    return konsultasjonRepository.hasJournalnotat(id)
   }
 }

@@ -52,6 +52,14 @@ object KonsultasjonTable : Table("konsultasjon") {
 }
 
 @OptIn(ExperimentalUuidApi::class)
+object JournalnotatTable : Table("Journalnotat") {
+  val id = uuid("id")
+  val konsultasjonId = reference("konsultasjon_id", refColumn = KonsultasjonTable.id)
+  val pasientId = reference("pasient_id", refColumn = PasientTable.id)
+  val journalnotat = text("journalnotat")
+}
+
+@OptIn(ExperimentalUuidApi::class)
 object DiagnoseTable : Table("diagnose") {
   val id = integer("id").autoIncrement()
   val konsultasjonId = reference("konsultasjon_id", refColumn = KonsultasjonTable.id)

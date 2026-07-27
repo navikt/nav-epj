@@ -61,7 +61,7 @@ class TestHelper : TestRepository() {
         startetTidspunkt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
         status = KonsultasjonStatus.PÅGÅENDE,
       )
-    konsultasjonRepository.createKonsultasjon(konsultasjon)
+    konsultasjonRepository.insertKonsultasjon(konsultasjon)
   }
 
   @OptIn(ExperimentalUuidApi::class)

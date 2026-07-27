@@ -42,8 +42,8 @@ class KonsultasjonRepositoryTest : TestRepository() {
         startetTidspunkt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
         status = KonsultasjonStatus.PÅGÅENDE,
       )
-    konsultasjonRepository.createKonsultasjon(opprettKonsultasjon)
-    val konsultasjon = konsultasjonRepository.getAktivKonsultasjon(pasientId)
+    konsultasjonRepository.insertKonsultasjon(opprettKonsultasjon)
+    val konsultasjon = konsultasjonRepository.getPasientAktivKonsultasjon(pasientId)
     konsultasjon shouldNotBe null
     konsultasjon?.pasientId shouldBe pasientId
     konsultasjon?.hpr shouldBe listOf("111")
@@ -65,7 +65,7 @@ class KonsultasjonRepositoryTest : TestRepository() {
       ),
       pasientId,
     )
-    val konsultasjon = konsultasjonRepository.getAktivKonsultasjon(pasientId)
+    val konsultasjon = konsultasjonRepository.getPasientAktivKonsultasjon(pasientId)
     konsultasjon shouldBe null
   }
 
@@ -77,7 +77,7 @@ class KonsultasjonRepositoryTest : TestRepository() {
     testHelper.createKonsultasjon(legeId, pasientId)
     testHelper.createKonsultasjon(legeId, pasientId)
 
-    val result = konsultasjonRepository.getKonsultasjoner(pasientId)
+    val result = konsultasjonRepository.getPasientKonsultasjoner(pasientId)
 
     result.map { it.pasientId } shouldBe listOf(pasientId, pasientId)
   }

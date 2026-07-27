@@ -26,7 +26,7 @@ CREATE TABLE pasient
     legekontor_id UUID        NOT NULL REFERENCES legekontor (id),
     fastlege      UUID        NOT NULL REFERENCES helsepersonell (id),
     navn          TEXT        NOT NULL,
-    fnr           TEXT        NOT NULL UNIQUE ,
+    fnr           TEXT        NOT NULL UNIQUE,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -39,10 +39,17 @@ CREATE TABLE konsultasjon
     avsluttet_tidspunkt TIMESTAMPTZ,
     status              TEXT        NOT NULL, -- planlagt, pågående, fullført, avlyst
     problemstilling     TEXT,
-    journalnotat        TEXT,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+CREATE TABLE jornalnotat
+(
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    konsultasjon_id UUID NOT NULL REFERENCES konsultasjon (id),
+    pasient_id      UUID NOT NULL REFERENCES pasient (id),
+    journalnotat    TEXT,
+)
 
 CREATE TABLE diagnose
 (
@@ -55,8 +62,8 @@ CREATE TABLE diagnose
 
 CREATE TABLE konsultasjon_helsepersonell
 (
-    konsultasjon_id   UUID NOT NULL REFERENCES konsultasjon(id) ON DELETE CASCADE,
-    hpr               TEXT NOT NULL
+    konsultasjon_id UUID NOT NULL REFERENCES konsultasjon (id) ON DELETE CASCADE,
+    hpr             TEXT NOT NULL
 );
 
 INSERT INTO legekontor (id, navn, tlf, orgnummer)
