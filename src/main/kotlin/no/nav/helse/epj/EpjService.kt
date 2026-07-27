@@ -61,15 +61,15 @@ class EpjService(
   }
 
   suspend fun getKonsultasjoner(pasientId: String): List<Konsultasjon> {
-    return konsultasjonRepository.getKonsultasjoner(pasientId)
+    return konsultasjonRepository.getPasientKonsultasjoner(pasientId)
   }
 
   suspend fun getAktivKonsultasjon(pasientId: String): Konsultasjon? {
-    return konsultasjonRepository.getAktivKonsultasjon(pasientId)
+    return konsultasjonRepository.getPasientAktivKonsultasjon(pasientId)
   }
 
   suspend fun createKonsultasjon(opprettKonsultasjon: OpprettKonsultasjon): Konsultasjon {
-    val createdId = konsultasjonRepository.createKonsultasjon(opprettKonsultasjon)
+    val createdId = konsultasjonRepository.insertKonsultasjon(opprettKonsultasjon)
     val createdKonsultasjon =
       konsultasjonRepository.getKonsultasjon(createdId)
         ?: throw IllegalStateException("Konsultasjon ble ikke opprettet")

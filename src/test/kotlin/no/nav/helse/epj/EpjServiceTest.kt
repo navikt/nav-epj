@@ -39,7 +39,7 @@ class EpjServiceTest {
 
   @Test
   fun `returnerer eksisterende aktiv konsultasjon hvis den finnes`() = runTest {
-    coEvery { konsultasjonRepository.getAktivKonsultasjon(pasientId) } returns aktivKonsultasjon
+    coEvery { konsultasjonRepository.getPasientAktivKonsultasjon(pasientId) } returns aktivKonsultasjon
     val konsultasjon = epjService.getOrCreateKonsultasjon(pasientId, hpr)
     konsultasjon shouldBe aktivKonsultasjon
   }

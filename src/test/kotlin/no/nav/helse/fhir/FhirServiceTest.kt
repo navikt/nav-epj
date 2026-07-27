@@ -120,7 +120,7 @@ class FhirServiceTest {
 
   @Test
   fun `should return null active encounter when patient has none`() = runTest {
-    coEvery { konsultasjonRepository.getAktivKonsultasjon(pasient.id) } returns null
+    coEvery { konsultasjonRepository.getPasientAktivKonsultasjon(pasient.id) } returns null
 
     val encounter = fhirService.getActiveEncounterForPatient(pasient.id)
     encounter.shouldBeNull()
@@ -128,7 +128,7 @@ class FhirServiceTest {
 
   @Test
   fun `should return active encounter for patient`() = runTest {
-    coEvery { konsultasjonRepository.getAktivKonsultasjon(pasient.id) } returns konsultasjon
+    coEvery { konsultasjonRepository.getPasientAktivKonsultasjon(pasient.id) } returns konsultasjon
 
     val encounter = fhirService.getActiveEncounterForPatient(pasient.id)
     encounter.shouldNotBeNull()
@@ -138,7 +138,7 @@ class FhirServiceTest {
 
   @Test
   fun `should return empty bundle when patient has no active encounter`() = runTest {
-    coEvery { konsultasjonRepository.getKonsultasjoner(pasient.id) } returns emptyList()
+    coEvery { konsultasjonRepository.getPasientKonsultasjoner(pasient.id) } returns emptyList()
 
     val bundle = fhirService.searchEncounters(pasient.id)
     bundle.entry.size shouldBe 0
@@ -146,7 +146,7 @@ class FhirServiceTest {
 
   @Test
   fun `should return bundle containing active encounter when one exists`() = runTest {
-    coEvery { konsultasjonRepository.getKonsultasjoner(pasient.id) } returns
+    coEvery { konsultasjonRepository.getPasientKonsultasjoner(pasient.id) } returns
       listOf(
         konsultasjon.copy(
           id = "konsultasjon-1",
