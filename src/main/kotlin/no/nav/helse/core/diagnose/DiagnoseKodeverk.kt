@@ -10,12 +10,5 @@ fun DiagnoseSystem.toDiagnoseType(): DiagnoseType =
     DiagnoseSystem.ICD10 -> DiagnoseType.ICD10
   }
 
-val DiagnoseSystem.oid: String
-  get() =
-    when (this) {
-      DiagnoseSystem.ICPC2 -> DiagnoseSystem.ICPC2.oid
-      DiagnoseSystem.ICD10 -> DiagnoseSystem.ICD10.oid
-    }
-
 fun lookupDiagnose(system: DiagnoseSystem, kode: String): Diagnose? =
   Diagnose.from(system.toDiagnoseType(), kode)

@@ -19,7 +19,6 @@ import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.Uri
 import com.google.fhir.model.r4.terminologies.DocumentReferenceStatus
 import no.nav.helse.core.diagnose.lookupDiagnose
-import no.nav.helse.core.diagnose.oid
 import no.nav.helse.epj.api.Diagnose
 import no.nav.helse.epj.api.Helsepersonell
 import no.nav.helse.epj.api.Konsultasjon
@@ -129,7 +128,7 @@ fun Diagnose.ToCondition(konsultasjonId: String, patientId: String): Condition {
         coding =
           listOf(
             Coding(
-              system = Uri(value = "urn:oid:${this.system.oid}"),
+              system = Uri(value = this.system.oid),
               code = Code(value = this.kode),
               display =
                 com.google.fhir.model.r4.String(value = kodeverkDiagnose?.text ?: this.beskrivelse),

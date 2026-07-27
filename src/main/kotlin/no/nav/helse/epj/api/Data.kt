@@ -75,7 +75,7 @@ data class OpprettDiagnoseRequest(
 
 data class Diagnose(val kode: String, val system: DiagnoseSystem, val beskrivelse: String)
 
-enum class DiagnoseSystem {
-  ICPC2,
-  ICD10,
+enum class DiagnoseSystem(val oid: String) {
+  ICPC2("urn:oid:2.16.578.1.12.4.1.1.7170"),
+  ICD10("urn:oid:2.16.578.1.12.4.1.1.7110"),
 }
