@@ -8,23 +8,26 @@ import no.nav.helse.core.Environment
 import no.nav.helse.core.PostgresConfig
 import no.nav.helse.core.SmartConfig
 import no.nav.helse.core.ValkeyConfig
-import no.nav.helse.fhir.FhirService
-import no.nav.helse.helseIdAuth.DebugInfo
-import no.nav.helse.helseIdAuth.HelseIdPrincipal
-import no.nav.helse.helseIdAuth.User
+import no.nav.helse.fhir.Encounter.EncounterService
+import no.nav.helse.fhir.Patient.PatientService
+import no.nav.helse.helseId.DebugInfo
+import no.nav.helse.helseId.HelseIdPrincipal
+import no.nav.helse.helseId.User
 import no.nav.helse.smart.api.configureSmartRouting
 import no.nav.helse.smart.security.SmartClient
 import no.nav.helse.smart.valkey.ValkeyService
 import org.testcontainers.postgresql.PostgreSQLContainer
 
-private val fhirService = mockk<FhirService>()
 private val valkeyService = mockk<ValkeyService>(relaxed = true)
+private val encounterService = mockk<EncounterService>(relaxed = true)
+private val patientService = mockk<PatientService>(relaxed = true)
 
 fun Application.configureTestSmartDependencies() {
   dependencies {
     provide<Environment>() { simpleTestEnvironment }
-    provide<FhirService> { fhirService }
     provide<ValkeyService> { valkeyService }
+    provide<EncounterService> { encounterService }
+    provide<PatientService> { patientService }
   }
   authentication {
     provider("wonderwall-helseid") {

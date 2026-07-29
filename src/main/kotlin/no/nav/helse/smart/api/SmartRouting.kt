@@ -15,10 +15,14 @@ import io.ktor.server.routing.openapi.*
 import io.ktor.utils.io.*
 import java.security.MessageDigest
 import java.util.*
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import no.nav.helse.core.Environment
 import no.nav.helse.core.utils.logger
-import no.nav.helse.fhir.FhirService
-import no.nav.helse.helseIdAuth.loggedInUser
+import no.nav.helse.fhir.Encounter.EncounterService
+import no.nav.helse.fhir.Patient.PatientInputId
+import no.nav.helse.fhir.Patient.PatientService
+import no.nav.helse.helseId.loggedInUser
 import no.nav.helse.smart.SmartDiscoveryDocument
 import no.nav.helse.smart.TokenResponse
 import no.nav.helse.smart.security.SmartKeys
@@ -27,10 +31,11 @@ import no.nav.helse.smart.valkey.AuthCodeContext
 import no.nav.helse.smart.valkey.LaunchContext
 import no.nav.helse.smart.valkey.ValkeyService
 
-@OptIn(ExperimentalKtorApi::class)
+@OptIn(ExperimentalKtorApi::class, ExperimentalUuidApi::class)
 fun Application.configureSmartRouting() {
   val env: Environment by dependencies
-  val fhirService: FhirService by dependencies
+  val patientService: PatientService by dependencies
+  val encounterService: EncounterService by dependencies
   val valkeyService: ValkeyService by dependencies
 
   val issuerUrl = env.smart.issuerBaseUrl
@@ -58,14 +63,15 @@ fun Application.configureSmartRouting() {
                 "No active patient context for clinician",
               )
 
+          val patientInputId = PatientInputId(Uuid.parse(patientId))
           val patient =
-            fhirService.getPatient(patientId)
+            patientService.getPatient(patientInputId)
               ?: return@get call.respond(HttpStatusCode.NotFound, "Unknown patient")
 
-          val encounter = fhirService.getActiveEncounterForPatient(patientId)
+          val encounter = encounterService.getEncounterById(patientInputId)
           val launchId = UUID.randomUUID().toString()
 
-          valkeyService.saveLaunchContext(launchId, LaunchContext(patient.id, encounter?.id))
+          valkeyService.saveLaunchContext(launchId, LaunchContext(patient.id, encounter.id))
 
           val iss = env.smart.fhirServerUrl
           call.respondRedirect("$appUrl/?iss=$iss&launch=$launchId")

@@ -13,7 +13,6 @@ CREATE TABLE helsepersonell
     id            UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
     legekontor_id UUID        NOT NULL REFERENCES legekontor (id),
     hpr           TEXT        NOT NULL UNIQUE,
-    her_id        TEXT,
     navn          TEXT        NOT NULL,
     autorisasjon  TEXT        NOT NULL,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -24,7 +23,7 @@ CREATE TABLE pasient
 (
     id            UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
     legekontor_id UUID        NOT NULL REFERENCES legekontor (id),
-    fastlege      UUID        NOT NULL REFERENCES helsepersonell (id),
+    hpr           TEXT        NOT NULL,
     navn          TEXT        NOT NULL,
     fnr           TEXT        NOT NULL UNIQUE,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -43,13 +42,13 @@ CREATE TABLE konsultasjon
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE TABLE jornalnotat
+CREATE TABLE journalnotat
 (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     konsultasjon_id UUID NOT NULL REFERENCES konsultasjon (id),
     pasient_id      UUID NOT NULL REFERENCES pasient (id),
-    journalnotat    TEXT,
-)
+    journalnotat    TEXT
+);
 
 CREATE TABLE diagnose
 (

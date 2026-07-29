@@ -31,15 +31,24 @@ export const OpprettPasientSchema = z.object({
 
 export type OpprettPasientRequest = z.infer<typeof OpprettPasientSchema>;
 
+export const JournalnotatEntrySchema = z.object({
+    id: z.string(),
+    konsultasjonId: z.string(),
+    pasientId: z.string(),
+    journalnotat: z.string().nullable(),
+});
+
+export type JournalnotatEntry = z.infer<typeof JournalnotatEntrySchema>;
+
 export const KonsultasjonSchema = z.object({
     id: z.string(),
     pasientId: z.string(),
     hpr: z.array(z.string()),
+    journalnotat: z.array(JournalnotatEntrySchema),
     startetTidspunkt: z.string(),
     avsluttetTidspunkt: z.string().nullable(),
     status: z.string(),
     problemstilling: z.string().nullable(),
-    journalnotat: z.string().nullable(),
 });
 
 export type Konsultasjon = z.infer<typeof KonsultasjonSchema>;
