@@ -253,6 +253,7 @@ class KonsultasjonRepository {
     )
   }
 
+  @OptIn(ExperimentalUuidApi::class)
   suspend fun findJournalnotat(journalnotatId: Uuid): Journalnotat? = dbQuery {
     JournalnotatTable.selectAll()
       .where(JournalnotatTable.id eq journalnotatId)

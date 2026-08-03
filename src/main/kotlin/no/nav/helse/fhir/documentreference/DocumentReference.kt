@@ -1,4 +1,4 @@
-package no.nav.helse.fhir.DocumentReference
+package no.nav.helse.fhir.documentreference
 
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid

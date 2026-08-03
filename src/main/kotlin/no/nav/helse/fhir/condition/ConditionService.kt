@@ -48,7 +48,7 @@ class ConditionService(private val epjClient: HttpClient) {
                   Coding(
                     system = Uri(value = oid),
                     code = Code(value = diagnose.kode),
-                    display = com.google.fhir.model.r4.String(value = it.beskrivelse),
+                    display = com.google.fhir.model.r4.String(value = diagnose.beskrivelse),
                   )
                 )
             ),

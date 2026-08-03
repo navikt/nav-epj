@@ -15,32 +15,16 @@ import kotlin.collections.map
 import kotlin.uuid.ExperimentalUuidApi
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.konsultasjon.Konsultasjon
-<<<<<<< HEAD:src/main/kotlin/no/nav/helse/fhir/Encounter/EncounterService.kt
-import no.nav.helse.fhir.Patient.PatientInputId
-=======
 import no.nav.helse.fhir.patient.PatientInputId
->>>>>>> refactor-wip:src/main/kotlin/no/nav/helse/fhir/encounter/EncounterService.kt
 
 @OptIn(ExperimentalUuidApi::class)
 class EncounterService(private val epjClient: HttpClient) {
 
-<<<<<<< HEAD:src/main/kotlin/no/nav/helse/fhir/Encounter/EncounterService.kt
-  suspend fun getEncounterById(encounterId: EncounterId): Encounter {
-    val konsultasjon = epjClient.get("/api/konsultasjon/${encounterId.value}").body<Konsultasjon>()
-
-    return konsultasjon.toEncounter()
-  }
-
-  suspend fun getEncounterByPatientId(patientId: PatientInputId): Encounter {
-    val konsultasjon =
-      epjClient.get("/api/patient/${patientId.value}/konsultasjon").body<Konsultasjon>()
-=======
   suspend fun getEncounterById(encounterId: EncounterId): Encounter? {
     val response = epjClient.get("/api/patient/${encounterId.value}/konsultasjon")
     if (response.status != HttpStatusCode.OK) return null // TODO tidy
     return response.body<Konsultasjon>().toEncounter()
   }
->>>>>>> refactor-wip:src/main/kotlin/no/nav/helse/fhir/encounter/EncounterService.kt
 
   suspend fun getActiveEncounterByPatient(patientId: PatientInputId): Encounter? {
     val response = epjClient.get("/api/patient/${patientId.value}/konsultasjon/aktiv")

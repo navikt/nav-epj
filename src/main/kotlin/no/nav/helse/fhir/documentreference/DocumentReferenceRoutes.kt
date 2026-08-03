@@ -1,4 +1,4 @@
-package no.nav.helse.fhir.DocumentReference
+package no.nav.helse.fhir.documentreference
 
 import com.google.fhir.model.r4.FhirR4Json
 import io.ktor.http.*

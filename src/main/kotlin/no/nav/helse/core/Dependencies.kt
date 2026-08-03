@@ -1,5 +1,6 @@
 package no.nav.helse.core
 
+// import no.nav.helse.fhir.documentreference.DocumentReferenceService
 import glide.api.GlideClient
 import glide.api.models.configuration.GlideClientConfiguration
 import io.ktor.client.HttpClient
@@ -14,7 +15,6 @@ import no.nav.helse.epj.legekontor.LegekontorService
 import no.nav.helse.epj.pasient.PasientRepository
 import no.nav.helse.epj.pasient.PasientService
 import no.nav.helse.fhir.condition.ConditionService
-import no.nav.helse.fhir.documentreference.DocumentReferenceService
 import no.nav.helse.fhir.encounter.EncounterService
 import no.nav.helse.fhir.organization.OrganizationService
 import no.nav.helse.fhir.patient.PatientService
@@ -44,7 +44,7 @@ fun Application.configureDependencies() {
     provide(LegekontorService::class)
 
     provide(ConditionService::class)
-    provide(DocumentReferenceService::class)
+    // provide(DocumentReferenceService::class)
     provide(EncounterService::class)
     provide(OrganizationService::class)
     provide(PatientService::class)
