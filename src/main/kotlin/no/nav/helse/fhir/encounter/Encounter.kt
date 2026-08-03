@@ -1,4 +1,4 @@
-package no.nav.helse.fhir.Encounter
+package no.nav.helse.fhir.encounter
 
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid

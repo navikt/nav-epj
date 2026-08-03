@@ -1,4 +1,4 @@
-package no.nav.helse.fhir.Patient
+package no.nav.helse.fhir.patient
 
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid

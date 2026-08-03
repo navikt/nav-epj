@@ -1,12 +1,12 @@
 package no.nav.helse.epj.konsultasjon
 
 import io.ktor.http.*
-import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import no.nav.helse.core.utils.AktivKonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.UgyldigDiagnoseException
@@ -52,7 +52,7 @@ fun Route.konsultasjonRoutes(
         }
       }
     }
-    route("/patient") {
+    route("/patient") { // TODO does it make sense to have consultation as a patient route?
       route("/{patientId}/konsultasjoner") {
         get {
           val pasientId = call.parameters["patientId"] ?: error("Missing  pasientId")
@@ -129,7 +129,32 @@ fun Route.konsultasjonRoutes(
           }
         }
       }
+      route("/{patientId}/konsultasjon/aktiv}") {
+        get {
+          log.info("henter aktiv konsultasjon")
+          val pasientId =
+            call.parameters["patientId"]
+              ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing pasientId")
 
+          log.info("Looking up aktiv konsultasjon for pasientId: {}", pasientId)
+          val principal = loggedInUser()
+
+          try {
+            val pasientUuid = PatientId(Uuid.parse(pasientId))
+            val konsultasjon =
+              konsultasjonService.getAktivKonsultasjon(pasientUuid)
+                ?: throw AktivKonsultasjonNotFoundException(pasientUuid)
+            valkeyService.set(principal.hpr, "aktiv-${pasientId}")
+            call.respond(konsultasjon)
+          } catch (exception: Exception) {
+            log.error("Kunne ikke hente eller opprette konsultasjon", exception)
+            call.respond(
+              HttpStatusCode.InternalServerError,
+              "Konsultasjon kunne ikke hentes eller opprettes",
+            )
+          }
+        }
+      }
     }
   }
 }

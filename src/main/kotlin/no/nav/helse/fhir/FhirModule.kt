@@ -1,21 +1,21 @@
 package no.nav.helse.fhir
 
 import com.google.fhir.model.r4.FhirR4Json
-import io.ktor.http.ContentType
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.ktor.server.plugins.di.dependencies
+import io.ktor.server.plugins.di.*
 import io.ktor.server.routing.*
-import no.nav.helse.fhir.Condition.ConditionService
-import no.nav.helse.fhir.Condition.conditionRoutes
-import no.nav.helse.fhir.Encounter.EncounterService
-import no.nav.helse.fhir.Encounter.encounterRoutes
-import no.nav.helse.fhir.Organization.OrganizationService
-import no.nav.helse.fhir.Organization.organizationRoutes
-import no.nav.helse.fhir.Patient.PatientService
-import no.nav.helse.fhir.Patient.patientRoutes
-import no.nav.helse.fhir.Practitioner.PractitionerService
-import no.nav.helse.fhir.Practitioner.pracitionerRoutes
+import no.nav.helse.fhir.condition.ConditionService
+import no.nav.helse.fhir.condition.conditionRoutes
+import no.nav.helse.fhir.encounter.EncounterService
+import no.nav.helse.fhir.encounter.encounterRoutes
+import no.nav.helse.fhir.organization.OrganizationService
+import no.nav.helse.fhir.organization.organizationRoutes
+import no.nav.helse.fhir.patient.PatientService
+import no.nav.helse.fhir.patient.patientRoutes
+import no.nav.helse.fhir.practitioner.PractitionerService
+import no.nav.helse.fhir.practitioner.pracitionerRoutes
 
 fun Application.configureFhirModule() {
   val conditionService: ConditionService by dependencies

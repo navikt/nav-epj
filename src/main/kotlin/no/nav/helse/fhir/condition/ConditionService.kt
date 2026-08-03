@@ -1,4 +1,4 @@
-package no.nav.helse.fhir.Condition
+package no.nav.helse.fhir.condition
 
 import com.google.fhir.model.r4.Code
 import com.google.fhir.model.r4.CodeableConcept
@@ -12,8 +12,8 @@ import io.ktor.client.request.*
 import kotlin.uuid.ExperimentalUuidApi
 import no.nav.helse.epj.konsultasjon.Diagnose
 import no.nav.helse.epj.konsultasjon.DiagnoseSystem
-import no.nav.helse.fhir.Encounter.EncounterId
-import no.nav.helse.fhir.Patient.PatientInputId
+import no.nav.helse.fhir.encounter.EncounterId
+import no.nav.helse.fhir.patient.PatientInputId
 
 @OptIn(ExperimentalUuidApi::class)
 class ConditionService(private val epjClient: HttpClient) {
@@ -28,15 +28,17 @@ class ConditionService(private val epjClient: HttpClient) {
     patientId: PatientInputId,
   ): List<Condition> {
     val conditionList =
-      this.map {
+      this.mapIndexed { index, diagnose ->
         val oid =
           "urn:oid:" +
-          when (it.system) {
-            DiagnoseSystem.ICPC2 -> no.nav.tsm.diagnoser.ICPC2.OID
-            DiagnoseSystem.ICD10 -> no.nav.tsm.diagnoser.ICD10.OID
-          }
+            when (diagnose.system) {
+              DiagnoseSystem.ICPC2 -> no.nav.tsm.diagnoser.ICPC2.OID
+              DiagnoseSystem.ICD10 -> no.nav.tsm.diagnoser.ICD10.OID
+            }
         Condition(
-          id = encounterId.value.toString(),
+          // Diagnose has no id of its own in the EPJ model; index against the encounter to keep
+          // each Condition.id (and therefore Bundle.entry.fullUrl) unique per result.
+          id = "${encounterId.value}-$index",
           subject =
             Reference(reference = com.google.fhir.model.r4.String(value = "Patient/${patientId}")),
           code =
@@ -45,7 +47,7 @@ class ConditionService(private val epjClient: HttpClient) {
                 listOf(
                   Coding(
                     system = Uri(value = oid),
-                    code = Code(value = it.kode),
+                    code = Code(value = diagnose.kode),
                     display = com.google.fhir.model.r4.String(value = it.beskrivelse),
                   )
                 )

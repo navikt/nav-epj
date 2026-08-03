@@ -1,12 +1,10 @@
-package no.nav.helse.fhir.Organization
+package no.nav.helse.fhir.organization
 
 import com.google.fhir.model.r4.Bundle
 import com.google.fhir.model.r4.Enumeration
 import com.google.fhir.model.r4.FhirR4Json
 import com.google.fhir.model.r4.Uri
 import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.plugins.di.*
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
