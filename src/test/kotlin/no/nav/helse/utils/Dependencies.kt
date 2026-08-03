@@ -5,26 +5,30 @@ import io.ktor.server.auth.authentication
 import io.ktor.server.plugins.di.dependencies
 import io.mockk.mockk
 import no.nav.helse.core.Environment
+import no.nav.helse.core.EpjConfig
 import no.nav.helse.core.PostgresConfig
 import no.nav.helse.core.SmartConfig
 import no.nav.helse.core.ValkeyConfig
-import no.nav.helse.fhir.FhirService
-import no.nav.helse.helseIdAuth.DebugInfo
-import no.nav.helse.helseIdAuth.HelseIdPrincipal
-import no.nav.helse.helseIdAuth.User
+import no.nav.helse.fhir.encounter.EncounterService
+import no.nav.helse.fhir.patient.PatientService
+import no.nav.helse.helseId.DebugInfo
+import no.nav.helse.helseId.HelseIdPrincipal
+import no.nav.helse.helseId.User
 import no.nav.helse.smart.api.configureSmartRouting
 import no.nav.helse.smart.security.SmartClient
 import no.nav.helse.smart.valkey.ValkeyService
 import org.testcontainers.postgresql.PostgreSQLContainer
 
-private val fhirService = mockk<FhirService>()
 private val valkeyService = mockk<ValkeyService>(relaxed = true)
+private val encounterService = mockk<EncounterService>(relaxed = true)
+private val patientService = mockk<PatientService>(relaxed = true)
 
 fun Application.configureTestSmartDependencies() {
   dependencies {
     provide<Environment>() { simpleTestEnvironment }
-    provide<FhirService> { fhirService }
     provide<ValkeyService> { valkeyService }
+    provide<EncounterService> { encounterService }
+    provide<PatientService> { patientService }
   }
   authentication {
     provider("wonderwall-helseid") {
@@ -58,6 +62,8 @@ fun createIntegrationEnvironment(postgres: PostgreSQLContainer) =
           ),
       ),
     valkey = ValkeyConfig("valkey", 8080, false, null, null),
+    httpClient = mockk(relaxed = true),
+    epj = EpjConfig(baseUrl = "testurl"),
   )
 
 val simpleTestEnvironment =
@@ -77,4 +83,6 @@ val simpleTestEnvironment =
           ),
       ),
     valkey = ValkeyConfig("valkey", 8080, false, null, null),
+    httpClient = mockk(relaxed = true),
+    epj = EpjConfig(baseUrl = "testurl"),
   )

@@ -1,12 +1,28 @@
 package no.nav.helse.core.utils
 
-class HelsepersonellNotFoundException(hpr: String) :
-  RuntimeException("Fant ikke helsepersonell med HPR=$hpr")
+import kotlin.uuid.ExperimentalUuidApi
+import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
+import no.nav.helse.epj.konsultasjon.KonsultasjonId
+import no.nav.helse.epj.pasient.PatientId
+
+class HelsepersonellNotFoundException(hpr: HelsepersonellHpr) :
+  RuntimeException("Fant ikke helsepersonell med HPR=${hpr.value}")
 
 class PasientCreationException : RuntimeException("Pasient ble ikke opprettet")
 
-class KonsultasjonNotFoundException(konsultasjonId: String, pasientId: String) :
-  RuntimeException("Fant ikke konsultasjon med id=$konsultasjonId for pasientId=$pasientId")
+@OptIn(ExperimentalUuidApi::class)
+class KonsultasjonNotFoundException(konsultasjonId: KonsultasjonId) :
+  RuntimeException("Fant ikke konsultasjon med id=${konsultasjonId.value}")
+
+@OptIn(ExperimentalUuidApi::class)
+class AktivKonsultasjonNotFoundException(pasientId: PatientId) :
+  RuntimeException("Fant ingen aktiv konsultasjon for pasient med id=${pasientId.value}")
+
+class LegekontorNotfoundException : RuntimeException("Fant ikke Legekontor")
+
+@OptIn(ExperimentalUuidApi::class)
+class KonsultasjonNotFoundForPatientException(pasientId: PatientId) :
+  RuntimeException("Fant ikke konsultasjon for pasientId=${pasientId.value}")
 
 class UgyldigDiagnoseException(kode: String, system: String) :
   RuntimeException("Fant ikke diagnosekode=$kode i kodeverk=$system")

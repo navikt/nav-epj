@@ -13,6 +13,9 @@ database:
   user: "postgres"
   password: "postgres"
 
+epj:
+  baseUrl: "http://localhost:8080"
+
 smart:
   issuerBaseUrl: "http://localhost:8080/oidc"
   fhirServerUrl: "http://localhost:8080/fhir"

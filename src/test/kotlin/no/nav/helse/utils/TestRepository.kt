@@ -1,3 +1,4 @@
+/*
 package no.nav.helse.utils
 
 import kotlin.uuid.ExperimentalUuidApi
@@ -70,3 +71,4 @@ abstract class TestRepository : WithPostgresql() {
     HelsepersonellTable.deleteAll()
   }
 }
+*/

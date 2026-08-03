@@ -1,11 +1,22 @@
 package no.nav.helse.core
 
-import io.ktor.server.config.ApplicationConfig
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.logging.Logging
+import io.ktor.server.config.*
 import no.nav.helse.smart.security.SmartClient
 
-class Environment(val postgres: PostgresConfig, val smart: SmartConfig, val valkey: ValkeyConfig) {}
+class Environment(
+  val postgres: PostgresConfig,
+  val smart: SmartConfig,
+  val valkey: ValkeyConfig,
+  val httpClient: HttpClient,
+  val epj: EpjConfig,
+)
 
 data class PostgresConfig(val url: String, val username: String, val password: String)
+
+data class EpjConfig(val baseUrl: String)
 
 class SmartConfig(
   val issuerBaseUrl: String,
@@ -51,5 +62,7 @@ fun initEnvironment(config: ApplicationConfig): Environment {
         username = config.propertyOrNull("valkey.username")?.getString(),
         password = config.propertyOrNull("valkey.password")?.getString(),
       ),
+    httpClient = HttpClient(CIO) { install(Logging) },
+    epj = EpjConfig(baseUrl = config.property("epj.baseUrl").getString()),
   )
 }

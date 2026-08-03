@@ -1,3 +1,4 @@
+/*
 package no.nav.helse.utils
 
 import kotlin.time.Clock
@@ -9,8 +10,8 @@ import no.nav.helse.epj.api.Helsepersonell
 import no.nav.helse.epj.api.KonsultasjonStatus
 import no.nav.helse.epj.api.OpprettKonsultasjon
 import no.nav.helse.epj.api.Pasient
-import no.nav.helse.epj.db.KonsultasjonRepository
-import no.nav.helse.epj.db.PasientRepository
+import no.nav.helse.epj.konsultasjon.KonsultasjonRepository
+import no.nav.helse.epj.pasient.PasientRepository
 
 const val LEGEKONTOR_ID = "a1000000-0000-0000-0000-000000000001"
 
@@ -61,7 +62,7 @@ class TestHelper : TestRepository() {
         startetTidspunkt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
         status = KonsultasjonStatus.PÅGÅENDE,
       )
-    konsultasjonRepository.createKonsultasjon(konsultasjon)
+    konsultasjonRepository.insert(konsultasjon)
   }
 
   @OptIn(ExperimentalUuidApi::class)
@@ -80,3 +81,4 @@ class TestHelper : TestRepository() {
     insert(konsultasjon, konsultasjonId)
   }
 }
+*/

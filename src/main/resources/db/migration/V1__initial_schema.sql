@@ -13,7 +13,6 @@ CREATE TABLE helsepersonell
     id            UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
     legekontor_id UUID        NOT NULL REFERENCES legekontor (id),
     hpr           TEXT        NOT NULL UNIQUE,
-    her_id        TEXT,
     navn          TEXT        NOT NULL,
     autorisasjon  TEXT        NOT NULL,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -24,9 +23,9 @@ CREATE TABLE pasient
 (
     id            UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
     legekontor_id UUID        NOT NULL REFERENCES legekontor (id),
-    fastlege      UUID        NOT NULL REFERENCES helsepersonell (id),
+    hpr           TEXT        NOT NULL,
     navn          TEXT        NOT NULL,
-    fnr           TEXT        NOT NULL UNIQUE ,
+    fnr           TEXT        NOT NULL UNIQUE,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -39,14 +38,22 @@ CREATE TABLE konsultasjon
     avsluttet_tidspunkt TIMESTAMPTZ,
     status              TEXT        NOT NULL, -- planlagt, pågående, fullført, avlyst
     problemstilling     TEXT,
-    journalnotat        TEXT,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE journalnotat
+(
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    konsultasjon_id UUID NOT NULL REFERENCES konsultasjon (id),
+    pasient_id      UUID NOT NULL REFERENCES pasient (id),
+    journalnotat    TEXT
 );
 
 CREATE TABLE diagnose
 (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    patient_id      UUID NOT NULL REFERENCES pasient (id),
     konsultasjon_id UUID NOT NULL REFERENCES konsultasjon (id),
     beskrivelse     TEXT,
     diagnosekode    TEXT NOT NULL,
@@ -55,9 +62,10 @@ CREATE TABLE diagnose
 
 CREATE TABLE konsultasjon_helsepersonell
 (
-    konsultasjon_id   UUID NOT NULL REFERENCES konsultasjon(id) ON DELETE CASCADE,
-    hpr               TEXT NOT NULL
+    konsultasjon_id UUID NOT NULL REFERENCES konsultasjon (id) ON DELETE CASCADE,
+    hpr             TEXT NOT NULL
 );
+
 
 INSERT INTO legekontor (id, navn, tlf, orgnummer)
 VALUES ('a1000000-0000-0000-0000-000000000001', 'Tonsberg Legesenter', 'tulletlf', '123');

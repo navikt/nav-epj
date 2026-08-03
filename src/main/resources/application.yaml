@@ -10,6 +10,9 @@ database:
   user: ${DB_USERNAME}
   password: ${DB_PASSWORD}
 
+epj:
+  baseUrl: "http://localhost:8080"
+
 auth:
   helseId:
     wellKnownUrl: ${WONDERWALL_OPENID_WELL_KNOWN_URL}

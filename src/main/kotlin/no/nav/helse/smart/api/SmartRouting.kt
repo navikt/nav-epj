@@ -3,8 +3,7 @@ package no.nav.helse.smart.api
 import com.auth0.jwt.JWT
 import com.nimbusds.oauth2.sdk.OAuth2Error
 import io.ktor.http.*
-import io.ktor.http.auth.AuthScheme
-import io.ktor.http.auth.HttpAuthHeader
+import io.ktor.http.auth.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.plugins.di.*
@@ -15,10 +14,14 @@ import io.ktor.server.routing.openapi.*
 import io.ktor.utils.io.*
 import java.security.MessageDigest
 import java.util.*
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import no.nav.helse.core.Environment
 import no.nav.helse.core.utils.logger
-import no.nav.helse.fhir.FhirService
-import no.nav.helse.helseIdAuth.loggedInUser
+import no.nav.helse.fhir.encounter.EncounterService
+import no.nav.helse.fhir.patient.PatientInputId
+import no.nav.helse.fhir.patient.PatientService
+import no.nav.helse.helseId.loggedInUser
 import no.nav.helse.smart.SmartDiscoveryDocument
 import no.nav.helse.smart.TokenResponse
 import no.nav.helse.smart.security.SmartKeys
@@ -27,10 +30,11 @@ import no.nav.helse.smart.valkey.AuthCodeContext
 import no.nav.helse.smart.valkey.LaunchContext
 import no.nav.helse.smart.valkey.ValkeyService
 
-@OptIn(ExperimentalKtorApi::class)
+@OptIn(ExperimentalKtorApi::class, ExperimentalUuidApi::class)
 fun Application.configureSmartRouting() {
   val env: Environment by dependencies
-  val fhirService: FhirService by dependencies
+  val patientService: PatientService by dependencies
+  val encounterService: EncounterService by dependencies
   val valkeyService: ValkeyService by dependencies
 
   val issuerUrl = env.smart.issuerBaseUrl
@@ -52,20 +56,31 @@ fun Application.configureSmartRouting() {
           val user = loggedInUser()
 
           val patientId =
-            valkeyService.get(user.hpr)
-              ?: return@get call.respond(
+            valkeyService.get(
+              user.hpr
+            ) // TODO this implies that a patient id is returned from a hpr number hit, bad juju!
+            ?: return@get call.respond(
                 HttpStatusCode.Conflict,
                 "No active patient context for clinician",
               )
 
+          // FHIR launch requires an active patient
+          val patientInputId = PatientInputId(Uuid.parse(patientId))
           val patient =
-            fhirService.getPatient(patientId)
-              ?: return@get call.respond(HttpStatusCode.NotFound, "Unknown patient")
+            patientService.getPatient(patientInputId)
+              ?: return@get call.respond(HttpStatusCode.BadRequest, "Unknown patient")
 
-          val encounter = fhirService.getActiveEncounterForPatient(patientId)
+          // FHIR launch requires an active encounter
+          val encounter =
+            encounterService.getActiveEncounterByPatient(patientInputId)
+              ?: return@get call.respond(
+                HttpStatusCode.BadRequest,
+                "Found no active encounter for patient",
+              )
+
           val launchId = UUID.randomUUID().toString()
 
-          valkeyService.saveLaunchContext(launchId, LaunchContext(patient.id, encounter?.id))
+          valkeyService.saveLaunchContext(launchId, LaunchContext(patient.id, encounter.id))
 
           val iss = env.smart.fhirServerUrl
           call.respondRedirect("$appUrl/?iss=$iss&launch=$launchId")
