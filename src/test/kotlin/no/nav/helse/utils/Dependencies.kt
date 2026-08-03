@@ -8,8 +8,8 @@ import no.nav.helse.core.Environment
 import no.nav.helse.core.PostgresConfig
 import no.nav.helse.core.SmartConfig
 import no.nav.helse.core.ValkeyConfig
-import no.nav.helse.fhir.Encounter.EncounterService
-import no.nav.helse.fhir.Patient.PatientService
+import no.nav.helse.fhir.encounter.EncounterService
+import no.nav.helse.fhir.patient.PatientService
 import no.nav.helse.helseId.DebugInfo
 import no.nav.helse.helseId.HelseIdPrincipal
 import no.nav.helse.helseId.User
@@ -61,6 +61,7 @@ fun createIntegrationEnvironment(postgres: PostgreSQLContainer) =
           ),
       ),
     valkey = ValkeyConfig("valkey", 8080, false, null, null),
+    httpClient = mockk(relaxed = true),
   )
 
 val simpleTestEnvironment =
@@ -80,4 +81,5 @@ val simpleTestEnvironment =
           ),
       ),
     valkey = ValkeyConfig("valkey", 8080, false, null, null),
+    httpClient = mockk(relaxed = true),
   )

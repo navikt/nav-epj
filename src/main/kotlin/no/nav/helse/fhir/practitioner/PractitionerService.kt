@@ -1,17 +1,15 @@
-package no.nav.helse.fhir.Practitioner
+package no.nav.helse.fhir.practitioner
 
 import com.google.fhir.model.r4.Canonical
 import com.google.fhir.model.r4.Identifier
 import com.google.fhir.model.r4.Meta
 import com.google.fhir.model.r4.Practitioner
 import com.google.fhir.model.r4.Uri
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.request.get
-import kotlin.uuid.ExperimentalUuidApi
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.request.*
 import no.nav.helse.epj.helsepersonell.Helsepersonell
 
-@OptIn(ExperimentalUuidApi::class)
 class PractitionerService(val epjClient: HttpClient) {
 
   suspend fun getPractitioner(): Practitioner {

@@ -1,4 +1,4 @@
-package no.nav.helse.fhir.Patient
+package no.nav.helse.fhir.patient
 
 import com.google.fhir.model.r4.Canonical
 import com.google.fhir.model.r4.HumanName
@@ -16,9 +16,12 @@ import no.nav.helse.epj.pasient.Pasient
 class PatientService(private val epjClient: HttpClient) {
 
   suspend fun getPatient(patientInputId: PatientInputId): Patient? {
-    val patient = epjClient.get("/api/patient/${patientInputId.value}").body<Pasient>()
+    val httpResponse = epjClient.get("/api/patient/${patientInputId.value}")
+    if (httpResponse.status.value in 200..299) {
+      return httpResponse.body<Pasient>().toPatient()
+    }
 
-    return patient.toPatient()
+    return null // TODO tidy
   }
 
   fun Pasient.toPatient(): Patient {

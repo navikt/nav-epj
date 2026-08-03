@@ -1,4 +1,4 @@
-package no.nav.helse.fhir.Organization
+package no.nav.helse.fhir.organization
 
 import com.google.fhir.model.r4.Canonical
 import com.google.fhir.model.r4.ContactPoint

@@ -1,4 +1,4 @@
-package no.nav.helse.fhir.Practitioner
+package no.nav.helse.fhir.practitioner
 
 import com.google.fhir.model.r4.FhirR4Json
 import io.ktor.http.*

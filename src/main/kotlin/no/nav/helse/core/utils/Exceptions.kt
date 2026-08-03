@@ -15,7 +15,10 @@ class KonsultasjonNotFoundException(konsultasjonId: KonsultasjonId) :
   RuntimeException("Fant ikke konsultasjon med id=${konsultasjonId.value}")
 
 @OptIn(ExperimentalUuidApi::class)
-class LegekontorNotfoundException() : RuntimeException("Fant ikke Legekontor")
+class AktivKonsultasjonNotFoundException(pasientId: PatientId) :
+  RuntimeException("Fant ingen aktiv konsultasjon for pasient med id=${pasientId.value}")
+
+class LegekontorNotfoundException : RuntimeException("Fant ikke Legekontor")
 
 @OptIn(ExperimentalUuidApi::class)
 class KonsultasjonNotFoundForPatientException(

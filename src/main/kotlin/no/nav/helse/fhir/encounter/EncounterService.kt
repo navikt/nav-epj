@@ -1,4 +1,4 @@
-package no.nav.helse.fhir.Encounter
+package no.nav.helse.fhir.encounter
 
 import com.google.fhir.model.r4.Code
 import com.google.fhir.model.r4.CodeableConcept
@@ -10,19 +10,26 @@ import com.google.fhir.model.r4.Uri
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import io.ktor.http.HttpStatusCode
 import kotlin.collections.map
 import kotlin.uuid.ExperimentalUuidApi
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.konsultasjon.Konsultasjon
+import no.nav.helse.fhir.patient.PatientInputId
 
 @OptIn(ExperimentalUuidApi::class)
 class EncounterService(private val epjClient: HttpClient) {
 
-  suspend fun getEncounterById(encounterId: EncounterId): Encounter {
-    val konsultasjon =
-      epjClient.get("/api/patient/${encounterId.value}/konsultasjon").body<Konsultasjon>()
+  suspend fun getEncounterById(encounterId: EncounterId): Encounter? {
+    val response = epjClient.get("/api/patient/${encounterId.value}/konsultasjon")
+    if (response.status != HttpStatusCode.OK) return null // TODO tidy
+    return response.body<Konsultasjon>().toEncounter()
+  }
 
-    return konsultasjon.toEncounter()
+  suspend fun getActiveEncounterByPatient(patientId: PatientInputId): Encounter? {
+    val response = epjClient.get("/api/patient/${patientId.value}/konsultasjon/aktiv")
+    if (response.status != HttpStatusCode.OK) return null // TODO tidy
+    return response.body<Konsultasjon>().toEncounter()
   }
 
   fun Konsultasjon.toEncounter(): Encounter {

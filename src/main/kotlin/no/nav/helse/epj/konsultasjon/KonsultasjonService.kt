@@ -1,7 +1,6 @@
 package no.nav.helse.epj.konsultasjon
 
 import kotlin.time.Clock
-import kotlin.uuid.ExperimentalUuidApi
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
@@ -11,7 +10,6 @@ import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.pasient.PatientId
 
-@OptIn(ExperimentalUuidApi::class)
 class KonsultasjonService(private val konsultasjonRepository: KonsultasjonRepository) {
   val log = logger()
 

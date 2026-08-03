@@ -1,4 +1,4 @@
-package no.nav.helse.fhir.Condition
+package no.nav.helse.fhir.condition
 
 import no.nav.tsm.diagnoser.Diagnose
 

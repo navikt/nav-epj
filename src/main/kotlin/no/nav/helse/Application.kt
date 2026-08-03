@@ -4,7 +4,6 @@ import io.ktor.server.application.*
 import no.nav.helse.core.configureDependencies
 import no.nav.helse.core.db.configureDatabases
 import no.nav.helse.epj.configureEpjModule
-import no.nav.helse.fhir.configureFhirDependencies
 import no.nav.helse.fhir.configureFhirModule
 import no.nav.helse.helseId.configureHelseId
 import no.nav.helse.plugins.configureCors
@@ -17,7 +16,6 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
 fun Application.module() {
   configureDependencies()
-  configureFhirDependencies()
 
   configureSerialization()
   configureDatabases()
