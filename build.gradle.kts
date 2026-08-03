@@ -1,7 +1,7 @@
 plugins {
   alias(libs.plugins.kotlin.jvm)
   alias(libs.plugins.kotlin.serialization)
-  alias(libs.plugins.ktor)
+  alias(ktorLibs.plugins.ktor)
   alias(libs.plugins.spotless)
   alias(libs.plugins.detekt)
   alias(libs.plugins.flyway)
@@ -23,13 +23,6 @@ tasks {
 
 kotlin {
   jvmToolchain(21)
-}
-
-repositories {
-  mavenCentral()
-  google()
-  maven { url = uri("https://jitpack.io") }
-  maven { url = uri("https://github-package-registry-mirror.gc.nav.no/cached/maven-release") }
 }
 
 dependencies {
@@ -65,8 +58,8 @@ dependencies {
   implementation(libs.valkey.glide)
   implementation("io.ktor:ktor-client-logging:3.5.0")
 
-  testImplementation(libs.ktor.server.test.host)
-  testImplementation(libs.ktor.client.test.mock)
+  testImplementation(ktorLibs.server.testHost)
+  testImplementation(ktorLibs.client.mock)
   testImplementation(libs.kotlin.test.junit)
   testImplementation(libs.mockk)
   testImplementation(libs.testcontainers.postgresql)
@@ -74,7 +67,7 @@ dependencies {
 }
 
 configure<com.diffplug.gradle.spotless.SpotlessExtension> {
-    kotlin { ktfmt("0.62").googleStyle() }
+    kotlin { ktfmt("0.64").googleStyle() }
 }
 
 tasks.named("spotlessCheck") {

@@ -1,6 +1,5 @@
 [versions]
 kotlin = "2.3.0"
-ktor = "3.5.0"
 logback = "1.5.32"
 logbackEncoder = "9.0"
 mockk = "1.14.9"
@@ -60,8 +59,6 @@ tsm-diagnoser = { module = "no.nav.tsm:diagnoser", version.ref = "tsm-diagnoser"
 valkey-glide = { module = "io.valkey:valkey-glide", version.ref = "valkey" }
 
 # Testing
-ktor-client-test-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
-ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 testcontainers-postgresql = { module = "org.testcontainers:testcontainers-postgresql", version.ref = "testcontainers" }
@@ -70,7 +67,6 @@ kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref =
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }
 flyway = { id = "org.flywaydb.flyway", version.ref = "flyway" }
