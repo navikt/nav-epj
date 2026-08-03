@@ -26,7 +26,6 @@ fun Route.conditionRoutes(
         call.request.queryParameters["subject"]
           ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing patient search param")
 
-
       try {
         val patientId = PatientInputId(Uuid.parse(patient))
         val conditions = conditionService.getConditions(patientId)

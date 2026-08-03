@@ -1,7 +1,7 @@
 plugins {
   alias(libs.plugins.kotlin.jvm)
   alias(libs.plugins.kotlin.serialization)
-  alias(ktorLibs.plugins.ktor)
+  alias(libs.plugins.ktor)
   alias(libs.plugins.spotless)
   alias(libs.plugins.detekt)
   alias(libs.plugins.flyway)
@@ -23,6 +23,13 @@ tasks {
 
 kotlin {
   jvmToolchain(21)
+}
+
+repositories {
+  mavenCentral()
+  google()
+  maven { url = uri("https://jitpack.io") }
+  maven { url = uri("https://github-package-registry-mirror.gc.nav.no/cached/maven-release") }
 }
 
 dependencies {
@@ -58,8 +65,8 @@ dependencies {
   implementation(libs.valkey.glide)
   implementation("io.ktor:ktor-client-logging:3.5.0")
 
-  testImplementation(ktorLibs.server.testHost)
-  testImplementation(ktorLibs.client.mock)
+  testImplementation(libs.ktor.server.test.host)
+  testImplementation(libs.ktor.client.test.mock)
   testImplementation(libs.kotlin.test.junit)
   testImplementation(libs.mockk)
   testImplementation(libs.testcontainers.postgresql)
@@ -67,11 +74,11 @@ dependencies {
 }
 
 configure<com.diffplug.gradle.spotless.SpotlessExtension> {
-    kotlin { ktfmt("0.64").googleStyle() }
+  kotlin { ktfmt("0.62").googleStyle() }
 }
 
 tasks.named("spotlessCheck") {
-    dependsOn("spotlessApply")
+  dependsOn("spotlessApply")
 }
 
 tasks.register<JavaExec>("runLocal") {
@@ -84,13 +91,13 @@ tasks.register<JavaExec>("runLocal") {
 }
 
 tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
-    config.setFrom(file("detekt.yml"))
-    buildUponDefaultConfig = true
-    dependsOn("spotlessApply")
+  config.setFrom(file("detekt.yml"))
+  buildUponDefaultConfig = true
+  dependsOn("spotlessApply")
 }
 
 afterEvaluate {
-    tasks.named("check") {
-        setDependsOn(dependsOn.filter { !it.toString().contains("detekt") })
-    }
+  tasks.named("check") {
+    setDependsOn(dependsOn.filter { !it.toString().contains("detekt") })
+  }
 }
