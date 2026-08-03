@@ -27,7 +27,7 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
       ?: throw KonsultasjonNotFoundException(konsultasjonId)
   }
 
-  suspend fun getDiagnoser(konsultasjonId: KonsultasjonId): List<Diagnose> {
+  suspend fun getDiagnoser(konsultasjonId: PatientId): List<Diagnose> {
     return konsultasjonRepository.listDiagnoser(konsultasjonId)
   }
 

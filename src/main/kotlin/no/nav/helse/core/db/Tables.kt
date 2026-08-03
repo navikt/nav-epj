@@ -59,7 +59,8 @@ object JournalnotatTable : Table("journalnotat") {
 
 @OptIn(ExperimentalUuidApi::class)
 object DiagnoseTable : Table("diagnose") {
-  val id = integer("id").autoIncrement()
+  val id = uuid("id")
+  val patientId = reference("patient_id", refColumn = PasientTable.id)
   val konsultasjonId = reference("konsultasjon_id", refColumn = KonsultasjonTable.id)
   val diagnosekode = text("diagnosekode")
   val diagnosesystem = text("diagnosesystem")

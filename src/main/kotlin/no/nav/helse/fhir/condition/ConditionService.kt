@@ -12,23 +12,19 @@ import io.ktor.client.request.*
 import kotlin.uuid.ExperimentalUuidApi
 import no.nav.helse.epj.konsultasjon.Diagnose
 import no.nav.helse.epj.konsultasjon.DiagnoseSystem
-import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
 
 @OptIn(ExperimentalUuidApi::class)
 class ConditionService(private val epjClient: HttpClient) {
 
-  suspend fun getConditions(encounterId: EncounterId, patientId: PatientInputId): List<Condition> {
-    val diagnoser = epjClient.get("/api/diagnoser/${encounterId.value}").body<List<Diagnose>>()
-    return diagnoser.toCondition(encounterId, patientId)
+  suspend fun getConditions(patientId: PatientInputId): List<Condition> {
+    val diagnoser = epjClient.get("/api/diagnoser/${patientId.value}").body<List<Diagnose>>()
+    return diagnoser.toCondition(patientId)
   }
 
-  private fun List<Diagnose>.toCondition(
-    encounterId: EncounterId,
-    patientId: PatientInputId,
-  ): List<Condition> {
+  private fun List<Diagnose>.toCondition(patientId: PatientInputId): List<Condition> {
     val conditionList =
-      this.mapIndexed { index, diagnose ->
+      this.map { diagnose ->
         val oid =
           "urn:oid:" +
             when (diagnose.system) {
@@ -36,9 +32,7 @@ class ConditionService(private val epjClient: HttpClient) {
               DiagnoseSystem.ICD10 -> no.nav.tsm.diagnoser.ICD10.OID
             }
         Condition(
-          // Diagnose has no id of its own in the EPJ model; index against the encounter to keep
-          // each Condition.id (and therefore Bundle.entry.fullUrl) unique per result.
-          id = "${encounterId.value}-$index",
+          id = diagnose.id.toString(),
           subject =
             Reference(reference = com.google.fhir.model.r4.String(value = "Patient/${patientId}")),
           code =

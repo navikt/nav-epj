@@ -6,6 +6,7 @@ import kotlin.uuid.Uuid
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import no.nav.helse.core.db.DiagnoseTable
+import no.nav.helse.core.db.DiagnoseTable.patientId
 import no.nav.helse.core.db.JournalnotatTable
 import no.nav.helse.core.db.KonsultasjonHelsepersonell
 import no.nav.helse.core.db.KonsultasjonTable
@@ -71,10 +72,8 @@ class KonsultasjonRepository {
     }
   }
 
-  suspend fun listDiagnoser(id: KonsultasjonId) = dbQuery {
-    DiagnoseTable.selectAll()
-      .where { (DiagnoseTable.konsultasjonId eq id.value) }
-      .map { it.toDiagnose() }
+  suspend fun listDiagnoser(id: PatientId) = dbQuery {
+    DiagnoseTable.selectAll().where { (patientId eq id.value) }.map { it.toDiagnose() }
   }
 
   suspend fun insert(opprettKonsultasjon: OpprettKonsultasjon) = dbQuery {
@@ -121,7 +120,7 @@ class KonsultasjonRepository {
     }
   }
 
-  suspend fun update(oppdaterKonsultasjon: OppdaterKonsultasjonRequest, pasientId: PatientId): Int =
+  suspend fun update(oppdaterKonsultasjon: OppdaterKonsultasjonRequest, patientId: PatientId): Int =
     dbQuery {
       logger.info("Oppdaterer konsultasjon {}", oppdaterKonsultasjon.konsultasjonId)
 
@@ -129,7 +128,7 @@ class KonsultasjonRepository {
         KonsultasjonTable.selectAll()
           .where {
             (KonsultasjonTable.id eq oppdaterKonsultasjon.konsultasjonId.value) and
-              (KonsultasjonTable.pasientId eq pasientId.value)
+              (KonsultasjonTable.pasientId eq patientId.value)
           }
           .limit(1)
           .any()
@@ -138,7 +137,7 @@ class KonsultasjonRepository {
         logger.warn(
           "Fant ikke konsultasjon {} for pasientId {}, avbryter oppdatering",
           oppdaterKonsultasjon.konsultasjonId,
-          pasientId,
+          patientId,
         )
         return@dbQuery 0
       }
@@ -149,6 +148,7 @@ class KonsultasjonRepository {
         updatedRows +=
           updateDiagnose(
             diagnose = diagnose,
+            patientId = patientId.value,
             konsultasjonId = oppdaterKonsultasjon.konsultasjonId.value,
           )
       }
@@ -159,7 +159,7 @@ class KonsultasjonRepository {
         updatedRows +=
           updateJournalnotat(
             konsultasjonId = oppdaterKonsultasjon.konsultasjonId,
-            pasientId = pasientId,
+            pasientId = patientId,
             journalnotat = journalnotat,
           )
       }
@@ -168,7 +168,7 @@ class KonsultasjonRepository {
 
       if (oppdaterKonsultasjon.ferdigstill) {
         updatedRows +=
-          ferdigstill(konsultasjonId = oppdaterKonsultasjon.konsultasjonId, pasientId = pasientId)
+          ferdigstill(konsultasjonId = oppdaterKonsultasjon.konsultasjonId, pasientId = patientId)
       }
 
       logger.info(
@@ -201,34 +201,24 @@ class KonsultasjonRepository {
       .insertedCount
   }
 
-  suspend fun updateDiagnose(diagnose: OpprettDiagnoseRequest, konsultasjonId: Uuid): Int =
-    dbQuery {
-      val kodeverkDiagnose =
-        no.nav.tsm.diagnoser.Diagnose.from(diagnose.system.toString(), diagnose.kode)
-          ?: throw UgyldigDiagnoseException(diagnose.kode, diagnose.system.toString())
+  suspend fun updateDiagnose(
+    diagnose: OpprettDiagnoseRequest,
+    patientId: Uuid,
+    konsultasjonId: Uuid,
+  ): Int = dbQuery {
+    val kodeverkDiagnose =
+      no.nav.tsm.diagnoser.Diagnose.from(diagnose.system.toString(), diagnose.kode)
+        ?: throw UgyldigDiagnoseException(diagnose.kode, diagnose.system.toString())
 
-      val exists =
-        DiagnoseTable.selectAll()
-          .where {
-            (DiagnoseTable.konsultasjonId eq konsultasjonId) and
-              (DiagnoseTable.diagnosekode eq diagnose.kode) and
-              (DiagnoseTable.diagnosesystem eq diagnose.system.toString())
-          }
-          .limit(1)
-          .any()
-
-      if (exists) {
-        logger.info("Diagnose finnes allerede: ${diagnose.kode}")
-        return@dbQuery 0
-      }
-      DiagnoseTable.insert {
-        it[DiagnoseTable.konsultasjonId] = konsultasjonId
-        it[diagnosekode] = diagnose.kode
-        it[diagnosesystem] = diagnose.system.toString()
-        it[beskrivelse] = kodeverkDiagnose.text
-      }
-      1
+    DiagnoseTable.insert {
+      it[DiagnoseTable.konsultasjonId] = konsultasjonId
+      it[DiagnoseTable.patientId] = patientId
+      it[diagnosekode] = diagnose.kode
+      it[diagnosesystem] = diagnose.system.toString()
+      it[beskrivelse] = kodeverkDiagnose.text
     }
+    1
+  }
 
   private fun toEpjKonsultasjon(konsultasjon: ResultRow): Konsultasjon {
     val hprListe =
@@ -290,6 +280,8 @@ class KonsultasjonRepository {
 
   fun ResultRow.toDiagnose() =
     Diagnose(
+      id = DiagnoseId(this[DiagnoseTable.id]),
+      patientId = PatientId(this[DiagnoseTable.patientId]),
       kode = this[DiagnoseTable.diagnosekode],
       system = DiagnoseSystem.valueOf(this[DiagnoseTable.diagnosesystem]),
       beskrivelse = this[DiagnoseTable.beskrivelse],

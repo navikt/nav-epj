@@ -348,7 +348,7 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
   }
 
   @Test
-  fun `updateDiagnose lagrer ikke samme diagnose to ganger`() = runTest {
+  fun `updateDiagnose lagrer samme diagnose to ganger`() = runTest {
     val hpr = HelsepersonellHpr("123")
     val pasientId = opprettPasient(hpr = hpr)
     val konsultasjonId =
@@ -358,16 +358,18 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
     val diagnose =
       OpprettDiagnoseRequest(kode = "A01", system = DiagnoseSystem.ICPC2, beskrivelse = "")
 
-    val forsteInsert = konsultasjonRepository.updateDiagnose(diagnose, konsultasjonId.value)
-    val andreInsert = konsultasjonRepository.updateDiagnose(diagnose, konsultasjonId.value)
+    val forsteInsert =
+      konsultasjonRepository.updateDiagnose(diagnose, pasientId.value, konsultasjonId.value)
+    val andreInsert =
+      konsultasjonRepository.updateDiagnose(diagnose, pasientId.value, konsultasjonId.value)
 
     assertEquals(1, forsteInsert)
-    assertEquals(0, andreInsert)
+    assertEquals(1, andreInsert)
     val antallDiagnoser = dbQuery {
       DiagnoseTable.selectAll()
         .where { DiagnoseTable.konsultasjonId eq konsultasjonId.value }
         .count()
     }
-    assertEquals(1L, antallDiagnoser)
+    assertEquals(2, antallDiagnoser)
   }
 }

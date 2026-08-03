@@ -16,6 +16,7 @@ import no.nav.helse.epj.pasient.PasientRepository
 import no.nav.helse.epj.pasient.PasientService
 import no.nav.helse.fhir.condition.ConditionService
 import no.nav.helse.fhir.encounter.EncounterService
+import no.nav.helse.fhir.initEpjClient
 import no.nav.helse.fhir.organization.OrganizationService
 import no.nav.helse.fhir.patient.PatientService
 import no.nav.helse.fhir.practitioner.PractitionerService
@@ -27,7 +28,6 @@ fun Application.configureDependencies() {
   val config = environment.config
   dependencies {
     provide<Environment> { initEnvironment(config) }
-    provide<HttpClient> { resolve<Environment>().httpClient }
     provide<GlideClientConfiguration> { createGlideClientConfiguration(resolve()) }
     provide<GlideClient> { createGlideClient(resolve()) }
 
@@ -49,5 +49,7 @@ fun Application.configureDependencies() {
     provide(OrganizationService::class)
     provide(PatientService::class)
     provide(PractitionerService::class)
+
+    provide<HttpClient> { initEpjClient(resolve<Environment>().epj.baseUrl) }
   }
 }

@@ -60,8 +60,16 @@ data class OpprettDiagnoseRequest(
   val beskrivelse: String,
 )
 
+@OptIn(ExperimentalUuidApi::class) @Serializable data class DiagnoseId(val value: Uuid)
+
 @Serializable
-data class Diagnose(val kode: String, val system: DiagnoseSystem, val beskrivelse: String)
+data class Diagnose(
+  val id: DiagnoseId,
+  val patientId: PatientId,
+  val kode: String,
+  val system: DiagnoseSystem,
+  val beskrivelse: String,
+)
 
 enum class DiagnoseSystem {
   ICPC2,

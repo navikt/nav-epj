@@ -21,13 +21,13 @@ import no.nav.helse.fhir.patient.PatientInputId
 class EncounterService(private val epjClient: HttpClient) {
 
   suspend fun getEncounterById(encounterId: EncounterId): Encounter? {
-    val response = epjClient.get("/api/patient/${encounterId.value}/konsultasjon")
+    val response = epjClient.get("/api/konsultasjon/${encounterId.value}")
     if (response.status != HttpStatusCode.OK) return null // TODO tidy
     return response.body<Konsultasjon>().toEncounter()
   }
 
   suspend fun getActiveEncounterByPatient(patientId: PatientInputId): Encounter? {
-    val response = epjClient.get("/api/patient/${patientId.value}/konsultasjon/aktiv")
+    val response = epjClient.get("/api/patient/${patientId.value}/konsultasjon")
     if (response.status != HttpStatusCode.OK) return null // TODO tidy
     return response.body<Konsultasjon>().toEncounter()
   }

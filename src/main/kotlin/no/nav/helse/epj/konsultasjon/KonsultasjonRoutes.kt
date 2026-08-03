@@ -26,12 +26,12 @@ fun Route.konsultasjonRoutes(
   route("/api") {
     route("/diagnoser/{id}") {
       get {
-        val konsultasjonId = call.parameters["id"] ?: error("Missing konsultasjonId")
+        val pasientId = call.parameters["id"] ?: error("Missing patientid")
         try {
-          val konsultasjonUuid = KonsultasjonId(Uuid.parse(konsultasjonId))
-          log.info("looking up konsultasjon for id: $konsultasjonId")
-          val diagnoser = konsultasjonService.getDiagnoser(konsultasjonUuid)
-          log.info("diagnoser for konsultasjon: $konsultasjonId, {}", diagnoser)
+          val pasientUuid = PatientId(Uuid.parse(pasientId))
+          log.info("looking up diagnose for pasient: $pasientId")
+          val diagnoser = konsultasjonService.getDiagnoser(pasientUuid)
+          log.info("diagnoser for pasient: $pasientId, {}", diagnoser)
           call.respond(diagnoser)
         } catch (e: KonsultasjonNotFoundException) {
           call.respond(HttpStatusCode.BadRequest, e.message ?: "Konsultasjon feil")

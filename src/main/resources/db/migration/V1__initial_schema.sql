@@ -53,6 +53,7 @@ CREATE TABLE journalnotat
 CREATE TABLE diagnose
 (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    patient_id      UUID NOT NULL REFERENCES pasient (id),
     konsultasjon_id UUID NOT NULL REFERENCES konsultasjon (id),
     beskrivelse     TEXT,
     diagnosekode    TEXT NOT NULL,
@@ -64,6 +65,7 @@ CREATE TABLE konsultasjon_helsepersonell
     konsultasjon_id UUID NOT NULL REFERENCES konsultasjon (id) ON DELETE CASCADE,
     hpr             TEXT NOT NULL
 );
+
 
 INSERT INTO legekontor (id, navn, tlf, orgnummer)
 VALUES ('a1000000-0000-0000-0000-000000000001', 'Tonsberg Legesenter', 'tulletlf', '123');
