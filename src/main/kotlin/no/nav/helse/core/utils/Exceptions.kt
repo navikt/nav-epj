@@ -18,13 +18,8 @@ class KonsultasjonNotFoundException(konsultasjonId: KonsultasjonId) :
 class LegekontorNotfoundException() : RuntimeException("Fant ikke Legekontor")
 
 @OptIn(ExperimentalUuidApi::class)
-class KonsultasjonNotFoundForPatientException(
-  konsultasjonId: KonsultasjonId,
-  pasientId: PatientId,
-) :
-  RuntimeException(
-    "Fant ikke konsultasjon med id=${konsultasjonId.value} for pasientId=${pasientId.value}"
-  )
+class KonsultasjonNotFoundForPatientException(pasientId: PatientId) :
+  RuntimeException("Fant ikke konsultasjon for pasientId=${pasientId.value}")
 
 class UgyldigDiagnoseException(kode: String, system: String) :
   RuntimeException("Fant ikke diagnosekode=$kode i kodeverk=$system")

@@ -14,13 +14,20 @@ import kotlin.collections.map
 import kotlin.uuid.ExperimentalUuidApi
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.konsultasjon.Konsultasjon
+import no.nav.helse.fhir.Patient.PatientInputId
 
 @OptIn(ExperimentalUuidApi::class)
 class EncounterService(private val epjClient: HttpClient) {
 
   suspend fun getEncounterById(encounterId: EncounterId): Encounter {
+    val konsultasjon = epjClient.get("/api/konsultasjon/${encounterId.value}").body<Konsultasjon>()
+
+    return konsultasjon.toEncounter()
+  }
+
+  suspend fun getEncounterByPatientId(patientId: PatientInputId): Encounter {
     val konsultasjon =
-      epjClient.get("/api/patient/${encounterId.value}/konsultasjon").body<Konsultasjon>()
+      epjClient.get("/api/patient/${patientId.value}/konsultasjon").body<Konsultasjon>()
 
     return konsultasjon.toEncounter()
   }
@@ -34,7 +41,7 @@ class EncounterService(private val epjClient: HttpClient) {
         KonsultasjonStatus.AVLYST -> Encounter.EncounterStatus.Cancelled
       }
     return Encounter(
-      id = this.id.toString(),
+      id = this.id.value.toString(),
       subject =
         Reference(reference = com.google.fhir.model.r4.String(value = "Patient/${this.pasientId}")),
       participant =

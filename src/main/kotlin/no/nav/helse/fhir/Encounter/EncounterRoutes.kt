@@ -32,6 +32,7 @@ fun Route.encounterRoutes(
         principal.patient
           ?: return@get call.respond(HttpStatusCode.Forbidden, "Token has no patient context")
 
+      //TODO: ?
       val patientParam =
         call.request.queryParameters["patient"]
           ?: return@get call.respond(

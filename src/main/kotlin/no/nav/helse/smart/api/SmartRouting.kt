@@ -68,7 +68,7 @@ fun Application.configureSmartRouting() {
             patientService.getPatient(patientInputId)
               ?: return@get call.respond(HttpStatusCode.NotFound, "Unknown patient")
 
-          val encounter = encounterService.getEncounterById(patientInputId)
+          val encounter = encounterService.getEncounterByPatientId(patientInputId)
           val launchId = UUID.randomUUID().toString()
 
           valkeyService.saveLaunchContext(launchId, LaunchContext(patient.id, encounter.id))

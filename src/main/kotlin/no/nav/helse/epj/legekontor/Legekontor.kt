@@ -10,6 +10,7 @@ import kotlinx.serialization.Serializable
 value class LegekontorId(val value: Uuid)
 
 @OptIn(ExperimentalUuidApi::class)
+@Serializable
 data class Legekontor(
   val id: LegekontorId,
   val navn: String,

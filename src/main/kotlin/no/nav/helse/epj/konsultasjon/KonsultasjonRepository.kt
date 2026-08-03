@@ -71,13 +71,19 @@ class KonsultasjonRepository {
     }
   }
 
+  suspend fun listDiagnoser(id: KonsultasjonId) = dbQuery {
+    DiagnoseTable.selectAll()
+      .where { (DiagnoseTable.konsultasjonId eq id.value) }
+      .map { it.toDiagnose() }
+  }
+
   suspend fun insert(opprettKonsultasjon: OpprettKonsultasjon) = dbQuery {
     val konsultasjon =
       KonsultasjonTable.insertReturning {
-          it[pasientId] = opprettKonsultasjon.pasientId.value
-          it[startetTidspunkt] = opprettKonsultasjon.startetTidspunkt
-          it[status] = opprettKonsultasjon.status
-        }
+        it[pasientId] = opprettKonsultasjon.pasientId.value
+        it[startetTidspunkt] = opprettKonsultasjon.startetTidspunkt
+        it[status] = opprettKonsultasjon.status
+      }
         .single()
     val id = konsultasjon[KonsultasjonTable.id]
     opprettKonsultasjon.hpr.forEach { hprValue ->
@@ -174,10 +180,12 @@ class KonsultasjonRepository {
     }
 
   private fun ferdigstill(konsultasjonId: KonsultasjonId, pasientId: PatientId): Int =
-    KonsultasjonTable.update({
-      (KonsultasjonTable.id eq konsultasjonId.value) and
-        (KonsultasjonTable.pasientId eq pasientId.value)
-    }) {
+    KonsultasjonTable.update(
+      {
+        (KonsultasjonTable.id eq konsultasjonId.value) and
+          (KonsultasjonTable.pasientId eq pasientId.value)
+      },
+    ) {
       it[avsluttetTidspunkt] = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
       it[status] = KonsultasjonStatus.FULLFØRT
     }
@@ -188,10 +196,10 @@ class KonsultasjonRepository {
     journalnotat: String,
   ): Int = dbQuery {
     JournalnotatTable.insert {
-        it[JournalnotatTable.konsultasjonId] = konsultasjonId.value
-        it[JournalnotatTable.pasientId] = pasientId.value
-        it[JournalnotatTable.journalnotat] = journalnotat
-      }
+      it[JournalnotatTable.konsultasjonId] = konsultasjonId.value
+      it[JournalnotatTable.pasientId] = pasientId.value
+      it[JournalnotatTable.journalnotat] = journalnotat
+    }
       .insertedCount
   }
 
@@ -245,6 +253,11 @@ class KonsultasjonRepository {
       journalnotatListe,
       diagnoseListe,
     )
+  }
+
+  suspend fun findJournalnotat(journalnotatId: Uuid): Journalnotat? = dbQuery {
+    JournalnotatTable.selectAll().where(JournalnotatTable.id eq journalnotatId).singleOrNull()
+      ?.toJournalnotat() ?: return@dbQuery null
   }
 
   @OptIn(ExperimentalUuidApi::class)

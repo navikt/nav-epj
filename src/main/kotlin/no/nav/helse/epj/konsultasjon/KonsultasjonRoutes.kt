@@ -2,13 +2,13 @@ package no.nav.helse.epj.konsultasjon
 
 import io.ktor.http.*
 import io.ktor.server.application.*
-import io.ktor.server.plugins.di.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
+import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.UgyldigDiagnoseException
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
@@ -24,8 +24,33 @@ fun Route.konsultasjonRoutes(
 
   val log = logger()
   route("/api") {
-    route("/diagnose/{id}") {
-      // TODO:
+    route("/diagnoser/{id}") {
+      get {
+        val konsultasjonId = call.parameters["id"] ?: error("Missing konsultasjonId")
+        try {
+          val konsultasjonUuid = KonsultasjonId(Uuid.parse(konsultasjonId))
+          log.info("looking up konsultasjon for id: $konsultasjonId")
+          val diagnoser = konsultasjonService.getDiagnoser(konsultasjonUuid)
+          log.info("diagnoser for konsultasjon: $konsultasjonId, {}", diagnoser)
+          call.respond(diagnoser)
+        } catch (e: KonsultasjonNotFoundException) {
+          call.respond(HttpStatusCode.BadRequest, e.message ?: "Konsultasjon feil")
+        }
+      }
+    }
+    route("/konsultasjon/{id}") {
+      get {
+        val konsultasjonId = call.parameters["id"] ?: error("Missing konsultasjonId")
+        try {
+          val konsultasjonUuid = KonsultasjonId(Uuid.parse(konsultasjonId))
+          log.info("looking up konsultasjon for id: $konsultasjonId")
+          val konsultasjon = konsultasjonService.getKonsultasjon(konsultasjonUuid)
+          log.info("konsultasjon: $konsultasjon")
+          call.respond(konsultasjon)
+        } catch (e: KonsultasjonNotFoundException) {
+          call.respond(HttpStatusCode.BadRequest, e.message ?: "Konsultasjon feil")
+        }
+      }
     }
     route("/patient") {
       route("/{patientId}/konsultasjoner") {
@@ -42,67 +67,69 @@ fun Route.konsultasjonRoutes(
           }
         }
       }
-      route("/{id}/konsultasjon") {
+      route("/{patientId}/konsultasjon") {
         get {
-          val konsultasjonId = call.parameters["id"] ?: error("Missing konsultasjonId")
+          val patientId = call.parameters["patientId"] ?: error("Missing patientId")
           try {
-            val konsultasjonUuid = KonsultasjonId(Uuid.parse(konsultasjonId))
-            log.info("looking up konsultasjon for id: $konsultasjonId")
-            val konsultasjon = konsultasjonService.getKonsultasjon(konsultasjonUuid)
+            val patientUuidId = PatientId(Uuid.parse(patientId))
+            log.info("looking up konsultasjon for patient id: $patientId")
+            val konsultasjon =
+              konsultasjonService.getAktivKonsultasjon(patientUuidId)
+                ?: throw KonsultasjonNotFoundForPatientException(patientUuidId)
             log.info("konsultasjon: $konsultasjon")
             call.respond(konsultasjon)
           } catch (e: KonsultasjonNotFoundException) {
             call.respond(HttpStatusCode.BadRequest, e.message ?: "Konsultasjon feil")
           }
         }
-      }
+        post {
+          log.info("oppretter konsutasjon")
+          val pasientId =
+            call.parameters["patientId"]
+              ?: return@post call.respond(HttpStatusCode.BadRequest, "Missing pasientId")
 
-      post("/{patientId}/konsultasjon") {
-        log.info("oppretter konsutasjon")
-        val pasientId =
-          call.parameters["patientId"]
-            ?: return@post call.respond(HttpStatusCode.BadRequest, "Missing pasientId")
+          log.info("Looking up konsultasjon for pasientId: {}", pasientId)
+          val principal = loggedInUser()
 
-        log.info("Looking up konsultasjon for pasientId: {}", pasientId)
-        val principal = loggedInUser()
+          try {
+            val pasientUuid = PatientId(Uuid.parse(pasientId))
+            val hpr = HelsepersonellHpr(principal.hpr)
+            val konsultasjon = konsultasjonService.getOrCreateKonsultasjon(pasientUuid, hpr)
+            valkeyService.set(principal.hpr, pasientId)
+            call.respond(konsultasjon)
+          } catch (exception: Exception) {
+            log.error("Kunne ikke hente eller opprette konsultasjon", exception)
+            call.respond(
+              HttpStatusCode.InternalServerError,
+              "Konsultasjon kunne ikke hentes eller opprettes",
+            )
+          }
+        }
+        patch {
+          log.info("patching konsultasjon pasientId:")
+          val pasientId =
+            call.parameters["patientId"]
+              ?: return@patch call.respond(HttpStatusCode.BadRequest, "Missing pasientId")
+          log.info("Patching konsultasjon for pasientId: {}", pasientId)
+          val request = call.receive<OppdaterKonsultasjonRequest>()
 
-        try {
-          val pasientUuid = PatientId(Uuid.parse(pasientId))
-          val hpr = HelsepersonellHpr(principal.hpr)
-          val konsultasjon = konsultasjonService.getOrCreateKonsultasjon(pasientUuid, hpr)
-          valkeyService.set(principal.hpr, pasientId)
-          call.respond(konsultasjon)
-        } catch (exception: Exception) {
-          log.error("Kunne ikke hente eller opprette konsultasjon", exception)
-          call.respond(
-            HttpStatusCode.InternalServerError,
-            "Konsultasjon kunne ikke hentes eller opprettes",
-          )
+          try {
+            val pasientUuid = PatientId(Uuid.parse(pasientId))
+            konsultasjonService.updateKonsultasjon(request, pasientUuid)
+            call.respond(HttpStatusCode.OK)
+          } catch (exception: KonsultasjonNotFoundException) {
+            log.warn("Fant ikke konsultasjon {}", request.konsultasjonId, exception)
+            call.respond(HttpStatusCode.NotFound)
+          } catch (exception: UgyldigDiagnoseException) {
+            log.warn("Ugyldig diagnose for konsultasjon {}", request.konsultasjonId, exception)
+            call.respond(HttpStatusCode.BadRequest, exception.message ?: "Ugyldig diagnose")
+          } catch (exception: Exception) {
+            log.error("Kunne ikke oppdatere konsultasjon ${request.konsultasjonId}", exception)
+            call.respond(HttpStatusCode.InternalServerError, "Konsultasjon ble ikke oppdatert")
+          }
         }
       }
-      patch("/{pasientId}/konsultasjon") {
-        log.info("patching konsultasjon pasientId:")
-        val pasientId =
-          call.parameters["pasientId"]
-            ?: return@patch call.respond(HttpStatusCode.BadRequest, "Missing pasientId")
-        log.info("Patching konsultasjon for pasientId: {}", pasientId)
-        val request = call.receive<OppdaterKonsultasjonRequest>()
 
-        try {
-          val pasientUuid = PatientId(Uuid.parse(pasientId))
-          konsultasjonService.updateKonsultasjon(request, pasientUuid)
-          call.respond(HttpStatusCode.OK)
-        } catch (exception: KonsultasjonNotFoundException) {
-          log.warn("Fant ikke konsultasjon {}", request.konsultasjonId, exception)
-          call.respond(HttpStatusCode.NotFound)
-        } catch (exception: UgyldigDiagnoseException) {
-          log.warn("Ugyldig diagnose for konsultasjon {}", request.konsultasjonId, exception)
-          call.respond(HttpStatusCode.BadRequest, exception.message ?: "Ugyldig diagnose")
-        } catch (exception: Exception) {
-          log.error("Kunne ikke oppdatere konsultasjon ${request.konsultasjonId}", exception)
-          call.respond(HttpStatusCode.InternalServerError, "Konsultasjon ble ikke oppdatert")
-        }
-      }
     }
   }
 }

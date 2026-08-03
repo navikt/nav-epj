@@ -28,6 +28,14 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
       ?: throw KonsultasjonNotFoundException(konsultasjonId)
   }
 
+  suspend fun getDiagnoser(konsultasjonId: KonsultasjonId): List<Diagnose> {
+    return konsultasjonRepository.listDiagnoser(konsultasjonId)
+  }
+
+  suspend fun getJournalnotat(journalnotatId: JournalnotatId): Journalnotat? {
+    return konsultasjonRepository.findJournalnotat(journalnotatId.value)
+  }
+
   suspend fun createKonsultasjon(opprettKonsultasjon: OpprettKonsultasjon): Konsultasjon {
     val createdId = konsultasjonRepository.insert(opprettKonsultasjon)
     val createdKonsultasjon =
@@ -62,7 +70,7 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
     log.info("oppdater konsultasjon på pasientId: $pasientId")
     val updatedRows = konsultasjonRepository.update(oppdaterKonsultasjon, pasientId)
     if (updatedRows == 0) {
-      throw KonsultasjonNotFoundForPatientException(oppdaterKonsultasjon.konsultasjonId, pasientId)
+      throw KonsultasjonNotFoundForPatientException(pasientId)
     }
   }
 }

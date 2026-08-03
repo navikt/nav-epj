@@ -19,8 +19,8 @@ value class JournalnotatId @OptIn(ExperimentalUuidApi::class) constructor(val va
 
 @Serializable
 data class Konsultasjon(
-  val id: KonsultasjonId? = null,
-  val pasientId: PatientId? = null,
+  val id: KonsultasjonId,
+  val pasientId: PatientId,
   val hpr: List<String>,
   val journalnotat: List<Journalnotat>,
   val diagnoser: List<Diagnose>,

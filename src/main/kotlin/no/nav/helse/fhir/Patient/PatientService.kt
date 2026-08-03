@@ -15,7 +15,7 @@ import no.nav.helse.epj.pasient.Pasient
 @OptIn(ExperimentalUuidApi::class)
 class PatientService(private val epjClient: HttpClient) {
 
-  suspend fun getPatient(patientInputId: PatientInputId): Patient? {
+  suspend fun getPatient(patientInputId: PatientInputId): Patient {
     val patient = epjClient.get("/api/patient/${patientInputId.value}").body<Pasient>()
 
     return patient.toPatient()

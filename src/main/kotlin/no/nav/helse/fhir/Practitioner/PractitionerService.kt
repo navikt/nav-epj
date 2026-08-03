@@ -15,7 +15,7 @@ import no.nav.helse.epj.helsepersonell.Helsepersonell
 class PractitionerService(val epjClient: HttpClient) {
 
   suspend fun getPractitioner(): Practitioner {
-    val helsepersonell = epjClient.get("/api/helsepersonell/me}").body<Helsepersonell>()
+    val helsepersonell = epjClient.get("/api/helsepersonell/me").body<Helsepersonell>()
 
     return helsepersonell.toPractitioner()
   }
