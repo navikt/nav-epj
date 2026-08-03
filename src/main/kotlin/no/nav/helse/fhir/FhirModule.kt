@@ -9,6 +9,7 @@ import io.ktor.server.routing.*
 import no.nav.helse.fhir.condition.ConditionService
 import no.nav.helse.fhir.condition.conditionRoutes
 import no.nav.helse.fhir.encounter.EncounterService
+import no.nav.helse.fhir.encounter.encounterRoutes
 import no.nav.helse.fhir.organization.OrganizationService
 import no.nav.helse.fhir.organization.organizationRoutes
 import no.nav.helse.fhir.patient.PatientService
@@ -28,7 +29,7 @@ fun Application.configureFhirModule() {
   routing {
     authenticate("smart-access-token") {
       conditionRoutes(conditionService, fhirJson, fhirContentType)
-      // encounterRoutes(encounterService, fhirJson, fhirContentType)
+      encounterRoutes(encounterService, fhirJson, fhirContentType)
       organizationRoutes(organizationService, fhirJson, fhirContentType)
       patientRoutes(patientService, fhirJson, fhirContentType)
       pracitionerRoutes(practitionerService, fhirJson, fhirContentType)
