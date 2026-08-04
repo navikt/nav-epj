@@ -4,7 +4,8 @@ import no.nav.helse.core.utils.LegekontorNotfoundException
 
 class LegekontorService(val legekontorRepository: LegekontorRepository) {
 
-  suspend fun getLegekontor(): Legekontor {
-    return legekontorRepository.find() ?: throw LegekontorNotfoundException()
+  suspend fun getLegekontor(legekontorId: LegekontorId): Legekontor {
+    return legekontorRepository.findByLegekontorId(legekontorId.value)
+      ?: throw LegekontorNotfoundException()
   }
 }

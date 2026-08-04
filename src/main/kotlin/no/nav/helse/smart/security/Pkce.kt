@@ -1,7 +1,7 @@
 package no.nav.helse.smart.security
 
 import java.security.MessageDigest
-import java.util.Base64
+import java.util.*
 
 /**
  * PKCE S256 code challenge (RFC 7636): `BASE64URL-ENCODE(SHA256(ASCII(code_verifier)))`, unpadded.

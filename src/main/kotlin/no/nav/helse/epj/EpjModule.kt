@@ -1,10 +1,10 @@
 package no.nav.helse.epj
 
 import io.ktor.server.application.*
-import io.ktor.server.auth.authenticate
-import io.ktor.server.http.content.singlePageApplication
-import io.ktor.server.plugins.di.dependencies
-import io.ktor.server.routing.routing
+import io.ktor.server.auth.*
+import io.ktor.server.http.content.*
+import io.ktor.server.plugins.di.*
+import io.ktor.server.routing.*
 import no.nav.helse.epj.helsepersonell.HelsepersonellService
 import no.nav.helse.epj.helsepersonell.helsepersonellRoutes
 import no.nav.helse.epj.konsultasjon.KonsultasjonService

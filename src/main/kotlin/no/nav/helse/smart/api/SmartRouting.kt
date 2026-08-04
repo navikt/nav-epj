@@ -11,10 +11,8 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.routing.openapi.*
-import io.ktor.utils.io.*
 import java.security.MessageDigest
 import java.util.*
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import no.nav.helse.core.Environment
 import no.nav.helse.core.utils.logger
@@ -30,7 +28,6 @@ import no.nav.helse.smart.valkey.AuthCodeContext
 import no.nav.helse.smart.valkey.LaunchContext
 import no.nav.helse.smart.valkey.ValkeyService
 
-@OptIn(ExperimentalKtorApi::class, ExperimentalUuidApi::class)
 fun Application.configureSmartRouting() {
   val env: Environment by dependencies
   val patientService: PatientService by dependencies
@@ -197,7 +194,7 @@ fun Application.configureSmartRouting() {
 
     // NO AUTH
     route("/oidc") {
-      // Step 4: exchange the authorization code for an access token.
+      // Step 4: exchange the authorisation code for an access token.
       post("/token") {
         val params = call.receiveParameters()
         log.debug("SMART: /token called with params: {}", params)

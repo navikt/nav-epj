@@ -4,7 +4,6 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.AktivKonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
@@ -16,7 +15,6 @@ import no.nav.helse.epj.pasient.PatientId
 import no.nav.helse.helseId.loggedInUser
 import no.nav.helse.smart.valkey.ValkeyService
 
-@OptIn(ExperimentalUuidApi::class)
 fun Route.konsultasjonRoutes(
   konsultasjonService: KonsultasjonService,
   valkeyService: ValkeyService,

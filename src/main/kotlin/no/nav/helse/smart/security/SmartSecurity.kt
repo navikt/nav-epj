@@ -2,9 +2,9 @@ package no.nav.helse.smart.security
 
 import com.auth0.jwt.JWT
 import io.ktor.server.application.*
-import io.ktor.server.auth.authentication
-import io.ktor.server.auth.jwt.jwt
-import io.ktor.server.plugins.di.dependencies
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+import io.ktor.server.plugins.di.*
 import no.nav.helse.core.Environment
 
 /**

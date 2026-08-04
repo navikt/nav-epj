@@ -12,7 +12,9 @@ import no.nav.helse.epj.helsepersonell.Helsepersonell
 
 class PractitionerService(val epjClient: HttpClient) {
 
-  suspend fun getPractitioner(): Practitioner {
+  suspend fun getPractitioner(practitionerId: PractitionerId): Practitioner {
+    // TODO get practitioner by ID not auth
+
     val helsepersonell = epjClient.get("/api/helsepersonell/me").body<Helsepersonell>()
 
     return helsepersonell.toPractitioner()

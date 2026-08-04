@@ -20,7 +20,7 @@ class TestHelper : TestRepository() {
   val pasientRepository = PasientRepository()
   val konsultasjonRepository = KonsultasjonRepository()
 
-  @OptIn(ExperimentalUuidApi::class)
+
   suspend fun insertHelsepersonellOgPasientTestData(pasientId: String, legeId: String) {
     val helsepersonell =
       Helsepersonell(
@@ -65,7 +65,7 @@ class TestHelper : TestRepository() {
     konsultasjonRepository.insert(konsultasjon)
   }
 
-  @OptIn(ExperimentalUuidApi::class)
+
   suspend fun insertKonsultasjonWithPredefinedId(
     legeId: String,
     pasientId: String,

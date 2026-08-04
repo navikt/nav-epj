@@ -13,9 +13,13 @@ fun Route.pracitionerRoutes(
 ) {
   val log = logger()
   route("/fhir") {
-    get("/Practitioner/{id}") {
+    get("/Practitioner/{practitionerId}") {
+      val practitionerId =
+        call.parameters["practitionerId"]
+          ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing id")
+
       try {
-        val practitioner = practitionerService.getPractitioner()
+        val practitioner = practitionerService.getPractitioner(PractitionerId(practitionerId))
         call.respondText(fhirR4Json.encodeToString(practitioner), fhirContentType)
       } catch (e: Exception) {
         log.error("Feil ved henting av practitioner", e)

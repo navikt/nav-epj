@@ -1,11 +1,9 @@
 package no.nav.helse.core.db
 
-import kotlin.uuid.ExperimentalUuidApi
 import no.nav.helse.core.utils.KonsultasjonStatus
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.datetime.datetime
 
-@OptIn(ExperimentalUuidApi::class)
 object PasientTable : Table("pasient") {
   val id = uuid("id")
   val legekontorId = reference("legekontor_id", refColumn = LegekontorTable.id)
@@ -16,7 +14,6 @@ object PasientTable : Table("pasient") {
   val updated = datetime("updated_at")
 }
 
-@OptIn(ExperimentalUuidApi::class)
 object LegekontorTable : Table("legekontor") {
   val id = uuid("id")
   val navn = text("navn")
@@ -26,7 +23,6 @@ object LegekontorTable : Table("legekontor") {
   val updated = datetime("updated_at")
 }
 
-@OptIn(ExperimentalUuidApi::class)
 object HelsepersonellTable : Table("helsepersonell") {
   val id = uuid("id")
   val legekontorId = reference("legekontor_id", refColumn = LegekontorTable.id)
@@ -37,7 +33,6 @@ object HelsepersonellTable : Table("helsepersonell") {
   val updated = datetime("updated_at")
 }
 
-@OptIn(ExperimentalUuidApi::class)
 object KonsultasjonTable : Table("konsultasjon") {
   val id = uuid("id")
   val pasientId = reference("pasient_id", refColumn = PasientTable.id)
@@ -49,7 +44,6 @@ object KonsultasjonTable : Table("konsultasjon") {
   val updated = datetime("updated_at")
 }
 
-@OptIn(ExperimentalUuidApi::class)
 object JournalnotatTable : Table("journalnotat") {
   val id = uuid("id")
   val konsultasjonId = reference("konsultasjon_id", refColumn = KonsultasjonTable.id)
@@ -57,7 +51,6 @@ object JournalnotatTable : Table("journalnotat") {
   val journalnotat = text("journalnotat").nullable()
 }
 
-@OptIn(ExperimentalUuidApi::class)
 object DiagnoseTable : Table("diagnose") {
   val id = uuid("id")
   val patientId = reference("patient_id", refColumn = PasientTable.id)
@@ -67,7 +60,6 @@ object DiagnoseTable : Table("diagnose") {
   val beskrivelse = text("beskrivelse")
 }
 
-@OptIn(ExperimentalUuidApi::class)
 object KonsultasjonHelsepersonell : Table("konsultasjon_helsepersonell") {
   val konsultasjonId = reference("konsultasjon_id", refColumn = KonsultasjonTable.id)
   val hpr = text("hpr")

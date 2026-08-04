@@ -1,7 +1,6 @@
 package no.nav.helse.fhir.documentreference
 
-import io.ktor.client.HttpClient
-import io.ktor.client.request.get
+import io.ktor.client.*
 
 class DocumentReferenceService(private val epjClient: HttpClient) {
 

@@ -7,12 +7,10 @@ import com.google.fhir.model.r4.Uri
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.logger
 import no.nav.helse.fhir.patient.PatientInputId
 
-@OptIn(ExperimentalUuidApi::class)
 fun Route.conditionRoutes(
   conditionService: ConditionService,
   fhirR4Json: FhirR4Json,

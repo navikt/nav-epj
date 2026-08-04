@@ -5,9 +5,8 @@ import com.auth0.jwt.JWT
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.jwt
+import io.ktor.server.auth.jwt.*
 import java.net.URI
-import kotlin.text.replace
 import no.nav.helse.core.utils.logger
 
 fun Application.configureHelseId() {

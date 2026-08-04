@@ -10,16 +10,14 @@ import com.google.fhir.model.r4.Uri
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
-import kotlin.uuid.ExperimentalUuidApi
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.legekontor.Legekontor
 
-@OptIn(ExperimentalUuidApi::class)
 class OrganizationService(private val epjClient: HttpClient) {
   val log = logger()
 
-  suspend fun getOrganization(): Organization {
-    val legekontor = epjClient.get("api/legekontor").body<Legekontor>()
+  suspend fun getOrganization(id: OrganizationId): Organization {
+    val legekontor = epjClient.get("api/legekontor/$id").body<Legekontor>()
     return legekontor.toOrganization()
   }
 

@@ -7,7 +7,7 @@ import com.nimbusds.jose.jwk.RSAKey
 import java.security.KeyPairGenerator
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
-import java.util.UUID
+import java.util.*
 
 /**
  * This app's own RSA signing key for SMART access/id tokens, exposed as a public JWK at
@@ -16,8 +16,8 @@ import java.util.UUID
  * Generated fresh in memory once per process; never persisted or shared. Fine for a single instance
  * that both issues (`/oidc/token`) and verifies ([configureSmartSecurity]) tokens.
  *
- * TODO Kubernetes: each replica would generate its own key, so tokens issued by one TODO replica
- * could not be verified by another (nor would its `/oidc/jwks` list the other's key).
+ * TODO Kubernetes: each replica would generate its own key, so tokens issued by one could not be
+ * verified by another (nor would its `/oidc/jwks` list the other's key).
  */
 internal object SmartKeys {
   private val keyPair = KeyPairGenerator.getInstance("RSA").apply { initialize(2048) }.genKeyPair()

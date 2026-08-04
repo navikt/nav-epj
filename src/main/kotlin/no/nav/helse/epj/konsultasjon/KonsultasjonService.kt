@@ -1,7 +1,6 @@
 package no.nav.helse.epj.konsultasjon
 
 import kotlin.time.Clock
-import kotlin.uuid.ExperimentalUuidApi
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
@@ -31,7 +30,6 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
     return konsultasjonRepository.listDiagnoser(konsultasjonId)
   }
 
-  @OptIn(ExperimentalUuidApi::class)
   suspend fun getJournalnotat(journalnotatId: JournalnotatId): Journalnotat? {
     return konsultasjonRepository.findJournalnotat(journalnotatId.value)
   }

@@ -9,12 +9,10 @@ import com.google.fhir.model.r4.Uri
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
-import kotlin.uuid.ExperimentalUuidApi
 import no.nav.helse.epj.konsultasjon.Diagnose
 import no.nav.helse.epj.konsultasjon.DiagnoseSystem
 import no.nav.helse.fhir.patient.PatientInputId
 
-@OptIn(ExperimentalUuidApi::class)
 class ConditionService(private val epjClient: HttpClient) {
 
   suspend fun getConditions(patientId: PatientInputId): List<Condition> {

@@ -1,18 +1,12 @@
 package no.nav.helse.fhir.encounter
 
 import com.google.fhir.model.r4.FhirR4Json
-import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.response.respond
-import io.ktor.server.response.respondText
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.get
-import io.ktor.server.routing.route
-import kotlin.uuid.ExperimentalUuidApi
+import io.ktor.http.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.logger
 
-@OptIn(ExperimentalUuidApi::class)
 fun Route.encounterRoutes(
   encounterService: EncounterService,
   fhirR4Json: FhirR4Json,

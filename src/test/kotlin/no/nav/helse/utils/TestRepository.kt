@@ -22,7 +22,7 @@ abstract class TestRepository : WithPostgresql() {
     connect()
   }
 
-  @OptIn(ExperimentalUuidApi::class)
+
   suspend fun insert(helsePersonell: Helsepersonell) = dbQuery {
     HelsepersonellTable.insert {
       it[id] = Uuid.parse(helsePersonell.id)
@@ -33,7 +33,7 @@ abstract class TestRepository : WithPostgresql() {
     }
   }
 
-  @OptIn(ExperimentalUuidApi::class)
+
   suspend fun insert(konsultasjon: Konsultasjon) = dbQuery {
     KonsultasjonTable.insert {
       it[id] = Uuid.parse(konsultasjon.id)
@@ -44,7 +44,7 @@ abstract class TestRepository : WithPostgresql() {
     }
   }
 
-  @OptIn(ExperimentalUuidApi::class)
+
   suspend fun insert(opprettKonsultasjon: OpprettKonsultasjon, tulleId: Uuid) = dbQuery {
     val konsultasjon =
       KonsultasjonTable.insertReturning {

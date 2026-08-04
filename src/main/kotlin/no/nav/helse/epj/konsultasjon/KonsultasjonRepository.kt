@@ -1,7 +1,6 @@
 package no.nav.helse.epj.konsultasjon
 
 import kotlin.time.Clock
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -27,7 +26,6 @@ import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 
-@OptIn(ExperimentalUuidApi::class)
 class KonsultasjonRepository {
   private val logger = logger()
 
@@ -243,7 +241,6 @@ class KonsultasjonRepository {
     )
   }
 
-  @OptIn(ExperimentalUuidApi::class)
   suspend fun findJournalnotat(journalnotatId: Uuid): Journalnotat? = dbQuery {
     JournalnotatTable.selectAll()
       .where(JournalnotatTable.id eq journalnotatId)
@@ -251,7 +248,6 @@ class KonsultasjonRepository {
       ?.toJournalnotat() ?: return@dbQuery null
   }
 
-  @OptIn(ExperimentalUuidApi::class)
   fun ResultRow.toJournalnotat(): Journalnotat =
     Journalnotat(
       id = JournalnotatId(this[JournalnotatTable.id]),
@@ -260,7 +256,6 @@ class KonsultasjonRepository {
       journalnotat = this[JournalnotatTable.journalnotat],
     )
 
-  @OptIn(ExperimentalUuidApi::class)
   fun ResultRow.toKonsultasjonWithHprAndJournalnotat(
     hprListe: List<String>,
     journalnotatListe: List<Journalnotat>,
@@ -281,7 +276,7 @@ class KonsultasjonRepository {
   fun ResultRow.toDiagnose() =
     Diagnose(
       id = DiagnoseId(this[DiagnoseTable.id]),
-      patientId = PatientId(this[DiagnoseTable.patientId]),
+      patientId = PatientId(this[patientId]),
       kode = this[DiagnoseTable.diagnosekode],
       system = DiagnoseSystem.valueOf(this[DiagnoseTable.diagnosesystem]),
       beskrivelse = this[DiagnoseTable.beskrivelse],

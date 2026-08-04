@@ -8,7 +8,6 @@ import kotlin.test.assertEquals
 import no.nav.helse.utils.configureTestSmartDependencies
 import org.junit.Test
 
-@OptIn(ExperimentalKtorApi::class)
 class SmartRoutingTest() {
 
   @Test

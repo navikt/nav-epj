@@ -1,6 +1,5 @@
 package no.nav.helse.epj.helsepersonell
 
-import kotlin.uuid.ExperimentalUuidApi
 import no.nav.helse.core.db.HelsepersonellTable
 import no.nav.helse.core.db.dbQuery
 import no.nav.helse.core.utils.logger
@@ -10,7 +9,6 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.selectAll
 
-@OptIn(ExperimentalUuidApi::class)
 class HelsepersonellRepository {
 
   private val logger = logger()
@@ -33,7 +31,6 @@ class HelsepersonellRepository {
       ?.toHelsepersonell()
   }
 
-  @OptIn(ExperimentalUuidApi::class)
   private fun ResultRow.toHelsepersonell() =
     Helsepersonell(
       hpr = HelsepersonellHpr(this[HelsepersonellTable.hpr]),

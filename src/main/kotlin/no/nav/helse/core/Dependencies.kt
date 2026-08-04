@@ -3,7 +3,7 @@ package no.nav.helse.core
 // import no.nav.helse.fhir.documentreference.DocumentReferenceService
 import glide.api.GlideClient
 import glide.api.models.configuration.GlideClientConfiguration
-import io.ktor.client.HttpClient
+import io.ktor.client.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.di.*
 import no.nav.helse.epj.helsepersonell.HelsepersonellRepository

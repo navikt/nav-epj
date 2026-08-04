@@ -1,10 +1,8 @@
 package no.nav.helse.epj.helsepersonell
 
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.get
-import io.ktor.server.routing.route
+import io.ktor.http.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import no.nav.helse.core.utils.HelsepersonellNotFoundException
 import no.nav.helse.helseId.loggedInUser
 

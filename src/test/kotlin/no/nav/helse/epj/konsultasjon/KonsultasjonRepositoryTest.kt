@@ -7,7 +7,6 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDateTime
@@ -27,7 +26,6 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.Test
 
-@OptIn(ExperimentalUuidApi::class)
 class KonsultasjonRepositoryTest : WithPostgresql() {
   init {
     runMigrations(true)

@@ -1,7 +1,7 @@
 package no.nav.helse.helseId
 
-import io.ktor.server.auth.principal
-import io.ktor.server.routing.RoutingContext
+import io.ktor.server.auth.*
+import io.ktor.server.routing.*
 
 data class User(val name: String, val hpr: String)
 

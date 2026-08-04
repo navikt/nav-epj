@@ -9,10 +9,8 @@ import com.google.fhir.model.r4.Uri
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
-import kotlin.uuid.ExperimentalUuidApi
 import no.nav.helse.epj.pasient.Pasient
 
-@OptIn(ExperimentalUuidApi::class)
 class PatientService(private val epjClient: HttpClient) {
 
   suspend fun getPatient(patientInputId: PatientInputId): Patient? {

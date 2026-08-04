@@ -1,17 +1,19 @@
 package no.nav.helse.epj.legekontor
 
-import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import no.nav.helse.core.db.LegekontorTable
 import no.nav.helse.core.db.dbQuery
 import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
 
-@OptIn(ExperimentalUuidApi::class)
 class LegekontorRepository {
 
-  suspend fun find(): Legekontor? {
+  suspend fun findByLegekontorId(id: Uuid): Legekontor? {
     return dbQuery {
-      val legekontor = LegekontorTable.selectAll().singleOrNull() ?: return@dbQuery null
+      val legekontor =
+        LegekontorTable.selectAll().where { LegekontorTable.id eq id }.singleOrNull()
+          ?: return@dbQuery null
       legekontor.toLegekontor()
     }
   }

@@ -1,15 +1,10 @@
 package no.nav.helse.epj.legekontor
 
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.serialization.Serializable
 
-@JvmInline
-@Serializable
-@OptIn(ExperimentalUuidApi::class)
-value class LegekontorId(val value: Uuid)
+@JvmInline @Serializable value class LegekontorId(val value: Uuid)
 
-@OptIn(ExperimentalUuidApi::class)
 @Serializable
 data class Legekontor(
   val id: LegekontorId,

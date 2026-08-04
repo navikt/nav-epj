@@ -1,14 +1,9 @@
 package no.nav.helse.fhir.organization
 
-import com.google.fhir.model.r4.Bundle
-import com.google.fhir.model.r4.Enumeration
 import com.google.fhir.model.r4.FhirR4Json
-import com.google.fhir.model.r4.Uri
 import io.ktor.http.*
-import io.ktor.server.response.respondText
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.get
-import io.ktor.server.routing.route
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 
 fun Route.organizationRoutes(
   organizationService: OrganizationService,
@@ -17,15 +12,13 @@ fun Route.organizationRoutes(
 ) {
 
   route("/fhir") {
-    get("/Organization") {
-      val organization = organizationService.getOrganization()
-      val bundle =
-        Bundle(
-          type = Enumeration(value = Bundle.BundleType.Searchset),
-          entry =
-            listOf(Bundle.Entry(fullUrl = Uri(value = "Organization"), resource = organization)),
-        )
-      call.respondText(fhirR4Json.encodeToString(bundle), fhirContentType)
+    get("/Organization/{organizationId}") {
+      val organizationId =
+        call.parameters["organizationId"]
+          ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing id")
+
+      val organization = organizationService.getOrganization(OrganizationId(organizationId))
+      call.respondText(fhirR4Json.encodeToString(organization), fhirContentType)
     }
   }
 }

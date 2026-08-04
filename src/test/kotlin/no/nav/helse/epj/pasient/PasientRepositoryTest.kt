@@ -2,7 +2,6 @@ package no.nav.helse.epj.pasient
 
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
@@ -10,7 +9,6 @@ import no.nav.helse.epj.legekontor.Legekontor
 import no.nav.helse.utils.WithPostgresql
 import org.junit.Test
 
-@OptIn(ExperimentalUuidApi::class)
 class PasientRepositoryTest : WithPostgresql() {
   init {
     runMigrations(true)

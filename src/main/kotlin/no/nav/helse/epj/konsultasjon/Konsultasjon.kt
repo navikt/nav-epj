@@ -1,6 +1,5 @@
 package no.nav.helse.epj.konsultasjon
 
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
@@ -8,14 +7,9 @@ import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.pasient.PatientId
 
-@JvmInline
-@Serializable
-@OptIn(ExperimentalUuidApi::class)
-value class KonsultasjonId(val value: Uuid)
+@JvmInline @Serializable value class KonsultasjonId(val value: Uuid)
 
-@JvmInline
-@Serializable
-value class JournalnotatId @OptIn(ExperimentalUuidApi::class) constructor(val value: Uuid)
+@JvmInline @Serializable value class JournalnotatId(val value: Uuid)
 
 @Serializable
 data class Konsultasjon(
@@ -60,7 +54,7 @@ data class OpprettDiagnoseRequest(
   val beskrivelse: String,
 )
 
-@OptIn(ExperimentalUuidApi::class) @Serializable data class DiagnoseId(val value: Uuid)
+@Serializable data class DiagnoseId(val value: Uuid)
 
 @Serializable
 data class Diagnose(

@@ -7,17 +7,14 @@ import com.google.fhir.model.r4.Encounter
 import com.google.fhir.model.r4.Enumeration
 import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.Uri
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.request.get
-import io.ktor.http.HttpStatusCode
-import kotlin.collections.map
-import kotlin.uuid.ExperimentalUuidApi
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.request.*
+import io.ktor.http.*
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.konsultasjon.Konsultasjon
 import no.nav.helse.fhir.patient.PatientInputId
 
-@OptIn(ExperimentalUuidApi::class)
 class EncounterService(private val epjClient: HttpClient) {
 
   suspend fun getEncounterById(encounterId: EncounterId): Encounter? {

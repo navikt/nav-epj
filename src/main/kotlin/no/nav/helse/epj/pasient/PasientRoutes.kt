@@ -1,18 +1,14 @@
 package no.nav.helse.epj.pasient
 
 import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.plugins.di.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.helseId.loggedInUser
 
-@OptIn(ExperimentalUuidApi::class)
 fun Route.pasientRoutes(pasientService: PasientService) {
   val log = logger()
 

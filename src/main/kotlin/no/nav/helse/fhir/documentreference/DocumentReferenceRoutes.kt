@@ -2,12 +2,9 @@ package no.nav.helse.fhir.documentreference
 
 import com.google.fhir.model.r4.FhirR4Json
 import io.ktor.http.*
-import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlin.uuid.ExperimentalUuidApi
 import no.nav.helse.core.utils.logger
 
-@OptIn(ExperimentalUuidApi::class)
 fun Route.documentReferenceRoutes(
   documentReferenceService: DocumentReferenceService,
   fhirjson: FhirR4Json,
