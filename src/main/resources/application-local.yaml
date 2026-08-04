@@ -21,7 +21,7 @@ smart:
   fhirServerUrl: "http://localhost:8080/fhir"
   clients:
     - clientId: "syk-inn"
-      redirectUris: ["http://localhost:3000"]
+      redirectUris: ["http://localhost:3000", "http://localhost:3000/fhir/callback"]
       launchUris: ["http://localhost:3000/fhir/launch"]
     - clientId: "NAV_SMART_on_FHIR_example"
       redirectUris: ["http://localhost:5174/"]
