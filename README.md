@@ -19,6 +19,7 @@ To build or run the project, use one of the following tasks:
 | Task                                                                             | Description                                                          |
 |----------------------------------------------------------------------------------|----------------------------------------------------------------------|
 | `./gradlew test`                                                                 | Run the tests                                                        |
+| `./gradlew runLocal`                                                             | Run local backend                                                    |
 | `./gradlew build`                                                                | Build everything                                                     |
 | `./gradlew buildFatJar`                                                          | Build an executable JAR of the server with all dependencies included |
 | `./gradlew buildImage`                                                           | Build the docker image to use with the fat JAR                       |
@@ -31,9 +32,11 @@ To build or run the project, use one of the following tasks:
 
 ## Code Quality
 
-The project uses [Spotless](https://github.com/diffplug/spotless) with **ktfmt** (kotlinlangStyle) for formatting and [detekt](https://detekt.dev/) for static analysis.
+The project uses [Spotless](https://github.com/diffplug/spotless) with **ktfmt** (kotlinlangStyle)
+for formatting and [detekt](https://detekt.dev/) for static analysis.
 
-Formatting is applied automatically during build (`spotlessCheck` depends on `spotlessApply`). To set up a pre-commit hook that formats before each commit:
+Formatting is applied automatically during build (`spotlessCheck` depends on `spotlessApply`). To
+set up a pre-commit hook that formats before each commit:
 
 ```sh
 cp scripts/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit

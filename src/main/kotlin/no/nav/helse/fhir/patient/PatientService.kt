@@ -15,7 +15,7 @@ class PatientService(private val epjClient: HttpClient) {
 
   suspend fun getPatient(patientInputId: PatientInputId): Patient? {
     val httpResponse = epjClient.get("/api/patient/${patientInputId.value}")
-    if (httpResponse.status.value in 200..299) {
+    if (httpResponse.status.value == 200) {
       return httpResponse.body<Pasient>().toPatient()
     }
 

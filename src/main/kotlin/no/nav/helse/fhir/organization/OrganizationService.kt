@@ -16,9 +16,12 @@ import no.nav.helse.epj.legekontor.Legekontor
 class OrganizationService(private val epjClient: HttpClient) {
   val log = logger()
 
-  suspend fun getOrganization(id: OrganizationId): Organization {
-    val legekontor = epjClient.get("api/legekontor/$id").body<Legekontor>()
-    return legekontor.toOrganization()
+  suspend fun getOrganization(id: OrganizationId): Organization? {
+    val httpResponse = epjClient.get("api/legekontor/$id")
+    if (httpResponse.status.value == 200) {
+      return httpResponse.body<Legekontor>().toOrganization()
+    }
+    return null
   }
 
   fun Legekontor.toOrganization(): Organization {

@@ -13,26 +13,27 @@ class HelsepersonellService(val helsepersonellRepository: HelsepersonellReposito
     return (insertHelsepersonell.insertedCount == 1)
   }
 
-  suspend fun getHelsepersonell(hpr: HelsepersonellHpr): Helsepersonell? {
-    return helsepersonellRepository.findByHpr(hpr)
+  suspend fun getHelsepersonell(hpr: HelsepersonellHpr): Helsepersonell {
+    val helsepersonell =
+      helsepersonellRepository.findByHpr(hpr) ?: throw HelsepersonellNotFoundException(hpr)
+    return helsepersonell
   }
 
   suspend fun findOrCreateHelsepersonell(hpr: HelsepersonellHpr, navn: String): Helsepersonell {
-    val helsepersonell = getHelsepersonell(hpr)
-    if (helsepersonell != null) {
-      return helsepersonell
+    val helsepersonell = helsepersonellRepository.findByHpr(hpr)
+
+    if (helsepersonell == null) {
+      log.info("Fant ikke helsepersonell for hpr $hpr, oppretter ny")
+      val opprettHelsepersonell =
+        OpprettHelsepersonell(
+          legekontorId = Legekontor.DEFAULT.id,
+          hpr = hpr,
+          navn = navn,
+          autorisasjon = "Lege", // TODO hent fra UserInfo
+        )
+      insertHelsepersonell(opprettHelsepersonell)
+      return getHelsepersonell(hpr)
     }
-    val opprettHelsepersonell =
-      OpprettHelsepersonell(
-        legekontorId = Legekontor.DEFAULT.id,
-        hpr = hpr,
-        navn = navn,
-        autorisasjon = "Lege", // TODO hent fra UserInfo
-      )
-    val insertHelsepersonell = insertHelsepersonell(opprettHelsepersonell)
-    if (insertHelsepersonell) {
-      return getHelsepersonell(hpr) ?: throw IllegalStateException("Helspersonell ikke funnet")
-    }
-    throw HelsepersonellNotFoundException(hpr)
+    return helsepersonell
   }
 }

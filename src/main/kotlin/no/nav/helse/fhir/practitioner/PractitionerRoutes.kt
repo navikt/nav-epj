@@ -19,10 +19,13 @@ fun Route.pracitionerRoutes(
           ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing id")
 
       try {
-        val practitioner = practitionerService.getPractitioner(PractitionerId(practitionerId))
+        val practitioner =
+          practitionerService.getPractitioner(PractitionerId(practitionerId))
+            ?: return@get call.respond(HttpStatusCode.NotFound)
         call.respondText(fhirR4Json.encodeToString(practitioner), fhirContentType)
       } catch (e: Exception) {
-        log.error("Feil ved henting av practitioner", e)
+        log.error("Error when fetching practitioner $practitionerId", e)
+        call.respond(HttpStatusCode.InternalServerError, "Unable to get practitioner")
       }
     }
   }

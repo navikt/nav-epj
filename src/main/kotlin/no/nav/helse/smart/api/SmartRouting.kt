@@ -10,7 +10,6 @@ import io.ktor.server.plugins.di.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.ktor.server.routing.openapi.*
 import java.security.MessageDigest
 import java.util.*
 import kotlin.uuid.Uuid
@@ -294,46 +293,45 @@ fun Application.configureSmartRouting() {
 
     route("/fhir") {
       get("/.well-known/smart-configuration") {
-          call.respond(
-            HttpStatusCode.OK,
-            SmartDiscoveryDocument(
-              issuer = issuerUrl,
-              jwksUri = "$issuerUrl/jwks",
-              authorizationEndpoint = "$issuerUrl/authorize",
-              tokenEndpoint = "$issuerUrl/token",
-              grantTypesSupported = listOf("authorization_code"),
-              registrationEndpoint = "$issuerUrl/register",
-              scopesSupported =
-                listOf(
-                  "openid",
-                  "fhirUser",
-                  "launch",
-                  "patient/*.cruds",
-                  "user/*.cruds",
-                  "system/*.cruds",
-                  "offline_access",
-                ),
-              responseTypesSupported = listOf("code"),
-              managementEndpoint = "$issuerUrl/user/manage",
-              introspectionEndpoint = "$issuerUrl/user/introspect",
-              revocationEndpoint = "$issuerUrl/user/revoke",
-              codeChallengeMethodsSupported = listOf("S256"),
-              capabilities =
-                listOf(
-                  "launch-ehr",
-                  "permission-patient",
-                  "permission-v2",
-                  "client-public",
-                  "client-confidential-symmetric",
-                  "context-ehr-patient",
-                  "sso-openid-connect",
-                ),
-              tokenEndpointAuthMethodsSupported =
-                listOf("client_secret_basic"), // TODO add private_key_jwt
-            ),
-          )
-        }
-        .describe { summary = "Get SMART on FHIR configuration" }
+        call.respond(
+          HttpStatusCode.OK,
+          SmartDiscoveryDocument(
+            issuer = issuerUrl,
+            jwksUri = "$issuerUrl/jwks",
+            authorizationEndpoint = "$issuerUrl/authorize",
+            tokenEndpoint = "$issuerUrl/token",
+            grantTypesSupported = listOf("authorization_code"),
+            registrationEndpoint = "$issuerUrl/register",
+            scopesSupported =
+              listOf(
+                "openid",
+                "fhirUser",
+                "launch",
+                "patient/*.cruds",
+                "user/*.cruds",
+                "system/*.cruds",
+                "offline_access",
+              ),
+            responseTypesSupported = listOf("code"),
+            managementEndpoint = "$issuerUrl/user/manage",
+            introspectionEndpoint = "$issuerUrl/user/introspect",
+            revocationEndpoint = "$issuerUrl/user/revoke",
+            codeChallengeMethodsSupported = listOf("S256"),
+            capabilities =
+              listOf(
+                "launch-ehr",
+                "permission-patient",
+                "permission-v2",
+                "client-public",
+                "client-confidential-symmetric",
+                "context-ehr-patient",
+                "sso-openid-connect",
+              ),
+            tokenEndpointAuthMethodsSupported =
+              listOf("client_secret_basic"), // TODO add private_key_jwt
+          ),
+        )
+      }
     }
   }
 }
