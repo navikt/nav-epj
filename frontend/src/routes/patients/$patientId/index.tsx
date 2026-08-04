@@ -5,6 +5,7 @@ import {
   PasientSchema,
   type Pasient,
 } from "@utils/mapping/epj";
+import { format } from "date-fns";
 
 export const Route = createFileRoute("/patients/$patientId/")({
   loader: async ({ params }) => {
@@ -26,7 +27,7 @@ async function fetchKonsultasjoner(patientId: string) {
 }
 
 async function opprettKonsultasjon(patientId: string) {
-  return await fetch(`/api/patient/${patientId}/konsultasjon`, { method: 'POST'}).then((res) => res.json())
+  return await fetch(`/api/patient/${patientId}/konsultasjon`, { method: 'POST' }).then((res) => res.json())
 }
 
 function RouteComponent() {
@@ -43,22 +44,24 @@ function RouteComponent() {
     router.invalidate()
   }
 
-  
+
   return (
-    <div>
-      
-      {(patient.success && konsultasjoner.success) && 
-      <div>
-        Pasientnavn: {patient.data?.navn}
-        <ul>
-          {konsultasjoner.data.map((konsultasjon) => (
-            <li key={konsultasjon.id}><Link to="/patients/$patientId/konsultasjon/$konsultasjonId" params={{patientId, konsultasjonId: konsultasjon.id}}>{konsultasjon.startetTidspunkt} - {konsultasjon.status}</Link></li>
-          ))}
-        </ul>
-      </div>
+    <div className="flex flex-col items-start gap-4">
+      {(patient.success && konsultasjoner.success) &&
+        <div>
+          Pasientnavn: {patient.data?.navn}
+          <ul>
+            {konsultasjoner.data.map((konsultasjon) => (
+              <li key={konsultasjon.id}><Link className="aksel-link" to="/patients/$patientId/konsultasjon/$konsultasjonId" params={{ patientId, konsultasjonId: konsultasjon.id }}>
+                {format(konsultasjon.startetTidspunkt, "dd.MM.yyyy HH:mm")} - {konsultasjon.status}
+              </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       }
       <Button variant={'primary'} onClick={() => handleOnClickOpprettKonsultasjon()}>Opprett ny konsultasjon</Button>
-      
+
     </div>
   );
 }

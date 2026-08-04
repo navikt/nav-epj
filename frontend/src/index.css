@@ -1,4 +1,5 @@
-@import "@navikt/ds-css";
+@import "tailwindcss";
+@import "@navikt/ds-css" layer(components);
 
 :root {
 }

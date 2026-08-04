@@ -49,7 +49,7 @@ function RootComponent() {
         </HStack>
         <InternalHeader.User name={userInfo?.navn} />
       </InternalHeader>
-      <main>
+      <main className="mt-4 mx-6">
         {isLoading ? <div>Laster...</div> : 
         <Outlet />
         }
