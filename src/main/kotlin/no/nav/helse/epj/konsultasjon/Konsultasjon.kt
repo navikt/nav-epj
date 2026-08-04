@@ -9,8 +9,6 @@ import no.nav.helse.epj.pasient.PatientId
 
 @JvmInline @Serializable value class KonsultasjonId(val value: Uuid)
 
-@JvmInline @Serializable value class JournalnotatId(val value: Uuid)
-
 @Serializable
 data class Konsultasjon(
   val id: KonsultasjonId,
@@ -26,7 +24,7 @@ data class Konsultasjon(
 
 @Serializable
 data class Journalnotat(
-  val id: JournalnotatId,
+  val id: PatientId,
   val konsultasjonId: KonsultasjonId,
   val pasientId: PatientId,
   val journalnotat: String?,

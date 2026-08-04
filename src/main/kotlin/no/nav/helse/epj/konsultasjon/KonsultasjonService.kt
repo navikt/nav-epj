@@ -30,8 +30,14 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
     return konsultasjonRepository.listDiagnoser(konsultasjonId)
   }
 
-  suspend fun getJournalnotat(journalnotatId: JournalnotatId): Journalnotat? {
-    return konsultasjonRepository.findJournalnotat(journalnotatId.value)
+  suspend fun getJournalnotater(pasientId: PatientId): List<Journalnotat> {
+    return konsultasjonRepository.listJournalnotater(pasientId.value)
+  }
+
+  suspend fun createJournalnotat(journalnotat: Journalnotat): Boolean {
+    val insertedRows = konsultasjonRepository.insertJournalnotat(journalnotat)
+
+    return insertedRows == 1
   }
 
   suspend fun createKonsultasjon(opprettKonsultasjon: OpprettKonsultasjon): Konsultasjon {

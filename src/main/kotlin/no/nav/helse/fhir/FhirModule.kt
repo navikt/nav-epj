@@ -8,6 +8,8 @@ import io.ktor.server.plugins.di.*
 import io.ktor.server.routing.*
 import no.nav.helse.fhir.condition.ConditionService
 import no.nav.helse.fhir.condition.conditionRoutes
+import no.nav.helse.fhir.documentreference.DocumentReferenceService
+import no.nav.helse.fhir.documentreference.documentReferenceRoutes
 import no.nav.helse.fhir.encounter.EncounterService
 import no.nav.helse.fhir.encounter.encounterRoutes
 import no.nav.helse.fhir.organization.OrganizationService
@@ -23,6 +25,7 @@ fun Application.configureFhirModule() {
   val organizationService: OrganizationService by dependencies
   val patientService: PatientService by dependencies
   val practitionerService: PractitionerService by dependencies
+  val documentReferenceService: DocumentReferenceService by dependencies
   val fhirJson = FhirR4Json()
   val fhirContentType = ContentType("application", "fhir+json")
 
@@ -33,6 +36,7 @@ fun Application.configureFhirModule() {
       organizationRoutes(organizationService, fhirJson, fhirContentType)
       patientRoutes(patientService, fhirJson, fhirContentType)
       pracitionerRoutes(practitionerService, fhirJson, fhirContentType)
+      documentReferenceRoutes(documentReferenceService, fhirJson, fhirContentType)
     }
   }
 }

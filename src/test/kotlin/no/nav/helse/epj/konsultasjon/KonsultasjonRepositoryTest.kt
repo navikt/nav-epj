@@ -43,9 +43,9 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
       Pasient(
         id = pasientId,
         legekontorId = Legekontor.DEFAULT.id,
-        hpr = hpr,
         navn = "navn",
         fnr = "fnr-${pasientId.value}",
+        hprNumbers = listOf(hpr),
       )
     )
     return pasientId
@@ -85,9 +85,9 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
       Pasient(
         id = pasientId,
         legekontorId = Legekontor.DEFAULT.id,
-        hpr = hpr,
         navn = "navn",
         fnr = "fnr",
+        hprNumbers = listOf(hpr),
       )
     )
     konsultasjonRepository.insert(
@@ -346,7 +346,7 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
   }
 
   @Test
-  fun `updateDiagnose lagrer samme diagnose to ganger`() = runTest {
+  fun `updateDiagnose lagrer ikke samme diagnose to ganger på samme konsultasjon`() = runTest {
     val hpr = HelsepersonellHpr("123")
     val pasientId = opprettPasient(hpr = hpr)
     val konsultasjonId =
@@ -362,12 +362,44 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
       konsultasjonRepository.updateDiagnose(diagnose, pasientId.value, konsultasjonId.value)
 
     assertEquals(1, forsteInsert)
-    assertEquals(1, andreInsert)
+    assertEquals(0, andreInsert)
     val antallDiagnoser = dbQuery {
       DiagnoseTable.selectAll()
         .where { DiagnoseTable.konsultasjonId eq konsultasjonId.value }
         .count()
     }
-    assertEquals(2, antallDiagnoser)
+    assertEquals(1, antallDiagnoser)
+  }
+
+  @Test
+  fun `updateDiagnose lagrer samme diagnose på forskjellige konsultasjoner`() = runTest {
+    val hpr = HelsepersonellHpr("123")
+    val pasientId = opprettPasient(hpr = hpr)
+
+    val konsultasjonId1 =
+      konsultasjonRepository.insert(
+        OpprettKonsultasjon(pasientId, listOf(hpr), now(), KonsultasjonStatus.PÅGÅENDE)
+      )
+
+    val konsultasjonId2 =
+      konsultasjonRepository.insert(
+        OpprettKonsultasjon(pasientId, listOf(hpr), now(), KonsultasjonStatus.PÅGÅENDE)
+      )
+
+    val diagnose =
+      OpprettDiagnoseRequest(kode = "A01", system = DiagnoseSystem.ICPC2, beskrivelse = "")
+
+    val førsteInsert =
+      konsultasjonRepository.updateDiagnose(diagnose, pasientId.value, konsultasjonId1.value)
+
+    val andreInsert =
+      konsultasjonRepository.updateDiagnose(diagnose, pasientId.value, konsultasjonId2.value)
+
+    assertEquals(1, førsteInsert)
+    assertEquals(1, andreInsert)
+
+    val lagredeDiagnoser = konsultasjonRepository.listDiagnoser(pasientId)
+
+    assertEquals(2, lagredeDiagnoser.size)
   }
 }

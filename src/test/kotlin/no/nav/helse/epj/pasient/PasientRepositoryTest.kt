@@ -21,7 +21,14 @@ class PasientRepositoryTest : WithPostgresql() {
     id: PatientId = PatientId(Uuid.generateV4()),
     hpr: HelsepersonellHpr = HelsepersonellHpr("123"),
     fnr: String = "fnr-${id.value}",
-  ) = Pasient(id = id, legekontorId = Legekontor.DEFAULT.id, hpr = hpr, navn = "navn", fnr = fnr)
+  ) =
+    Pasient(
+      id = id,
+      legekontorId = Legekontor.DEFAULT.id,
+      hprNumbers = listOf(hpr),
+      navn = "navn",
+      fnr = fnr,
+    )
 
   @Test
   fun `findById returnerer null når pasient ikke finnes`() = runTest {

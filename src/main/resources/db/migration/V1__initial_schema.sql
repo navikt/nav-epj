@@ -23,7 +23,6 @@ CREATE TABLE pasient
 (
     id            UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
     legekontor_id UUID        NOT NULL REFERENCES legekontor (id),
-    hpr           TEXT        NOT NULL,
     navn          TEXT        NOT NULL,
     fnr           TEXT        NOT NULL UNIQUE,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -60,12 +59,21 @@ CREATE TABLE diagnose
     diagnosesystem  TEXT NOT NULL
 );
 
+CREATE UNIQUE INDEX diagnose_konsultasjon_system_kode_unique
+    ON diagnose (konsultasjon_id, diagnosesystem, diagnosekode);
+
 CREATE TABLE konsultasjon_helsepersonell
 (
     konsultasjon_id UUID NOT NULL REFERENCES konsultasjon (id) ON DELETE CASCADE,
     hpr             TEXT NOT NULL
 );
 
+
+CREATE TABLE pasient_helsepersonell
+(
+    pasient_id UUID NOT NULL REFERENCES pasient (id) ON DELETE CASCADE,
+    hpr        TEXT NOT NULL
+);
 
 INSERT INTO legekontor (id, navn, tlf, orgnummer)
 VALUES ('a1000000-0000-0000-0000-000000000001', 'Tonsberg Legesenter', 'tulletlf', '123');

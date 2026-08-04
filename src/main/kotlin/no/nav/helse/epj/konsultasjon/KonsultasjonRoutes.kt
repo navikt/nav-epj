@@ -50,6 +50,32 @@ fun Route.konsultasjonRoutes(
         }
       }
     }
+    route("/journalnotater") {
+      get("/{patientId}") {
+        val patientId = call.parameters["patientId"] ?: error("Missing journalnotatId")
+        try {
+          val pasientUuid = PatientId(Uuid.parse(patientId))
+          log.info("looking up journalnotat for patient: $patientId")
+          val journalnotater =
+            konsultasjonService.getJournalnotater(pasientUuid)
+              ?: call.respond(HttpStatusCode.NotFound)
+          log.info("journalnotat: $journalnotater")
+          call.respond(journalnotater)
+        } catch (e: Exception) {
+          call.respond(HttpStatusCode.BadRequest, e.message ?: "journalnotat feil")
+        }
+      }
+    }
+    route("/journalnotat") {
+      post {
+        val request = call.receive<Journalnotat>()
+        if (konsultasjonService.createJournalnotat(request)) {
+          call.respond(HttpStatusCode.Created)
+        } else {
+          call.respond(HttpStatusCode.InternalServerError, "Kunne ikke opprette journalnotat")
+        }
+      }
+    }
     route("/patient") { // TODO does it make sense to have consultation as a patient route?
       route("/{patientId}/konsultasjoner") {
         get {
