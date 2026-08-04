@@ -1,8 +1,6 @@
-import { Alert, Button, Heading, TextField, VStack } from "@navikt/ds-react";
+import { Heading } from "@navikt/ds-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  OpprettPasientSchema,
-  type OpprettPasientRequest,
   type Pasient,
 } from "@utils/mapping/epj";
 import { useState, useEffect } from "react";

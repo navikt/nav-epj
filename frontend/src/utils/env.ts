@@ -1,5 +1,5 @@
 type EnvUrls = {
-    [key in 'localhost' | 'dev' | 'prod']: {
+    [key in 'localhost' | 'dev']: {
         sykInnUrl: string
         validatorUrl: string
     }
@@ -11,13 +11,9 @@ const envUrls: EnvUrls = {
         validatorUrl: "http://localhost:5174/launch"
     },
     dev: {
-        sykInnUrl: "",
+        sykInnUrl: "https://www.ekstern.dev.nav.no/samarbeidspartner/sykmelding/fhir/launch",
         validatorUrl: "https://nav-on-fhir.ekstern.dev.nav.no/launch"
     },
-    prod: {
-        sykInnUrl: "",
-        validatorUrl: ""
-    }
 }
 
 const getEnv = () => {
@@ -26,7 +22,7 @@ const getEnv = () => {
     } else if (window.location.hostname.includes('dev.nav.no')) {
         return 'dev'
     } else {
-        return 'prod'
+        throw new Error('Unknown environment')
     }
 }
 
