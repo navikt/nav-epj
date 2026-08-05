@@ -287,7 +287,10 @@ fun Application.configureSmartRouting() {
         call.respond(tokenResponse)
       }
       get("/jwks") {
-        call.respondText("""{"keys": [${SmartKeys.jwk.toPublicJWK().toString()}]}""", ContentType.Application.Json)
+        call.respondText(
+          """{"keys": [${SmartKeys.jwk.toPublicJWK()}]}""",
+          ContentType.Application.Json,
+        )
       }
     }
 
@@ -300,7 +303,7 @@ fun Application.configureSmartRouting() {
             jwksUri = "$issuerUrl/jwks",
             authorizationEndpoint = "$issuerUrl/authorize",
             tokenEndpoint = "$issuerUrl/token",
-            grantTypesSupported = listOf("authorization_code"),
+            grantTypesSupported = listOf("authorization_code", "client_credentials"),
             registrationEndpoint = "$issuerUrl/register",
             scopesSupported =
               listOf(
@@ -324,11 +327,13 @@ fun Application.configureSmartRouting() {
                 "permission-v2",
                 "client-public",
                 "client-confidential-symmetric",
+                "client-confidential-asymmetric",
                 "context-ehr-patient",
                 "sso-openid-connect",
               ),
             tokenEndpointAuthMethodsSupported =
-              listOf("client_secret_basic"), // TODO add private_key_jwt
+              listOf("client_secret_post", "client_secret_basic", "private_key_jwt"),
+            tokenEndpointAuthSigningAlgValuesSupported = listOf("RS256", "RS384"), // TODO implement
           ),
         )
       }

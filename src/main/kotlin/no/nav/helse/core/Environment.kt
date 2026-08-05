@@ -50,7 +50,7 @@ fun initEnvironment(config: ApplicationConfig): Environment {
               clientId = c.property("clientId").getString(),
               redirectUris = c.property("redirectUris").getList(),
               launchUris = c.property("launchUris").getList(),
-              c.propertyOrNull("clientSecret")?.getString(),
+              clientSecret = c.propertyOrNull("clientSecret")?.getString(),
             )
           },
       ),

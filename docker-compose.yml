@@ -13,5 +13,5 @@ services:
     image: valkey/valkey:8-alpine
     container_name: nav-epj-valkey
     ports:
-      - "6379:6379"
+      - "6380:6380"
     restart: unless-stopped

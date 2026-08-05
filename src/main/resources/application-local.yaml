@@ -23,6 +23,7 @@ smart:
     - clientId: "syk-inn"
       redirectUris: ["http://localhost:3000", "http://localhost:3000/fhir/callback"]
       launchUris: ["http://localhost:3000/fhir/launch"]
+      clientSecret: "dev-mode-client-secret"
     - clientId: "NAV_SMART_on_FHIR_example"
       redirectUris: ["http://localhost:5174/"]
       launchUris: ["http://localhost:5174/launch"]
