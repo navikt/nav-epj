@@ -67,7 +67,7 @@ dependencies {
   implementation(libs.otel.annotations)
   implementation(libs.tsm.diagnoser)
   implementation(libs.valkey.glide)
-  implementation("io.ktor:ktor-client-logging:3.5.0")
+  implementation("io.ktor:ktor-client-logging:3.5.2")
 
   testImplementation(libs.ktor.server.test.host)
   testImplementation(libs.ktor.client.test.mock)

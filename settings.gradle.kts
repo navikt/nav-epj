@@ -1,6 +1,6 @@
 rootProject.name = "nav-epj"
 
-val ktorVersion = "3.5.1"
+val ktorVersion = "3.5.2"
 
 dependencyResolutionManagement {
   repositories {
