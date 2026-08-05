@@ -2,7 +2,7 @@
     <!-- Reduces the spammy logback logging during startup -->
     <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
 
-    <root level="TRACE">
+    <root level="INFO">
         <appender-ref ref="STDOUT_JSON"/>
     </root>
 

@@ -9,12 +9,9 @@ import com.google.fhir.model.r4.Uri
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
-import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.helsepersonell.Helsepersonell
 
 class PractitionerService(val epjClient: HttpClient) {
-
-  val log = logger()
 
   suspend fun getPractitioner(practitionerId: PractitionerId): Practitioner? {
     val httpResponse = epjClient.get("/api/helsepersonell/${practitionerId.value}")
@@ -26,8 +23,12 @@ class PractitionerService(val epjClient: HttpClient) {
   }
 
   fun Helsepersonell.toPractitioner(): Practitioner {
-    val givenNames = listOf(com.google.fhir.model.r4.String(value = this.navn.split(' ').first()))
-    val familyName = com.google.fhir.model.r4.String(value = this.navn.split(' ').last())
+    val givenNames =
+      listOf(
+        com.google.fhir.model.r4.String(value = this.navn.split(' ').first())
+      ) // TODO get dynamically
+    val familyName =
+      com.google.fhir.model.r4.String(value = this.navn.split(' ').last()) // TODO get dynamically
 
     return Practitioner(
       id = this.hpr.value,
