@@ -3,7 +3,6 @@ package no.nav.helse.epj.konsultasjon
 import kotlin.time.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import no.nav.helse.core.utils.AktivKonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.KonsultasjonStatus
@@ -18,8 +17,8 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
     return konsultasjonRepository.listByPasientId(pasientId)
   }
 
-  suspend fun getAktivKonsultasjon(pasientId: PatientId): Konsultasjon {
-    return konsultasjonRepository.findActiveByPasientId(pasientId) ?: throw AktivKonsultasjonNotFoundException(pasientId)
+  suspend fun getAktivKonsultasjon(pasientId: PatientId): Konsultasjon? {
+    return konsultasjonRepository.findActiveByPasientId(pasientId)
   }
 
   suspend fun getKonsultasjon(konsultasjonId: KonsultasjonId): Konsultasjon {
@@ -31,8 +30,8 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
     return konsultasjonRepository.listDiagnoser(konsultasjonId)
   }
 
-  suspend fun getJournalnotater(pasientId: PatientId): List<Journalnotat> {
-    return konsultasjonRepository.listJournalnotater(pasientId.value)
+  suspend fun getJournalnotat(journalnotatId: JournalnotatId): Journalnotat? {
+    return konsultasjonRepository.findJournalnotat(journalnotatId)
   }
 
   suspend fun createJournalnotat(journalnotat: Journalnotat): Boolean {

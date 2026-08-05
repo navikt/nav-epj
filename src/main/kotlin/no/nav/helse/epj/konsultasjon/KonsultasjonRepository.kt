@@ -254,15 +254,16 @@ class KonsultasjonRepository {
     )
   }
 
-  suspend fun listJournalnotater(pasientId: Uuid): List<Journalnotat> = dbQuery {
-    JournalnotatTable.selectAll().where(JournalnotatTable.pasientId eq pasientId).map {
-      it.toJournalnotat()
-    }
+  suspend fun findJournalnotat(journalnotatId: JournalnotatId): Journalnotat? = dbQuery {
+    JournalnotatTable.selectAll()
+      .where { (JournalnotatTable.id eq journalnotatId.value) }
+      .singleOrNull()
+      ?.toJournalnotat()
   }
 
   fun ResultRow.toJournalnotat(): Journalnotat =
     Journalnotat(
-      id = PatientId(this[JournalnotatTable.id]),
+      id = JournalnotatId(this[JournalnotatTable.id]),
       konsultasjonId = KonsultasjonId(this[JournalnotatTable.konsultasjonId]),
       pasientId = PatientId(this[JournalnotatTable.pasientId]),
       journalnotat = this[JournalnotatTable.journalnotat],

@@ -1,10 +1,7 @@
 package no.nav.helse.fhir.documentreference
 
-import com.google.fhir.model.r4.Bundle
 import com.google.fhir.model.r4.DocumentReference
-import com.google.fhir.model.r4.Enumeration
 import com.google.fhir.model.r4.FhirR4Json
-import com.google.fhir.model.r4.Uri
 import io.ktor.http.*
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
@@ -12,7 +9,6 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.*
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.logger
-import no.nav.helse.fhir.patient.PatientInputId
 
 fun Route.documentReferenceRoutes(
   documentReferenceService: DocumentReferenceService,
@@ -21,56 +17,34 @@ fun Route.documentReferenceRoutes(
 ) {
   val log = logger()
   route("/fhir") {
-    get("/DocumentReference") {
-      val patientId =
-        call.parameters["patient"]
-          ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing patient")
-      val type =
-        call.parameters["type"]
-          ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing type")
-
-      if (type != "urn:oid:2.16.578.1.12.4.1.1.9602|J01-2") {
-        return@get call.respond(
-          HttpStatusCode.BadRequest,
-          "Missing type",
-        ) // TODO: usikker på om vi trenger denne sjekken
-      }
+    get("/DocumentReference/{id}") {
+      val id =
+        call.parameters["id"]
+          ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing documentreference id")
 
       try {
-        val patientInputId = PatientInputId(Uuid.parse(patientId))
-        val documentReferences =
-          documentReferenceService.getDocumentReferences(patientInputId)
+        val docrefId = DocumentReferenceId(Uuid.parse(id))
+        val documentReference =
+          documentReferenceService.getDocumentReferences(docrefId)
             ?: return@get call.respond(
               HttpStatusCode.NotFound,
-              "No documentReference found for $patientInputId",
+              "No documentReference found for $docrefId",
             )
 
-        val bundle =
-          Bundle(
-            type = Enumeration(value = Bundle.BundleType.Searchset),
-            entry =
-              documentReferences.map { document ->
-                Bundle.Entry(
-                  fullUrl = Uri(value = "DocumentReference/${document.id}"),
-                  resource = document,
-                )
-              },
-          )
-
-        call.respondText(fhirjson.encodeToString(bundle), fhirContentType)
+        call.respondText(fhirjson.encodeToString(documentReference), fhirContentType)
       } catch (e: Exception) {
         log.error("Error while fetching DocumentReference", e)
         call.respond(HttpStatusCode.BadRequest, "DocumentReference returned error")
       }
     }
-    put("/DocumentReference/{id}") {
+    post("/DocumentReference") {
       val body = call.receiveText()
 
       try {
         val documentReference = fhirjson.decodeFromString(body) as DocumentReference
         val created = documentReferenceService.createDocumentReference(documentReference)
         if (created) {
-          call.respond(documentReference)
+          call.respond(HttpStatusCode.OK)
         } else {
           call.respond(HttpStatusCode.Conflict)
         }

@@ -41,15 +41,17 @@ class DocumentReferenceService(private val epjClient: HttpClient) {
     return response.status == HttpStatusCode.Created
   }
 
-  suspend fun getDocumentReferences(patientInputId: PatientInputId): List<DocumentReference>? {
-    val response = epjClient.get("/api/journalnotater/${patientInputId.value}")
+  suspend fun getDocumentReferences(documentReferenceId: DocumentReferenceId): DocumentReference? {
+    val response = epjClient.get("/api/journalnotat/${documentReferenceId.value}")
     if (response.status != HttpStatusCode.OK) return null
-    val journalNotater = response.body<List<Journalnotat>>()
+    val journalNotat = response.body<Journalnotat>()
+
     val responseHelsepersonell =
-      epjClient.get("/api/helsepersonell/patient/${patientInputId.value}")
+      epjClient.get("/api/helsepersonell/patient/${journalNotat.pasientId}")
+
     if (responseHelsepersonell.status != HttpStatusCode.OK) return null
     val hpr = responseHelsepersonell.body<List<HelsepersonellHpr>>()
-    return journalNotater.map { it.toDocumentReference(hpr) }
+    return journalNotat.toDocumentReference(hpr)
   }
 
   fun Journalnotat.toDocumentReference(hpr: List<HelsepersonellHpr>): DocumentReference {
@@ -72,7 +74,10 @@ class DocumentReferenceService(private val epjClient: HttpClient) {
           DocumentReference.Content(
             attachment =
               Attachment(
-                title = String(value = "tittel generert av Nav"), // TODO: denne skal vel ikke være hardkodet?
+                title =
+                  String(
+                    value = "tittel generert av Nav"
+                  ), // TODO: denne skal vel ikke være hardkodet?
                 language = Enumeration(value = CommonLanguages.No_No),
                 contentType = Code(value = "application/pdf"),
                 data = Base64Binary(value = "base64 PDF"),

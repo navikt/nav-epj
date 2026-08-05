@@ -150,7 +150,7 @@ class KonsultasjonServiceTest {
   fun `createJournalnotat returnerer true når nøyaktig en rad settes inn`() = runTest {
     val journalnotat =
       Journalnotat(
-        id = PatientId(Uuid.generateV4()),
+        id = JournalnotatId(Uuid.generateV4()),
         konsultasjonId = KonsultasjonId(Uuid.generateV4()),
         pasientId = PatientId(Uuid.generateV4()),
         journalnotat = "notat",
@@ -164,7 +164,7 @@ class KonsultasjonServiceTest {
   fun `createJournalnotat returnerer false når ingen rad settes inn`() = runTest {
     val journalnotat =
       Journalnotat(
-        id = PatientId(Uuid.generateV4()),
+        id = JournalnotatId(Uuid.generateV4()),
         konsultasjonId = KonsultasjonId(Uuid.generateV4()),
         pasientId = PatientId(Uuid.generateV4()),
         journalnotat = "notat",

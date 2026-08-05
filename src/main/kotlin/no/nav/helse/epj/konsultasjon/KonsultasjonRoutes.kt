@@ -50,15 +50,17 @@ fun Route.konsultasjonRoutes(
         }
       }
     }
-    route("/journalnotater") {
-      get("/{patientId}") {
-        val patientId = call.parameters["patientId"] ?: error("Missing journalnotatId")
+    route("/journalnotat") {
+      get("/{id}") {
+        val id = call.parameters["id"] ?: error("Missing journalnotatId")
         try {
-          val pasientUuid = PatientId(Uuid.parse(patientId))
-          log.info("looking up journalnotat for patient: $patientId")
-          val journalnotater = konsultasjonService.getJournalnotater(pasientUuid)
-          log.info("journalnotat: $journalnotater")
-          call.respond(journalnotater)
+          val journalnotatUuid = JournalnotatId(Uuid.parse(id))
+          log.info("looking up journalnotat for id: $id")
+          val journalnotat =
+            konsultasjonService.getJournalnotat(journalnotatUuid)
+              ?: call.respond(HttpStatusCode.NotFound)
+          log.info("journalnotat: $journalnotat")
+          call.respond(journalnotat)
         } catch (e: Exception) {
           call.respond(HttpStatusCode.BadRequest, e.message ?: "journalnotat feil")
         }
@@ -165,21 +167,15 @@ fun Route.konsultasjonRoutes(
             val pasientUuid = PatientId(Uuid.parse(pasientId))
             val konsultasjon =
               konsultasjonService.getAktivKonsultasjon(pasientUuid)
+                ?: return@get call.respond(HttpStatusCode.NotFound)
             valkeyService.set(principal.hpr, "aktiv-${pasientId}")
             call.respond(konsultasjon)
-
           } catch (exception: AktivKonsultasjonNotFoundException) {
             log.error("Kunne ikke hente konsultasjon", exception)
-            call.respond(
-              HttpStatusCode.NotFound,
-              "fant ikke aktiv konsultasjon for pasientId: {}",
-            )
+            call.respond(HttpStatusCode.NotFound, "fant ikke aktiv konsultasjon for pasientId: {}")
           } catch (exception: Exception) {
             log.error("Something went wrong", exception)
-            call.respond(
-              HttpStatusCode.InternalServerError,
-              "",
-            )
+            call.respond(HttpStatusCode.InternalServerError, "")
           }
         }
       }

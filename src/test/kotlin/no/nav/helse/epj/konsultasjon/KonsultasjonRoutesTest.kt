@@ -40,7 +40,11 @@ class KonsultasjonRoutesTest {
           }
         }
       }
-      routing { authenticate("wonderwall-helseid") { konsultasjonRoutes(konsultasjonService, valkeyService) } }
+      routing {
+        authenticate("wonderwall-helseid") {
+          konsultasjonRoutes(konsultasjonService, valkeyService)
+        }
+      }
     }
     client.block()
   }
