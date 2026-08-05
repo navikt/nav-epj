@@ -46,7 +46,7 @@ fun Route.konsultasjonRoutes(
           log.info("konsultasjon: $konsultasjon")
           call.respond(konsultasjon)
         } catch (e: KonsultasjonNotFoundException) {
-          call.respond(HttpStatusCode.BadRequest, e.message ?: "Konsultasjon feil")
+          call.respond(HttpStatusCode.NotFound, e.message ?: "Konsultasjon ikke funnet")
         }
       }
     }
@@ -56,9 +56,7 @@ fun Route.konsultasjonRoutes(
         try {
           val pasientUuid = PatientId(Uuid.parse(patientId))
           log.info("looking up journalnotat for patient: $patientId")
-          val journalnotater =
-            konsultasjonService.getJournalnotater(pasientUuid)
-              ?: call.respond(HttpStatusCode.NotFound)
+          val journalnotater = konsultasjonService.getJournalnotater(pasientUuid)
           log.info("journalnotat: $journalnotater")
           call.respond(journalnotater)
         } catch (e: Exception) {
@@ -153,7 +151,7 @@ fun Route.konsultasjonRoutes(
           }
         }
       }
-      route("/{patientId}/konsultasjon/aktiv}") {
+      route("/{patientId}/konsultasjon/aktiv") {
         get {
           log.info("henter aktiv konsultasjon")
           val pasientId =
@@ -167,14 +165,20 @@ fun Route.konsultasjonRoutes(
             val pasientUuid = PatientId(Uuid.parse(pasientId))
             val konsultasjon =
               konsultasjonService.getAktivKonsultasjon(pasientUuid)
-                ?: throw AktivKonsultasjonNotFoundException(pasientUuid)
             valkeyService.set(principal.hpr, "aktiv-${pasientId}")
             call.respond(konsultasjon)
+
+          } catch (exception: AktivKonsultasjonNotFoundException) {
+            log.error("Kunne ikke hente konsultasjon", exception)
+            call.respond(
+              HttpStatusCode.NotFound,
+              "fant ikke aktiv konsultasjon for pasientId: {}",
+            )
           } catch (exception: Exception) {
-            log.error("Kunne ikke hente eller opprette konsultasjon", exception)
+            log.error("Something went wrong", exception)
             call.respond(
               HttpStatusCode.InternalServerError,
-              "Konsultasjon kunne ikke hentes eller opprettes",
+              "",
             )
           }
         }
