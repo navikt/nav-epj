@@ -1,60 +1,51 @@
 # nav-epj
 
-## Features
+## Overview
 
-Here's a list of features included in this project:
+This application simulates an EHR system that launches applications using SMART on FHIR and exposes healthcare data through a FHIR API. 
 
-| Name                                                                             | Description                                                    |
-|----------------------------------------------------------------------------------|----------------------------------------------------------------|
-| [Routing](https://start.ktor.io/p/routing)                                       | Provides a structured routing DSL                              |
-| [Authentication](https://start.ktor.io/p/auth)                                   | Provides extension point for handling the Authorization header |
-| [Authentication OAuth](https://start.ktor.io/p/auth-oauth)                       | Handles OAuth Bearer authentication scheme                     |
-| [Authentication JWT](https://start.ktor.io/p/auth-jwt)                           | Handles JSON Web Token (JWT) bearer authentication scheme      |
-| [Dependency Injection](https://start.ktor.io/p/server-dependency-injection.html) | Provides dependency injection on the server                    |
+## Local Development
 
-## Building & Running
+### Prerequisites
 
-To build or run the project, use one of the following tasks:
+Before running the application, make sure you have the following installed:
 
-| Task                                                                             | Description                                                          |
-|----------------------------------------------------------------------------------|----------------------------------------------------------------------|
-| `./gradlew test`                                                                 | Run the tests                                                        |
-| `./gradlew runLocal`                                                             | Run local backend                                                    |
-| `./gradlew build`                                                                | Build everything                                                     |
-| `./gradlew buildFatJar`                                                          | Build an executable JAR of the server with all dependencies included |
-| `./gradlew buildImage`                                                           | Build the docker image to use with the fat JAR                       |
-| `./gradlew publishImageToLocalRegistry`                                          | Publish the docker image locally                                     |
-| `./gradlew run --args='-config=application.yaml -config=application-local.yaml'` | Run the server with local config                                     |
-| `./gradlew runDocker`                                                            | Run using the local docker image                                     |
-| `./gradlew spotlessApply`                                                        | Auto-format Kotlin code with ktfmt                                   |
-| `./gradlew spotlessCheck`                                                        | Check formatting without modifying files                             |
-| `./gradlew detekt`                                                               | Run static analysis                                                  |
+- [Node.js](https://nodejs.org/en/) (LTS)
+- [Yarn](https://yarnpkg.com/) (`corepack enable`)
+- [Docker](https://www.docker.com/) 
 
-## Code Quality
+### Running the application locally
 
-The project uses [Spotless](https://github.com/diffplug/spotless) with **ktfmt** (kotlinlangStyle)
-for formatting and [detekt](https://detekt.dev/) for static analysis.
+In addition to Node.js, Yarn and Docker, running the app locally requires PostgreSQL and
+Valkey. Start these with:                                                                                                                                                              
+```bash                                                                                                                                                                                                                                                                             ┃
+docker-compose up -d
+```
+   
+The frontend and backend must run in separate terminal windows. 
 
-Formatting is applied automatically during build (`spotlessCheck` depends on `spotlessApply`). To
-set up a pre-commit hook that formats before each commit:
+### Frontend
 
-```sh
-cp scripts/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+Navigate to the frontend directory and start the development server:
+
+```bash
+cd frontend
+yarn install
+yarn dev
 ```
 
-## Building and running frontend locally
+### Backend
 
-Frontend can be run separate from backend when developing locally. To do this, run the following
-commands in the terminal:
+From the backend directory, start the application using Gradle:
 
-1. `cd frontend`
-2. `yarn --immutable`
-3. `yarn dev`
+```bash
+./gradlew runLocal
+```
 
-TODO: Add functionality to proxy API calls to backend when running frontend locally.
+### Testing the SMART launch flow with SMART on FHIR Validator
 
-For the frontend to be served with ktor, the dist folder needs to be copied into the `resources`
-folder in the backend.
+To test the SMART launch flow locally,
+[the SMART on FHIR Validator](https://github.com/navikt/smart-on-fhir-validator) must also be running.
+Follow the instructions in the validator repository to start it before testing the launch flow.
 
-TODO: Add github action to build and copy dist folder into `resources` when building backend for
-nais envinronments.
+
