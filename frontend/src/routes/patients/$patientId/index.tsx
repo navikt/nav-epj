@@ -21,13 +21,13 @@ async function fetchPatient(id: string): Promise<Pasient> {
 }
 
 async function fetchKonsultasjoner(patientId: string) {
-  return await fetch(`/api/patient/${patientId}/konsultasjoner`).then((res) =>
+  return await fetch(`/api/patients/${patientId}/konsultasjoner`).then((res) =>
     res.json(),
   );
 }
 
 async function opprettKonsultasjon(patientId: string) {
-  return await fetch(`/api/patient/${patientId}/konsultasjon`, { method: 'POST' }).then((res) => res.json())
+  return await fetch(`/api/patients/${patientId}/konsultasjoner`, { method: 'POST' }).then((res) => res.json())
 }
 
 function RouteComponent() {

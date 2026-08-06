@@ -5,6 +5,7 @@ import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.helse.core.utils.logger
+import no.nav.helse.fhir.practitionerId
 
 fun Route.pracitionerRoutes(
   practitionerService: PractitionerService,
@@ -14,19 +15,12 @@ fun Route.pracitionerRoutes(
   val log = logger()
   route("/fhir") {
     get("/Practitioner/{practitionerId}") {
-      val practitionerId =
-        call.parameters["practitionerId"]
-          ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing id")
+      val practitionerId = call.practitionerId()
 
-      try {
-        val practitioner =
-          practitionerService.getPractitioner(PractitionerId(practitionerId))
-            ?: return@get call.respond(HttpStatusCode.NotFound)
-        call.respondText(fhirR4Json.encodeToString(practitioner), fhirContentType)
-      } catch (e: Exception) {
-        log.error("Error when fetching practitioner $practitionerId", e)
-        call.respond(HttpStatusCode.InternalServerError, "Unable to get practitioner")
-      }
+      val practitioner =
+        practitionerService.getPractitioner(practitionerId)
+          ?: return@get call.respond(HttpStatusCode.NotFound)
+      call.respondText(fhirR4Json.encodeToString(practitioner), fhirContentType)
     }
   }
 }

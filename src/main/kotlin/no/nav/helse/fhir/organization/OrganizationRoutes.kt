@@ -5,6 +5,7 @@ import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.helse.core.utils.logger
+import no.nav.helse.fhir.organizationId
 
 fun Route.organizationRoutes(
   organizationService: OrganizationService,
@@ -14,19 +15,11 @@ fun Route.organizationRoutes(
   val log = logger()
   route("/fhir") {
     get("/Organization/{organizationId}") {
-      val organizationId =
-        call.parameters["organizationId"]
-          ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing id")
-
-      try {
-        val organization =
-          organizationService.getOrganization(OrganizationId(organizationId))
-            ?: return@get call.respond(HttpStatusCode.NotFound)
-        call.respondText(fhirR4Json.encodeToString(organization), fhirContentType)
-      } catch (e: Exception) {
-        log.error("Error when fetching organization $organizationId", e)
-        call.respond(HttpStatusCode.BadRequest, "Unable to fetch organization")
-      }
+      val organizationId = call.organizationId()
+      val organization =
+        organizationService.getOrganization(organizationId)
+          ?: return@get call.respond(HttpStatusCode.NotFound)
+      call.respondText(fhirR4Json.encodeToString(organization), fhirContentType)
     }
   }
 }

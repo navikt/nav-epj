@@ -56,7 +56,7 @@ function RouteComponent() {
             ferdigstill: ferdigstill,
             konsultasjonId: konsultasjonId
         }
-        const res = await fetch(`/api/patient/${patientId}/konsultasjon`, { method: 'PATCH', body: JSON.stringify(requestBody), headers: { "Content-Type": "application/json" } }).then((res) => res.ok)
+        const res = await fetch(`/api/patients/${patientId}/konsultasjoner`, { method: 'PATCH', body: JSON.stringify(requestBody), headers: { "Content-Type": "application/json" } }).then((res) => res.ok)
         if (!res) {
             console.error('Kunne ikke lagre')
         }

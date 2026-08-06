@@ -4,8 +4,8 @@ import com.google.fhir.model.r4.FhirR4Json
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.logger
+import no.nav.helse.fhir.encounterId
 
 fun Route.encounterRoutes(
   encounterService: EncounterService,
@@ -15,20 +15,10 @@ fun Route.encounterRoutes(
   val log = logger()
   route("/fhir") {
     get("/Encounter/{encounterId}") {
-      val id =
-        call.parameters["encounterId"]
-          ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing id")
-
-      try {
-        val encounterId = EncounterId(Uuid.parse(id))
-        val encounter =
-          encounterService.getEncounterById(encounterId)
-            ?: return@get call.respond(HttpStatusCode.NotFound)
-        call.respondText(fhirR4Json.encodeToString(encounter), fhirContentType)
-      } catch (e: Exception) {
-        log.error("Encounter returned error while fetching Encounters", e)
-        call.respond(HttpStatusCode.InternalServerError, "Unable to get encounter")
-      }
+      val id = call.encounterId()
+      val encounter =
+        encounterService.getEncounterById(id) ?: return@get call.respond(HttpStatusCode.NotFound)
+      call.respondText(fhirR4Json.encodeToString(encounter), fhirContentType)
     }
   }
 }

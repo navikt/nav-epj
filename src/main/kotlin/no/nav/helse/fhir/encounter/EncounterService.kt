@@ -24,7 +24,7 @@ class EncounterService(private val epjClient: HttpClient) {
   }
 
   suspend fun getActiveEncounterByPatient(patientId: PatientInputId): Encounter? {
-    val response = epjClient.get("/api/patient/${patientId.value}/konsultasjon")
+    val response = epjClient.get("/api/patients/${patientId.value}/konsultasjoner/active")
     if (response.status != HttpStatusCode.OK) return null // TODO tidy
     return response.body<Konsultasjon>().toEncounter()
   }

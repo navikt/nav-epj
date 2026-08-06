@@ -4,18 +4,25 @@ import com.google.fhir.model.r4.FhirR4Json
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
+import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.di.*
 import io.ktor.server.routing.*
+import kotlin.uuid.Uuid
 import no.nav.helse.fhir.condition.ConditionService
 import no.nav.helse.fhir.condition.conditionRoutes
+import no.nav.helse.fhir.documentreference.DocumentReferenceId
 import no.nav.helse.fhir.documentreference.DocumentReferenceService
 import no.nav.helse.fhir.documentreference.documentReferenceRoutes
+import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.encounter.EncounterService
 import no.nav.helse.fhir.encounter.encounterRoutes
+import no.nav.helse.fhir.organization.OrganizationId
 import no.nav.helse.fhir.organization.OrganizationService
 import no.nav.helse.fhir.organization.organizationRoutes
+import no.nav.helse.fhir.patient.PatientInputId
 import no.nav.helse.fhir.patient.PatientService
 import no.nav.helse.fhir.patient.patientRoutes
+import no.nav.helse.fhir.practitioner.PractitionerId
 import no.nav.helse.fhir.practitioner.PractitionerService
 import no.nav.helse.fhir.practitioner.pracitionerRoutes
 
@@ -39,4 +46,32 @@ fun Application.configureFhirModule() {
       documentReferenceRoutes(documentReferenceService, fhirJson, fhirContentType)
     }
   }
+}
+
+fun ApplicationCall.encounterId(): EncounterId = EncounterId(uuidParameter("encounterId"))
+
+fun ApplicationCall.documentReferenceId(): DocumentReferenceId =
+  DocumentReferenceId(uuidParameter("documentreferenceId"))
+
+fun ApplicationCall.organizationId(): OrganizationId =
+  OrganizationId(stringParameter("organizationId"))
+
+fun ApplicationCall.patientInputId(): PatientInputId = PatientInputId(uuidParameter("subject"))
+
+fun ApplicationCall.practitionerId(): PractitionerId =
+  PractitionerId(stringParameter("practitionerId"))
+
+private fun ApplicationCall.uuidParameter(name: String): Uuid {
+  val value = parameters[name] ?: throw BadRequestException("Mangler parameteren '$name'")
+
+  return try {
+    Uuid.parse(value)
+  } catch (exception: IllegalArgumentException) {
+    throw BadRequestException("Parameteren '$name' er ikke en gyldig UUID", exception)
+  }
+}
+
+private fun ApplicationCall.stringParameter(name: String): String {
+  val value = parameters[name] ?: throw BadRequestException("Mangler parameteren '$name'")
+  return value
 }

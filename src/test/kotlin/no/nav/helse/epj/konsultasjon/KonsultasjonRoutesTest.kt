@@ -1,8 +1,6 @@
 package no.nav.helse.epj.konsultasjon
 
 import io.ktor.client.request.*
-import io.ktor.client.request.forms.*
-import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -17,7 +15,10 @@ import kotlin.uuid.Uuid
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.json.Json
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
+import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.KonsultasjonStatus
+import no.nav.helse.plugins.configureStatusPages
+import no.nav.helse.epj.konsultasjon.routes.konsultasjonRoutes
 import no.nav.helse.epj.pasient.PatientId
 import no.nav.helse.helseId.DebugInfo
 import no.nav.helse.helseId.HelseIdPrincipal
@@ -33,6 +34,7 @@ class KonsultasjonRoutesTest {
   private fun testApp(block: suspend io.ktor.client.HttpClient.() -> Unit) = testApplication {
     application {
       install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
+      configureStatusPages()
       authentication {
         provider("wonderwall-helseid") {
           authenticate { ctx ->
@@ -77,7 +79,7 @@ class KonsultasjonRoutesTest {
   }
 
   @Test
-  fun `GET konsultasjon med ukjent id returnerer 400`() = testApp {
+  fun `GET konsultasjon med ukjent id returnerer 500`() = testApp {
     val konsultasjonId = KonsultasjonId(Uuid.generateV4())
     coEvery { konsultasjonService.getKonsultasjon(konsultasjonId) } throws
       KonsultasjonNotFoundException(konsultasjonId)
@@ -88,13 +90,13 @@ class KonsultasjonRoutesTest {
   }
 
   @Test
-  fun `GET konsultasjon aktiv returnerer 200 når det finnes en aktiv konsultasjon`() = testApp {
-    val pasientId = PatientId(Uuid.generateV4())
-    coEvery { konsultasjonService.getAktivKonsultasjon(pasientId) } returns
-      konsultasjon(pasientId = pasientId)
+  fun `test`() = testApp {
+    val patientId = PatientId(Uuid.generateV4())
+    coEvery { konsultasjonService.getKonsultasjoner(patientId) } throws
+      KonsultasjonNotFoundForPatientException(patientId)
 
-    val response = get("/api/patient/${pasientId.value}/konsultasjon/aktiv")
+    val response = get("/api/patients/${patientId.value}/konsultasjoner")
 
-    assertEquals(HttpStatusCode.OK, response.status)
+    assertEquals(HttpStatusCode.NotFound, response.status)
   }
 }

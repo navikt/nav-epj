@@ -54,6 +54,7 @@ dependencies {
   implementation(ktorLibs.serialization.jackson)
   implementation(ktorLibs.server.openapi)
   implementation(ktorLibs.server.cors)
+  implementation(ktorLibs.server.statusPages)
   implementation(libs.logback.classic)
   implementation(libs.logback.encoder)
   implementation(libs.exposed.core)

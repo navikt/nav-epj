@@ -3,16 +3,13 @@ package no.nav.helse.epj.legekontor
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlin.uuid.Uuid
+import no.nav.helse.epj.legekontorId
 
 fun Route.legekontorRoutes(legekontorService: LegekontorService) {
   route("api") {
     get("/legekontor/{legekontorId}") {
-      val idParam =
-        call.parameters["legekontorId"]
-          ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing id")
-      val legekontorId = LegekontorId(Uuid.parse(idParam))
-      val legekontor = legekontorService.getLegekontor(legekontorId)
+      val idParam = call.legekontorId()
+      val legekontor = legekontorService.getLegekontor(idParam)
       call.respond(legekontor)
     }
   }
