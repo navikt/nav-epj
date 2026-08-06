@@ -1,7 +1,8 @@
-import { Button, Textarea, UNSAFE_Combobox } from '@navikt/ds-react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { Button, Link, Textarea, UNSAFE_Combobox } from '@navikt/ds-react'
+import {createFileRoute, useNavigate} from '@tanstack/react-router'
 import { useEffect, useState, type MouseEvent } from 'react'
 import { epjDiagnoser } from '@data/diagnoses'
+import {getSykInnUrl} from "@utils/env.ts";
 
 export const Route = createFileRoute(
     '/patients/$patientId/konsultasjon/$konsultasjonId/',
@@ -81,6 +82,7 @@ function RouteComponent() {
 
             <div className="flex flex-row gap-4">
                 <Button onClick={() => { navigate({ to: `/patients/$patientId/konsultasjon/$konsultasjonId/sykmelding`, params: { patientId, konsultasjonId } }) }}>Start sykmelding (not implemented)</Button>
+                <Link href={`/fhir/launch?url=${getSykInnUrl()}`} target="_blank" > åpne sykmelding i ny fane </Link>
                 <Button onClick={() => { navigate({ to: `/patients/$patientId/konsultasjon/$konsultasjonId/validator`, params: { patientId, konsultasjonId } }) }}>Start valideringsapp</Button>
             </div>
         </div>)
