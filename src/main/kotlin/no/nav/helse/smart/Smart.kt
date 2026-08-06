@@ -21,6 +21,8 @@ data class SmartDiscoveryDocument(
   @SerialName("revocation_endpoint") val revocationEndpoint: String,
   @SerialName("code_challenge_methods_supported") val codeChallengeMethodsSupported: List<String>,
   @SerialName("capabilities") val capabilities: List<String>,
+  @SerialName("token_endpoint_auth_signing_alg_values_supported")
+  val tokenEndpointAuthSigningAlgValuesSupported: List<String>,
 )
 
 @Serializable
@@ -33,8 +35,8 @@ data class TokenResponse(
   @EncodeDefault @SerialName("token_type") val tokenType: String = "Bearer",
   @EncodeDefault @SerialName("expires_in") val expiresIn: Int = 3600,
   /**
-   * OPTIONAL if identical to the requested scope. TODO remove default values. Available scopes are
-   * shown in the discovery document.
+   * OPTIONAL if identical to the requested scope. TODO WARNING remove default values. Available
+   * scopes are shown in the discovery document.
    */
   @EncodeDefault
   @SerialName("scope")

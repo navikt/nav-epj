@@ -6,6 +6,7 @@ import no.nav.helse.core.db.configureDatabases
 import no.nav.helse.epj.configureEpjModule
 import no.nav.helse.fhir.configureFhirModule
 import no.nav.helse.helseId.configureHelseId
+import no.nav.helse.plugins.configureCallLogging
 import no.nav.helse.plugins.configureCors
 import no.nav.helse.plugins.configureHealthCheck
 import no.nav.helse.plugins.configureSerialization
@@ -21,6 +22,7 @@ fun Application.module() {
   configureDatabases()
   configureHealthCheck()
   configureCors()
+  configureCallLogging()
 
   configureHelseId()
   configureSmartSecurity()

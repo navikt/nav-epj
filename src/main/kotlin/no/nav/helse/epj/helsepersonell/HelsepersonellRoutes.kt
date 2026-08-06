@@ -10,6 +10,7 @@ import no.nav.helse.epj.pasient.PatientId
 import no.nav.helse.helseId.loggedInUser
 
 fun Route.helsepersonellRoutes(helsepersonellService: HelsepersonellService) {
+
   route("/api") {
     route("/helsepersonell") {
       get("/me") {

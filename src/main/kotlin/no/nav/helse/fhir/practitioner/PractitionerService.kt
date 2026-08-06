@@ -1,6 +1,7 @@
 package no.nav.helse.fhir.practitioner
 
 import com.google.fhir.model.r4.Canonical
+import com.google.fhir.model.r4.HumanName
 import com.google.fhir.model.r4.Identifier
 import com.google.fhir.model.r4.Meta
 import com.google.fhir.model.r4.Practitioner
@@ -22,8 +23,16 @@ class PractitionerService(val epjClient: HttpClient) {
   }
 
   fun Helsepersonell.toPractitioner(): Practitioner {
+    val givenNames =
+      listOf(
+        com.google.fhir.model.r4.String(value = this.navn.split(' ').first())
+      ) // TODO get dynamically
+    val familyName =
+      com.google.fhir.model.r4.String(value = this.navn.split(' ').last()) // TODO get dynamically
+
     return Practitioner(
       id = this.hpr.value,
+      name = listOf(HumanName(family = familyName, given = givenNames)),
       meta =
         Meta(
           profile =
