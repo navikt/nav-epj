@@ -56,7 +56,12 @@ class EncounterService(private val epjClient: HttpClient) {
           )
         },
       serviceProvider =
-        Reference(reference = com.google.fhir.model.r4.String(value = "Organization/Hardkodet")),
+        Reference(
+          reference =
+            com.google.fhir.model.r4.String(
+              value = "Organization/a1000000-0000-0000-0000-000000000001"
+            )
+        ),
       status = Enumeration(value = status),
       type =
         listOf(

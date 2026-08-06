@@ -14,7 +14,7 @@ fun Route.encounterRoutes(
 ) {
   val log = logger()
   route("/fhir") {
-    get("/Encounter/{encounterId}") {
+    get("/Encounter/{encounter}") {
       val id = call.encounterId()
       val encounter =
         encounterService.getEncounterById(id) ?: return@get call.respond(HttpStatusCode.NotFound)

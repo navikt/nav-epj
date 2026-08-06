@@ -42,7 +42,9 @@ fun Route.konsultasjonRoutes(
       }
       get("/active") {
         val pasientId = call.patientId()
-        val konsultasjoner = konsultasjonService.getAktivKonsultasjon(pasientId) ?: return@get call.respond(HttpStatusCode.NotFound)
+        val konsultasjoner =
+          konsultasjonService.getAktivKonsultasjon(pasientId)
+            ?: return@get call.respond(HttpStatusCode.NotFound)
         call.respond(konsultasjoner)
       }
     }

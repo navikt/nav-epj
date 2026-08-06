@@ -17,7 +17,7 @@ class OrganizationService(private val epjClient: HttpClient) {
   val log = logger()
 
   suspend fun getOrganization(id: OrganizationId): Organization? {
-    val httpResponse = epjClient.get("api/legekontor/$id")
+    val httpResponse = epjClient.get("api/legekontor/${id.value}")
     if (httpResponse.status.value == 200) {
       return httpResponse.body<Legekontor>().toOrganization()
     }

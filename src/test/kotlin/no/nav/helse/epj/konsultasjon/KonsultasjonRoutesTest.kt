@@ -17,12 +17,12 @@ import kotlinx.serialization.json.Json
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.KonsultasjonStatus
-import no.nav.helse.plugins.configureStatusPages
 import no.nav.helse.epj.konsultasjon.routes.konsultasjonRoutes
 import no.nav.helse.epj.pasient.PatientId
 import no.nav.helse.helseId.DebugInfo
 import no.nav.helse.helseId.HelseIdPrincipal
 import no.nav.helse.helseId.User
+import no.nav.helse.plugins.configureStatusPages
 import no.nav.helse.smart.valkey.ValkeyService
 import org.junit.Test
 

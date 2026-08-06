@@ -48,7 +48,7 @@ fun Application.configureFhirModule() {
   }
 }
 
-fun ApplicationCall.encounterId(): EncounterId = EncounterId(uuidParameter("encounterId"))
+fun ApplicationCall.encounterId(): EncounterId = EncounterId(uuidParameter("encounter"))
 
 fun ApplicationCall.documentReferenceId(): DocumentReferenceId =
   DocumentReferenceId(uuidParameter("documentreferenceId"))

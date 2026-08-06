@@ -5,6 +5,7 @@ import kotlin.uuid.Uuid
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import no.nav.helse.core.db.DiagnoseTable
+import no.nav.helse.core.db.DiagnoseTable.konsultasjonId
 import no.nav.helse.core.db.DiagnoseTable.patientId
 import no.nav.helse.core.db.JournalnotatTable
 import no.nav.helse.core.db.KonsultasjonHelsepersonell
@@ -73,6 +74,10 @@ class KonsultasjonRepository {
 
   suspend fun listDiagnoser(id: PatientId) = dbQuery {
     DiagnoseTable.selectAll().where { (patientId eq id.value) }.map { it.toDiagnose() }
+  }
+
+  suspend fun listDiagnoser(id: KonsultasjonId) = dbQuery {
+    DiagnoseTable.selectAll().where { (konsultasjonId eq id.value) }.map { it.toDiagnose() }
   }
 
   suspend fun insert(opprettKonsultasjon: OpprettKonsultasjon) = dbQuery {

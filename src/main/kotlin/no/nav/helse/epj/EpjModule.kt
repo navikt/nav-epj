@@ -22,7 +22,6 @@ import no.nav.helse.epj.legekontor.legekontorRoutes
 import no.nav.helse.epj.pasient.PasientService
 import no.nav.helse.epj.pasient.PatientId
 import no.nav.helse.epj.pasient.pasientRoutes
-import no.nav.helse.plugins.configureStatusPages
 import no.nav.helse.smart.valkey.ValkeyService
 
 fun Application.configureEpjModule() {
