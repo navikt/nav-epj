@@ -21,6 +21,7 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.insertReturning
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -199,23 +200,35 @@ class KonsultasjonRepository {
       .insertedCount
   }
 
+  suspend fun insertJournalnotat(journalnotat: Journalnotat): Int = dbQuery {
+    JournalnotatTable.insert {
+        it[JournalnotatTable.id] = journalnotat.id.value
+        it[JournalnotatTable.konsultasjonId] = journalnotat.konsultasjonId.value
+        it[JournalnotatTable.pasientId] = journalnotat.pasientId.value
+        it[JournalnotatTable.journalnotat] = journalnotat.journalnotat
+      }
+      .insertedCount
+  }
+
   suspend fun updateDiagnose(
     diagnose: OpprettDiagnoseRequest,
     patientId: Uuid,
     konsultasjonId: Uuid,
   ): Int = dbQuery {
+    val system = diagnose.system.toString()
+
     val kodeverkDiagnose =
       no.nav.tsm.diagnoser.Diagnose.from(diagnose.system.toString(), diagnose.kode)
         ?: throw UgyldigDiagnoseException(diagnose.kode, diagnose.system.toString())
 
-    DiagnoseTable.insert {
-      it[DiagnoseTable.konsultasjonId] = konsultasjonId
-      it[DiagnoseTable.patientId] = patientId
-      it[diagnosekode] = diagnose.kode
-      it[diagnosesystem] = diagnose.system.toString()
-      it[beskrivelse] = kodeverkDiagnose.text
-    }
-    1
+    DiagnoseTable.insertIgnore {
+        it[DiagnoseTable.konsultasjonId] = konsultasjonId
+        it[DiagnoseTable.patientId] = patientId
+        it[diagnosekode] = diagnose.kode
+        it[diagnosesystem] = system
+        it[beskrivelse] = kodeverkDiagnose.text
+      }
+      .insertedCount
   }
 
   private fun toEpjKonsultasjon(konsultasjon: ResultRow): Konsultasjon {
@@ -241,11 +254,11 @@ class KonsultasjonRepository {
     )
   }
 
-  suspend fun findJournalnotat(journalnotatId: Uuid): Journalnotat? = dbQuery {
+  suspend fun findJournalnotat(journalnotatId: JournalnotatId): Journalnotat? = dbQuery {
     JournalnotatTable.selectAll()
-      .where(JournalnotatTable.id eq journalnotatId)
+      .where { (JournalnotatTable.id eq journalnotatId.value) }
       .singleOrNull()
-      ?.toJournalnotat() ?: return@dbQuery null
+      ?.toJournalnotat()
   }
 
   fun ResultRow.toJournalnotat(): Journalnotat =

@@ -7,7 +7,6 @@ import org.jetbrains.exposed.v1.datetime.datetime
 object PasientTable : Table("pasient") {
   val id = uuid("id")
   val legekontorId = reference("legekontor_id", refColumn = LegekontorTable.id)
-  val hpr = text("hpr")
   val navn = text("navn")
   val fnr = text("fnr")
   val created = datetime("created_at")
@@ -58,9 +57,23 @@ object DiagnoseTable : Table("diagnose") {
   val diagnosekode = text("diagnosekode")
   val diagnosesystem = text("diagnosesystem")
   val beskrivelse = text("beskrivelse")
+
+  init {
+    uniqueIndex(
+      "diagnose_konsultasjon_system_kode_unique",
+      konsultasjonId,
+      diagnosekode,
+      diagnosesystem,
+    )
+  }
 }
 
 object KonsultasjonHelsepersonell : Table("konsultasjon_helsepersonell") {
   val konsultasjonId = reference("konsultasjon_id", refColumn = KonsultasjonTable.id)
+  val hpr = text("hpr")
+}
+
+object PasientHelsepersonell : Table("pasient_helsepersonell") {
+  val pasientId = reference("pasient_id", refColumn = PasientTable.id)
   val hpr = text("hpr")
 }

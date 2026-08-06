@@ -7,6 +7,9 @@ import no.nav.helse.epj.pasient.PatientId
 class HelsepersonellNotFoundException(hpr: HelsepersonellHpr) :
   RuntimeException("Fant ikke helsepersonell med HPR=${hpr.value}")
 
+class HelsepersonellForPatientNotFoundException(patient: PatientId) :
+  RuntimeException("Fant ikke helsepersonell på pasient med id=${patient.value}")
+
 class PasientCreationException : RuntimeException("Pasient ble ikke opprettet")
 
 class KonsultasjonNotFoundException(konsultasjonId: KonsultasjonId) :

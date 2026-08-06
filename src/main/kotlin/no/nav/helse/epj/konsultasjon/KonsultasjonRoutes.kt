@@ -46,7 +46,33 @@ fun Route.konsultasjonRoutes(
           log.info("konsultasjon: $konsultasjon")
           call.respond(konsultasjon)
         } catch (e: KonsultasjonNotFoundException) {
-          call.respond(HttpStatusCode.BadRequest, e.message ?: "Konsultasjon feil")
+          call.respond(HttpStatusCode.NotFound, e.message ?: "Konsultasjon ikke funnet")
+        }
+      }
+    }
+    route("/journalnotat") {
+      get("/{id}") {
+        val id = call.parameters["id"] ?: error("Missing journalnotatId")
+        try {
+          val journalnotatUuid = JournalnotatId(Uuid.parse(id))
+          log.info("looking up journalnotat for id: $id")
+          val journalnotat =
+            konsultasjonService.getJournalnotat(journalnotatUuid)
+              ?: call.respond(HttpStatusCode.NotFound)
+          log.info("journalnotat: $journalnotat")
+          call.respond(journalnotat)
+        } catch (e: Exception) {
+          call.respond(HttpStatusCode.BadRequest, e.message ?: "journalnotat feil")
+        }
+      }
+    }
+    route("/journalnotat") {
+      post {
+        val request = call.receive<Journalnotat>()
+        if (konsultasjonService.createJournalnotat(request)) {
+          call.respond(HttpStatusCode.Created)
+        } else {
+          call.respond(HttpStatusCode.InternalServerError, "Kunne ikke opprette journalnotat")
         }
       }
     }
@@ -127,7 +153,7 @@ fun Route.konsultasjonRoutes(
           }
         }
       }
-      route("/{patientId}/konsultasjon/aktiv}") {
+      route("/{patientId}/konsultasjon/aktiv") {
         get {
           log.info("henter aktiv konsultasjon")
           val pasientId =
@@ -141,15 +167,15 @@ fun Route.konsultasjonRoutes(
             val pasientUuid = PatientId(Uuid.parse(pasientId))
             val konsultasjon =
               konsultasjonService.getAktivKonsultasjon(pasientUuid)
-                ?: throw AktivKonsultasjonNotFoundException(pasientUuid)
+                ?: return@get call.respond(HttpStatusCode.NotFound)
             valkeyService.set(principal.hpr, "aktiv-${pasientId}")
             call.respond(konsultasjon)
+          } catch (exception: AktivKonsultasjonNotFoundException) {
+            log.error("Kunne ikke hente konsultasjon", exception)
+            call.respond(HttpStatusCode.NotFound, "fant ikke aktiv konsultasjon for pasientId: {}")
           } catch (exception: Exception) {
-            log.error("Kunne ikke hente eller opprette konsultasjon", exception)
-            call.respond(
-              HttpStatusCode.InternalServerError,
-              "Konsultasjon kunne ikke hentes eller opprettes",
-            )
+            log.error("Something went wrong", exception)
+            call.respond(HttpStatusCode.InternalServerError, "")
           }
         }
       }

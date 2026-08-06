@@ -15,6 +15,7 @@ import no.nav.helse.epj.legekontor.LegekontorService
 import no.nav.helse.epj.pasient.PasientRepository
 import no.nav.helse.epj.pasient.PasientService
 import no.nav.helse.fhir.condition.ConditionService
+import no.nav.helse.fhir.documentreference.DocumentReferenceService
 import no.nav.helse.fhir.encounter.EncounterService
 import no.nav.helse.fhir.initEpjClient
 import no.nav.helse.fhir.organization.OrganizationService
@@ -44,7 +45,7 @@ fun Application.configureDependencies() {
     provide(LegekontorService::class)
 
     provide(ConditionService::class)
-    // provide(DocumentReferenceService::class)
+    provide(DocumentReferenceService::class)
     provide(EncounterService::class)
     provide(OrganizationService::class)
     provide(PatientService::class)

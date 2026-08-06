@@ -11,7 +11,7 @@ import no.nav.helse.epj.legekontor.LegekontorId
 data class Pasient(
   val id: PatientId,
   val legekontorId: LegekontorId,
-  val hpr: HelsepersonellHpr,
+  val hprNumbers: List<HelsepersonellHpr>,
   val navn: String,
   val fnr: String,
 )
