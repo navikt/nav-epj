@@ -18,7 +18,9 @@ fun Route.encounterRoutes(
       val id = call.encounterId()
       val encounter =
         encounterService.getEncounterById(id) ?: return@get call.respond(HttpStatusCode.NotFound)
-      call.respondText(fhirR4Json.encodeToString(encounter), fhirContentType)
+      val fhirJson = fhirR4Json.encodeToString(encounter)
+      log.info("encounter: $fhirJson")
+      call.respondText(fhirJson, fhirContentType)
     }
   }
 }

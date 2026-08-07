@@ -1,0 +1,4 @@
+TODO:
+
+- fikse Organization docs i syk-inn - legg på name i JSON-struktur link: https://github.com/navikt/syk-inn/blob/main/docs/fhir/organization.md
+- fikse Condition docs i syk-inn - legg på encounter reference i JSON-struktur link: https://github.com/navikt/syk-inn/blob/main/docs/fhir/condition.md

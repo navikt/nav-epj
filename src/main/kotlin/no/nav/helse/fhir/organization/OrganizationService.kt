@@ -27,6 +27,7 @@ class OrganizationService(private val epjClient: HttpClient) {
   fun Legekontor.toOrganization(): Organization {
     return Organization(
       id = this.id.value.toString(),
+      name = com.google.fhir.model.r4.String(value = this.navn),
       meta =
         Meta(
           profile =
@@ -38,11 +39,11 @@ class OrganizationService(private val epjClient: HttpClient) {
         listOf(
           Identifier(
             system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.101"),
-            value = com.google.fhir.model.r4.String(this.id.value.toString()),
+            value = com.google.fhir.model.r4.String(value = this.id.value.toString()),
           ),
           Identifier(
             system = Uri(value = "urn:oid:2.16.578.1.12.4.1.2"),
-            value = com.google.fhir.model.r4.String("organisasjonsnummer / HER"),
+            value = com.google.fhir.model.r4.String(value = "organisasjonsnummer / HER"),
           ),
         ),
       telecom =

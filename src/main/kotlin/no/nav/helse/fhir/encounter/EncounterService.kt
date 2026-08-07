@@ -48,6 +48,20 @@ class EncounterService(private val epjClient: HttpClient) {
               Reference(reference = com.google.fhir.model.r4.String(value = "Practitioner/$hpr"))
           )
         },
+      reasonCode =
+        listOf(
+          CodeableConcept(
+            coding =
+              listOf(
+                Coding(
+                  system = Uri(value = "urn:oid:2.16.578.1.12.4.1.1.7170"),
+                  code = Code(value = this.diagnoser.first().kode),
+                  display =
+                    com.google.fhir.model.r4.String(value = this.diagnoser.first().beskrivelse),
+                )
+              )
+          )
+        ),
       diagnosis =
         this.diagnoser.map {
           Encounter.Diagnosis(
@@ -68,7 +82,10 @@ class EncounterService(private val epjClient: HttpClient) {
           CodeableConcept(
             coding =
               listOf(
-                Coding(system = Uri("urn:oid:2.16.578.1.12.4.1.1.8432"), code = Code("kontakttype"))
+                Coding(
+                  system = Uri(value = "urn:oid:2.16.578.1.12.4.1.1.8432"),
+                  code = Code(value = "kontakttype"),
+                )
               )
           )
         ),

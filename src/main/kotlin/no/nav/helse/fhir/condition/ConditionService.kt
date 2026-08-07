@@ -19,12 +19,16 @@ import no.nav.helse.fhir.patient.PatientInputId
 class ConditionService(private val epjClient: HttpClient) {
 
   suspend fun getConditionsByPatientId(patientId: PatientInputId): Bundle {
-    val diagnoser = epjClient.get("/api/diagnoser?patientId=${patientId.value}").body<List<Diagnose>>()
+    val diagnoser =
+      epjClient.get("/api/diagnoser?patientId=${patientId.value}").body<List<Diagnose>>()
+    // return diagnoser.toCondition()
     return toBundle(diagnoser)
   }
 
   suspend fun getConditionsByEncounterId(encounterId: EncounterId): Bundle {
-    val diagnoser = epjClient.get("/api/diagnoser?konsultasjonId=${encounterId.value}").body<List<Diagnose>>()
+    val diagnoser =
+      epjClient.get("/api/diagnoser?konsultasjonId=${encounterId.value}").body<List<Diagnose>>()
+    // return diagnoser.toCondition(encounterId)
     return toBundle(diagnoser)
   }
 
@@ -41,7 +45,12 @@ class ConditionService(private val epjClient: HttpClient) {
     return bundle
   }
 
-  private fun List<Diagnose>.toCondition(): List<Condition> {
+  private fun List<Diagnose>.toCondition(encounterId: EncounterId? = null): List<Condition> {
+    val encounter =
+      encounterId?.value?.let {
+        Reference(reference = com.google.fhir.model.r4.String(value = "Encounter/$it"))
+      }
+
     val conditionList =
       this.map { diagnose ->
         val oid =
@@ -51,12 +60,13 @@ class ConditionService(private val epjClient: HttpClient) {
               DiagnoseSystem.ICD10 -> no.nav.tsm.diagnoser.ICD10.OID
             }
         Condition(
-          id = diagnose.id.toString(),
+          id = diagnose.id.value.toString(),
           subject =
             Reference(
               reference =
                 com.google.fhir.model.r4.String(value = "Patient/${diagnose.patientId.value}")
             ),
+          encounter = encounter,
           code =
             CodeableConcept(
               coding =
