@@ -60,8 +60,10 @@ fun Application.configureSmartRouting() {
                 "No active patient context for clinician",
               )
 
+          logger.info("Patient id from valkey: $patientId")
           // FHIR launch requires an active patient
           val patientInputId = PatientInputId(Uuid.parse(patientId))
+          logger.info("PatientInputId: $patientInputId")
           val patient =
             patientService.getPatient(patientInputId)
               ?: return@get call.respond(HttpStatusCode.BadRequest, "Unknown patient")

@@ -84,7 +84,7 @@ class PasientRepository {
       it[fnr] = pasient.fnr
     }
 
-    pasient.hprNumbers.forEach {
+    pasient.hprNumbers.forEach { it ->
       val value = it.value
       PasientHelsepersonell.insert {
         it[pasientId] = pasient.id.value
