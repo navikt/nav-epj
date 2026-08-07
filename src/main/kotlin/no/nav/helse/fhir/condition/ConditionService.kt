@@ -19,21 +19,33 @@ import no.nav.helse.fhir.patient.PatientInputId
 class ConditionService(private val epjClient: HttpClient) {
 
   suspend fun getConditionsByPatientId(patientId: PatientInputId): Bundle {
-    val diagnoser =
-      epjClient.get("/api/diagnoser?patientId=${patientId.value}").body<List<Diagnose>>()
-    // return diagnoser.toCondition()
-    return toBundle(diagnoser)
+    val httpResponse = epjClient.get("/api/diagnoser?patientId=${patientId.value}")
+    if (httpResponse.status.value == 200) {
+      val diagnoser = httpResponse.body<List<Diagnose>>()
+      if (diagnoser.isEmpty()) {
+        return Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
+      }
+      return toBundle(diagnoser, null)
+    }
+
+    return Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
   }
 
   suspend fun getConditionsByEncounterId(encounterId: EncounterId): Bundle {
-    val diagnoser =
-      epjClient.get("/api/diagnoser?konsultasjonId=${encounterId.value}").body<List<Diagnose>>()
-    // return diagnoser.toCondition(encounterId)
-    return toBundle(diagnoser)
+    val httpResponse = epjClient.get("/api/diagnoser?konsultasjonId=${encounterId.value}")
+    if (httpResponse.status.value == 200) {
+      val diagnoser = httpResponse.body<List<Diagnose>>()
+      if (diagnoser.isEmpty()) {
+        return Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
+      }
+      return toBundle(diagnoser, encounterId)
+    }
+
+    return Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
   }
 
-  private fun toBundle(diagnoser: List<Diagnose>): Bundle {
-    val conditions = diagnoser.toCondition()
+  private fun toBundle(diagnoser: List<Diagnose>, encounterId: EncounterId?): Bundle {
+    val conditions = diagnoser.toCondition(encounterId)
     val bundle =
       Bundle(
         type = Enumeration(value = Bundle.BundleType.Searchset),
@@ -46,11 +58,6 @@ class ConditionService(private val epjClient: HttpClient) {
   }
 
   private fun List<Diagnose>.toCondition(encounterId: EncounterId? = null): List<Condition> {
-    val encounter =
-      encounterId?.value?.let {
-        Reference(reference = com.google.fhir.model.r4.String(value = "Encounter/$it"))
-      }
-
     val conditionList =
       this.map { diagnose ->
         val oid =
@@ -66,7 +73,10 @@ class ConditionService(private val epjClient: HttpClient) {
               reference =
                 com.google.fhir.model.r4.String(value = "Patient/${diagnose.patientId.value}")
             ),
-          encounter = encounter,
+          encounter =
+            encounterId?.value?.let {
+              Reference(reference = com.google.fhir.model.r4.String(value = "Encounter/$it"))
+            },
           code =
             CodeableConcept(
               coding =

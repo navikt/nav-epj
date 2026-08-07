@@ -6,9 +6,9 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
-import no.nav.helse.epj.konsultaasjonId
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
 import no.nav.helse.epj.konsultasjon.OppdaterKonsultasjonRequest
+import no.nav.helse.epj.konsultasjonId
 import no.nav.helse.epj.patientId
 import no.nav.helse.helseId.loggedInUser
 import no.nav.helse.smart.valkey.ValkeyService
@@ -50,7 +50,7 @@ fun Route.konsultasjonRoutes(
     }
     route("/konsultasjon/{konsultasjonId}") {
       get {
-        val konsultasjonId = call.konsultaasjonId()
+        val konsultasjonId = call.konsultasjonId()
         val konsultasjon = konsultasjonService.getKonsultasjon(konsultasjonId)
         call.respond(konsultasjon)
       }

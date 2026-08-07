@@ -57,7 +57,7 @@ fun ApplicationCall.helsepersonellHpr(): HelsepersonellHpr =
 
 fun ApplicationCall.legekontorId(): LegekontorId = LegekontorId(uuidParameter("legekontorId"))
 
-fun ApplicationCall.konsultaasjonId(): KonsultasjonId =
+fun ApplicationCall.konsultasjonId(): KonsultasjonId =
   KonsultasjonId(uuidParameter("konsultasjonId"))
 
 private fun ApplicationCall.uuidParameter(name: String): Uuid {

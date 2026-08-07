@@ -4,7 +4,7 @@ import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.helse.epj.helsepersonellHpr
-import no.nav.helse.epj.konsultaasjonId
+import no.nav.helse.epj.konsultasjonId
 import no.nav.helse.epj.patientId
 import no.nav.helse.helseId.loggedInUser
 
@@ -25,7 +25,7 @@ fun Route.helsepersonellRoutes(helsepersonellService: HelsepersonellService) {
       }
 
       get("/konsultasjon/{konsultasjonId}") {
-        val konsultasjonId = call.konsultaasjonId()
+        val konsultasjonId = call.konsultasjonId()
         val helsepersonell = helsepersonellService.getHelsepersonell(konsultasjonId)
         call.respond(HttpStatusCode.OK, helsepersonell)
       }

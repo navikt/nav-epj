@@ -40,12 +40,14 @@ class EncounterService(private val epjClient: HttpClient) {
     return Encounter(
       id = this.id.value.toString(),
       subject =
-        Reference(reference = com.google.fhir.model.r4.String(value = "Patient/${this.pasientId}")),
+        Reference(
+          reference = com.google.fhir.model.r4.String(value = "Patient/${this.pasientId.value}")
+        ),
       participant =
         this.hpr.map {
           Encounter.Participant(
             individual =
-              Reference(reference = com.google.fhir.model.r4.String(value = "Practitioner/$hpr"))
+              Reference(reference = com.google.fhir.model.r4.String(value = "Practitioner/$it"))
           )
         },
       reasonCode =
@@ -66,29 +68,19 @@ class EncounterService(private val epjClient: HttpClient) {
         this.diagnoser.map {
           Encounter.Diagnosis(
             condition =
-              Reference(reference = com.google.fhir.model.r4.String(value = "Condition/${it.kode}"))
+              Reference(
+                reference = com.google.fhir.model.r4.String(value = "Condition/${it.id.value}")
+              )
           )
         },
       serviceProvider =
         Reference(
           reference =
             com.google.fhir.model.r4.String(
-              value = "Organization/a1000000-0000-0000-0000-000000000001"
+              value = "Organization/a1000000-0000-0000-0000-000000000001" // TODO hent
             )
         ),
       status = Enumeration(value = status),
-      type =
-        listOf(
-          CodeableConcept(
-            coding =
-              listOf(
-                Coding(
-                  system = Uri(value = "urn:oid:2.16.578.1.12.4.1.1.8432"),
-                  code = Code(value = "kontakttype"),
-                )
-              )
-          )
-        ),
       `class` =
         Coding(
           code = Code(value = "VR"),
