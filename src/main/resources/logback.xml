@@ -11,6 +11,12 @@
     <logger name="io.swagger.codegen.v3.generators" level="WARN"/>
     <logger name="org.apache.kafka" level="WARN"/>
 
+    <!-- Debug logs for dev -->
+    <logger name="no.nav.helse" level="DEBUG"/>
+    <logger name="io.ktor.server" level="DEBUG"/>
+    <logger name="io.ktor.http" level="DEBUG"/>
+    <logger name="io.netty" level="DEBUG"/>
+
     <appender name="STDOUT_JSON" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
             <includeMdcKeyName>x_request_id</includeMdcKeyName>

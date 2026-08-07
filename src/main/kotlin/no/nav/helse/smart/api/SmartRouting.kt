@@ -50,6 +50,7 @@ fun Application.configureSmartRouting() {
               "The given launch url $appUrl is not registered for any known clients",
             )
           val user = loggedInUser()
+          logger.debug("Logged in user: {}", user)
 
           val patientId =
             valkeyService.get(
@@ -60,10 +61,10 @@ fun Application.configureSmartRouting() {
                 "No active patient context for clinician",
               )
 
-          logger.info("Patient id from valkey: $patientId")
+          logger.debug("Patient id from valkey: {}", patientId)
           // FHIR launch requires an active patient
           val patientInputId = PatientInputId(Uuid.parse(patientId))
-          logger.info("PatientInputId: $patientInputId")
+          logger.debug("PatientInputId: {}", patientInputId)
           val patient =
             patientService.getPatient(patientInputId)
               ?: return@get call.respond(HttpStatusCode.BadRequest, "Unknown patient")
@@ -88,7 +89,7 @@ fun Application.configureSmartRouting() {
       route("/oidc") {
         get("/authorize") {
           val query = call.request.queryParameters
-          logger.info("/oidc/authorize request with params ${query.entries()}")
+          logger.debug("/oidc/authorize request with params {}", query.entries())
 
           val redirectUri =
             query["redirect_uri"]
