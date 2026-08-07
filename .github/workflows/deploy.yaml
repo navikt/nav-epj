@@ -13,7 +13,6 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    if: github.ref_name != 'main' && !startsWith(github.ref_name, 'dev')
     steps:
       - uses: actions/checkout@v7
       - uses: navikt/tsm-workflows/actions/gradle/test@main
@@ -65,6 +64,7 @@ jobs:
 
       - uses: nais/deploy/actions/deploy@v2
         env:
-          CLUSTER: "dev-gcp"
-          RESOURCE: ".nais/nais-dev.yaml"
+          CLUSTER: dev-gcp
+          RESOURCE: .nais/nais-dev.yaml
           VAR: image=${{ needs.build.outputs.image }},sourceVersionURL=https://github.com/${{ github.repository }}/tree/${{ github.sha }}
+          NAIS_DEPLOY_SUMMARY: false

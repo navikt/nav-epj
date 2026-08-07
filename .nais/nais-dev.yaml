@@ -72,7 +72,15 @@ spec:
         - /api/**
 
   accessPolicy:
+    inbound:
+      rules:
+        - application: syk-inn
+        - application: syk-inn
+        - application: zara
     outbound:
+      rules:
+        - application: logging
+          namespace: nais-system
       external:
         - host: 'helseid-sts.test.nhn.no'
 
