@@ -3,6 +3,7 @@ package no.nav.helse.plugins
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
+import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respondText
 import no.nav.helse.core.utils.AktivKonsultasjonNotFoundException
@@ -51,6 +52,12 @@ fun Application.configureStatusPages() {
     exception<UgyldigDiagnoseException> { call, cause ->
       call.respondText(
         text = "Ugyldig diagnose: ${cause.message}",
+        status = HttpStatusCode.BadRequest,
+      )
+    }
+    exception<BadRequestException> { call, cause ->
+      call.respondText(
+        text = cause.message ?: "Ugyldig forespørsel",
         status = HttpStatusCode.BadRequest,
       )
     }

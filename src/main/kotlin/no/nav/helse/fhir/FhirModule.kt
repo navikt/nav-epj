@@ -71,7 +71,30 @@ private fun ApplicationCall.uuidParameter(name: String): Uuid {
   }
 }
 
+fun ApplicationCall.patientReferenceInputId(): PatientInputId =
+  PatientInputId(uuidReferenceParameter("subject"))
+
+fun ApplicationCall.encounterReferenceId(): EncounterId =
+  EncounterId(uuidReferenceParameter("encounter"))
+
 private fun ApplicationCall.stringParameter(name: String): String {
   val value = parameters[name] ?: throw BadRequestException("Mangler parameteren '$name'")
   return value
+}
+
+/**
+ * Parses a FHIR search reference parameter such as `subject=Patient/123` or
+ * `encounter=Encounter/456`. FHIR R4 reference search parameters are conventionally sent as
+ * `ResourceType/id` (search.html #reference), not a bare id, so any such prefix must be stripped
+ * before parsing the UUID.
+ */
+private fun ApplicationCall.uuidReferenceParameter(name: String): Uuid {
+  val value = parameters[name] ?: throw BadRequestException("Mangler parameteren '$name'")
+  val id = value.substringAfterLast('/')
+
+  return try {
+    Uuid.parse(id)
+  } catch (exception: IllegalArgumentException) {
+    throw BadRequestException("Parameteren '$name' er ikke en gyldig UUID", exception)
+  }
 }

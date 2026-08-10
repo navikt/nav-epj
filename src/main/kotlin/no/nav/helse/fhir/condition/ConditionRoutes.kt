@@ -4,8 +4,8 @@ import com.google.fhir.model.r4.FhirR4Json
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.helse.fhir.encounterId
-import no.nav.helse.fhir.patientInputId
+import no.nav.helse.fhir.encounterReferenceId
+import no.nav.helse.fhir.patientReferenceInputId
 
 fun Route.conditionRoutes(
   conditionService: ConditionService,
@@ -20,8 +20,10 @@ fun Route.conditionRoutes(
 
       val conditions =
         when {
-          patientId != null -> conditionService.getConditionsByPatientId(call.patientInputId())
-          encounterId != null -> conditionService.getConditionsByEncounterId(call.encounterId())
+          patientId != null ->
+            conditionService.getConditionsByPatientId(call.patientReferenceInputId())
+          encounterId != null ->
+            conditionService.getConditionsByEncounterId(call.encounterReferenceId())
           else -> return@get call.respond(HttpStatusCode.BadRequest)
         }
       call.respondText(fhirR4Json.encodeToString(conditions), fhirContentType)

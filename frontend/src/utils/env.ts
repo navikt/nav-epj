@@ -8,7 +8,7 @@ type EnvUrls = {
 const envUrls: EnvUrls = {
     localhost: {
         sykInnUrl: "http://localhost:3000/fhir/launch",
-        validatorUrl: "http://localhost:5174/launch"
+        validatorUrl: "http://localhost:3001/launch"
     },
     dev: {
         sykInnUrl: "https://www.ekstern.dev.nav.no/samarbeidspartner/sykmelding/fhir/launch",
