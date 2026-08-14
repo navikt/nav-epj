@@ -291,7 +291,7 @@ fun Application.configureSmartRouting() {
       }
       get("/jwks") {
         call.respondText(
-          """{"keys": [${SmartKeys.jwk.toPublicJWK()}]}""",
+          """{"keys": [${SmartKeys.jwk.toPublicJWK().toJSONString()}]}""",
           ContentType.Application.Json,
         )
       }

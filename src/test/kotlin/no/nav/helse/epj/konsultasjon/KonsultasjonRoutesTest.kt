@@ -2,7 +2,7 @@ package no.nav.helse.epj.konsultasjon
 
 import io.ktor.client.request.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.serialization.jackson3.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.plugins.contentnegotiation.*
@@ -13,7 +13,6 @@ import io.mockk.mockk
 import kotlin.test.assertEquals
 import kotlin.uuid.Uuid
 import kotlinx.datetime.LocalDateTime
-import kotlinx.serialization.json.Json
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.KonsultasjonStatus
@@ -33,7 +32,7 @@ class KonsultasjonRoutesTest {
 
   private fun testApp(block: suspend io.ktor.client.HttpClient.() -> Unit) = testApplication {
     application {
-      install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
+      install(ContentNegotiation) { jackson() }
       configureStatusPages()
       authentication {
         provider("wonderwall-helseid") {

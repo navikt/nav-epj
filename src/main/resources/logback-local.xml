@@ -3,7 +3,7 @@
     <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
 
     <root level="INFO">
-        <appender-ref ref="STDOUT_JSON"/>
+        <appender-ref ref="PRETTY-CONSOLE"/>
     </root>
 
     <!-- Stuff we wanna squelch, use sparingly -->
@@ -20,9 +20,7 @@
     <!-- Pretty console appender for local development -->
     <appender name="PRETTY-CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>
-                %d{HH:mm:ss.SSS} %highlight(%-5level) %X{call-id} [%thread] %logger{36} - %msg%n
-            </pattern>
+            <pattern>%d{HH:mm:ss.SSS} %highlight(%-5level) %X{call-id} [%thread] %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 </configuration>
