@@ -57,11 +57,8 @@ class KonsultasjonRepository {
 
     val diagnoser =
       DiagnoseTable.selectAll()
-        .where { DiagnoseTable.konsultasjonId inList konsultasjonIder }
-        .groupBy(
-          keySelector = { it[DiagnoseTable.konsultasjonId] },
-          valueTransform = { it.toDiagnose() },
-        )
+        .where { konsultasjonId inList konsultasjonIder }
+        .groupBy(keySelector = { it[konsultasjonId] }, valueTransform = { it.toDiagnose() })
 
     konsultasjoner.map { row ->
       val konsultasjonId = row[KonsultasjonTable.id]
@@ -249,7 +246,7 @@ class KonsultasjonRepository {
 
     val diagnoseListe =
       DiagnoseTable.selectAll()
-        .where { (DiagnoseTable.konsultasjonId eq konsultasjon[KonsultasjonTable.id]) }
+        .where { (konsultasjonId eq konsultasjon[KonsultasjonTable.id]) }
         .map { it.toDiagnose() }
 
     return konsultasjon.toKonsultasjonWithHprAndJournalnotat(

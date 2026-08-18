@@ -3,9 +3,8 @@ package no.nav.helse.fhir.documentreference
 import com.google.fhir.model.r4.DocumentReference
 import com.google.fhir.model.r4.FhirR4Json
 import io.ktor.http.*
-import io.ktor.server.request.receiveText
-import io.ktor.server.response.respond
-import io.ktor.server.response.respondText
+import io.ktor.server.request.*
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.helse.core.utils.logger
 import no.nav.helse.fhir.documentReferenceId

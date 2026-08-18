@@ -1,6 +1,5 @@
 package no.nav.helse.epj.legekontor
 
-import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.helse.epj.legekontorId

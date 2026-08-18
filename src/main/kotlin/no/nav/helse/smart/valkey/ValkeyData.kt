@@ -1,10 +1,7 @@
 package no.nav.helse.smart.valkey
 
-import kotlinx.serialization.Serializable
+data class LaunchContext(val patientId: String?, val encounterId: String?)
 
-@Serializable data class LaunchContext(val patientId: String?, val encounterId: String?)
-
-@Serializable
 data class AuthCodeContext(
   val username: String,
   val redirectUrl: String,

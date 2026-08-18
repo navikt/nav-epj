@@ -1,7 +1,7 @@
 package no.nav.helse.epj.konsultasjon.routes
 
 import io.ktor.http.*
-import io.ktor.server.request.receive
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.helse.core.utils.logger

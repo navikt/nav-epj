@@ -8,7 +8,6 @@ kotest = "6.1.11"
 nimbus = "11.33"
 postgresql = "42.7.10"
 flyway = "12.4.0"
-jackson = "2.19.0"
 testcontainers = "2.0.5"
 spotless = "8.4.0"
 detekt = "2.0.0-alpha.3"
@@ -31,11 +30,9 @@ exposed-kotlin-datetime = { module = "org.jetbrains.exposed:exposed-kotlin-datet
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 flyway-postgresql = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
-jackson-datatype-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
 
 # Auth
 nimbus-oauth2-oidc-sdk = { module = "com.nimbusds:oauth2-oidc-sdk", version.ref = "nimbus" }
-
 
 fhir-model = { module = "com.google.fhir:fhir-model", version.ref = "fhir" }
 tsm-diagnoser = { module = "no.nav.tsm:diagnoser", version.ref = "tsm-diagnoser" }
@@ -49,7 +46,6 @@ kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref =
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }
 flyway = { id = "org.flywaydb.flyway", version.ref = "flyway" }

@@ -2,9 +2,7 @@ package no.nav.helse.smart
 
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 
-@Serializable
 data class SmartDiscoveryDocument(
   val issuer: String,
   @SerialName("jwks_uri") val jwksUri: String,
@@ -25,7 +23,6 @@ data class SmartDiscoveryDocument(
   val tokenEndpointAuthSigningAlgValuesSupported: List<String>,
 )
 
-@Serializable
 data class TokenResponse(
   @SerialName("access_token") val accessToken: String,
   @SerialName("id_token") val idToken: String,

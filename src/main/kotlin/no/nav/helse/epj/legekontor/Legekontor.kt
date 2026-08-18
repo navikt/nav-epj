@@ -1,11 +1,9 @@
 package no.nav.helse.epj.legekontor
 
 import kotlin.uuid.Uuid
-import kotlinx.serialization.Serializable
 
-@JvmInline @Serializable value class LegekontorId(val value: Uuid)
+@JvmInline value class LegekontorId(val value: Uuid)
 
-@Serializable
 data class Legekontor(
   val id: LegekontorId,
   val navn: String,

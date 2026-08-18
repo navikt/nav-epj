@@ -1,11 +1,10 @@
 package no.nav.helse.plugins
 
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.Application
-import io.ktor.server.application.install
-import io.ktor.server.plugins.BadRequestException
-import io.ktor.server.plugins.statuspages.StatusPages
-import io.ktor.server.response.respondText
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.*
+import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.response.*
 import no.nav.helse.core.utils.AktivKonsultasjonNotFoundException
 import no.nav.helse.core.utils.HelsepersonellForPatientNotFoundException
 import no.nav.helse.core.utils.HelsepersonellNotFoundException

@@ -4,7 +4,7 @@ import com.google.fhir.model.r4.FhirR4Json
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.ktor.server.plugins.BadRequestException
+import io.ktor.server.plugins.*
 import io.ktor.server.plugins.di.*
 import io.ktor.server.routing.*
 import kotlin.uuid.Uuid

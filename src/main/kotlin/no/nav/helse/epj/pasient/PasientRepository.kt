@@ -1,6 +1,5 @@
 package no.nav.helse.epj.pasient
 
-import kotlin.collections.map
 import kotlin.uuid.Uuid
 import no.nav.helse.core.db.PasientHelsepersonell
 import no.nav.helse.core.db.PasientTable

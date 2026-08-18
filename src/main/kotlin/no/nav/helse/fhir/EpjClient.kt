@@ -5,7 +5,7 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
-import io.ktor.serialization.jackson3.jackson
+import io.ktor.serialization.jackson3.*
 
 fun initEpjClient(baseUrl: String): HttpClient {
   return HttpClient(CIO) {
