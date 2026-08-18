@@ -83,4 +83,18 @@ class ValkeyServiceTest : WithValkey() {
 
   @Test
   fun `get på ukjent nøkkel gir null`() = runTest { assertNull(valkeyService.get("ukjent-nokkel")) }
+
+  @Test
+  fun `setIfAbsent lagrer verdi når nøkkel ikke finnes`() = runTest {
+    val result = valkeyService.setIfAbsent("jti-1", "", ttlSeconds = 60)
+    assertEquals(true, result)
+    assertEquals("", valkeyService.get("jti-1"))
+  }
+
+  @Test
+  fun `setIfAbsent gir false når nøkkel allerede finnes`() = runTest {
+    valkeyService.setIfAbsent("jti-2", "", ttlSeconds = 60)
+    val result = valkeyService.setIfAbsent("jti-2", "", ttlSeconds = 60)
+    assertEquals(false, result)
+  }
 }
