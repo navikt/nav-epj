@@ -62,7 +62,6 @@ fun createIntegrationEnvironment(postgres: PostgreSQLContainer) =
           ),
       ),
     valkey = ValkeyConfig("valkey", 8080, false, null, null),
-    httpClient = mockk(relaxed = true),
     epj = EpjConfig(baseUrl = "testurl"),
   )
 
@@ -83,6 +82,5 @@ val simpleTestEnvironment =
           ),
       ),
     valkey = ValkeyConfig("valkey", 8080, false, null, null),
-    httpClient = mockk(relaxed = true),
     epj = EpjConfig(baseUrl = "testurl"),
   )

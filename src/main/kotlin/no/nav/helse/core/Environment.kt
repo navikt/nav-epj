@@ -10,7 +10,6 @@ class Environment(
   val postgres: PostgresConfig,
   val smart: SmartConfig,
   val valkey: ValkeyConfig,
-  val httpClient: HttpClient,
   val epj: EpjConfig,
 )
 
@@ -62,7 +61,6 @@ fun initEnvironment(config: ApplicationConfig): Environment {
         username = config.propertyOrNull("valkey.username")?.getString(),
         password = config.propertyOrNull("valkey.password")?.getString(),
       ),
-    httpClient = HttpClient(CIO) { install(Logging) },
     epj = EpjConfig(baseUrl = config.property("epj.baseUrl").getString()),
   )
 }
