@@ -1,8 +1,5 @@
 package no.nav.helse.core
 
-import io.ktor.client.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.plugins.logging.*
 import io.ktor.server.config.*
 import no.nav.helse.smart.security.SmartClient
 
