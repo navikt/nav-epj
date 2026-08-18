@@ -23,10 +23,13 @@ smart:
     - clientId: "syk-inn"
       redirectUris: ["http://localhost:3000", "http://localhost:3000/fhir/callback"]
       launchUris: ["http://localhost:3000/fhir/launch"]
+      tokenEndpointAuthMethod: "client_secret_basic"
       clientSecret: "dev-mode-client-secret"
     - clientId: "NAV_SMART_on_FHIR_validator"
       redirectUris: ["http://localhost:3001/callback"]
       launchUris: ["http://localhost:3001/launch"]
+      tokenEndpointAuthMethod: "private_key_jwt"
+      jwksUri: "http://localhost:3001/jwks.json"
 
 valkey:
   host: localhost

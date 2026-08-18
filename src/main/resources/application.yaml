@@ -25,9 +25,13 @@ smart:
     - clientId: "syk-inn"
       redirectUris: [ "https://www.ekstern.dev.nav.no/samarbeidspartner/sykmelding", "https://www.ekstern.dev.nav.no/samarbeidspartner/sykmelding/fhir/callback" ]
       launchUris: [ "https://www.ekstern.dev.nav.no/samarbeidspartner/sykmelding/fhir/launch" ]
+      tokenEndpointAuthMethod: "private_key_jwt"
+      jwksUri: "https://www.ekstern.dev.nav.no/samarbeidspartner/sykmelding/fhir/jwks.json"
     - clientId: "NAV_SMART_on_FHIR_validator"
       redirectUris: [ "https://nav-on-fhir.ekstern.dev.nav.no" ]
       launchUris: [ "https://nav-on-fhir.ekstern.dev.nav.no/launch" ]
+      tokenEndpointAuthMethod: "private_key_jwt"
+      jwksUri: "https://nav-on-fhir.ekstern.dev.nav.no/jwks.json"
 
 valkey:
   host: ${VALKEY_HOST_NAV_EPJ}
