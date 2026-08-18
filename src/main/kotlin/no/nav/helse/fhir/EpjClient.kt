@@ -6,11 +6,12 @@ import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.serialization.jackson3.*
+import tools.jackson.databind.SerializationFeature
 
 fun initEpjClient(baseUrl: String): HttpClient {
   return HttpClient(CIO) {
     install(Logging)
-    install(ContentNegotiation) { jackson() }
+    install(ContentNegotiation) { jackson { enable(SerializationFeature.INDENT_OUTPUT) } }
     defaultRequest { url(baseUrl) }
   }
 }
