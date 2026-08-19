@@ -1,4 +1,4 @@
-package no.nav.helse.smart
+package no.nav.helse.smart.security
 
 import org.junit.Ignore
 import org.junit.Test

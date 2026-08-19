@@ -3,14 +3,12 @@ package no.nav.helse.smart.api
 import com.auth0.jwt.JWT
 import com.nimbusds.oauth2.sdk.OAuth2Error
 import io.ktor.http.*
-import io.ktor.http.auth.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.plugins.di.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import java.security.MessageDigest
 import java.util.*
 import kotlin.uuid.Uuid
 import no.nav.helse.core.Environment
@@ -21,8 +19,11 @@ import no.nav.helse.fhir.patient.PatientService
 import no.nav.helse.helseId.loggedInUser
 import no.nav.helse.smart.SmartDiscoveryDocument
 import no.nav.helse.smart.TokenResponse
+import no.nav.helse.smart.security.ClientAssertionVerifier
 import no.nav.helse.smart.security.SmartKeys
+import no.nav.helse.smart.security.authenticateClient
 import no.nav.helse.smart.security.codeChallengeS256
+import no.nav.helse.smart.security.resolveAssertedClientId
 import no.nav.helse.smart.valkey.AuthCodeContext
 import no.nav.helse.smart.valkey.LaunchContext
 import no.nav.helse.smart.valkey.ValkeyService
@@ -32,6 +33,7 @@ fun Application.configureSmartRouting() {
   val patientService: PatientService by dependencies
   val encounterService: EncounterService by dependencies
   val valkeyService: ValkeyService by dependencies
+  val clientAssertionVerifier: ClientAssertionVerifier by dependencies
 
   val issuerUrl = env.smart.issuerBaseUrl
   val clients = env.smart.clients
@@ -214,38 +216,30 @@ fun Application.configureSmartRouting() {
         val codeVerifier =
           params["code_verifier"] ?: return@post rejectMissingToken("code_verifier")
 
+        val assertedClientId =
+          resolveAssertedClientId(call.request, params)
+            ?: return@post rejectMissingToken("client_id")
+        val acceptedClient =
+          clients.find { it.clientId == assertedClientId }
+            ?: return@post rejectToken(
+              HttpStatusCode.BadRequest,
+              OAuth2Error.INVALID_CLIENT.appendDescription("unknown client"),
+            )
+        authenticateClient(call.request, acceptedClient, params, clientAssertionVerifier)?.let {
+          return@post rejectToken(HttpStatusCode.Unauthorized, it)
+        }
+
         val ctx =
           valkeyService.getAndDeleteAuthCode(code)
             ?: return@post rejectToken(
               HttpStatusCode.BadRequest,
               OAuth2Error.INVALID_GRANT.appendDescription("unknown or already used code"),
             )
-        val acceptedClient =
-          clients.find { it.clientId == ctx.clientId }
-            ?: return@post rejectToken(
-              HttpStatusCode.BadRequest,
-              OAuth2Error.INVALID_REQUEST.appendDescription("unknown client"),
-            )
-
-        if (acceptedClient.clientSecret != null) {
-          val basic = call.request.parseAuthorizationHeader() as? HttpAuthHeader.Single
-          val credentials =
-            basic
-              ?.takeIf { it.authScheme == AuthScheme.Basic }
-              ?.let { String(Base64.getDecoder().decode(it.blob)) }
-          val authenticated =
-            credentials != null &&
-              credentials.substringBefore(":") == ctx.clientId &&
-              MessageDigest.isEqual(
-                credentials.substringAfter(":").toByteArray(Charsets.UTF_8),
-                acceptedClient.clientSecret.toByteArray(Charsets.UTF_8),
-              )
-          if (!authenticated) {
-            return@post rejectToken(
-              HttpStatusCode.Unauthorized,
-              OAuth2Error.INVALID_CLIENT.appendDescription("client authentication failed"),
-            )
-          }
+        if (ctx.clientId != acceptedClient.clientId) {
+          return@post rejectToken(
+            HttpStatusCode.BadRequest,
+            OAuth2Error.INVALID_GRANT.appendDescription("code was not issued to this client"),
+          )
         }
 
         if (codeChallengeS256(codeVerifier) != ctx.codeChallenge) {
@@ -306,7 +300,7 @@ fun Application.configureSmartRouting() {
             jwksUri = "$issuerUrl/jwks",
             authorizationEndpoint = "$issuerUrl/authorize",
             tokenEndpoint = "$issuerUrl/token",
-            grantTypesSupported = listOf("authorization_code", "client_credentials"),
+            grantTypesSupported = listOf("authorization_code"), // TODO implement client_credentials
             registrationEndpoint = "$issuerUrl/register",
             scopesSupported =
               listOf(
@@ -335,8 +329,8 @@ fun Application.configureSmartRouting() {
                 "sso-openid-connect",
               ),
             tokenEndpointAuthMethodsSupported =
-              listOf("client_secret_post", "client_secret_basic", "private_key_jwt"),
-            tokenEndpointAuthSigningAlgValuesSupported = listOf("RS256", "RS384"), // TODO implement
+              listOf("client_secret_basic", "private_key_jwt"), // TODO implement client_secret_post
+            tokenEndpointAuthSigningAlgValuesSupported = listOf("RS384", "ES384"),
           ),
         )
       }

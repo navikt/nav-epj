@@ -1,6 +1,5 @@
 package no.nav.helse.core
 
-// import no.nav.helse.fhir.documentreference.DocumentReferenceService
 import glide.api.GlideClient
 import glide.api.models.configuration.GlideClientConfiguration
 import io.ktor.client.*
@@ -21,6 +20,9 @@ import no.nav.helse.fhir.initEpjClient
 import no.nav.helse.fhir.organization.OrganizationService
 import no.nav.helse.fhir.patient.PatientService
 import no.nav.helse.fhir.practitioner.PractitionerService
+import no.nav.helse.smart.security.ClientAssertionVerifier
+import no.nav.helse.smart.security.ClientJwksSetProvider
+import no.nav.helse.smart.security.RemoteClientJwksSetProvider
 import no.nav.helse.smart.valkey.ValkeyService
 import no.nav.helse.smart.valkey.createGlideClient
 import no.nav.helse.smart.valkey.createGlideClientConfiguration
@@ -33,6 +35,8 @@ fun Application.configureDependencies() {
     provide<GlideClient> { createGlideClient(resolve()) }
 
     provide(ValkeyService::class)
+    provide<ClientJwksSetProvider> { RemoteClientJwksSetProvider() }
+    provide(ClientAssertionVerifier::class)
 
     provide(PasientRepository::class)
     provide(HelsepersonellRepository::class)

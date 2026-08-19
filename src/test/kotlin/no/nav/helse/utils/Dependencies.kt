@@ -1,5 +1,7 @@
 package no.nav.helse.utils
 
+import com.nimbusds.jose.jwk.JWKSet
+import com.nimbusds.jose.jwk.source.ImmutableJWKSet
 import io.ktor.server.application.Application
 import io.ktor.server.auth.authentication
 import io.ktor.server.plugins.di.dependencies
@@ -15,6 +17,7 @@ import no.nav.helse.helseId.DebugInfo
 import no.nav.helse.helseId.HelseIdPrincipal
 import no.nav.helse.helseId.User
 import no.nav.helse.smart.api.configureSmartRouting
+import no.nav.helse.smart.security.ClientAssertionVerifier
 import no.nav.helse.smart.security.SmartClient
 import no.nav.helse.smart.security.TokenEndpointAuthMethod
 import no.nav.helse.smart.valkey.ValkeyService
@@ -30,6 +33,7 @@ fun Application.configureTestSmartDependencies() {
     provide<ValkeyService> { valkeyService }
     provide<EncounterService> { encounterService }
     provide<PatientService> { patientService }
+    provide<ClientAssertionVerifier> { clientAssertionVerifier }
   }
   authentication {
     provider("wonderwall-helseid") {
@@ -86,4 +90,11 @@ val simpleTestEnvironment =
       ),
     valkey = ValkeyConfig("valkey", 8080, false, null, null),
     epj = EpjConfig(baseUrl = "testurl"),
+  )
+
+private val clientAssertionVerifier =
+  ClientAssertionVerifier(
+    env = simpleTestEnvironment,
+    jtiStore = valkeyService,
+    jwkSetProvider = { ImmutableJWKSet(JWKSet()) },
   )
