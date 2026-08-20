@@ -11,9 +11,8 @@ fun Application.configureCallLogging() {
     format { call ->
       val status = call.response.status()
       val httpMethod = call.request.httpMethod.value
-      val userAgent = call.request.headers["User-Agent"]
-      val authorization = call.request.headers["Authorization"]
-      "Status: $status, HTTP method: $httpMethod, User-Agent: $userAgent, Authorization: $authorization"
+      val userAgent = call.request.path()
+      "Status: $status, HTTP method: $httpMethod, User-Agent: $userAgent"
     }
   }
 }

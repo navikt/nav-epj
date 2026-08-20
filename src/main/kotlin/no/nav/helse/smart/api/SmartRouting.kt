@@ -91,6 +91,7 @@ fun Application.configureSmartRouting() {
       route("/oidc") {
         get("/authorize") {
           val query = call.request.queryParameters
+          // Deliberate test diagnostics
           logger.debug("/oidc/authorize request with params {}", query.entries())
 
           val redirectUri =
@@ -201,6 +202,7 @@ fun Application.configureSmartRouting() {
       // Step 4: exchange the authorisation code for an access token.
       post("/token") {
         val params = call.receiveParameters()
+        // Deliberate test diagnostics
         log.debug("SMART: /token called with params: {}", params)
         val code = params["code"] ?: return@post rejectMissingToken("code")
         val grantType = params["grant_type"] ?: return@post rejectMissingToken("grant_type")
@@ -260,7 +262,12 @@ fun Application.configureSmartRouting() {
           )
         }
 
-        log.info("SMART: issuing token for user={}, patient={}", ctx.username, ctx.launch.patientId)
+        log.info(
+          "SMART: issuing token for client={}, user={}, patient={}",
+          ctx.clientId,
+          ctx.username,
+          ctx.launch.patientId,
+        )
 
         val now = Date()
         val expiresAt = Date(now.time + 3600_000)
