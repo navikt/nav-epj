@@ -1,11 +1,12 @@
 package no.nav.helse.smart.security
 
 import com.auth0.jwt.JWT
-import com.auth0.jwt.interfaces.DecodedJWT
+import io.ktor.http.auth.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.plugins.di.*
+import io.ktor.server.request.*
 import no.nav.helse.core.Environment
 
 /**
@@ -25,8 +26,8 @@ fun Application.configureSmartSecurity() {
           .build()
       )
       validate { credentials ->
-        val decoded = credentials.payload as? DecodedJWT
-        if (decoded?.type != "at+jwt") {
+        val token = request.bearerToken() ?: return@validate null
+        if (runCatching { JWT.decode(token).type }.getOrNull() != "at+jwt") {
           return@validate null
         }
 
@@ -42,3 +43,8 @@ fun Application.configureSmartSecurity() {
     }
   }
 }
+
+private fun ApplicationRequest.bearerToken(): String? =
+  (parseAuthorizationHeader() as? HttpAuthHeader.Single)
+    ?.takeIf { it.authScheme.equals(AuthScheme.Bearer, ignoreCase = true) }
+    ?.blob

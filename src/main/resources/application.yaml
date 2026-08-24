@@ -29,11 +29,13 @@ smart:
       jwksUri: "https://www.ekstern.dev.nav.no/samarbeidspartner/sykmelding/fhir/jwks.json"
       scopes:
         - openid
+        - profile
         - fhirUser
         - launch
         - offline_access
         - patient/Patient.rs
         - patient/Encounter.rs
+        - patient/Condition.rs
         - patient/DocumentReference.crs
     - clientId: "NAV_SMART_on_FHIR_validator"
       redirectUris: [ "https://nav-on-fhir.ekstern.dev.nav.no" ]
@@ -44,8 +46,17 @@ smart:
         - openid
         - fhirUser
         - launch
-        - patient/*.rs
-        - user/*.rs
+        - launch/patient
+        - offline_access
+        - patient/Patient.rs
+        - patient/Practitioner.rs
+        - patient/PractitionerRole.rs
+        - patient/Organization.rs
+        - patient/Encounter.rs
+        - patient/Condition.rs
+        - patient/DocumentReference.cruds
+        - patient/Binary.cruds
+        - patient/QuestionnaireResponse.cruds
 
 valkey:
   host: ${VALKEY_HOST_NAV_EPJ}

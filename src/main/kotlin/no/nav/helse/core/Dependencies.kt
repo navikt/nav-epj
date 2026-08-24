@@ -20,6 +20,7 @@ import no.nav.helse.fhir.initEpjClient
 import no.nav.helse.fhir.organization.OrganizationService
 import no.nav.helse.fhir.patient.PatientService
 import no.nav.helse.fhir.practitioner.PractitionerService
+import no.nav.helse.fhir.practitionerrole.PractitionerRoleService
 import no.nav.helse.smart.security.ClientAssertionVerifier
 import no.nav.helse.smart.security.ClientJwksSetProvider
 import no.nav.helse.smart.security.RemoteClientJwksSetProvider
@@ -54,6 +55,7 @@ fun Application.configureDependencies() {
     provide(OrganizationService::class)
     provide(PatientService::class)
     provide(PractitionerService::class)
+    provide(PractitionerRoleService::class)
 
     provide<HttpClient> { initEpjClient(resolve<Environment>().epj.baseUrl) }
   }

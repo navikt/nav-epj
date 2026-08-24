@@ -1,5 +1,6 @@
 package no.nav.helse.fhir.encounter
 
+import com.google.fhir.model.r4.Bundle
 import com.google.fhir.model.r4.Code
 import com.google.fhir.model.r4.CodeableConcept
 import com.google.fhir.model.r4.Coding
@@ -29,6 +30,23 @@ class EncounterService(private val epjClient: HttpClient) {
     return response.body<Konsultasjon>().toEncounter()
   }
 
+  suspend fun getEncountersByPatient(patientId: PatientInputId): Bundle {
+    val response = epjClient.get("/api/patients/${patientId.value}/konsultasjoner")
+    if (response.status != HttpStatusCode.OK) {
+      return Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
+    }
+
+    val konsultasjoner = response.body<List<Konsultasjon>>()
+    return Bundle(
+      type = Enumeration(value = Bundle.BundleType.Searchset),
+      entry =
+        konsultasjoner.map { konsultasjon ->
+          val encounter = konsultasjon.toEncounter()
+          Bundle.Entry(fullUrl = Uri(value = "Encounter/${encounter.id}"), resource = encounter)
+        },
+    )
+  }
+
   fun Konsultasjon.toEncounter(): Encounter {
     val status =
       when (this.status) {
@@ -51,19 +69,18 @@ class EncounterService(private val epjClient: HttpClient) {
           )
         },
       reasonCode =
-        listOf(
+        this.diagnoser.map { diagnose ->
           CodeableConcept(
             coding =
               listOf(
                 Coding(
                   system = Uri(value = "urn:oid:2.16.578.1.12.4.1.1.7170"),
-                  code = Code(value = this.diagnoser.first().kode),
-                  display =
-                    com.google.fhir.model.r4.String(value = this.diagnoser.first().beskrivelse),
+                  code = Code(value = diagnose.kode),
+                  display = com.google.fhir.model.r4.String(value = diagnose.beskrivelse),
                 )
               )
           )
-        ),
+        },
       diagnosis =
         this.diagnoser.map {
           Encounter.Diagnosis(

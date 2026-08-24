@@ -32,6 +32,24 @@ fun ApplicationCall.requireFhirScope(
   return principal
 }
 
+fun ApplicationCall.requireFhirScopeOrFhirUserSelf(
+  resourceType: String,
+  interaction: Interaction,
+  resourceId: String,
+): SmartPrincipal {
+  val principal = principal<SmartPrincipal>()!!
+  val hasScope = principal.matchingScopes(resourceType, interaction).isNotEmpty()
+  val isFhirUserSelf =
+    resourceType == "Practitioner" &&
+      interaction == Interaction.READ &&
+      SmartScope.Other("fhirUser") in principal.scopes &&
+      resourceId == principal.subject
+  if (!hasScope && !isFhirUserSelf) {
+    throw InsufficientScopeException(resourceType, interaction)
+  }
+  return principal
+}
+
 fun SmartPrincipal.requirePatientMatch(
   resourceType: String,
   interaction: Interaction,
