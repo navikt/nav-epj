@@ -78,8 +78,9 @@ fun Application.configureSmartRouting() {
               )
 
           val launchId = UUID.randomUUID().toString()
+          val launchContext = LaunchContext(patient.id, encounter.id)
 
-          valkeyService.saveLaunchContext(launchId, LaunchContext(patient.id, encounter.id))
+          valkeyService.saveLaunchContext(launchId, launchContext)
 
           val iss = env.smart.fhirServerUrl
           call.respondRedirect("$appUrl/?iss=$iss&launch=$launchId")

@@ -3,12 +3,12 @@ package no.nav.helse.epj.konsultasjon
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import java.time.LocalDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertSame
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.LocalDateTime
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.KonsultasjonStatus
@@ -32,7 +32,7 @@ class KonsultasjonServiceTest {
       hpr = emptyList(),
       journalnotat = emptyList(),
       diagnoser = emptyList(),
-      startetTidspunkt = LocalDateTime(2024, 1, 1, 0, 0),
+      startetTidspunkt = java.time.LocalDateTime.now().minusHours(1),
       avsluttetTidspunkt = null,
       status = status,
       problemstilling = null,
@@ -100,7 +100,7 @@ class KonsultasjonServiceTest {
         OpprettKonsultasjon(
           pasientId = pasientId,
           hpr = emptyList(),
-          startetTidspunkt = LocalDateTime(2024, 1, 1, 0, 0),
+          startetTidspunkt = LocalDateTime.now().minusHours(1),
           status = KonsultasjonStatus.PÅGÅENDE,
         )
       coEvery { konsultasjonRepository.insert(opprettKonsultasjon) } returns opprettetId

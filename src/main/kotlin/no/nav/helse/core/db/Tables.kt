@@ -2,7 +2,7 @@ package no.nav.helse.core.db
 
 import no.nav.helse.core.utils.KonsultasjonStatus
 import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.datetime.datetime
+import org.jetbrains.exposed.v1.javatime.datetime
 
 object PasientTable : Table("pasient") {
   val id = uuid("id")

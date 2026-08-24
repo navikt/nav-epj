@@ -1,9 +1,7 @@
 package no.nav.helse.epj.konsultasjon
 
-import kotlin.time.Clock
+import java.time.LocalDateTime
 import kotlin.uuid.Uuid
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import no.nav.helse.core.db.DiagnoseTable
 import no.nav.helse.core.db.DiagnoseTable.konsultasjonId
 import no.nav.helse.core.db.DiagnoseTable.patientId
@@ -185,7 +183,7 @@ class KonsultasjonRepository {
       (KonsultasjonTable.id eq konsultasjonId.value) and
         (KonsultasjonTable.pasientId eq pasientId.value)
     }) {
-      it[avsluttetTidspunkt] = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+      it[avsluttetTidspunkt] = LocalDateTime.now()
       it[status] = KonsultasjonStatus.FULLFØRT
     }
 
