@@ -8,8 +8,6 @@ import org.junit.Test
 
 class SmartScopeTest {
 
-  // --- parseScope: v2 suffix rules -----------------------------------------------------------
-
   @Test
   fun `v2 suffix in cruds order is accepted`() {
     val scope = parseScope("patient/Patient.rs")
@@ -21,9 +19,7 @@ class SmartScopeTest {
 
   @Test
   fun `v2 suffix out of order is rejected`() {
-    // 'sr' reverses the mandated c-r-u-d-s order (SMART scopes-and-launch-context: the order
-    // guards against e.g. '.rd' being misread as '.read' and granting an unintended delete).
-    assertNull(parseScope("patient/Patient.sr"))
+    assertNull(parseScope("patient/Patient.sr")) // must be "rs" (c_r_ud_s_)
   }
 
   @Test
@@ -40,8 +36,6 @@ class SmartScopeTest {
   fun `empty suffix is rejected`() {
     assertNull(parseScope("patient/Patient."))
   }
-
-  // --- parseScope: v1 backwards compatibility -------------------------------------------------
 
   @Test
   fun `v1 read maps to read and search`() {
@@ -74,8 +68,6 @@ class SmartScopeTest {
     )
   }
 
-  // --- parseScope: non-FHIR scopes -------------------------------------------------------------
-
   @Test
   fun `openid launch and fhirUser are opaque scopes`() {
     assertEquals(SmartScope.Other("openid"), parseScope("openid"))
@@ -89,25 +81,16 @@ class SmartScopeTest {
     assertTrue(SmartScope.Other("launch") != SmartScope.Other("launch/patient"))
   }
 
-  // --- parseScopes: lenient at request time -----------------------------------------------------
-
   @Test
   fun `unparseable scopes are dropped, not rejected, at request time`() {
     val scopes = parseScopes("openid patient/Patient.rs patient/Patient.sr")
-    // patient/Patient.sr has a context prefix but an invalid suffix, so it fails to parse as
-    // Fhir and is dropped entirely (unlike "garbage/x", which has no recognized context prefix
-    // and falls back to an opaque Other - harmless, since grantScopes will never match it).
     assertEquals(setOf(SmartScope.Other("openid"), parseScope("patient/Patient.rs")), scopes)
   }
 
   @Test
   fun `search parameter scopes fail closed`() {
-    // Search-parameter scopes (patient/Observation.rs?category=x) are not yet supported;
-    // they must be dropped rather than partially honoured.
     assertNull(parseScope("patient/Observation.rs?category=laboratory"))
   }
-
-  // --- parseRegisteredScopes: strict at registration --------------------------------------------
 
   @Test
   fun `registering an unparseable scope throws`() {
@@ -126,8 +109,6 @@ class SmartScopeTest {
     val scopes = parseRegisteredScopes(listOf("openid", "fhirUser", "launch", "patient/Patient.rs"))
     assertEquals(4, scopes.size)
   }
-
-  // --- grantScopes: subsumption and wildcard narrowing -------------------------------------------
 
   @Test
   fun `exact match is granted`() {
@@ -152,8 +133,6 @@ class SmartScopeTest {
 
   @Test
   fun `wildcard resource request is narrowed to what is registered`() {
-    // Client registered patient/Observation.rs; requesting patient/*.rs must grant only
-    // Observation, not synthesize access to resource types never registered.
     val allowed = setOf(parseScope("patient/Observation.rs")!!)
     val requested = setOf(parseScope("patient/*.rs")!!)
     assertEquals(setOf(parseScope("patient/Observation.rs")!!), grantScopes(requested, allowed))
@@ -161,8 +140,6 @@ class SmartScopeTest {
 
   @Test
   fun `wildcard registration covers a specific request`() {
-    // Client registered patient/*.cruds; requesting patient/Observation.rs must be granted,
-    // this is the case a naive requested-intersect-allowed set check gets wrong.
     val allowed = setOf(parseScope("patient/*.cruds")!!)
     val requested = setOf(parseScope("patient/Observation.rs")!!)
     assertEquals(setOf(parseScope("patient/Observation.rs")!!), grantScopes(requested, allowed))
@@ -196,13 +173,9 @@ class SmartScopeTest {
     assertEquals(setOf(SmartScope.Other("openid")), grantScopes(requested, allowed))
   }
 
-  // --- serialize ---------------------------------------------------------------------------------
-
   @Test
   fun `serialize re-emits fhir scopes in canonical cruds order regardless of parse order`() {
     val scope = parseScope("patient/Patient.sr")
-    // out-of-order suffix is rejected by the parser (already covered above); build directly
-    // to prove the serializer sorts on output rather than trusting the interaction set order.
     val fhir =
       SmartScope.Fhir(ScopeContext.PATIENT, "Patient", setOf(Interaction.SEARCH, Interaction.READ))
     assertEquals("patient/Patient.rs", fhir.toString())
