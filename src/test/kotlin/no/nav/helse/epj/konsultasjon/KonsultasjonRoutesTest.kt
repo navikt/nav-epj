@@ -10,9 +10,9 @@ import io.ktor.server.routing.*
 import io.ktor.server.testing.*
 import io.mockk.coEvery
 import io.mockk.mockk
+import java.time.LocalDateTime
 import kotlin.test.assertEquals
 import kotlin.uuid.Uuid
-import kotlinx.datetime.LocalDateTime
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.KonsultasjonStatus
@@ -60,7 +60,7 @@ class KonsultasjonRoutesTest {
       hpr = emptyList(),
       journalnotat = emptyList(),
       diagnoser = emptyList(),
-      startetTidspunkt = LocalDateTime(2024, 1, 1, 0, 0),
+      startetTidspunkt = LocalDateTime.now().minusDays(1),
       avsluttetTidspunkt = null,
       status = KonsultasjonStatus.PÅGÅENDE,
       problemstilling = null,

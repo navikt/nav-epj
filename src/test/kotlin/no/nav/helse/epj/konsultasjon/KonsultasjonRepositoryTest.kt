@@ -1,17 +1,13 @@
 package no.nav.helse.epj.konsultasjon
 
+import java.time.LocalDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlin.time.Clock
-import kotlin.time.Duration.Companion.hours
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import no.nav.helse.core.db.DiagnoseTable
 import no.nav.helse.core.db.dbQuery
 import no.nav.helse.core.utils.KonsultasjonStatus
@@ -51,25 +47,6 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
     return pasientId
   }
 
-  private fun now(offset: kotlin.time.Duration = kotlin.time.Duration.ZERO): LocalDateTime =
-    (Clock.System.now() - offset).toLocalDateTime(TimeZone.currentSystemDefault())
-
-  /*  // Legger til en journalnotat-rad direkte i databasen for å simulere at det finnes et
-  // tidligere notat på konsultasjonen. `update` oppretter alltid en ny journalnotat-rad
-  // (ren insert) og erstatter ikke eksisterende notater.
-  private suspend fun opprettJournalnotat(
-    konsultasjonId: KonsultasjonId,
-    pasientId: PasientId,
-    tekst: String? = null,
-  ) = dbQuery {
-    JournalnotatTable.insert {
-      it[id] = Uuid.generateV4()
-      it[JournalnotatTable.konsultasjonId] = konsultasjonId.value
-      it[JournalnotatTable.pasientId] = pasientId.value
-      it[journalnotat] = tekst
-    }
-  }*/
-
   @Test
   fun `finds no konsultasjon`() = runTest {
     val pasientId = PatientId(Uuid.generateV4())
@@ -94,7 +71,7 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
       OpprettKonsultasjon(
         pasientId = pasientId,
         hpr = listOf(hpr),
-        startetTidspunkt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+        startetTidspunkt = LocalDateTime.now(),
         status = KonsultasjonStatus.PÅGÅENDE,
       )
     )
@@ -108,10 +85,10 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
     val pasientA = opprettPasient(hpr = hpr)
     val pasientB = opprettPasient(hpr = hpr)
     konsultasjonRepository.insert(
-      OpprettKonsultasjon(pasientA, listOf(hpr), now(), KonsultasjonStatus.PÅGÅENDE)
+      OpprettKonsultasjon(pasientA, listOf(hpr), LocalDateTime.now(), KonsultasjonStatus.PÅGÅENDE)
     )
     konsultasjonRepository.insert(
-      OpprettKonsultasjon(pasientB, listOf(hpr), now(), KonsultasjonStatus.PÅGÅENDE)
+      OpprettKonsultasjon(pasientB, listOf(hpr), LocalDateTime.now(), KonsultasjonStatus.PÅGÅENDE)
     )
 
     val konsultasjonerA = konsultasjonRepository.listByPasientId(pasientA)
@@ -123,8 +100,8 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
   fun `listByPasientId sorts konsultasjoner descending by startetTidspunkt`() = runTest {
     val hpr = HelsepersonellHpr("123")
     val pasientId = opprettPasient(hpr = hpr)
-    val eldst = now(2.hours)
-    val nyest = now()
+    val eldst = LocalDateTime.now().minusHours(2)
+    val nyest = LocalDateTime.now()
     val eldstId =
       konsultasjonRepository.insert(
         OpprettKonsultasjon(pasientId, listOf(hpr), eldst, KonsultasjonStatus.FULLFØRT)
@@ -146,7 +123,12 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
     val hprB = HelsepersonellHpr("456")
     val pasientId = opprettPasient(hpr = hprA)
     konsultasjonRepository.insert(
-      OpprettKonsultasjon(pasientId, listOf(hprA, hprB), now(), KonsultasjonStatus.PÅGÅENDE)
+      OpprettKonsultasjon(
+        pasientId,
+        listOf(hprA, hprB),
+        LocalDateTime.now(),
+        KonsultasjonStatus.PÅGÅENDE,
+      )
     )
 
     val konsultasjon = konsultasjonRepository.listByPasientId(pasientId).single()
@@ -158,7 +140,12 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
     runTest {
       val pasientId = opprettPasient()
       konsultasjonRepository.insert(
-        OpprettKonsultasjon(pasientId, emptyList(), now(), KonsultasjonStatus.PLANLAGT)
+        OpprettKonsultasjon(
+          pasientId,
+          emptyList(),
+          LocalDateTime.now(),
+          KonsultasjonStatus.PLANLAGT,
+        )
       )
 
       val konsultasjon = konsultasjonRepository.listByPasientId(pasientId).single()
@@ -177,7 +164,12 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
     val pasientId = opprettPasient(hpr = hpr)
     val oppdaterKonsultasjonRequest =
       konsultasjonRepository.insert(
-        OpprettKonsultasjon(pasientId, listOf(hpr), now(1.hours), KonsultasjonStatus.FULLFØRT)
+        OpprettKonsultasjon(
+          pasientId,
+          listOf(hpr),
+          java.time.LocalDateTime.now(),
+          KonsultasjonStatus.FULLFØRT,
+        )
       )
     konsultasjonRepository.update(
       OppdaterKonsultasjonRequest(
@@ -197,11 +189,21 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
     val hpr = HelsepersonellHpr("123")
     val pasientId = opprettPasient(hpr = hpr)
     konsultasjonRepository.insert(
-      OpprettKonsultasjon(pasientId, listOf(hpr), now(2.hours), KonsultasjonStatus.PÅGÅENDE)
+      OpprettKonsultasjon(
+        pasientId,
+        listOf(hpr),
+        LocalDateTime.now().minusHours(2),
+        KonsultasjonStatus.PÅGÅENDE,
+      )
     )
     val nyesteId =
       konsultasjonRepository.insert(
-        OpprettKonsultasjon(pasientId, listOf(hpr), now(), KonsultasjonStatus.PÅGÅENDE)
+        OpprettKonsultasjon(
+          pasientId,
+          listOf(hpr),
+          LocalDateTime.now(),
+          KonsultasjonStatus.PÅGÅENDE,
+        )
       )
 
     val aktiv = konsultasjonRepository.findActiveByPasientId(pasientId)
@@ -220,7 +222,12 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
     val pasientId = opprettPasient(hpr = hpr)
     val konsultasjonId =
       konsultasjonRepository.insert(
-        OpprettKonsultasjon(pasientId, listOf(hpr), now(), KonsultasjonStatus.PÅGÅENDE)
+        OpprettKonsultasjon(
+          pasientId,
+          listOf(hpr),
+          LocalDateTime.now(),
+          KonsultasjonStatus.PÅGÅENDE,
+        )
       )
 
     val konsultasjon = konsultasjonRepository.findByKonsultasjonId(konsultasjonId)
@@ -236,7 +243,12 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
       val annenPasientId = opprettPasient(hpr = hpr)
       val konsultasjonId =
         konsultasjonRepository.insert(
-          OpprettKonsultasjon(pasientId, listOf(hpr), now(), KonsultasjonStatus.PÅGÅENDE)
+          OpprettKonsultasjon(
+            pasientId,
+            listOf(hpr),
+            LocalDateTime.now(),
+            KonsultasjonStatus.PÅGÅENDE,
+          )
         )
 
       val updatedRows =
@@ -266,7 +278,12 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
     val pasientId = opprettPasient(hpr = hpr)
     val konsultasjonId =
       konsultasjonRepository.insert(
-        OpprettKonsultasjon(pasientId, listOf(hpr), now(), KonsultasjonStatus.PÅGÅENDE)
+        OpprettKonsultasjon(
+          pasientId,
+          listOf(hpr),
+          LocalDateTime.now(),
+          KonsultasjonStatus.PÅGÅENDE,
+        )
       )
     val updatedRows =
       konsultasjonRepository.update(
@@ -298,7 +315,12 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
     val pasientId = opprettPasient(hpr = hpr)
     val konsultasjonId =
       konsultasjonRepository.insert(
-        OpprettKonsultasjon(pasientId, listOf(hpr), now(), KonsultasjonStatus.PÅGÅENDE)
+        OpprettKonsultasjon(
+          pasientId,
+          listOf(hpr),
+          LocalDateTime.now(),
+          KonsultasjonStatus.PÅGÅENDE,
+        )
       )
 
     konsultasjonRepository.update(
@@ -313,12 +335,36 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
   }
 
   @Test
+  fun `konsultasjon retrieves an empty list of diagnoses when there are none`() = runTest {
+    val hpr = HelsepersonellHpr("123")
+    val pasientId = opprettPasient(hpr = hpr)
+    val konsultasjonId =
+      konsultasjonRepository.insert(
+        OpprettKonsultasjon(
+          pasientId,
+          listOf(hpr),
+          LocalDateTime.now(),
+          KonsultasjonStatus.PÅGÅENDE,
+        )
+      )
+
+    val konsultasjon = konsultasjonRepository.findByKonsultasjonId(konsultasjonId)
+
+    assertEquals(emptyList(), konsultasjon?.diagnoser)
+  }
+
+  @Test
   fun `update throws UgyldigDiagnoseException for an unknown diagnosis code`() = runTest {
     val hpr = HelsepersonellHpr("123")
     val pasientId = opprettPasient(hpr = hpr)
     val konsultasjonId =
       konsultasjonRepository.insert(
-        OpprettKonsultasjon(pasientId, listOf(hpr), now(), KonsultasjonStatus.PÅGÅENDE)
+        OpprettKonsultasjon(
+          pasientId,
+          listOf(hpr),
+          LocalDateTime.now(),
+          KonsultasjonStatus.PÅGÅENDE,
+        )
       )
 
     assertFailsWith<UgyldigDiagnoseException> {
@@ -347,7 +393,12 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
     val pasientId = opprettPasient(hpr = hpr)
     val konsultasjonId =
       konsultasjonRepository.insert(
-        OpprettKonsultasjon(pasientId, listOf(hpr), now(), KonsultasjonStatus.PÅGÅENDE)
+        OpprettKonsultasjon(
+          pasientId,
+          listOf(hpr),
+          LocalDateTime.now(),
+          KonsultasjonStatus.PÅGÅENDE,
+        )
       )
     val diagnose =
       OpprettDiagnoseRequest(kode = "A01", system = DiagnoseSystem.ICPC2, beskrivelse = "")
@@ -374,12 +425,22 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
 
     val konsultasjonId1 =
       konsultasjonRepository.insert(
-        OpprettKonsultasjon(pasientId, listOf(hpr), now(), KonsultasjonStatus.PÅGÅENDE)
+        OpprettKonsultasjon(
+          pasientId,
+          listOf(hpr),
+          LocalDateTime.now(),
+          KonsultasjonStatus.PÅGÅENDE,
+        )
       )
 
     val konsultasjonId2 =
       konsultasjonRepository.insert(
-        OpprettKonsultasjon(pasientId, listOf(hpr), now(), KonsultasjonStatus.PÅGÅENDE)
+        OpprettKonsultasjon(
+          pasientId,
+          listOf(hpr),
+          LocalDateTime.now(),
+          KonsultasjonStatus.PÅGÅENDE,
+        )
       )
 
     val diagnose =

@@ -59,6 +59,7 @@ dependencies {
   implementation(libs.exposed.jdbc)
   implementation(libs.exposed.json)
   implementation(libs.exposed.kotlin.datetime)
+  implementation(libs.exposed.java.time)
   implementation(libs.postgresql)
   implementation(libs.flyway.core)
   implementation(libs.flyway.postgresql)
