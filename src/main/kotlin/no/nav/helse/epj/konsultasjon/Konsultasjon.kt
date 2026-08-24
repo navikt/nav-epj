@@ -1,7 +1,7 @@
 package no.nav.helse.epj.konsultasjon
 
+import java.time.LocalDateTime
 import kotlin.uuid.Uuid
-import kotlinx.datetime.LocalDateTime
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.pasient.PatientId

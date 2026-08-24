@@ -17,10 +17,10 @@ import no.nav.helse.smart.security.configureSmartSecurity
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
 fun Application.module() {
+  configureSerialization()
   configureDependencies()
   configureStatusPages()
 
-  configureSerialization()
   configureDatabases()
   configureHealthCheck()
   configureCors()

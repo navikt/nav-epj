@@ -13,8 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as PatientsIndexRouteImport } from './routes/patients/index'
 import { Route as PatientsPatientIdIndexRouteImport } from './routes/patients/$patientId/index'
 import { Route as PatientsPatientIdKonsultasjonKonsultasjonIdIndexRouteImport } from './routes/patients/$patientId/konsultasjon/$konsultasjonId/index'
-import { Route as PatientsPatientIdKonsultasjonKonsultasjonIdValidatorIndexRouteImport } from './routes/patients/$patientId/konsultasjon/$konsultasjonId/validator/index'
 import { Route as PatientsPatientIdKonsultasjonKonsultasjonIdSykmeldingIndexRouteImport } from './routes/patients/$patientId/konsultasjon/$konsultasjonId/sykmelding/index'
+import { Route as PatientsPatientIdKonsultasjonKonsultasjonIdValidatorIndexRouteImport } from './routes/patients/$patientId/konsultasjon/$konsultasjonId/validator/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -37,16 +37,16 @@ const PatientsPatientIdKonsultasjonKonsultasjonIdIndexRoute =
     path: '/patients/$patientId/konsultasjon/$konsultasjonId/',
     getParentRoute: () => rootRouteImport,
   } as any)
-const PatientsPatientIdKonsultasjonKonsultasjonIdValidatorIndexRoute =
-  PatientsPatientIdKonsultasjonKonsultasjonIdValidatorIndexRouteImport.update({
-    id: '/patients/$patientId/konsultasjon/$konsultasjonId/validator/',
-    path: '/patients/$patientId/konsultasjon/$konsultasjonId/validator/',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const PatientsPatientIdKonsultasjonKonsultasjonIdSykmeldingIndexRoute =
   PatientsPatientIdKonsultasjonKonsultasjonIdSykmeldingIndexRouteImport.update({
     id: '/patients/$patientId/konsultasjon/$konsultasjonId/sykmelding/',
     path: '/patients/$patientId/konsultasjon/$konsultasjonId/sykmelding/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PatientsPatientIdKonsultasjonKonsultasjonIdValidatorIndexRoute =
+  PatientsPatientIdKonsultasjonKonsultasjonIdValidatorIndexRouteImport.update({
+    id: '/patients/$patientId/konsultasjon/$konsultasjonId/validator/',
+    path: '/patients/$patientId/konsultasjon/$konsultasjonId/validator/',
     getParentRoute: () => rootRouteImport,
   } as any)
 
@@ -141,18 +141,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PatientsPatientIdKonsultasjonKonsultasjonIdIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/patients/$patientId/konsultasjon/$konsultasjonId/validator/': {
-      id: '/patients/$patientId/konsultasjon/$konsultasjonId/validator/'
-      path: '/patients/$patientId/konsultasjon/$konsultasjonId/validator'
-      fullPath: '/patients/$patientId/konsultasjon/$konsultasjonId/validator/'
-      preLoaderRoute: typeof PatientsPatientIdKonsultasjonKonsultasjonIdValidatorIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/patients/$patientId/konsultasjon/$konsultasjonId/sykmelding/': {
       id: '/patients/$patientId/konsultasjon/$konsultasjonId/sykmelding/'
       path: '/patients/$patientId/konsultasjon/$konsultasjonId/sykmelding'
       fullPath: '/patients/$patientId/konsultasjon/$konsultasjonId/sykmelding/'
       preLoaderRoute: typeof PatientsPatientIdKonsultasjonKonsultasjonIdSykmeldingIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/patients/$patientId/konsultasjon/$konsultasjonId/validator/': {
+      id: '/patients/$patientId/konsultasjon/$konsultasjonId/validator/'
+      path: '/patients/$patientId/konsultasjon/$konsultasjonId/validator'
+      fullPath: '/patients/$patientId/konsultasjon/$konsultasjonId/validator/'
+      preLoaderRoute: typeof PatientsPatientIdKonsultasjonKonsultasjonIdValidatorIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
   }

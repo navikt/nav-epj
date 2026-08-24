@@ -40,11 +40,19 @@ export const JournalnotatEntrySchema = z.object({
 
 export type JournalnotatEntry = z.infer<typeof JournalnotatEntrySchema>;
 
+export const DiagnoseSchema = z.object({
+    id: z.string(),
+    konsultasjon_id: z.string(),
+    diagnosekode: z.string(),
+    diagnosesystem: z.string(),
+});
+
 export const KonsultasjonSchema = z.object({
     id: z.string(),
     pasientId: z.string(),
     hpr: z.array(z.string()),
     journalnotat: z.array(JournalnotatEntrySchema),
+    diagnoser: z.array(DiagnoseSchema),
     startetTidspunkt: z.string(),
     avsluttetTidspunkt: z.string().nullable(),
     status: z.string(),
@@ -52,12 +60,5 @@ export const KonsultasjonSchema = z.object({
 });
 
 export type Konsultasjon = z.infer<typeof KonsultasjonSchema>;
-
-export const DiagnoseSchema = z.object({
-    id: z.string(),
-    konsultasjon_id: z.string(),
-    diagnosekode: z.string(),
-    diagnosesystem: z.string(),
-});
 
 export type Diagnose = z.infer<typeof DiagnoseSchema>;

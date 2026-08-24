@@ -1,8 +1,6 @@
 package no.nav.helse.epj.konsultasjon
 
-import kotlin.time.Clock
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
+import java.time.LocalDateTime
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.KonsultasjonStatus
@@ -65,7 +63,7 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
       OpprettKonsultasjon(
         pasientId = pasientId,
         hpr = listOf(hpr), // TODO: send inn liste med hpr i funksjonen - ikke kun en
-        startetTidspunkt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+        startetTidspunkt = LocalDateTime.now(),
         status = KonsultasjonStatus.PÅGÅENDE,
       )
     return createKonsultasjon(opprettKonsultasjon)
