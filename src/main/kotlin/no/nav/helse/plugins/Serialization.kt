@@ -28,7 +28,7 @@ val uuidModule: SimpleModule =
       Uuid::class.java,
       object : ValueDeserializer<Uuid>() {
         override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Uuid =
-          Uuid.parse(p.toString())
+          Uuid.parse(p.string)
       },
     )
   }
