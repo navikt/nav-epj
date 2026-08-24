@@ -59,10 +59,8 @@ fun Application.configureSmartRouting() {
           logger.debug("Logged in user: {}", user)
 
           val cachedPatientId =
-            valkeyService.get(
-              user.hpr
-            ) // TODO this implies that a patient id is returned from a hpr number hit, bad juju!
-            ?: return@get call.respond(
+            valkeyService.getActivePatient(user.hpr)
+              ?: return@get call.respond(
                 HttpStatusCode.Conflict,
                 "No active patient context for clinician",
               )

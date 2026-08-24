@@ -40,14 +40,14 @@ class ValkeyServiceTest : WithValkey() {
       )
 
     valkeyService.saveAuthCode(key, authCode)
-    val result = valkeyService.getAuthCode(key)
+    val result = valkeyService.getAndDeleteAuthCode(key)
 
     assertEquals(authCode, result)
   }
 
   @Test
   fun `henter auth code som ikke finnes gir null`() = runTest {
-    val result = valkeyService.getAuthCode("finnes-ikke")
+    val result = valkeyService.getAndDeleteAuthCode("finnes-ikke")
     assertNull(result)
   }
 
@@ -74,15 +74,39 @@ class ValkeyServiceTest : WithValkey() {
   }
 
   @Test
-  fun `set og get lagrer rene strenger`() = runTest {
-    val key = "string-key"
-    valkeyService.set(key, "hello")
+  fun `lagrer og henter active patient for hpr`() = runTest {
+    val hpr = "hpr-1"
+    valkeyService.setActivePatient(hpr, "patient-1")
 
-    assertEquals("hello", valkeyService.get(key))
+    assertEquals("patient-1", valkeyService.getActivePatient(hpr))
   }
 
   @Test
-  fun `get på ukjent nøkkel gir null`() = runTest { assertNull(valkeyService.get("ukjent-nokkel")) }
+  fun `active patient for ukjent hpr gir null`() = runTest {
+    assertNull(valkeyService.getActivePatient("ukjent-hpr"))
+  }
+
+  @Test
+  fun `auth code and launch context with the same id do not collide`() = runTest {
+    val sameId = "shared-id"
+    val authCode =
+      AuthCodeContext(
+        username = "Test",
+        redirectUrl = "http://test",
+        launch = LaunchContext(patientId = "patient-3", encounterId = "encounter-3"),
+        subject = "333",
+        scope = "openid",
+        clientId = "test-client-id",
+        codeChallenge = "challenge",
+      )
+    val launchContext = LaunchContext(patientId = "patient-4", encounterId = "encounter-4")
+
+    valkeyService.saveAuthCode(sameId, authCode)
+    valkeyService.saveLaunchContext(sameId, launchContext)
+
+    assertEquals(launchContext, valkeyService.getLaunchContext(sameId))
+    assertEquals(authCode, valkeyService.getAndDeleteAuthCode(sameId))
+  }
 
   @Test
   fun `setIfAbsent lagrer verdi når nøkkel ikke finnes`() = runTest {
