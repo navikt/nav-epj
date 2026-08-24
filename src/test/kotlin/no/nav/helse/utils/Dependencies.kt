@@ -16,6 +16,7 @@ import no.nav.helse.fhir.patient.PatientService
 import no.nav.helse.helseId.DebugInfo
 import no.nav.helse.helseId.HelseIdPrincipal
 import no.nav.helse.helseId.User
+import no.nav.helse.plugins.configureSerialization
 import no.nav.helse.smart.api.configureSmartRouting
 import no.nav.helse.smart.security.ClientAssertionVerifier
 import no.nav.helse.smart.security.SmartClient
@@ -29,6 +30,7 @@ private val encounterService = mockk<EncounterService>(relaxed = true)
 private val patientService = mockk<PatientService>(relaxed = true)
 
 fun Application.configureTestSmartDependencies() {
+  configureSerialization()
   dependencies {
     provide<Environment>() { simpleTestEnvironment }
     provide<ValkeyService> { valkeyService }

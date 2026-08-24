@@ -33,52 +33,33 @@ class ClientAssertionVerifier(
 
   suspend fun verify(client: SmartClient, params: Parameters): ErrorObject? {
     val jwksUri = client.jwksUri ?: return invalidClient("client has no registered jwks_uri")
-    return verifyAgainst(client, jwksUri, params)
-  }
-
-  private suspend fun verifyAgainst(
-    client: SmartClient,
-    jwksUri: String,
-    params: Parameters,
-  ): ErrorObject? {
     val jwt =
       extractAssertion(params, client.clientId) ?: return invalidClient("invalid client_assertion")
     validateHeader(jwt.header, jwksUri)?.let {
       return it
     }
-    return verifyClaimsAndClaim(client, jwt, jwksUri)
-  }
-
-  private suspend fun verifyClaimsAndClaim(
-    client: SmartClient,
-    jwt: SignedJWT,
-    jwksUri: String,
-  ): ErrorObject? {
     val claims =
       verifyClaims(client, jwt, jwksUri)
         ?: return invalidClient("client_assertion verification failed")
-    validateLifetime(claims)?.let {
-      return it
-    }
-    return claimJti(client.clientId, claims)
+    return validateLifetime(claims) ?: claimJti(client.clientId, claims)
   }
 
   private suspend fun verifyClaims(
     client: SmartClient,
     jwt: SignedJWT,
     jwksUri: String,
-  ): JWTClaimsSet? =
-    buildProcessor(client, jwksUri).let { processor ->
-      runCatching { withContext(Dispatchers.IO) { processor.process(jwt, null) } }
-        .onFailure {
-          log.warn(
-            "SMART client_assertion verification failed for client={}: {}",
-            client.clientId,
-            it.message,
-          )
-        }
-        .getOrNull()
-    }
+  ): JWTClaimsSet? {
+    val processor = buildProcessor(client, jwksUri)
+    return runCatching { withContext(Dispatchers.IO) { processor.process(jwt, null) } }
+      .onFailure {
+        log.warn(
+          "SMART client_assertion verification failed for client={}: {}",
+          client.clientId,
+          it.message,
+        )
+      }
+      .getOrNull()
+  }
 
   private fun extractAssertion(params: Parameters, clientId: String): SignedJWT? =
     runCatching { PrivateKeyJWT.parse(params.toNimbudsMultiMap()).clientAssertion }

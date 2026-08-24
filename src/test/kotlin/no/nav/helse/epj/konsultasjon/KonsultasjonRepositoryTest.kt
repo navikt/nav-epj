@@ -71,14 +71,14 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
   }*/
 
   @Test
-  fun `finner ingen konsultasjon`() = runTest {
+  fun `finds no konsultasjon`() = runTest {
     val pasientId = PatientId(Uuid.generateV4())
     val konsultasjon = konsultasjonRepository.listByPasientId(pasientId)
     assertEquals(0, konsultasjon.size)
   }
 
   @Test
-  fun `finner en konsultasjon`() = runTest {
+  fun `finds one konsultasjon`() = runTest {
     val pasientId = PatientId(Uuid.generateV4())
     val hpr = HelsepersonellHpr("123")
     pasientRepository.insert(
@@ -103,7 +103,7 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
   }
 
   @Test
-  fun `listByPasientId returnerer kun konsultasjoner for riktig pasient`() = runTest {
+  fun `listByPasientId returns only konsultasjoner for the correct patient`() = runTest {
     val hpr = HelsepersonellHpr("123")
     val pasientA = opprettPasient(hpr = hpr)
     val pasientB = opprettPasient(hpr = hpr)
@@ -120,7 +120,7 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
   }
 
   @Test
-  fun `listByPasientId sorterer konsultasjoner synkende etter startetTidspunkt`() = runTest {
+  fun `listByPasientId sorts konsultasjoner descending by startetTidspunkt`() = runTest {
     val hpr = HelsepersonellHpr("123")
     val pasientId = opprettPasient(hpr = hpr)
     val eldst = now(2.hours)
@@ -141,7 +141,7 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
   }
 
   @Test
-  fun `insert lagrer flere hpr for en konsultasjon`() = runTest {
+  fun `insert stores multiple hpr for a konsultasjon`() = runTest {
     val hprA = HelsepersonellHpr("123")
     val hprB = HelsepersonellHpr("456")
     val pasientId = opprettPasient(hpr = hprA)
@@ -154,24 +154,25 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
   }
 
   @Test
-  fun `insert med tom hpr-liste gir konsultasjon uten helsepersonell`() = runTest {
-    val pasientId = opprettPasient()
-    konsultasjonRepository.insert(
-      OpprettKonsultasjon(pasientId, emptyList(), now(), KonsultasjonStatus.PLANLAGT)
-    )
+  fun `insert with an empty hpr list gives a konsultasjon without healthcare personnel`() =
+    runTest {
+      val pasientId = opprettPasient()
+      konsultasjonRepository.insert(
+        OpprettKonsultasjon(pasientId, emptyList(), now(), KonsultasjonStatus.PLANLAGT)
+      )
 
-    val konsultasjon = konsultasjonRepository.listByPasientId(pasientId).single()
-    assertTrue(konsultasjon.hpr.isEmpty())
-  }
+      val konsultasjon = konsultasjonRepository.listByPasientId(pasientId).single()
+      assertTrue(konsultasjon.hpr.isEmpty())
+    }
 
   @Test
-  fun `findActiveByPasientId returnerer null når det ikke finnes noen konsultasjoner`() = runTest {
+  fun `findActiveByPasientId returns null when no konsultasjoner exist`() = runTest {
     val pasientId = opprettPasient()
     assertNull(konsultasjonRepository.findActiveByPasientId(pasientId))
   }
 
   @Test
-  fun `findActiveByPasientId ignorerer avsluttede konsultasjoner`() = runTest {
+  fun `findActiveByPasientId ignores completed konsultasjoner`() = runTest {
     val hpr = HelsepersonellHpr("123")
     val pasientId = opprettPasient(hpr = hpr)
     val oppdaterKonsultasjonRequest =
@@ -192,7 +193,7 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
   }
 
   @Test
-  fun `findActiveByPasientId returnerer nyeste aktive konsultasjon`() = runTest {
+  fun `findActiveByPasientId returns the newest active konsultasjon`() = runTest {
     val hpr = HelsepersonellHpr("123")
     val pasientId = opprettPasient(hpr = hpr)
     konsultasjonRepository.insert(
@@ -209,12 +210,12 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
   }
 
   @Test
-  fun `findByKonsultasjonId returnerer null for ukjent id`() = runTest {
+  fun `findByKonsultasjonId returns null for an unknown id`() = runTest {
     assertNull(konsultasjonRepository.findByKonsultasjonId(KonsultasjonId(Uuid.generateV4())))
   }
 
   @Test
-  fun `findByKonsultasjonId returnerer konsultasjon for kjent id`() = runTest {
+  fun `findByKonsultasjonId returns the konsultasjon for a known id`() = runTest {
     val hpr = HelsepersonellHpr("123")
     val pasientId = opprettPasient(hpr = hpr)
     val konsultasjonId =
@@ -228,7 +229,7 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
   }
 
   @Test
-  fun `update returnerer 0 rader og gjør ingen endringer når pasientId ikke eier konsultasjonen`() =
+  fun `update returns 0 rows and makes no changes when pasientId does not own the konsultasjon`() =
     runTest {
       val hpr = HelsepersonellHpr("123")
       val pasientId = opprettPasient(hpr = hpr)
@@ -260,44 +261,39 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
     }
 
   @Test
-  fun `update legger til nytt journalnotat, lagrer diagnose og ferdigstiller konsultasjon`() =
-    runTest {
-      val hpr = HelsepersonellHpr("123")
-      val pasientId = opprettPasient(hpr = hpr)
-      val konsultasjonId =
-        konsultasjonRepository.insert(
-          OpprettKonsultasjon(pasientId, listOf(hpr), now(), KonsultasjonStatus.PÅGÅENDE)
-        )
-      val updatedRows =
-        konsultasjonRepository.update(
-          OppdaterKonsultasjonRequest(
-            konsultasjonId = konsultasjonId,
-            diagnoser =
-              listOf(
-                OpprettDiagnoseRequest(
-                  kode = "A01",
-                  system = DiagnoseSystem.ICPC2,
-                  beskrivelse = "",
-                )
-              ),
-            journalNotat = "oppdatert notat",
-            ferdigstill = true,
-          ),
-          pasientId,
-        )
+  fun `update adds a new journalnotat, stores diagnose and completes konsultasjon`() = runTest {
+    val hpr = HelsepersonellHpr("123")
+    val pasientId = opprettPasient(hpr = hpr)
+    val konsultasjonId =
+      konsultasjonRepository.insert(
+        OpprettKonsultasjon(pasientId, listOf(hpr), now(), KonsultasjonStatus.PÅGÅENDE)
+      )
+    val updatedRows =
+      konsultasjonRepository.update(
+        OppdaterKonsultasjonRequest(
+          konsultasjonId = konsultasjonId,
+          diagnoser =
+            listOf(
+              OpprettDiagnoseRequest(kode = "A01", system = DiagnoseSystem.ICPC2, beskrivelse = "")
+            ),
+          journalNotat = "oppdatert notat",
+          ferdigstill = true,
+        ),
+        pasientId,
+      )
 
-      // 1 for ny diagnose + 1 for nytt journalnotat (insert) + 1 for ferdigstilt konsultasjon
-      assertEquals(3, updatedRows)
-      val konsultasjon = konsultasjonRepository.findByKonsultasjonId(konsultasjonId)
-      assertNotNull(konsultasjon)
-      assertEquals(KonsultasjonStatus.FULLFØRT, konsultasjon.status)
-      assertNotNull(konsultasjon.avsluttetTidspunkt)
-      assertEquals(1, konsultasjon.journalnotat.size)
-      assertEquals("oppdatert notat", konsultasjon.journalnotat.last().journalnotat)
-    }
+    // 1 for ny diagnose + 1 for nytt journalnotat (insert) + 1 for ferdigstilt konsultasjon
+    assertEquals(3, updatedRows)
+    val konsultasjon = konsultasjonRepository.findByKonsultasjonId(konsultasjonId)
+    assertNotNull(konsultasjon)
+    assertEquals(KonsultasjonStatus.FULLFØRT, konsultasjon.status)
+    assertNotNull(konsultasjon.avsluttetTidspunkt)
+    assertEquals(1, konsultasjon.journalnotat.size)
+    assertEquals("oppdatert notat", konsultasjon.journalnotat.last().journalnotat)
+  }
 
   @Test
-  fun `update lar konsultasjonen forbli åpen når ferdigstill er false`() = runTest {
+  fun `update leaves the konsultasjon open when ferdigstill is false`() = runTest {
     val hpr = HelsepersonellHpr("123")
     val pasientId = opprettPasient(hpr = hpr)
     val konsultasjonId =
@@ -317,7 +313,7 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
   }
 
   @Test
-  fun `update kaster UgyldigDiagnoseException for ukjent diagnosekode`() = runTest {
+  fun `update throws UgyldigDiagnoseException for an unknown diagnosis code`() = runTest {
     val hpr = HelsepersonellHpr("123")
     val pasientId = opprettPasient(hpr = hpr)
     val konsultasjonId =
@@ -346,7 +342,7 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
   }
 
   @Test
-  fun `updateDiagnose lagrer ikke samme diagnose to ganger på samme konsultasjon`() = runTest {
+  fun `updateDiagnose does not store the same diagnose twice on the same konsultasjon`() = runTest {
     val hpr = HelsepersonellHpr("123")
     val pasientId = opprettPasient(hpr = hpr)
     val konsultasjonId =
@@ -372,7 +368,7 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
   }
 
   @Test
-  fun `updateDiagnose lagrer samme diagnose på forskjellige konsultasjoner`() = runTest {
+  fun `updateDiagnose stores the same diagnose on different konsultasjoner`() = runTest {
     val hpr = HelsepersonellHpr("123")
     val pasientId = opprettPasient(hpr = hpr)
 

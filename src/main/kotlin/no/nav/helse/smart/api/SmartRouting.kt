@@ -22,6 +22,7 @@ import no.nav.helse.smart.TokenResponse
 import no.nav.helse.smart.security.ClientAssertionVerifier
 import no.nav.helse.smart.security.SmartKeys
 import no.nav.helse.smart.security.SmartScope
+import no.nav.helse.smart.security.TokenEndpointAuthMethod
 import no.nav.helse.smart.security.authenticateClient
 import no.nav.helse.smart.security.codeChallengeS256
 import no.nav.helse.smart.security.grantScopes
@@ -260,7 +261,15 @@ fun Application.configureSmartRouting() {
               OAuth2Error.INVALID_CLIENT.appendDescription("unknown client"),
             )
         authenticateClient(call.request, acceptedClient, params, clientAssertionVerifier)?.let {
-          return@post rejectToken(HttpStatusCode.Unauthorized, it)
+          val challenge =
+            if (
+              acceptedClient.tokenEndpointAuthMethod == TokenEndpointAuthMethod.CLIENT_SECRET_BASIC
+            ) {
+              "Basic"
+            } else {
+              null
+            }
+          return@post rejectToken(HttpStatusCode.Unauthorized, it, challenge)
         }
 
         val ctx =
@@ -315,14 +324,15 @@ fun Application.configureSmartRouting() {
         val tokenResponse =
           TokenResponse(
             accessToken = accessToken,
-            idToken = idToken ?: "",
-            patient = if (hasLaunchContext) ctx.launch.patientId else "",
-            encounter = if (hasLaunchContext) ctx.launch.encounterId else "",
+            idToken = idToken,
+            patient = if (hasLaunchContext) ctx.launch.patientId else null,
+            encounter = if (hasLaunchContext) ctx.launch.encounterId else null,
             // TODO token refresh is not implemented yet.
             refreshToken =
               if (SmartScope.Other("offline_access") in grantedScopes) UUID.randomUUID().toString()
-              else "",
+              else null,
             scope = ctx.scope,
+            needPatientBanner = hasLaunchContext,
           )
         call.respond(tokenResponse)
       }
@@ -364,11 +374,16 @@ fun Application.configureSmartRouting() {
               listOf(
                 "launch-ehr",
                 "permission-patient",
+                "permission-user",
+                "permission-offline",
+                "permission-v1",
                 "permission-v2",
                 "client-public",
                 "client-confidential-symmetric",
                 "client-confidential-asymmetric",
                 "context-ehr-patient",
+                "context-ehr-encounter",
+                "context-banner",
                 "sso-openid-connect",
               ),
             tokenEndpointAuthMethodsSupported =

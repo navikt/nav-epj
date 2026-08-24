@@ -9,7 +9,7 @@ import org.junit.Test
 class ValkeyServiceTest : WithValkey() {
 
   @Test
-  fun `lagrer og henter launch context`() = runTest {
+  fun `stores and retrieves launch context`() = runTest {
     val key = "launch-1"
     val context = LaunchContext(patientId = "patient-1", encounterId = "encounter-1", hpr = "hpr-1")
 
@@ -20,7 +20,7 @@ class ValkeyServiceTest : WithValkey() {
   }
 
   @Test
-  fun `launch context kan kun hentes en gang`() = runTest {
+  fun `launch context can only be retrieved once`() = runTest {
     val key = "launch-once"
     val context = LaunchContext(patientId = "patient-1", encounterId = "encounter-1", hpr = "hpr-1")
 
@@ -32,13 +32,13 @@ class ValkeyServiceTest : WithValkey() {
   }
 
   @Test
-  fun `henter launch context som ikke finnes gir null`() = runTest {
+  fun `getting a launch context that does not exist returns null`() = runTest {
     val result = valkeyService.getAndDeleteLaunchContext("finnes-ikke")
     assertNull(result)
   }
 
   @Test
-  fun `lagrer og henter auth code`() = runTest {
+  fun `stores and retrieves auth code`() = runTest {
     val key = "auth-code-1"
     val authCode =
       AuthCodeContext(
@@ -58,13 +58,13 @@ class ValkeyServiceTest : WithValkey() {
   }
 
   @Test
-  fun `henter auth code som ikke finnes gir null`() = runTest {
+  fun `getting an auth code that does not exist returns null`() = runTest {
     val result = valkeyService.getAndDeleteAuthCode("finnes-ikke")
     assertNull(result)
   }
 
   @Test
-  fun `getAndDeleteAuthCode returnerer og sletter koden`() = runTest {
+  fun `getAndDeleteAuthCode returns and deletes the code`() = runTest {
     val key = "auth-code-2"
     val authCode =
       AuthCodeContext(
@@ -86,7 +86,7 @@ class ValkeyServiceTest : WithValkey() {
   }
 
   @Test
-  fun `lagrer og henter active patient for hpr`() = runTest {
+  fun `stores and retrieves active patient for hpr`() = runTest {
     val hpr = "hpr-1"
     valkeyService.setActivePatient(hpr, "patient-1")
 
@@ -94,7 +94,7 @@ class ValkeyServiceTest : WithValkey() {
   }
 
   @Test
-  fun `active patient for ukjent hpr gir null`() = runTest {
+  fun `active patient for an unknown hpr returns null`() = runTest {
     assertNull(valkeyService.getActivePatient("ukjent-hpr"))
   }
 
@@ -122,14 +122,14 @@ class ValkeyServiceTest : WithValkey() {
   }
 
   @Test
-  fun `setIfAbsent lagrer verdi når nøkkel ikke finnes`() = runTest {
+  fun `setIfAbsent stores the value when the key does not exist`() = runTest {
     val result = valkeyService.setIfAbsent("jti-1", "", ttlSeconds = 60)
     assertEquals(true, result)
     assertEquals("", valkeyService.get("jti-1"))
   }
 
   @Test
-  fun `setIfAbsent gir false når nøkkel allerede finnes`() = runTest {
+  fun `setIfAbsent returns false when the key already exists`() = runTest {
     valkeyService.setIfAbsent("jti-2", "", ttlSeconds = 60)
     val result = valkeyService.setIfAbsent("jti-2", "", ttlSeconds = 60)
     assertEquals(false, result)

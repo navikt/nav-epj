@@ -43,9 +43,12 @@ fun verifyClientSecretBasic(request: ApplicationRequest, client: SmartClient): E
 private fun basicClientId(request: ApplicationRequest): String? = basicCredentials(request)?.first
 
 private fun basicCredentials(request: ApplicationRequest): Pair<String, String>? =
-  (request.parseAuthorizationHeader() as? HttpAuthHeader.Single)
+  runCatching { request.parseAuthorizationHeader() }
+    .getOrNull()
+    .let { it as? HttpAuthHeader.Single }
     ?.takeIf { it.authScheme == AuthScheme.Basic }
-    ?.let { String(Base64.getDecoder().decode(it.blob)) }
+    ?.let { runCatching { String(Base64.getDecoder().decode(it.blob)) }.getOrNull() }
+    ?.takeIf { ":" in it }
     ?.let { it.substringBefore(":") to it.substringAfter(":") }
 
 private fun invalidClient(description: String): ErrorObject =
