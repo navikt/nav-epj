@@ -31,12 +31,12 @@ class PasientRepositoryTest : WithPostgresql() {
     )
 
   @Test
-  fun `findById returnerer null når pasient ikke finnes`() = runTest {
+  fun `findById returns null when patient does not exist`() = runTest {
     assertNull(pasientRepository.findById(Uuid.generateV4()))
   }
 
   @Test
-  fun `findById returnerer pasient etter insert`() = runTest {
+  fun `findById returns patient after insert`() = runTest {
     val pasient = nyPasient()
     pasientRepository.insert(pasient)
 
@@ -48,12 +48,12 @@ class PasientRepositoryTest : WithPostgresql() {
   }
 
   @Test
-  fun `findByFnr returnerer null når fnr ikke finnes`() = runTest {
+  fun `findByFnr returns null when fnr does not exist`() = runTest {
     assertNull(pasientRepository.findByFnr("finnes-ikke"))
   }
 
   @Test
-  fun `findByFnr returnerer pasient med riktig fnr`() = runTest {
+  fun `findByFnr returns patient with the correct fnr`() = runTest {
     val pasient = nyPasient(fnr = "12345678910")
     pasientRepository.insert(pasient)
 
@@ -63,7 +63,7 @@ class PasientRepositoryTest : WithPostgresql() {
   }
 
   @Test
-  fun `insert med samme id to ganger oppretter ikke duplikat`() = runTest {
+  fun `insert with the same id twice does not create a duplicate`() = runTest {
     val pasient = nyPasient()
     pasientRepository.insert(pasient)
     pasientRepository.insert(pasient.copy(navn = "annet navn"))

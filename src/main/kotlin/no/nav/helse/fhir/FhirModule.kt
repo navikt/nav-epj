@@ -8,6 +8,7 @@ import io.ktor.server.plugins.*
 import io.ktor.server.plugins.di.*
 import io.ktor.server.routing.*
 import kotlin.uuid.Uuid
+import no.nav.helse.fhir.capabilitystatement.capabilityStatementRoutes
 import no.nav.helse.fhir.condition.ConditionService
 import no.nav.helse.fhir.condition.conditionRoutes
 import no.nav.helse.fhir.documentreference.DocumentReferenceId
@@ -25,6 +26,8 @@ import no.nav.helse.fhir.patient.patientRoutes
 import no.nav.helse.fhir.practitioner.PractitionerId
 import no.nav.helse.fhir.practitioner.PractitionerService
 import no.nav.helse.fhir.practitioner.pracitionerRoutes
+import no.nav.helse.fhir.practitionerrole.PractitionerRoleService
+import no.nav.helse.fhir.practitionerrole.practitionerRoleRoutes
 
 fun Application.configureFhirModule() {
   val conditionService: ConditionService by dependencies
@@ -32,17 +35,20 @@ fun Application.configureFhirModule() {
   val organizationService: OrganizationService by dependencies
   val patientService: PatientService by dependencies
   val practitionerService: PractitionerService by dependencies
+  val practitionerRoleService: PractitionerRoleService by dependencies
   val documentReferenceService: DocumentReferenceService by dependencies
   val fhirJson = FhirR4Json()
   val fhirContentType = ContentType("application", "fhir+json")
 
   routing {
+    capabilityStatementRoutes(fhirJson, fhirContentType)
     authenticate("smart-access-token") {
       conditionRoutes(conditionService, fhirJson, fhirContentType)
       encounterRoutes(encounterService, fhirJson, fhirContentType)
       organizationRoutes(organizationService, fhirJson, fhirContentType)
       patientRoutes(patientService, fhirJson, fhirContentType)
       pracitionerRoutes(practitionerService, fhirJson, fhirContentType)
+      practitionerRoleRoutes(practitionerRoleService, fhirJson, fhirContentType)
       documentReferenceRoutes(documentReferenceService, fhirJson, fhirContentType)
     }
   }

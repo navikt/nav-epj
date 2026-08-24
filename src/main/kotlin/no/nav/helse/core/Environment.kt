@@ -1,7 +1,10 @@
 package no.nav.helse.core
 
 import io.ktor.server.config.*
+import java.net.URI
 import no.nav.helse.smart.security.SmartClient
+import no.nav.helse.smart.security.TokenEndpointAuthMethod
+import no.nav.helse.smart.security.parseRegisteredScopes
 
 class Environment(
   val postgres: PostgresConfig,
@@ -19,6 +22,52 @@ class SmartConfig(
   val fhirServerUrl: String,
   val clients: List<SmartClient>,
 )
+
+private fun smartClient(c: ApplicationConfig): SmartClient {
+  val clientId = c.property("clientId").getString()
+  val clientSecret = c.propertyOrNull("clientSecret")?.getString()
+  val jwksUri = c.propertyOrNull("jwksUri")?.getString()
+  val method =
+    c.propertyOrNull("tokenEndpointAuthMethod")?.getString()?.let(TokenEndpointAuthMethod::from)
+      ?: if (clientSecret != null) TokenEndpointAuthMethod.CLIENT_SECRET_BASIC
+      else TokenEndpointAuthMethod.NONE
+
+  when (method) {
+    TokenEndpointAuthMethod.PRIVATE_KEY_JWT -> {
+      require(jwksUri != null) {
+        "smart.clients: client '${c.property("clientId").getString()}' declares private_key_jwt but has no jwksUri"
+      }
+      requireSecureJwksUri(clientId, jwksUri)
+    }
+    TokenEndpointAuthMethod.CLIENT_SECRET_BASIC ->
+      require(clientSecret != null) {
+        "smart.clients: client '${c.property("clientId").getString()}' declares client_secret_basic but has no clientSecret"
+      }
+    TokenEndpointAuthMethod.NONE -> Unit
+  }
+
+  return SmartClient(
+    clientId = clientId,
+    redirectUris = c.property("redirectUris").getList(),
+    launchUris = c.property("launchUris").getList(),
+    tokenEndpointAuthMethod = method,
+    clientSecret = clientSecret,
+    jwksUri = jwksUri,
+    allowedScopes = parseRegisteredScopes(c.property("scopes").getList()),
+  )
+}
+
+private val LOCAL_JWKS_HOSTS = setOf("localhost", "127.0.0.1")
+
+private fun requireSecureJwksUri(clientId: String, jwksUri: String) {
+  val uri = URI(jwksUri)
+  require(uri.scheme == "https" || uri.host in LOCAL_JWKS_HOSTS) {
+    "smart.clients: client '$clientId' has an insecure jwksUri ($jwksUri); " +
+      "jwks_uri must use https, since a plain http fetch can be intercepted and " +
+      "the attacker's own key substituted, defeating private_key_jwt entirely " +
+      "(plain http is only permitted for localhost during local development)"
+  }
+}
 
 data class ValkeyConfig(
   val host: String,
@@ -40,15 +89,7 @@ fun initEnvironment(config: ApplicationConfig): Environment {
       SmartConfig(
         issuerBaseUrl = config.property("smart.issuerBaseUrl").getString(),
         fhirServerUrl = config.property("smart.fhirServerUrl").getString(),
-        clients =
-          config.configList("smart.clients").map { c ->
-            SmartClient(
-              clientId = c.property("clientId").getString(),
-              redirectUris = c.property("redirectUris").getList(),
-              launchUris = c.property("launchUris").getList(),
-              clientSecret = c.propertyOrNull("clientSecret")?.getString(),
-            )
-          },
+        clients = config.configList("smart.clients").map { c -> smartClient(c) },
       ),
     valkey =
       ValkeyConfig(

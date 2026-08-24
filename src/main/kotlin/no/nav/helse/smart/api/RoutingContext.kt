@@ -31,8 +31,13 @@ suspend fun RoutingContext.rejectViaRedirect(
   call.respondRedirect(target)
 }
 
-suspend fun RoutingContext.rejectToken(status: HttpStatusCode, error: ErrorObject) {
+suspend fun RoutingContext.rejectToken(
+  status: HttpStatusCode,
+  error: ErrorObject,
+  wwwAuthenticateScheme: String? = null,
+) {
   logger.warn("SMART token request rejected: error={}", error.code)
+  wwwAuthenticateScheme?.let { call.response.headers.append(HttpHeaders.WWWAuthenticate, it) }
   call.respond(status, error.toJSONObject())
 }
 

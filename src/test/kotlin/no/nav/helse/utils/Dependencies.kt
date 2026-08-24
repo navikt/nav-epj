@@ -1,5 +1,7 @@
 package no.nav.helse.utils
 
+import com.nimbusds.jose.jwk.JWKSet
+import com.nimbusds.jose.jwk.source.ImmutableJWKSet
 import io.ktor.server.application.Application
 import io.ktor.server.auth.authentication
 import io.ktor.server.plugins.di.dependencies
@@ -14,8 +16,12 @@ import no.nav.helse.fhir.patient.PatientService
 import no.nav.helse.helseId.DebugInfo
 import no.nav.helse.helseId.HelseIdPrincipal
 import no.nav.helse.helseId.User
+import no.nav.helse.plugins.configureSerialization
 import no.nav.helse.smart.api.configureSmartRouting
+import no.nav.helse.smart.security.ClientAssertionVerifier
 import no.nav.helse.smart.security.SmartClient
+import no.nav.helse.smart.security.TokenEndpointAuthMethod
+import no.nav.helse.smart.security.parseRegisteredScopes
 import no.nav.helse.smart.valkey.ValkeyService
 import org.testcontainers.postgresql.PostgreSQLContainer
 
@@ -24,11 +30,13 @@ private val encounterService = mockk<EncounterService>(relaxed = true)
 private val patientService = mockk<PatientService>(relaxed = true)
 
 fun Application.configureTestSmartDependencies() {
+  configureSerialization()
   dependencies {
     provide<Environment>() { simpleTestEnvironment }
     provide<ValkeyService> { valkeyService }
     provide<EncounterService> { encounterService }
     provide<PatientService> { patientService }
+    provide<ClientAssertionVerifier> { clientAssertionVerifier }
   }
   authentication {
     provider("wonderwall-helseid") {
@@ -58,6 +66,9 @@ fun createIntegrationEnvironment(postgres: PostgreSQLContainer) =
               clientId = "test-client-id",
               redirectUris = listOf("http://test"),
               launchUris = listOf("http://test/fhir/launch"),
+              tokenEndpointAuthMethod = TokenEndpointAuthMethod.NONE,
+              allowedScopes =
+                parseRegisteredScopes(listOf("openid", "fhirUser", "launch", "patient/*.cruds")),
             )
           ),
       ),
@@ -78,9 +89,19 @@ val simpleTestEnvironment =
               clientId = "test-client-id",
               redirectUris = listOf("http://test"),
               launchUris = listOf("http://test/fhir/launch"),
+              tokenEndpointAuthMethod = TokenEndpointAuthMethod.NONE,
+              allowedScopes =
+                parseRegisteredScopes(listOf("openid", "fhirUser", "launch", "patient/*.cruds")),
             )
           ),
       ),
     valkey = ValkeyConfig("valkey", 8080, false, null, null),
     epj = EpjConfig(baseUrl = "testurl"),
+  )
+
+private val clientAssertionVerifier =
+  ClientAssertionVerifier(
+    env = simpleTestEnvironment,
+    jtiStore = valkeyService,
+    jwkSetProvider = { ImmutableJWKSet(JWKSet()) },
   )

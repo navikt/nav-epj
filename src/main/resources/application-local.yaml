@@ -23,10 +23,38 @@ smart:
     - clientId: "syk-inn"
       redirectUris: ["http://localhost:3000", "http://localhost:3000/fhir/callback"]
       launchUris: ["http://localhost:3000/fhir/launch"]
+      tokenEndpointAuthMethod: "client_secret_basic"
       clientSecret: "dev-mode-client-secret"
+      scopes:
+        - openid
+        - profile
+        - fhirUser
+        - launch
+        - offline_access
+        - patient/Patient.rs
+        - patient/Encounter.rs
+        - patient/Condition.rs
+        - patient/DocumentReference.crs
     - clientId: "NAV_SMART_on_FHIR_validator"
       redirectUris: ["http://localhost:3001/callback"]
       launchUris: ["http://localhost:3001/launch"]
+      tokenEndpointAuthMethod: "private_key_jwt"
+      jwksUri: "http://localhost:3001/.well-known/jwks.json"
+      scopes:
+        - openid
+        - fhirUser
+        - launch
+        - launch/patient
+        - offline_access
+        - patient/Patient.rs
+        - patient/Practitioner.rs
+        - patient/PractitionerRole.rs
+        - patient/Organization.rs
+        - patient/Encounter.rs
+        - patient/Condition.rs
+        - patient/DocumentReference.cruds
+        - patient/Binary.cruds
+        - patient/QuestionnaireResponse.cruds
 
 valkey:
   host: localhost

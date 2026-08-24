@@ -1,10 +1,12 @@
 package no.nav.helse.smart.security
 
 import com.auth0.jwt.JWT
+import io.ktor.http.auth.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.plugins.di.*
+import io.ktor.server.request.*
 import no.nav.helse.core.Environment
 
 /**
@@ -17,18 +19,23 @@ fun Application.configureSmartSecurity() {
   authentication {
     jwt("smart-access-token") {
       realm = "fhir"
-      verifier(JWT.require(SmartKeys.algorithm).withIssuer(env.smart.issuerBaseUrl).build())
+      verifier(
+        JWT.require(SmartKeys.algorithm)
+          .withIssuer(env.smart.issuerBaseUrl)
+          .withAudience(env.smart.fhirServerUrl)
+          .build()
+      )
       validate { credentials ->
-        val scope = credentials.payload.getClaim("scope").asString() ?: return@validate null
-        val hasFhirScope =
-          scope.contains("patient/") || scope.contains("user/") || scope.contains("system/")
-        if (!hasFhirScope) {
+        val token = request.bearerToken() ?: return@validate null
+        if (runCatching { JWT.decode(token).type }.getOrNull() != "at+jwt") {
           return@validate null
         }
 
+        val scopes = credentials.payload.getClaim("scope").asString() ?: return@validate null
+
         SmartPrincipal(
           subject = credentials.payload.subject ?: return@validate null,
-          scope = scope,
+          scopes = parseScopes(scopes),
           patient = credentials.payload.getClaim("patient").asString(),
           encounter = credentials.payload.getClaim("encounter").asString(),
         )
@@ -36,3 +43,8 @@ fun Application.configureSmartSecurity() {
     }
   }
 }
+
+private fun ApplicationRequest.bearerToken(): String? =
+  (parseAuthorizationHeader() as? HttpAuthHeader.Single)
+    ?.takeIf { it.authScheme.equals(AuthScheme.Bearer, ignoreCase = true) }
+    ?.blob

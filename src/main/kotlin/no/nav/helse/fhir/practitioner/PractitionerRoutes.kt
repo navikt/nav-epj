@@ -6,6 +6,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.helse.core.utils.logger
 import no.nav.helse.fhir.practitionerId
+import no.nav.helse.fhir.security.requireFhirScopeOrFhirUserSelf
+import no.nav.helse.smart.security.Interaction
 
 fun Route.pracitionerRoutes(
   practitionerService: PractitionerService,
@@ -16,6 +18,7 @@ fun Route.pracitionerRoutes(
   route("/fhir") {
     get("/Practitioner/{practitionerId}") {
       val practitionerId = call.practitionerId()
+      call.requireFhirScopeOrFhirUserSelf("Practitioner", Interaction.READ, practitionerId.value)
 
       val practitioner =
         practitionerService.getPractitioner(practitionerId)

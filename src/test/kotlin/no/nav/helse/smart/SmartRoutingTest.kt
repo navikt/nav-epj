@@ -11,7 +11,7 @@ import org.junit.Test
 class SmartRoutingTest() {
 
   @Test
-  fun `GET fhir launch uten url gir 400`() = testApplication {
+  fun `GET fhir launch without url returns 400`() = testApplication {
     application { configureTestSmartDependencies() }
     val response = client.get("/fhir/launch")
     assertEquals(HttpStatusCode.BadRequest, response.status)
@@ -19,17 +19,17 @@ class SmartRoutingTest() {
 
   // TODO: fullføre tester under
   @Test
-  fun `GET fhir launch med ukjent app-url `() = testApplication {
+  fun `GET fhir launch with an unknown app url`() = testApplication {
     application { configureTestSmartDependencies() }
   }
 
   @Test
-  fun `GET fhir launch med ukjent pasient gir 404`() = testApplication {
+  fun `GET fhir launch with an unknown patient returns 404`() = testApplication {
     application { configureTestSmartDependencies() }
   }
 
   @Test
-  fun `GET fhir launch med gyldig context redirecter til app med iss og launch`() =
+  fun `GET fhir launch with valid context redirects to app with iss and launch`() =
     testApplication {
       application { configureTestSmartDependencies() }
     }

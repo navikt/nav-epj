@@ -67,7 +67,7 @@ class KonsultasjonRoutesTest {
     )
 
   @Test
-  fun `GET konsultasjon med kjent id returnerer 200`() = testApp {
+  fun `GET konsultasjon with known id returns 200`() = testApp {
     val konsultasjonId = KonsultasjonId(Uuid.generateV4())
     coEvery { konsultasjonService.getKonsultasjon(konsultasjonId) } returns
       konsultasjon(id = konsultasjonId)
@@ -78,7 +78,7 @@ class KonsultasjonRoutesTest {
   }
 
   @Test
-  fun `GET konsultasjon med ukjent id returnerer 500`() = testApp {
+  fun `GET konsultasjon with unknown id returns 404`() = testApp {
     val konsultasjonId = KonsultasjonId(Uuid.generateV4())
     coEvery { konsultasjonService.getKonsultasjon(konsultasjonId) } throws
       KonsultasjonNotFoundException(konsultasjonId)
@@ -89,7 +89,7 @@ class KonsultasjonRoutesTest {
   }
 
   @Test
-  fun `test`() = testApp {
+  fun `GET konsultasjoner for unknown patient returns 404`() = testApp {
     val patientId = PatientId(Uuid.generateV4())
     coEvery { konsultasjonService.getKonsultasjoner(patientId) } throws
       KonsultasjonNotFoundForPatientException(patientId)

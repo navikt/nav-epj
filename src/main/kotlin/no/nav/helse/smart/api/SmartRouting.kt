@@ -3,14 +3,12 @@ package no.nav.helse.smart.api
 import com.auth0.jwt.JWT
 import com.nimbusds.oauth2.sdk.OAuth2Error
 import io.ktor.http.*
-import io.ktor.http.auth.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.plugins.di.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import java.security.MessageDigest
 import java.util.*
 import kotlin.uuid.Uuid
 import no.nav.helse.core.Environment
@@ -21,8 +19,16 @@ import no.nav.helse.fhir.patient.PatientService
 import no.nav.helse.helseId.loggedInUser
 import no.nav.helse.smart.SmartDiscoveryDocument
 import no.nav.helse.smart.TokenResponse
+import no.nav.helse.smart.security.ClientAssertionVerifier
 import no.nav.helse.smart.security.SmartKeys
+import no.nav.helse.smart.security.SmartScope
+import no.nav.helse.smart.security.TokenEndpointAuthMethod
+import no.nav.helse.smart.security.authenticateClient
 import no.nav.helse.smart.security.codeChallengeS256
+import no.nav.helse.smart.security.grantScopes
+import no.nav.helse.smart.security.parseScopes
+import no.nav.helse.smart.security.resolveAssertedClientId
+import no.nav.helse.smart.security.serialize
 import no.nav.helse.smart.valkey.AuthCodeContext
 import no.nav.helse.smart.valkey.LaunchContext
 import no.nav.helse.smart.valkey.ValkeyService
@@ -32,6 +38,7 @@ fun Application.configureSmartRouting() {
   val patientService: PatientService by dependencies
   val encounterService: EncounterService by dependencies
   val valkeyService: ValkeyService by dependencies
+  val clientAssertionVerifier: ClientAssertionVerifier by dependencies
 
   val issuerUrl = env.smart.issuerBaseUrl
   val clients = env.smart.clients
@@ -52,18 +59,16 @@ fun Application.configureSmartRouting() {
           val user = loggedInUser()
           logger.debug("Logged in user: {}", user)
 
-          val patientId =
-            valkeyService.get(
-              user.hpr
-            ) // TODO this implies that a patient id is returned from a hpr number hit, bad juju!
-            ?: return@get call.respond(
+          val cachedPatientId =
+            valkeyService.getActivePatient(user.hpr)
+              ?: return@get call.respond(
                 HttpStatusCode.Conflict,
                 "No active patient context for clinician",
               )
 
-          logger.debug("Patient id from valkey: {}", patientId)
+          logger.debug("Patient id from valkey: {}", cachedPatientId)
           // FHIR launch requires an active patient
-          val patientInputId = PatientInputId(Uuid.parse(patientId))
+          val patientInputId = PatientInputId(Uuid.parse(cachedPatientId))
           logger.debug("PatientInputId: {}", patientInputId)
           val patient =
             patientService.getPatient(patientInputId)
@@ -78,9 +83,20 @@ fun Application.configureSmartRouting() {
               )
 
           val launchId = UUID.randomUUID().toString()
-          val launchContext = LaunchContext(patient.id, encounter.id)
+          val patientId =
+            patient.id
+              ?: return@get call.respond(
+                HttpStatusCode.InternalServerError,
+                "FHIR Patient returned without an id",
+              )
+          val encounterId =
+            encounter.id
+              ?: return@get call.respond(
+                HttpStatusCode.InternalServerError,
+                "FHIR Encounter returned without an id",
+              )
 
-          valkeyService.saveLaunchContext(launchId, launchContext)
+          valkeyService.saveLaunchContext(launchId, LaunchContext(patientId, encounterId, user.hpr))
 
           val iss = env.smart.fhirServerUrl
           call.respondRedirect("$appUrl/?iss=$iss&launch=$launchId")
@@ -90,6 +106,7 @@ fun Application.configureSmartRouting() {
       route("/oidc") {
         get("/authorize") {
           val query = call.request.queryParameters
+          // Deliberate test diagnostics
           logger.debug("/oidc/authorize request with params {}", query.entries())
 
           val redirectUri =
@@ -164,28 +181,46 @@ fun Application.configureSmartRouting() {
                 ),
             )
           }
+          val user = loggedInUser()
+
           val launchContext =
-            valkeyService.getLaunchContext(launchId)
+            valkeyService.getAndDeleteLaunchContext(launchId)
               ?: return@get rejectViaRedirect(
                 redirectUri = redirectUri,
                 state = state,
                 error =
                   OAuth2Error.INVALID_REQUEST.appendDescription(
-                    "Opaque launch token was missing or wrong."
+                    "Opaque launch token was missing, wrong or already used."
                   ),
               )
 
+          if (launchContext.hpr != user.hpr) {
+            return@get rejectViaRedirect(
+              redirectUri = redirectUri,
+              state = state,
+              error =
+                OAuth2Error.INVALID_REQUEST.appendDescription(
+                  "Launch token was not issued to the authenticated clinician."
+                ),
+            )
+          }
+
+          /**
+           * The scopes granted may differ from those requested (SMART app-launch:
+           * https://build.fhir.org/ig/HL7/smart-app-launch/scopes-and-launch-context.html)
+           */
+          val grantedScope = grantScopes(parseScopes(scope), acceptedClient.allowedScopes)
+
           val code = UUID.randomUUID().toString()
 
-          val user = loggedInUser()
           valkeyService.saveAuthCode(
             code,
             AuthCodeContext(
               username = user.name,
               redirectUrl = redirectUri,
               launch = launchContext,
-              hpr = user.hpr,
-              scope = scope,
+              subject = user.hpr,
+              scope = grantedScope.serialize(),
               clientId = clientId,
               codeChallenge = codeChallenge,
             ),
@@ -200,6 +235,7 @@ fun Application.configureSmartRouting() {
       // Step 4: exchange the authorisation code for an access token.
       post("/token") {
         val params = call.receiveParameters()
+        // Deliberate test diagnostics
         log.debug("SMART: /token called with params: {}", params)
         val code = params["code"] ?: return@post rejectMissingToken("code")
         val grantType = params["grant_type"] ?: return@post rejectMissingToken("grant_type")
@@ -215,38 +251,38 @@ fun Application.configureSmartRouting() {
         val codeVerifier =
           params["code_verifier"] ?: return@post rejectMissingToken("code_verifier")
 
+        val assertedClientId =
+          resolveAssertedClientId(call.request, params)
+            ?: return@post rejectMissingToken("client_id")
+        val acceptedClient =
+          clients.find { it.clientId == assertedClientId }
+            ?: return@post rejectToken(
+              HttpStatusCode.BadRequest,
+              OAuth2Error.INVALID_CLIENT.appendDescription("unknown client"),
+            )
+        authenticateClient(call.request, acceptedClient, params, clientAssertionVerifier)?.let {
+          val challenge =
+            if (
+              acceptedClient.tokenEndpointAuthMethod == TokenEndpointAuthMethod.CLIENT_SECRET_BASIC
+            ) {
+              "Basic"
+            } else {
+              null
+            }
+          return@post rejectToken(HttpStatusCode.Unauthorized, it, challenge)
+        }
+
         val ctx =
           valkeyService.getAndDeleteAuthCode(code)
             ?: return@post rejectToken(
               HttpStatusCode.BadRequest,
               OAuth2Error.INVALID_GRANT.appendDescription("unknown or already used code"),
             )
-        val acceptedClient =
-          clients.find { it.clientId == ctx.clientId }
-            ?: return@post rejectToken(
-              HttpStatusCode.BadRequest,
-              OAuth2Error.INVALID_REQUEST.appendDescription("unknown client"),
-            )
-
-        if (acceptedClient.clientSecret != null) {
-          val basic = call.request.parseAuthorizationHeader() as? HttpAuthHeader.Single
-          val credentials =
-            basic
-              ?.takeIf { it.authScheme == AuthScheme.Basic }
-              ?.let { String(Base64.getDecoder().decode(it.blob)) }
-          val authenticated =
-            credentials != null &&
-              credentials.substringBefore(":") == ctx.clientId &&
-              MessageDigest.isEqual(
-                credentials.substringAfter(":").toByteArray(Charsets.UTF_8),
-                acceptedClient.clientSecret.toByteArray(Charsets.UTF_8),
-              )
-          if (!authenticated) {
-            return@post rejectToken(
-              HttpStatusCode.Unauthorized,
-              OAuth2Error.INVALID_CLIENT.appendDescription("client authentication failed"),
-            )
-          }
+        if (ctx.clientId != acceptedClient.clientId) {
+          return@post rejectToken(
+            HttpStatusCode.BadRequest,
+            OAuth2Error.INVALID_GRANT.appendDescription("code was not issued to this client"),
+          )
         }
 
         if (codeChallengeS256(codeVerifier) != ctx.codeChallenge) {
@@ -267,26 +303,36 @@ fun Application.configureSmartRouting() {
           )
         }
 
-        log.info("SMART: issuing token for user={}, patient={}", ctx.username, ctx.launch.patientId)
+        log.info(
+          "SMART: issuing token for client={}, user={}, patient={}",
+          ctx.clientId,
+          ctx.username,
+          ctx.launch.patientId,
+        )
 
         val now = Date()
         val expiresAt = Date(now.time + 3600_000)
-        val grantedScope = ctx.scope
-        val accessToken = buildAccessToken(issuerUrl, ctx, grantedScope, now, expiresAt)
+        val grantedScopes = parseScopes(ctx.scope)
+        val accessToken =
+          buildAccessToken(issuerUrl, env.smart.fhirServerUrl, ctx, ctx.scope, now, expiresAt)
         val idToken =
-          if ("openid" in grantedScope) buildIdToken(issuerUrl, ctx, grantedScope, now, expiresAt)
+          if (SmartScope.Other("openid") in grantedScopes)
+            buildIdToken(issuerUrl, ctx, grantedScopes, now, expiresAt)
           else null
 
+        val hasLaunchContext = SmartScope.Other("launch") in grantedScopes
         val tokenResponse =
           TokenResponse(
             accessToken = accessToken,
-            idToken = idToken ?: "",
-            patient = if ("launch" in grantedScope) ctx.launch.patientId.orEmpty() else "",
-            encounter = if ("launch" in grantedScope) ctx.launch.encounterId.orEmpty() else "",
+            idToken = idToken,
+            patient = if (hasLaunchContext) ctx.launch.patientId else null,
+            encounter = if (hasLaunchContext) ctx.launch.encounterId else null,
             // TODO token refresh is not implemented yet.
             refreshToken =
-              if ("offline_access" in grantedScope) UUID.randomUUID().toString() else "",
-            scope = grantedScope,
+              if (SmartScope.Other("offline_access") in grantedScopes) UUID.randomUUID().toString()
+              else null,
+            scope = ctx.scope,
+            needPatientBanner = hasLaunchContext,
           )
         call.respond(tokenResponse)
       }
@@ -307,7 +353,7 @@ fun Application.configureSmartRouting() {
             jwksUri = "$issuerUrl/jwks",
             authorizationEndpoint = "$issuerUrl/authorize",
             tokenEndpoint = "$issuerUrl/token",
-            grantTypesSupported = listOf("authorization_code", "client_credentials"),
+            grantTypesSupported = listOf("authorization_code"), // TODO implement client_credentials
             registrationEndpoint = "$issuerUrl/register",
             scopesSupported =
               listOf(
@@ -328,16 +374,21 @@ fun Application.configureSmartRouting() {
               listOf(
                 "launch-ehr",
                 "permission-patient",
+                "permission-user",
+                "permission-offline",
+                "permission-v1",
                 "permission-v2",
                 "client-public",
                 "client-confidential-symmetric",
                 "client-confidential-asymmetric",
                 "context-ehr-patient",
+                "context-ehr-encounter",
+                "context-banner",
                 "sso-openid-connect",
               ),
             tokenEndpointAuthMethodsSupported =
-              listOf("client_secret_post", "client_secret_basic", "private_key_jwt"),
-            tokenEndpointAuthSigningAlgValuesSupported = listOf("RS256", "RS384"), // TODO implement
+              listOf("client_secret_basic", "private_key_jwt"), // TODO implement client_secret_post
+            tokenEndpointAuthSigningAlgValuesSupported = listOf("RS384", "ES384"),
           ),
         )
       }
@@ -347,17 +398,23 @@ fun Application.configureSmartRouting() {
 
 private fun buildAccessToken(
   issuerUrl: String,
+  fhirServerUrl: String,
   ctx: AuthCodeContext,
   grantedScope: String,
   now: Date,
   expiresAt: Date,
 ): String =
   JWT.create()
+    .withHeader(mapOf("typ" to "at+jwt"))
     .withIssuer(issuerUrl)
-    .withSubject(ctx.hpr.toString())
+    .withAudience(fhirServerUrl) // RFC 9068 2.2: resource server(s) this token is valid for
+    .withSubject(ctx.subject)
     .withKeyId(SmartKeys.keyId)
     .withIssuedAt(now)
     .withExpiresAt(expiresAt)
+    .withJWTId(
+      UUID.randomUUID().toString()
+    ) // RFC 9068 2.2: unique identifier for revocation/logging
     .withClaim("scope", grantedScope)
     .withClaim("patient", ctx.launch.patientId)
     .withClaim("encounter", ctx.launch.encounterId)
@@ -366,18 +423,20 @@ private fun buildAccessToken(
 private fun buildIdToken(
   issuerUrl: String,
   ctx: AuthCodeContext,
-  grantedScope: String,
+  grantedScopes: Set<SmartScope>,
   now: Date,
   expiresAt: Date,
 ): String =
   JWT.create()
     .apply {
-      if ("profile" in grantedScope) withClaim("profile", "Practitioner/${ctx.hpr}")
-      if ("fhirUser" in grantedScope) withClaim("fhirUser", "Practitioner/${ctx.hpr}")
+      if (SmartScope.Other("profile") in grantedScopes)
+        withClaim("profile", "Practitioner/${ctx.subject}")
+      if (SmartScope.Other("fhirUser") in grantedScopes)
+        withClaim("fhirUser", "Practitioner/${ctx.subject}")
     }
     .withIssuer(issuerUrl)
     .withAudience(ctx.clientId)
-    .withSubject(ctx.hpr!!)
+    .withSubject(ctx.subject)
     .withIssuedAt(now)
     .withExpiresAt(expiresAt)
     .sign(SmartKeys.algorithm)

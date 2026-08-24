@@ -1,5 +1,6 @@
 package no.nav.helse.smart
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class SmartDiscoveryDocument(
@@ -23,19 +24,15 @@ data class SmartDiscoveryDocument(
   val tokenEndpointAuthSigningAlgValuesSupported: List<String>,
 )
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 data class TokenResponse(
   @get:JsonProperty("access_token") val accessToken: String,
-  @get:JsonProperty("id_token") val idToken: String,
-  @get:JsonProperty("patient") val patient: String,
-  @get:JsonProperty("encounter") val encounter: String,
-  @get:JsonProperty("refresh_token") val refreshToken: String,
+  @get:JsonProperty("id_token") val idToken: String? = null,
+  @get:JsonProperty("patient") val patient: String? = null,
+  @get:JsonProperty("encounter") val encounter: String? = null,
+  @get:JsonProperty("refresh_token") val refreshToken: String? = null,
   @get:JsonProperty("token_type") val tokenType: String = "Bearer",
   @get:JsonProperty("expires_in") val expiresIn: Int = 3600,
-  /**
-   * OPTIONAL if identical to the requested scope. TODO WARNING remove default values. Available
-   * scopes are shown in the discovery document.
-   */
-  @get:JsonProperty("scope")
-  val scope: String = "openid profile launch fhirUser patient/*.* user/*.* offline_access",
-  @get:JsonProperty("need_patient_banner") val needPatientBanner: Boolean = true,
+  @get:JsonProperty("scope") val scope: String,
+  @get:JsonProperty("need_patient_banner") val needPatientBanner: Boolean,
 )

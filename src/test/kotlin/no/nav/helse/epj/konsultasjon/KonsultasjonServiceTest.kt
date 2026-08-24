@@ -39,7 +39,7 @@ class KonsultasjonServiceTest {
     )
 
   @Test
-  fun `getKonsultasjon kaster KonsultasjonNotFoundException når konsultasjon ikke finnes`() =
+  fun `getKonsultasjon throws KonsultasjonNotFoundException when konsultasjon does not exist`() =
     runTest {
       val konsultasjonId = KonsultasjonId(Uuid.generateV4())
       coEvery { konsultasjonRepository.findByKonsultasjonId(konsultasjonId) } returns null
@@ -50,7 +50,7 @@ class KonsultasjonServiceTest {
     }
 
   @Test
-  fun `getKonsultasjon returnerer konsultasjon når den finnes`() = runTest {
+  fun `getKonsultasjon returns konsultasjon when it exists`() = runTest {
     val konsultasjonId = KonsultasjonId(Uuid.generateV4())
     val forventet = konsultasjon(id = konsultasjonId)
     coEvery { konsultasjonRepository.findByKonsultasjonId(konsultasjonId) } returns forventet
@@ -61,20 +61,21 @@ class KonsultasjonServiceTest {
   }
 
   @Test
-  fun `getOrCreateKonsultasjon returnerer aktiv konsultasjon uten å opprette ny`() = runTest {
-    val pasientId = PatientId(Uuid.generateV4())
-    val hpr = HelsepersonellHpr("123")
-    val aktivKonsultasjon = konsultasjon(pasientId = pasientId)
-    coEvery { konsultasjonRepository.findActiveByPasientId(pasientId) } returns aktivKonsultasjon
+  fun `getOrCreateKonsultasjon returns the active konsultasjon without creating a new one`() =
+    runTest {
+      val pasientId = PatientId(Uuid.generateV4())
+      val hpr = HelsepersonellHpr("123")
+      val aktivKonsultasjon = konsultasjon(pasientId = pasientId)
+      coEvery { konsultasjonRepository.findActiveByPasientId(pasientId) } returns aktivKonsultasjon
 
-    val resultat = konsultasjonService.getOrCreateKonsultasjon(pasientId, hpr)
+      val resultat = konsultasjonService.getOrCreateKonsultasjon(pasientId, hpr)
 
-    assertSame(aktivKonsultasjon, resultat)
-    coVerify(exactly = 0) { konsultasjonRepository.insert(any()) }
-  }
+      assertSame(aktivKonsultasjon, resultat)
+      coVerify(exactly = 0) { konsultasjonRepository.insert(any()) }
+    }
 
   @Test
-  fun `getOrCreateKonsultasjon oppretter ny konsultasjon når ingen aktiv finnes`() = runTest {
+  fun `getOrCreateKonsultasjon creates a new konsultasjon when none is active`() = runTest {
     val pasientId = PatientId(Uuid.generateV4())
     val hpr = HelsepersonellHpr("123")
     val opprettetId = KonsultasjonId(Uuid.generateV4())
@@ -92,7 +93,7 @@ class KonsultasjonServiceTest {
   }
 
   @Test
-  fun `createKonsultasjon kaster IllegalStateException når konsultasjon ikke finnes etter insert`() =
+  fun `createKonsultasjon throws IllegalStateException when konsultasjon does not exist after insert`() =
     runTest {
       val pasientId = PatientId(Uuid.generateV4())
       val opprettetId = KonsultasjonId(Uuid.generateV4())
@@ -112,7 +113,7 @@ class KonsultasjonServiceTest {
     }
 
   @Test
-  fun `updateKonsultasjon kaster KonsultasjonNotFoundForPatientException når 0 rader oppdateres`() =
+  fun `updateKonsultasjon throws KonsultasjonNotFoundForPatientException when 0 rows are updated`() =
     runTest {
       val pasientId = PatientId(Uuid.generateV4())
       val request =
@@ -130,7 +131,7 @@ class KonsultasjonServiceTest {
     }
 
   @Test
-  fun `updateKonsultasjon fullfører uten feil når rader blir oppdatert`() = runTest {
+  fun `updateKonsultasjon completes without error when rows are updated`() = runTest {
     val pasientId = PatientId(Uuid.generateV4())
     val request =
       OppdaterKonsultasjonRequest(
@@ -147,7 +148,7 @@ class KonsultasjonServiceTest {
   }
 
   @Test
-  fun `createJournalnotat returnerer true når nøyaktig en rad settes inn`() = runTest {
+  fun `createJournalnotat returns true when exactly one row is inserted`() = runTest {
     val journalnotat =
       Journalnotat(
         id = JournalnotatId(Uuid.generateV4()),
@@ -161,7 +162,7 @@ class KonsultasjonServiceTest {
   }
 
   @Test
-  fun `createJournalnotat returnerer false når ingen rad settes inn`() = runTest {
+  fun `createJournalnotat returns false when no row is inserted`() = runTest {
     val journalnotat =
       Journalnotat(
         id = JournalnotatId(Uuid.generateV4()),

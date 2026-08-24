@@ -31,7 +31,7 @@ fun Route.konsultasjonRoutes(
         val principal = loggedInUser()
         val hpr = HelsepersonellHpr(principal.hpr)
         val konsultasjon = konsultasjonService.getOrCreateKonsultasjon(pasientId, hpr)
-        valkeyService.set(principal.hpr, pasientId.value.toString())
+        valkeyService.setActivePatient(principal.hpr, pasientId.value.toString())
         call.respond(konsultasjon)
       }
       patch {

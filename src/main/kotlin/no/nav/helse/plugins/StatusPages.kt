@@ -14,6 +14,8 @@ import no.nav.helse.core.utils.LegekontorNotfoundException
 import no.nav.helse.core.utils.PasientCreationException
 import no.nav.helse.core.utils.UgyldigDiagnoseException
 import no.nav.helse.core.utils.logger
+import no.nav.helse.fhir.security.InsufficientScopeException
+import no.nav.helse.fhir.security.PatientMismatchException
 
 fun Application.configureStatusPages() {
   val log = logger()
@@ -53,6 +55,16 @@ fun Application.configureStatusPages() {
         text = "Ugyldig diagnose: ${cause.message}",
         status = HttpStatusCode.BadRequest,
       )
+    }
+    exception<InsufficientScopeException> { call, cause ->
+      call.response.header(
+        HttpHeaders.WWWAuthenticate,
+        "Bearer error=\"insufficient_scope\", scope=\"${cause.resourceType}.${cause.interaction.code}\"",
+      )
+      call.respondText(text = cause.message ?: "Forbidden", status = HttpStatusCode.Forbidden)
+    }
+    exception<PatientMismatchException> { call, cause ->
+      call.respondText(text = "Not found", status = HttpStatusCode.NotFound)
     }
     exception<BadRequestException> { call, cause ->
       call.respondText(
