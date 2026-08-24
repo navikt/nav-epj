@@ -27,11 +27,25 @@ smart:
       launchUris: [ "https://www.ekstern.dev.nav.no/samarbeidspartner/sykmelding/fhir/launch" ]
       tokenEndpointAuthMethod: "private_key_jwt"
       jwksUri: "https://www.ekstern.dev.nav.no/samarbeidspartner/sykmelding/fhir/jwks.json"
+      scopes:
+        - openid
+        - fhirUser
+        - launch
+        - offline_access
+        - patient/Patient.rs
+        - patient/Encounter.rs
+        - patient/DocumentReference.crs
     - clientId: "NAV_SMART_on_FHIR_validator"
       redirectUris: [ "https://nav-on-fhir.ekstern.dev.nav.no" ]
       launchUris: [ "https://nav-on-fhir.ekstern.dev.nav.no/launch" ]
       tokenEndpointAuthMethod: "private_key_jwt"
       jwksUri: "https://nav-on-fhir.ekstern.dev.nav.no/jwks.json"
+      scopes:
+        - openid
+        - fhirUser
+        - launch
+        - patient/*.rs
+        - user/*.rs
 
 valkey:
   host: ${VALKEY_HOST_NAV_EPJ}

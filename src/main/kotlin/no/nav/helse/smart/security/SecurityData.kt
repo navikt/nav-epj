@@ -19,11 +19,12 @@ data class SmartClient(
   val tokenEndpointAuthMethod: TokenEndpointAuthMethod,
   val clientSecret: String? = null,
   val jwksUri: String? = null,
+  val allowedScopes: Set<SmartScope>,
 )
 
 data class SmartPrincipal(
   val subject: String,
-  val scope: String,
+  val scopes: Set<SmartScope>,
   val patient: String?,
   val encounter: String?,
 )

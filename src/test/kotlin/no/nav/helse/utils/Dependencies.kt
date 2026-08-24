@@ -20,6 +20,7 @@ import no.nav.helse.smart.api.configureSmartRouting
 import no.nav.helse.smart.security.ClientAssertionVerifier
 import no.nav.helse.smart.security.SmartClient
 import no.nav.helse.smart.security.TokenEndpointAuthMethod
+import no.nav.helse.smart.security.parseRegisteredScopes
 import no.nav.helse.smart.valkey.ValkeyService
 import org.testcontainers.postgresql.PostgreSQLContainer
 
@@ -64,6 +65,8 @@ fun createIntegrationEnvironment(postgres: PostgreSQLContainer) =
               redirectUris = listOf("http://test"),
               launchUris = listOf("http://test/fhir/launch"),
               tokenEndpointAuthMethod = TokenEndpointAuthMethod.NONE,
+              allowedScopes =
+                parseRegisteredScopes(listOf("openid", "fhirUser", "launch", "patient/*.cruds")),
             )
           ),
       ),
@@ -85,6 +88,8 @@ val simpleTestEnvironment =
               redirectUris = listOf("http://test"),
               launchUris = listOf("http://test/fhir/launch"),
               tokenEndpointAuthMethod = TokenEndpointAuthMethod.NONE,
+              allowedScopes =
+                parseRegisteredScopes(listOf("openid", "fhirUser", "launch", "patient/*.cruds")),
             )
           ),
       ),

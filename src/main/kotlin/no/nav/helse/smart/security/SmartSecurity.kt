@@ -1,6 +1,7 @@
 package no.nav.helse.smart.security
 
 import com.auth0.jwt.JWT
+import com.auth0.jwt.interfaces.DecodedJWT
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
@@ -17,18 +18,23 @@ fun Application.configureSmartSecurity() {
   authentication {
     jwt("smart-access-token") {
       realm = "fhir"
-      verifier(JWT.require(SmartKeys.algorithm).withIssuer(env.smart.issuerBaseUrl).build())
+      verifier(
+        JWT.require(SmartKeys.algorithm)
+          .withIssuer(env.smart.issuerBaseUrl)
+          .withAudience(env.smart.fhirServerUrl)
+          .build()
+      )
       validate { credentials ->
-        val scope = credentials.payload.getClaim("scope").asString() ?: return@validate null
-        val hasFhirScope =
-          scope.contains("patient/") || scope.contains("user/") || scope.contains("system/")
-        if (!hasFhirScope) {
+        val decoded = credentials.payload as? DecodedJWT
+        if (decoded?.type != "at+jwt") {
           return@validate null
         }
 
+        val scopes = credentials.payload.getClaim("scope").asString() ?: return@validate null
+
         SmartPrincipal(
           subject = credentials.payload.subject ?: return@validate null,
-          scope = scope,
+          scopes = parseScopes(scopes),
           patient = credentials.payload.getClaim("patient").asString(),
           encounter = credentials.payload.getClaim("encounter").asString(),
         )

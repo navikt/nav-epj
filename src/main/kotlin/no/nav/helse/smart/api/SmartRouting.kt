@@ -21,9 +21,13 @@ import no.nav.helse.smart.SmartDiscoveryDocument
 import no.nav.helse.smart.TokenResponse
 import no.nav.helse.smart.security.ClientAssertionVerifier
 import no.nav.helse.smart.security.SmartKeys
+import no.nav.helse.smart.security.SmartScope
 import no.nav.helse.smart.security.authenticateClient
 import no.nav.helse.smart.security.codeChallengeS256
+import no.nav.helse.smart.security.grantScopes
+import no.nav.helse.smart.security.parseScopes
 import no.nav.helse.smart.security.resolveAssertedClientId
+import no.nav.helse.smart.security.serialize
 import no.nav.helse.smart.valkey.AuthCodeContext
 import no.nav.helse.smart.valkey.LaunchContext
 import no.nav.helse.smart.valkey.ValkeyService
@@ -189,6 +193,12 @@ fun Application.configureSmartRouting() {
                   ),
               )
 
+          /**
+           * The scopes granted may differ from those requested (SMART app-launch:
+           * https://build.fhir.org/ig/HL7/smart-app-launch/scopes-and-launch-context.html)
+           */
+          val grantedScope = grantScopes(parseScopes(scope), acceptedClient.allowedScopes)
+
           val code = UUID.randomUUID().toString()
 
           val user = loggedInUser()
@@ -199,7 +209,7 @@ fun Application.configureSmartRouting() {
               redirectUrl = redirectUri,
               launch = launchContext,
               subject = user.hpr,
-              scope = scope,
+              scope = grantedScope.serialize(),
               clientId = clientId,
               codeChallenge = codeChallenge,
             ),
@@ -283,22 +293,25 @@ fun Application.configureSmartRouting() {
 
         val now = Date()
         val expiresAt = Date(now.time + 3600_000)
-        val grantedScope = ctx.scope
-        val accessToken = buildAccessToken(issuerUrl, ctx, grantedScope, now, expiresAt)
+        val grantedScopes = parseScopes(ctx.scope)
+        val accessToken = buildAccessToken(issuerUrl, ctx, ctx.scope, now, expiresAt)
         val idToken =
-          if ("openid" in grantedScope) buildIdToken(issuerUrl, ctx, grantedScope, now, expiresAt)
+          if (SmartScope.Other("openid") in grantedScopes)
+            buildIdToken(issuerUrl, ctx, grantedScopes, now, expiresAt)
           else null
 
+        val hasLaunchContext = SmartScope.Other("launch") in grantedScopes
         val tokenResponse =
           TokenResponse(
             accessToken = accessToken,
             idToken = idToken ?: "",
-            patient = if ("launch" in grantedScope) ctx.launch.patientId.orEmpty() else "",
-            encounter = if ("launch" in grantedScope) ctx.launch.encounterId.orEmpty() else "",
+            patient = if (hasLaunchContext) ctx.launch.patientId else "",
+            encounter = if (hasLaunchContext) ctx.launch.encounterId else "",
             // TODO token refresh is not implemented yet.
             refreshToken =
-              if ("offline_access" in grantedScope) UUID.randomUUID().toString() else "",
-            scope = grantedScope,
+              if (SmartScope.Other("offline_access") in grantedScopes) UUID.randomUUID().toString()
+              else "",
+            scope = ctx.scope,
           )
         call.respond(tokenResponse)
       }
@@ -365,6 +378,7 @@ private fun buildAccessToken(
   expiresAt: Date,
 ): String =
   JWT.create()
+    .withHeader(mapOf("typ" to "at+jwt"))
     .withIssuer(issuerUrl)
     .withSubject(ctx.subject)
     .withKeyId(SmartKeys.keyId)
@@ -378,14 +392,16 @@ private fun buildAccessToken(
 private fun buildIdToken(
   issuerUrl: String,
   ctx: AuthCodeContext,
-  grantedScope: String,
+  grantedScopes: Set<SmartScope>,
   now: Date,
   expiresAt: Date,
 ): String =
   JWT.create()
     .apply {
-      if ("profile" in grantedScope) withClaim("profile", "Practitioner/${ctx.subject}")
-      if ("fhirUser" in grantedScope) withClaim("fhirUser", "Practitioner/${ctx.subject}")
+      if (SmartScope.Other("profile") in grantedScopes)
+        withClaim("profile", "Practitioner/${ctx.subject}")
+      if (SmartScope.Other("fhirUser") in grantedScopes)
+        withClaim("fhirUser", "Practitioner/${ctx.subject}")
     }
     .withIssuer(issuerUrl)
     .withAudience(ctx.clientId)

@@ -42,13 +42,15 @@ class ClientAssertionVerifierTest {
       launchUris = listOf("http://test/fhir/launch"),
       tokenEndpointAuthMethod = TokenEndpointAuthMethod.PRIVATE_KEY_JWT,
       jwksUri = JWKS_URI,
+      allowedScopes =
+        parseRegisteredScopes(listOf("openid", "fhirUser", "launch", "patient/*.cruds")),
     )
   private val jtiStore = mockk<ValkeyService>()
   private val verifier =
     ClientAssertionVerifier(
       env = simpleTestEnvironment,
       jtiStore = jtiStore,
-      jwkSetProvider = ClientJwksSetProvider { ImmutableJWKSet(JWKSet(key.toPublicJWK())) },
+      jwkSetProvider = { ImmutableJWKSet(JWKSet(key.toPublicJWK())) },
     )
 
   private fun assertion(
