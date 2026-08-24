@@ -54,7 +54,7 @@ fun Application.configureSmartRouting() {
           val user = loggedInUser()
           logger.debug("Logged in user: {}", user)
 
-          val patientId =
+          val cachedPatientId =
             valkeyService.get(
               user.hpr
             ) // TODO this implies that a patient id is returned from a hpr number hit, bad juju!
@@ -63,9 +63,9 @@ fun Application.configureSmartRouting() {
                 "No active patient context for clinician",
               )
 
-          logger.debug("Patient id from valkey: {}", patientId)
+          logger.debug("Patient id from valkey: {}", cachedPatientId)
           // FHIR launch requires an active patient
-          val patientInputId = PatientInputId(Uuid.parse(patientId))
+          val patientInputId = PatientInputId(Uuid.parse(cachedPatientId))
           logger.debug("PatientInputId: {}", patientInputId)
           val patient =
             patientService.getPatient(patientInputId)
@@ -80,8 +80,20 @@ fun Application.configureSmartRouting() {
               )
 
           val launchId = UUID.randomUUID().toString()
+          val patientId =
+            patient.id
+              ?: return@get call.respond(
+                HttpStatusCode.InternalServerError,
+                "FHIR Patient returned without an id",
+              )
+          val encounterId =
+            encounter.id
+              ?: return@get call.respond(
+                HttpStatusCode.InternalServerError,
+                "FHIR Encounter returned without an id",
+              )
 
-          valkeyService.saveLaunchContext(launchId, LaunchContext(patient.id, encounter.id))
+          valkeyService.saveLaunchContext(launchId, LaunchContext(patientId, encounterId))
 
           val iss = env.smart.fhirServerUrl
           call.respondRedirect("$appUrl/?iss=$iss&launch=$launchId")
@@ -186,7 +198,7 @@ fun Application.configureSmartRouting() {
               username = user.name,
               redirectUrl = redirectUri,
               launch = launchContext,
-              hpr = user.hpr,
+              subject = user.hpr,
               scope = scope,
               clientId = clientId,
               codeChallenge = codeChallenge,
@@ -354,7 +366,7 @@ private fun buildAccessToken(
 ): String =
   JWT.create()
     .withIssuer(issuerUrl)
-    .withSubject(ctx.hpr.toString())
+    .withSubject(ctx.subject)
     .withKeyId(SmartKeys.keyId)
     .withIssuedAt(now)
     .withExpiresAt(expiresAt)
@@ -372,12 +384,12 @@ private fun buildIdToken(
 ): String =
   JWT.create()
     .apply {
-      if ("profile" in grantedScope) withClaim("profile", "Practitioner/${ctx.hpr}")
-      if ("fhirUser" in grantedScope) withClaim("fhirUser", "Practitioner/${ctx.hpr}")
+      if ("profile" in grantedScope) withClaim("profile", "Practitioner/${ctx.subject}")
+      if ("fhirUser" in grantedScope) withClaim("fhirUser", "Practitioner/${ctx.subject}")
     }
     .withIssuer(issuerUrl)
     .withAudience(ctx.clientId)
-    .withSubject(ctx.hpr!!)
+    .withSubject(ctx.subject)
     .withIssuedAt(now)
     .withExpiresAt(expiresAt)
     .sign(SmartKeys.algorithm)

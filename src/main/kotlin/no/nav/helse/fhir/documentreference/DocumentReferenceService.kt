@@ -25,7 +25,6 @@ import no.nav.helse.fhir.patient.PatientInputId
 class DocumentReferenceService(private val epjClient: HttpClient) {
 
   suspend fun createDocumentReference(documentReference: DocumentReference): Boolean {
-    // let{} fordi alle idene kan være null
     val createJournalnotat =
       CreateJournalnotat(
         id = documentReference.id?.let { DocumentReferenceId(Uuid.parse(it)) },
