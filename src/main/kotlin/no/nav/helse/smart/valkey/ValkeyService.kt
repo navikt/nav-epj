@@ -23,8 +23,8 @@ class ValkeyService(private val glideClient: GlideClient) {
       .await()
   }
 
-  suspend fun getLaunchContext(launchId: String): LaunchContext? =
-    glideClient.get(launchKey(launchId)).await()?.let { mapper.readValue<LaunchContext>(it) }
+  suspend fun getAndDeleteLaunchContext(launchId: String): LaunchContext? =
+    glideClient.getdel(launchKey(launchId)).await()?.let { mapper.readValue<LaunchContext>(it) }
 
   suspend fun setActivePatient(hpr: String, patientId: String) {
     glideClient

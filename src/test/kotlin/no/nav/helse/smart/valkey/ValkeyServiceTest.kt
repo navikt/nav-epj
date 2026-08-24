@@ -11,17 +11,29 @@ class ValkeyServiceTest : WithValkey() {
   @Test
   fun `lagrer og henter launch context`() = runTest {
     val key = "launch-1"
-    val context = LaunchContext(patientId = "patient-1", encounterId = "encounter-1")
+    val context = LaunchContext(patientId = "patient-1", encounterId = "encounter-1", hpr = "hpr-1")
 
     valkeyService.saveLaunchContext(key, context)
-    val result = valkeyService.getLaunchContext(key)
+    val result = valkeyService.getAndDeleteLaunchContext(key)
 
     assertEquals(context, result)
   }
 
   @Test
+  fun `launch context kan kun hentes en gang`() = runTest {
+    val key = "launch-once"
+    val context = LaunchContext(patientId = "patient-1", encounterId = "encounter-1", hpr = "hpr-1")
+
+    valkeyService.saveLaunchContext(key, context)
+    valkeyService.getAndDeleteLaunchContext(key)
+    val result = valkeyService.getAndDeleteLaunchContext(key)
+
+    assertNull(result)
+  }
+
+  @Test
   fun `henter launch context som ikke finnes gir null`() = runTest {
-    val result = valkeyService.getLaunchContext("finnes-ikke")
+    val result = valkeyService.getAndDeleteLaunchContext("finnes-ikke")
     assertNull(result)
   }
 
@@ -32,7 +44,7 @@ class ValkeyServiceTest : WithValkey() {
       AuthCodeContext(
         username = "Test",
         redirectUrl = "http://test",
-        launch = LaunchContext(patientId = "patient-1", encounterId = "encounter-1"),
+        launch = LaunchContext(patientId = "patient-1", encounterId = "encounter-1", hpr = "hpr-1"),
         subject = "111",
         scope = "openid launch",
         clientId = "test-client-id",
@@ -58,7 +70,7 @@ class ValkeyServiceTest : WithValkey() {
       AuthCodeContext(
         username = "Test",
         redirectUrl = "http://test",
-        launch = LaunchContext(patientId = "patient-2", encounterId = "encounter-2"),
+        launch = LaunchContext(patientId = "patient-2", encounterId = "encounter-2", hpr = "hpr-2"),
         subject = "222",
         scope = "openid",
         clientId = "test-client-id",
@@ -93,18 +105,19 @@ class ValkeyServiceTest : WithValkey() {
       AuthCodeContext(
         username = "Test",
         redirectUrl = "http://test",
-        launch = LaunchContext(patientId = "patient-3", encounterId = "encounter-3"),
+        launch = LaunchContext(patientId = "patient-3", encounterId = "encounter-3", hpr = "hpr-3"),
         subject = "333",
         scope = "openid",
         clientId = "test-client-id",
         codeChallenge = "challenge",
       )
-    val launchContext = LaunchContext(patientId = "patient-4", encounterId = "encounter-4")
+    val launchContext =
+      LaunchContext(patientId = "patient-4", encounterId = "encounter-4", hpr = "hpr-4")
 
     valkeyService.saveAuthCode(sameId, authCode)
     valkeyService.saveLaunchContext(sameId, launchContext)
 
-    assertEquals(launchContext, valkeyService.getLaunchContext(sameId))
+    assertEquals(launchContext, valkeyService.getAndDeleteLaunchContext(sameId))
     assertEquals(authCode, valkeyService.getAndDeleteAuthCode(sameId))
   }
 

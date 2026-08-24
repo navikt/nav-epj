@@ -1,6 +1,6 @@
 package no.nav.helse.smart.valkey
 
-data class LaunchContext(val patientId: String, val encounterId: String)
+data class LaunchContext(val patientId: String, val encounterId: String, val hpr: String)
 
 data class AuthCodeContext(
   val username: String,

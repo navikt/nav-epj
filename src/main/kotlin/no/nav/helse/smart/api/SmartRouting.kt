@@ -95,7 +95,7 @@ fun Application.configureSmartRouting() {
                 "FHIR Encounter returned without an id",
               )
 
-          valkeyService.saveLaunchContext(launchId, LaunchContext(patientId, encounterId))
+          valkeyService.saveLaunchContext(launchId, LaunchContext(patientId, encounterId, user.hpr))
 
           val iss = env.smart.fhirServerUrl
           call.respondRedirect("$appUrl/?iss=$iss&launch=$launchId")
@@ -180,16 +180,29 @@ fun Application.configureSmartRouting() {
                 ),
             )
           }
+          val user = loggedInUser()
+
           val launchContext =
-            valkeyService.getLaunchContext(launchId)
+            valkeyService.getAndDeleteLaunchContext(launchId)
               ?: return@get rejectViaRedirect(
                 redirectUri = redirectUri,
                 state = state,
                 error =
                   OAuth2Error.INVALID_REQUEST.appendDescription(
-                    "Opaque launch token was missing or wrong."
+                    "Opaque launch token was missing, wrong or already used."
                   ),
               )
+
+          if (launchContext.hpr != user.hpr) {
+            return@get rejectViaRedirect(
+              redirectUri = redirectUri,
+              state = state,
+              error =
+                OAuth2Error.INVALID_REQUEST.appendDescription(
+                  "Launch token was not issued to the authenticated clinician."
+                ),
+            )
+          }
 
           /**
            * The scopes granted may differ from those requested (SMART app-launch:
@@ -199,7 +212,6 @@ fun Application.configureSmartRouting() {
 
           val code = UUID.randomUUID().toString()
 
-          val user = loggedInUser()
           valkeyService.saveAuthCode(
             code,
             AuthCodeContext(
