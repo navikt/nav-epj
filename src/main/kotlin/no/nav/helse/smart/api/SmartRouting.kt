@@ -294,7 +294,8 @@ fun Application.configureSmartRouting() {
         val now = Date()
         val expiresAt = Date(now.time + 3600_000)
         val grantedScopes = parseScopes(ctx.scope)
-        val accessToken = buildAccessToken(issuerUrl, ctx, ctx.scope, now, expiresAt)
+        val accessToken =
+          buildAccessToken(issuerUrl, env.smart.fhirServerUrl, ctx, ctx.scope, now, expiresAt)
         val idToken =
           if (SmartScope.Other("openid") in grantedScopes)
             buildIdToken(issuerUrl, ctx, grantedScopes, now, expiresAt)
@@ -372,6 +373,7 @@ fun Application.configureSmartRouting() {
 
 private fun buildAccessToken(
   issuerUrl: String,
+  fhirServerUrl: String,
   ctx: AuthCodeContext,
   grantedScope: String,
   now: Date,
@@ -380,10 +382,14 @@ private fun buildAccessToken(
   JWT.create()
     .withHeader(mapOf("typ" to "at+jwt"))
     .withIssuer(issuerUrl)
+    .withAudience(fhirServerUrl) // RFC 9068 2.2: resource server(s) this token is valid for
     .withSubject(ctx.subject)
     .withKeyId(SmartKeys.keyId)
     .withIssuedAt(now)
     .withExpiresAt(expiresAt)
+    .withJWTId(
+      UUID.randomUUID().toString()
+    ) // RFC 9068 2.2: unique identifier for revocation/logging
     .withClaim("scope", grantedScope)
     .withClaim("patient", ctx.launch.patientId)
     .withClaim("encounter", ctx.launch.encounterId)

@@ -6,6 +6,9 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.helse.core.utils.logger
 import no.nav.helse.fhir.encounterId
+import no.nav.helse.fhir.security.requireFhirScope
+import no.nav.helse.fhir.security.requirePatientMatch
+import no.nav.helse.smart.security.Interaction
 
 fun Route.encounterRoutes(
   encounterService: EncounterService,
@@ -16,8 +19,16 @@ fun Route.encounterRoutes(
   route("/fhir") {
     get("/Encounter/{encounter}") {
       val id = call.encounterId()
+      val principal = call.requireFhirScope("Encounter", Interaction.READ)
+
       val encounter =
         encounterService.getEncounterById(id) ?: return@get call.respond(HttpStatusCode.NotFound)
+      principal.requirePatientMatch(
+        "Encounter",
+        Interaction.READ,
+        encounter.subject?.reference?.value?.substringAfter("Patient/"),
+      )
+
       val fhirJson = fhirR4Json.encodeToString(encounter)
       log.info("encounter: $fhirJson")
       call.respondText(fhirJson, fhirContentType)
