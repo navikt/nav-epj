@@ -35,6 +35,7 @@ smart:
         - patient/Encounter.rs
         - patient/Condition.rs
         - patient/DocumentReference.crs
+        - user/Organization.rs
     - clientId: "NAV_SMART_on_FHIR_validator"
       redirectUris: ["http://localhost:3001/callback"]
       launchUris: ["http://localhost:3001/launch"]
