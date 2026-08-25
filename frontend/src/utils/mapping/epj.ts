@@ -42,9 +42,10 @@ export type JournalnotatEntry = z.infer<typeof JournalnotatEntrySchema>;
 
 export const DiagnoseSchema = z.object({
     id: z.string(),
-    konsultasjon_id: z.string(),
-    diagnosekode: z.string(),
-    diagnosesystem: z.string(),
+    patientId: z.string(),
+    kode: z.string(),
+    system: z.string(),
+    beskrivelse: z.string(),
 });
 
 export const KonsultasjonSchema = z.object({
