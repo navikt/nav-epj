@@ -49,7 +49,7 @@ data class OpprettDiagnoseRequest(
   val beskrivelse: String,
 )
 
-data class DiagnoseId(val value: Uuid)
+@JvmInline value class DiagnoseId(val value: Uuid)
 
 data class Diagnose(
   val id: DiagnoseId,
