@@ -49,7 +49,7 @@ function RouteComponent() {
     <div className="flex flex-col items-start gap-4">
       {(patient.success && konsultasjoner.success) &&
         <div>
-          Pasientnavn: {patient.data?.navn}
+          Pasientnavn: {patient.data?.fornavn} {patient.data?.etternavn}
           <ul>
             {konsultasjoner.data.map((konsultasjon) => (
               <li key={konsultasjon.id}><Link className="aksel-link" to="/patients/$patientId/konsultasjon/$konsultasjonId" params={{ patientId, konsultasjonId: konsultasjon.id }}>

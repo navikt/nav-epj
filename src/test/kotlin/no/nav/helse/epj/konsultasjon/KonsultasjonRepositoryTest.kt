@@ -39,7 +39,8 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
       Pasient(
         id = pasientId,
         legekontorId = Legekontor.DEFAULT.id,
-        navn = "navn",
+        fornavn = "fornavn",
+        etternavn = "etternavn",
         fnr = "fnr-${pasientId.value}",
         hprNumbers = listOf(hpr),
       )
@@ -62,7 +63,8 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
       Pasient(
         id = pasientId,
         legekontorId = Legekontor.DEFAULT.id,
-        navn = "navn",
+        fornavn = "fornavn",
+        etternavn = "etternavn",
         fnr = "fnr",
         hprNumbers = listOf(hpr),
       )

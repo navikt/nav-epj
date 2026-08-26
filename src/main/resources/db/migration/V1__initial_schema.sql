@@ -23,7 +23,8 @@ CREATE TABLE pasient
 (
     id            UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
     legekontor_id UUID        NOT NULL REFERENCES legekontor (id),
-    navn          TEXT        NOT NULL,
+    fornavn       TEXT        NOT NULL,
+    etternavn     TEXT        NOT NULL,
     fnr           TEXT        NOT NULL UNIQUE,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -75,5 +76,3 @@ CREATE TABLE pasient_helsepersonell
     hpr        TEXT NOT NULL
 );
 
-INSERT INTO legekontor (id, navn, tlf, orgnummer)
-VALUES ('a1000000-0000-0000-0000-000000000001', 'Tonsberg Legesenter', 'tulletlf', '123');

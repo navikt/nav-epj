@@ -13,7 +13,7 @@ data class Legekontor(
   companion object {
     val DEFAULT =
       Legekontor(
-        id = LegekontorId(Uuid.parse("a1000000-0000-0000-0000-000000000001")),
+        id = LegekontorId(Uuid.parse("aed5c75c-3b12-4652-83d7-223bdd69062d")),
         navn = "Legekontoret",
         orgnummer = null,
         tlf = null,

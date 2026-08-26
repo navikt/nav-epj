@@ -17,13 +17,15 @@ export type Helsepersonell = z.infer<typeof HelsepersonellSchema>;
 
 export const PasientSchema = z.object({
     id: z.string(),
-    navn: z.string(),
+    fornavn: z.string(),
+    etternavn: z.string(),
 });
 
 export type Pasient = z.infer<typeof PasientSchema>;
 
 export const OpprettPasientSchema = z.object({
-    navn: z.string().min(1, "Navn er påkrevd"),
+    fornavn: z.string().min(1, "Fornavn er påkrevd"),
+    etternavn: z.string().min(1, "Etternavn er påkrevd"),
     fnr: z
         .string()
         .regex(/^\d{11}$/, "Fødselsnummer må bestå av 11 siffer"),

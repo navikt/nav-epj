@@ -10,8 +10,9 @@ data class Pasient(
   val id: PatientId,
   val legekontorId: LegekontorId,
   val hprNumbers: List<HelsepersonellHpr>,
-  val navn: String,
+  val fornavn: String,
+  val etternavn: String,
   val fnr: String,
 )
 
-data class OpprettPasientRequest(val navn: String, val fnr: String)
+data class OpprettPasientRequest(val fornavn: String, val etternavn: String, val fnr: String)

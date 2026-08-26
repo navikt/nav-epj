@@ -44,8 +44,8 @@ class PatientService(private val epjClient: HttpClient) {
       name =
         listOf(
           HumanName(
-            family = com.google.fhir.model.r4.String(value = this.navn),
-            given = listOf(com.google.fhir.model.r4.String(value = this.navn)),
+            family = com.google.fhir.model.r4.String(value = this.etternavn),
+            given = listOf(com.google.fhir.model.r4.String(value = this.fornavn)),
           )
         ),
     )
