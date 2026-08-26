@@ -1,1 +1,9 @@
 TODO:
+- Koble opp til persontjenesten i nhn
+    - https://et.persontjenesten.test.nhn.no/api
+    - https://et.persontjenesten.test.nhn.no/swagger/index.html
+    - https://utviklerportal.nhn.no/informasjonstjenester/persontjenesten/persontjenesten/persontjenesten/docs/person-api_nbmd
+    - https://utviklerportal.nhn.no/informasjonstjenester/persontjenesten/persontjenesten/persontjenesten/openapi/person-api
+
+- Ha en forhåndsdefinert liste over pasienter (koblet til en test lege man logger seg inn med) og et søkefelt for å finne testpersoner
+- Finn ut og dokumenter hvordan dolly skal brukes med dette
