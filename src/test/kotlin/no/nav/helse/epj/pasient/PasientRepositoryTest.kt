@@ -26,7 +26,8 @@ class PasientRepositoryTest : WithPostgresql() {
       id = id,
       legekontorId = Legekontor.DEFAULT.id,
       hprNumbers = listOf(hpr),
-      navn = "navn",
+      fornavn = "fornavn",
+      etternavn = "etternavn",
       fnr = fnr,
     )
 
@@ -44,7 +45,8 @@ class PasientRepositoryTest : WithPostgresql() {
 
     assertEquals(pasient.id, funnet?.id)
     assertEquals(pasient.fnr, funnet?.fnr)
-    assertEquals(pasient.navn, funnet?.navn)
+    assertEquals(pasient.fornavn, funnet?.fornavn)
+    assertEquals(pasient.etternavn, funnet?.etternavn)
   }
 
   @Test
@@ -66,10 +68,10 @@ class PasientRepositoryTest : WithPostgresql() {
   fun `insert with the same id twice does not create a duplicate`() = runTest {
     val pasient = nyPasient()
     pasientRepository.insert(pasient)
-    pasientRepository.insert(pasient.copy(navn = "annet navn"))
+    pasientRepository.insert(pasient.copy(fornavn = "annet navn"))
 
     val funnet = pasientRepository.findById(pasient.id.value)
 
-    assertEquals("navn", funnet?.navn)
+    assertEquals("fornavn", funnet?.fornavn)
   }
 }

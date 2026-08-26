@@ -37,7 +37,7 @@ function RouteComponent() {
       {patients.map((patient) => (
         <div key={patient.id}>
           <Link className="aksel-link" to="/patients/$patientId" params={{ patientId: patient.id }}>
-            {patient.navn}
+            {patient.fornavn} {patient.etternavn}
           </Link>
         </div>
       ))}

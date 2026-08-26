@@ -74,12 +74,13 @@ class PasientRepository {
   }
 
   suspend fun insert(pasient: Pasient) = dbQuery {
-    logger.info("Inserting pasient: ${pasient.navn}")
+    logger.info("Inserting pasient: ${pasient}")
 
     PasientTable.insertIgnore {
       it[id] = pasient.id.value
       it[legekontorId] = pasient.legekontorId.value
-      it[navn] = pasient.navn
+      it[fornavn] = pasient.fornavn
+      it[etternavn] = pasient.etternavn
       it[fnr] = pasient.fnr
     }
 
@@ -97,7 +98,8 @@ class PasientRepository {
       id = PatientId(this[PasientTable.id]),
       legekontorId = Legekontor.DEFAULT.id,
       hprNumbers = hpr,
-      navn = this[PasientTable.navn],
+      fornavn = this[PasientTable.fornavn],
+      etternavn = this[PasientTable.etternavn],
       fnr = this[PasientTable.fnr],
     )
 }

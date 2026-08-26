@@ -16,7 +16,8 @@ async function opprettPasient(request: OpprettPasientRequest): Promise<Pasient> 
 
 
 export const OpprettPasient = ({lastPasienter}: { lastPasienter: () => void}) => {
-    const [navn, setNavn] = useState("");
+    const [fornavn, setFornavn] = useState("");
+    const [etternavn, setEtternavn] = useState("");
     const [fnr, setFnr] = useState("");
     const [feilmelding, setFeilmelding] = useState<string | null>(null);
     const [lagrer, setLagrer] = useState(false);
@@ -25,7 +26,7 @@ export const OpprettPasient = ({lastPasienter}: { lastPasienter: () => void}) =>
         e.preventDefault();
         setFeilmelding(null);
 
-        const parsed = OpprettPasientSchema.safeParse({ navn, fnr });
+        const parsed = OpprettPasientSchema.safeParse({ fornavn, etternavn, fnr });
         if (!parsed.success) {
             setFeilmelding(parsed.error.issues[0].message);
             return;
@@ -34,7 +35,8 @@ export const OpprettPasient = ({lastPasienter}: { lastPasienter: () => void}) =>
         setLagrer(true);
         try {
             await opprettPasient(parsed.data);
-            setNavn("");
+            setFornavn("");
+            setEtternavn("");
             setFnr("");
             lastPasienter();
         } catch {
@@ -51,11 +53,18 @@ export const OpprettPasient = ({lastPasienter}: { lastPasienter: () => void}) =>
             </Heading>
             <form onSubmit={handleOpprettPasient} className="flex flex-col gap-4 items-start">
                 {feilmelding && <Alert variant="error">{feilmelding}</Alert>}
-                <TextField
-                    label="Navn"
-                    value={navn}
-                    onChange={(e) => setNavn(e.target.value)}
-                />
+                <div className="flex flex-row gap-4">
+                    <TextField
+                        label="Fornavn"
+                        value={fornavn}
+                        onChange={(e) => setFornavn(e.target.value)}
+                    />
+                    <TextField
+                        label="Etternavn"
+                        value={etternavn}
+                        onChange={(e) => setEtternavn(e.target.value)}
+                    />
+                </div>
                 <TextField
                     label="Fødselsnummer"
                     value={fnr}

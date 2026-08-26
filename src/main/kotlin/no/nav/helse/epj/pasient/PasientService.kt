@@ -24,7 +24,8 @@ class PasientService(private val pasientRepository: PasientRepository) {
         id = PatientId(Uuid.generateV4()),
         legekontorId = LegekontorId(Legekontor.DEFAULT.id.value),
         hprNumbers = listOf(HelsepersonellHpr(hpr)),
-        navn = request.navn,
+        fornavn = request.fornavn,
+        etternavn = request.etternavn,
         fnr = request.fnr,
       )
     pasientRepository.insert(newPasient)

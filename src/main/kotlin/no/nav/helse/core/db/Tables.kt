@@ -7,7 +7,8 @@ import org.jetbrains.exposed.v1.javatime.datetime
 object PasientTable : Table("pasient") {
   val id = uuid("id")
   val legekontorId = reference("legekontor_id", refColumn = LegekontorTable.id)
-  val navn = text("navn")
+  val fornavn = text("fornavn")
+  val etternavn = text("etternavn")
   val fnr = text("fnr")
   val created = datetime("created_at")
   val updated = datetime("updated_at")
