@@ -6,20 +6,16 @@ import com.google.fhir.model.r4.Identifier
 import com.google.fhir.model.r4.Meta
 import com.google.fhir.model.r4.Practitioner
 import com.google.fhir.model.r4.Uri
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.request.*
 import no.nav.helse.epj.helsepersonell.Helsepersonell
+import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
+import no.nav.helse.epj.helsepersonell.HelsepersonellService
 
-class PractitionerService(val epjClient: HttpClient) {
+class PractitionerService(val helsepersonellService: HelsepersonellService) {
 
   suspend fun getPractitioner(practitionerId: PractitionerId): Practitioner? {
-    val httpResponse = epjClient.get("/api/helsepersonell/${practitionerId.value}")
-    if (httpResponse.status.value == 200) {
-      return httpResponse.body<Helsepersonell>().toPractitioner()
-    }
-
-    return null // TODO tidy
+    val helsepersonell =
+      helsepersonellService.getHelsepersonell(HelsepersonellHpr(practitionerId.value))
+    return helsepersonell.toPractitioner()
   }
 
   fun Helsepersonell.toPractitioner(): Practitioner {

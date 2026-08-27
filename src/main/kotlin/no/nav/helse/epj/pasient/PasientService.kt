@@ -14,14 +14,14 @@ class PasientService(private val pasientRepository: PasientRepository) {
     return pasientRepository.listByHpr(hpr)
   }
 
-  suspend fun getPasientById(id: PatientId): Pasient? {
+  suspend fun getPasientById(id: PasientId): Pasient? {
     return pasientRepository.findById(id.value)
   }
 
   suspend fun createPasient(request: OpprettPasientRequest, hpr: String): Pasient {
     val newPasient =
       Pasient(
-        id = PatientId(Uuid.generateV4()),
+        id = PasientId(Uuid.generateV4()),
         legekontorId = LegekontorId(Legekontor.DEFAULT.id.value),
         hprNumbers = listOf(HelsepersonellHpr(hpr)),
         fornavn = request.fornavn,

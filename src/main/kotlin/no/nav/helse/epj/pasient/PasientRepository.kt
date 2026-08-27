@@ -95,7 +95,7 @@ class PasientRepository {
 
   private fun ResultRow.toPasient(hpr: List<HelsepersonellHpr>): Pasient =
     Pasient(
-      id = PatientId(this[PasientTable.id]),
+      id = PasientId(this[PasientTable.id]),
       legekontorId = Legekontor.DEFAULT.id,
       hprNumbers = hpr,
       fornavn = this[PasientTable.fornavn],

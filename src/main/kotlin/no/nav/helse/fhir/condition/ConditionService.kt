@@ -8,40 +8,30 @@ import com.google.fhir.model.r4.Condition
 import com.google.fhir.model.r4.Enumeration
 import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.Uri
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.request.*
 import no.nav.helse.epj.konsultasjon.Diagnose
 import no.nav.helse.epj.konsultasjon.DiagnoseSystem
+import no.nav.helse.epj.konsultasjon.KonsultasjonId
+import no.nav.helse.epj.konsultasjon.KonsultasjonService
+import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
 
-class ConditionService(private val epjClient: HttpClient) {
+class ConditionService(val konsultasjonService: KonsultasjonService) {
 
   suspend fun getConditionsByPatientId(patientId: PatientInputId): Bundle {
-    val httpResponse = epjClient.get("/api/diagnoser?patientId=${patientId.value}")
-    if (httpResponse.status.value == 200) {
-      val diagnoser = httpResponse.body<List<Diagnose>>()
-      if (diagnoser.isEmpty()) {
-        return Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
-      }
-      return toBundle(diagnoser, null)
+    val diagnoser = konsultasjonService.getDiagnoser(PasientId(patientId.value))
+    if (diagnoser.isEmpty()) {
+      return Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
     }
-
-    return Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
+    return toBundle(diagnoser, null)
   }
 
   suspend fun getConditionsByEncounterId(encounterId: EncounterId): Bundle {
-    val httpResponse = epjClient.get("/api/diagnoser?konsultasjonId=${encounterId.value}")
-    if (httpResponse.status.value == 200) {
-      val diagnoser = httpResponse.body<List<Diagnose>>()
-      if (diagnoser.isEmpty()) {
-        return Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
-      }
-      return toBundle(diagnoser, encounterId)
+    val diagnoser = konsultasjonService.getDiagnoser(KonsultasjonId(encounterId.value))
+    if (diagnoser.isEmpty()) {
+      return Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
     }
-
-    return Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
+    return toBundle(diagnoser, encounterId)
   }
 
   private fun toBundle(diagnoser: List<Diagnose>, encounterId: EncounterId?): Bundle {
@@ -71,7 +61,7 @@ class ConditionService(private val epjClient: HttpClient) {
           subject =
             Reference(
               reference =
-                com.google.fhir.model.r4.String(value = "Patient/${diagnose.patientId.value}")
+                com.google.fhir.model.r4.String(value = "Patient/${diagnose.pasientId.value}")
             ),
           encounter =
             encounterId?.value?.let {

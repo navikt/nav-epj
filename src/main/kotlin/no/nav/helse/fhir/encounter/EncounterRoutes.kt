@@ -23,8 +23,7 @@ fun Route.encounterRoutes(
       val id = call.encounterId()
       val principal = call.requireFhirScope("Encounter", Interaction.READ)
 
-      val encounter =
-        encounterService.getEncounterById(id) ?: return@get call.respond(HttpStatusCode.NotFound)
+      val encounter = encounterService.getEncounterById(id)
       principal.requirePatientMatch(
         "Encounter",
         Interaction.READ,

@@ -7,20 +7,16 @@ import com.google.fhir.model.r4.Meta
 import com.google.fhir.model.r4.PractitionerRole
 import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.Uri
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.request.*
 import no.nav.helse.epj.helsepersonell.Helsepersonell
+import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
+import no.nav.helse.epj.helsepersonell.HelsepersonellService
 
-class PractitionerRoleService(private val epjClient: HttpClient) {
+class PractitionerRoleService(val helsepersonellService: HelsepersonellService) {
 
   suspend fun getPractitionerRolesByPractitioner(hpr: String): Bundle {
-    val httpResponse = epjClient.get("/api/helsepersonell/$hpr")
-    if (httpResponse.status.value != 200) {
-      return Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
-    }
+    val helsepersonell = helsepersonellService.getHelsepersonell(HelsepersonellHpr(hpr))
 
-    val role = httpResponse.body<Helsepersonell>().toPractitionerRole()
+    val role = helsepersonell.toPractitionerRole()
     return Bundle(
       type = Enumeration(value = Bundle.BundleType.Searchset),
       entry =

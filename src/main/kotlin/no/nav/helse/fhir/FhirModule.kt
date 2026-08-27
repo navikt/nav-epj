@@ -60,7 +60,7 @@ fun ApplicationCall.documentReferenceId(): DocumentReferenceId =
   DocumentReferenceId(uuidParameter("documentreferenceId"))
 
 fun ApplicationCall.organizationId(): OrganizationId =
-  OrganizationId(stringParameter("organizationId"))
+  OrganizationId(uuidParameter("organizationId"))
 
 fun ApplicationCall.patientInputId(): PatientInputId = PatientInputId(uuidParameter("subject"))
 

@@ -5,7 +5,7 @@ import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.legekontor.Legekontor
-import no.nav.helse.epj.pasient.PatientId
+import no.nav.helse.epj.pasient.PasientId
 
 class HelsepersonellService(val helsepersonellRepository: HelsepersonellRepository) {
   val log = logger()
@@ -16,8 +16,8 @@ class HelsepersonellService(val helsepersonellRepository: HelsepersonellReposito
     return (insertHelsepersonell.insertedCount == 1)
   }
 
-  suspend fun getHelsepersonell(patientId: PatientId): List<HelsepersonellHpr> {
-    val hpr = helsepersonellRepository.listByPatientId(patientId)
+  suspend fun getHelsepersonell(pasientId: PasientId): List<HelsepersonellHpr> {
+    val hpr = helsepersonellRepository.listByPatientId(pasientId)
     return hpr
   }
 

@@ -4,10 +4,10 @@ import kotlin.uuid.Uuid
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.legekontor.LegekontorId
 
-@JvmInline value class PatientId(val value: Uuid)
+@JvmInline value class PasientId(val value: Uuid)
 
 data class Pasient(
-  val id: PatientId,
+  val id: PasientId,
   val legekontorId: LegekontorId,
   val hprNumbers: List<HelsepersonellHpr>,
   val fornavn: String,

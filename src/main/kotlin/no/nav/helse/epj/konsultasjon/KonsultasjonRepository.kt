@@ -12,7 +12,7 @@ import no.nav.helse.core.db.dbQuery
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.UgyldigDiagnoseException
 import no.nav.helse.core.utils.logger
-import no.nav.helse.epj.pasient.PatientId
+import no.nav.helse.epj.pasient.PasientId
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
@@ -29,7 +29,7 @@ import org.jetbrains.exposed.v1.jdbc.update
 class KonsultasjonRepository {
   private val logger = logger()
 
-  suspend fun listByPasientId(id: PatientId): List<Konsultasjon> = dbQuery {
+  suspend fun listByPasientId(id: PasientId): List<Konsultasjon> = dbQuery {
     val konsultasjoner =
       KonsultasjonTable.selectAll()
         .where { (KonsultasjonTable.pasientId eq id.value) }
@@ -67,7 +67,7 @@ class KonsultasjonRepository {
     }
   }
 
-  suspend fun listDiagnoser(id: PatientId) = dbQuery {
+  suspend fun listDiagnoser(id: PasientId) = dbQuery {
     DiagnoseTable.selectAll().where { (patientId eq id.value) }.map { it.toDiagnose() }
   }
 
@@ -93,7 +93,7 @@ class KonsultasjonRepository {
     KonsultasjonId(konsultasjon[KonsultasjonTable.id])
   }
 
-  suspend fun findActiveByPasientId(pasientId: PatientId): Konsultasjon? {
+  suspend fun findActiveByPasientId(pasientId: PasientId): Konsultasjon? {
     val pasientUuid = pasientId.value
     return dbQuery {
       val konsultasjon =
@@ -119,7 +119,7 @@ class KonsultasjonRepository {
     }
   }
 
-  suspend fun update(oppdaterKonsultasjon: OppdaterKonsultasjonRequest, patientId: PatientId): Int =
+  suspend fun update(oppdaterKonsultasjon: OppdaterKonsultasjonRequest, pasientId: PasientId): Int =
     dbQuery {
       logger.info("Oppdaterer konsultasjon {}", oppdaterKonsultasjon.konsultasjonId)
 
@@ -127,7 +127,7 @@ class KonsultasjonRepository {
         KonsultasjonTable.selectAll()
           .where {
             (KonsultasjonTable.id eq oppdaterKonsultasjon.konsultasjonId.value) and
-              (KonsultasjonTable.pasientId eq patientId.value)
+              (KonsultasjonTable.pasientId eq pasientId.value)
           }
           .limit(1)
           .any()
@@ -136,7 +136,7 @@ class KonsultasjonRepository {
         logger.warn(
           "Fant ikke konsultasjon {} for pasientId {}, avbryter oppdatering",
           oppdaterKonsultasjon.konsultasjonId,
-          patientId,
+          pasientId,
         )
         return@dbQuery 0
       }
@@ -147,7 +147,7 @@ class KonsultasjonRepository {
         updatedRows +=
           updateDiagnose(
             diagnose = diagnose,
-            patientId = patientId.value,
+            patientId = pasientId.value,
             konsultasjonId = oppdaterKonsultasjon.konsultasjonId.value,
           )
       }
@@ -158,7 +158,7 @@ class KonsultasjonRepository {
         updatedRows +=
           updateJournalnotat(
             konsultasjonId = oppdaterKonsultasjon.konsultasjonId,
-            pasientId = patientId,
+            pasientId = pasientId,
             journalnotat = journalnotat,
           )
       }
@@ -167,7 +167,7 @@ class KonsultasjonRepository {
 
       if (oppdaterKonsultasjon.ferdigstill) {
         updatedRows +=
-          ferdigstill(konsultasjonId = oppdaterKonsultasjon.konsultasjonId, pasientId = patientId)
+          ferdigstill(konsultasjonId = oppdaterKonsultasjon.konsultasjonId, pasientId = pasientId)
       }
 
       logger.info(
@@ -178,7 +178,7 @@ class KonsultasjonRepository {
       updatedRows
     }
 
-  private fun ferdigstill(konsultasjonId: KonsultasjonId, pasientId: PatientId): Int =
+  private fun ferdigstill(konsultasjonId: KonsultasjonId, pasientId: PasientId): Int =
     KonsultasjonTable.update({
       (KonsultasjonTable.id eq konsultasjonId.value) and
         (KonsultasjonTable.pasientId eq pasientId.value)
@@ -189,7 +189,7 @@ class KonsultasjonRepository {
 
   suspend fun updateJournalnotat(
     konsultasjonId: KonsultasjonId,
-    pasientId: PatientId,
+    pasientId: PasientId,
     journalnotat: String,
   ): Int = dbQuery {
     JournalnotatTable.insert {
@@ -265,7 +265,7 @@ class KonsultasjonRepository {
     Journalnotat(
       id = JournalnotatId(this[JournalnotatTable.id]),
       konsultasjonId = KonsultasjonId(this[JournalnotatTable.konsultasjonId]),
-      pasientId = PatientId(this[JournalnotatTable.pasientId]),
+      pasientId = PasientId(this[JournalnotatTable.pasientId]),
       journalnotat = this[JournalnotatTable.journalnotat],
     )
 
@@ -276,7 +276,7 @@ class KonsultasjonRepository {
   ): Konsultasjon =
     Konsultasjon(
       id = KonsultasjonId(this[KonsultasjonTable.id]),
-      pasientId = PatientId(this[KonsultasjonTable.pasientId]),
+      pasientId = PasientId(this[KonsultasjonTable.pasientId]),
       hpr = hprListe,
       startetTidspunkt = this[KonsultasjonTable.startetTidspunkt],
       avsluttetTidspunkt = this[KonsultasjonTable.avsluttetTidspunkt],
@@ -289,7 +289,7 @@ class KonsultasjonRepository {
   fun ResultRow.toDiagnose() =
     Diagnose(
       id = DiagnoseId(this[DiagnoseTable.id]),
-      patientId = PatientId(this[patientId]),
+      pasientId = PasientId(this[patientId]),
       kode = this[DiagnoseTable.diagnosekode],
       system = DiagnoseSystem.valueOf(this[DiagnoseTable.diagnosesystem]),
       beskrivelse = this[DiagnoseTable.beskrivelse],
