@@ -25,8 +25,8 @@ smart:
     - clientId: "syk-inn"
       redirectUris: [ "https://www.ekstern.dev.nav.no/samarbeidspartner/sykmelding", "https://www.ekstern.dev.nav.no/samarbeidspartner/sykmelding/fhir/callback" ]
       launchUris: [ "https://www.ekstern.dev.nav.no/samarbeidspartner/sykmelding/fhir/launch" ]
-      tokenEndpointAuthMethod: "private_key_jwt"
-      jwksUri: "https://www.ekstern.dev.nav.no/samarbeidspartner/sykmelding/fhir/jwks.json"
+      tokenEndpointAuthMethod: "client_secret_basic"
+      clientSecret: ${SYK_INN_CLIENT_SECRET}
       scopes:
         - openid
         - profile
@@ -37,6 +37,7 @@ smart:
         - patient/Encounter.rs
         - patient/Condition.rs
         - patient/DocumentReference.crs
+        - user/Organization.rs
     - clientId: "NAV_SMART_on_FHIR_validator"
       redirectUris: [ "https://nav-on-fhir.ekstern.dev.nav.no" ]
       launchUris: [ "https://nav-on-fhir.ekstern.dev.nav.no/launch" ]

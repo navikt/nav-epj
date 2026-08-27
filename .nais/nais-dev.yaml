@@ -86,6 +86,7 @@ spec:
 
   envFrom:
     - secret: login-config-nav-epj
+    - secret: nav-epj-client-config
 
   env:
     - name: FHIR_SERVER_URL
