@@ -12,45 +12,56 @@ import com.google.fhir.model.r4.String
 import com.google.fhir.model.r4.Uri
 import com.google.fhir.model.r4.terminologies.CommonLanguages
 import com.google.fhir.model.r4.terminologies.DocumentReferenceStatus
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.request.*
-import io.ktor.http.*
 import kotlin.uuid.Uuid
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
+import no.nav.helse.epj.helsepersonell.HelsepersonellService
 import no.nav.helse.epj.konsultasjon.Journalnotat
-import no.nav.helse.fhir.encounter.EncounterId
-import no.nav.helse.fhir.patient.PatientInputId
+import no.nav.helse.epj.konsultasjon.JournalnotatId
+import no.nav.helse.epj.konsultasjon.KonsultasjonId
+import no.nav.helse.epj.konsultasjon.KonsultasjonService
+import no.nav.helse.epj.pasient.PasientId
 
-class DocumentReferenceService(private val epjClient: HttpClient) {
+class DocumentReferenceService(
+  val konsultasjonService: KonsultasjonService,
+  val helsepersonellService: HelsepersonellService,
+) {
 
   suspend fun createDocumentReference(documentReference: DocumentReference): Boolean {
     val createJournalnotat =
-      CreateJournalnotat(
-        id = documentReference.id?.let { DocumentReferenceId(Uuid.parse(it)) },
-        konsultasjonId = documentReference.context?.id?.let { EncounterId(Uuid.parse(it)) },
-        pasientId = documentReference.subject?.id?.let { PatientInputId(Uuid.parse(it)) },
-        journalnotat = documentReference.description.toString(),
+      Journalnotat(
+        id =
+          JournalnotatId(
+            Uuid.parse(requireNotNull(documentReference.id) { "DocumentReference mangler id" })
+          ),
+        konsultasjonId =
+          KonsultasjonId(
+            Uuid.parse(
+              requireNotNull(documentReference.context?.id) {
+                "DocumentReference mangler context.id"
+              }
+            )
+          ),
+        pasientId =
+          PasientId(
+            Uuid.parse(
+              requireNotNull(documentReference.subject?.id) {
+                "DocumentReference mangler subject.id"
+              }
+            )
+          ),
+        journalnotat =
+          requireNotNull(documentReference.description.toString()) {
+            "DocumentReference mangler description"
+          },
       )
-    val response =
-      epjClient.post("/api/journalnotat") {
-        contentType(ContentType.Application.Json)
-        setBody(createJournalnotat)
-      }
-    return response.status == HttpStatusCode.Created
+    return konsultasjonService.createJournalnotat(createJournalnotat)
   }
 
   suspend fun getDocumentReferences(documentReferenceId: DocumentReferenceId): DocumentReference? {
-    val response = epjClient.get("/api/journalnotat/${documentReferenceId.value}")
-    if (response.status != HttpStatusCode.OK) return null
-    val journalNotat = response.body<Journalnotat>()
-
-    val responseHelsepersonell =
-      epjClient.get("/api/helsepersonell/patient/${journalNotat.pasientId}")
-
-    if (responseHelsepersonell.status != HttpStatusCode.OK) return null
-    val hpr = responseHelsepersonell.body<List<HelsepersonellHpr>>()
-    return journalNotat.toDocumentReference(hpr)
+    val journalnotat =
+      konsultasjonService.getJournalnotat(JournalnotatId(documentReferenceId.value)) ?: return null
+    val hpr = helsepersonellService.getHelsepersonell(journalnotat.pasientId)
+    return journalnotat.toDocumentReference(hpr)
   }
 
   fun Journalnotat.toDocumentReference(hpr: List<HelsepersonellHpr>): DocumentReference {

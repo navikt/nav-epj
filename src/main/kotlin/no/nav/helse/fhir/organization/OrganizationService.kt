@@ -7,21 +7,17 @@ import com.google.fhir.model.r4.Identifier
 import com.google.fhir.model.r4.Meta
 import com.google.fhir.model.r4.Organization
 import com.google.fhir.model.r4.Uri
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.request.*
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.legekontor.Legekontor
+import no.nav.helse.epj.legekontor.LegekontorId
+import no.nav.helse.epj.legekontor.LegekontorService
 
-class OrganizationService(private val epjClient: HttpClient) {
+class OrganizationService(val legekontorService: LegekontorService) {
   val log = logger()
 
   suspend fun getOrganization(id: OrganizationId): Organization? {
-    val httpResponse = epjClient.get("api/legekontor/${id.value}")
-    if (httpResponse.status.value == 200) {
-      return httpResponse.body<Legekontor>().toOrganization()
-    }
-    return null
+    val legekontor = legekontorService.getLegekontor(LegekontorId(id.value))
+    return legekontor.toOrganization()
   }
 
   fun Legekontor.toOrganization(): Organization {

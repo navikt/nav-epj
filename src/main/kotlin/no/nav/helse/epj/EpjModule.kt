@@ -19,8 +19,8 @@ import no.nav.helse.epj.konsultasjon.routes.konsultasjonRoutes
 import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.legekontor.LegekontorService
 import no.nav.helse.epj.legekontor.legekontorRoutes
+import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.epj.pasient.PasientService
-import no.nav.helse.epj.pasient.PatientId
 import no.nav.helse.epj.pasient.pasientRoutes
 import no.nav.helse.smart.valkey.ValkeyService
 
@@ -47,7 +47,7 @@ fun Application.configureEpjModule() {
   }
 }
 
-fun ApplicationCall.patientId(): PatientId = PatientId(uuidParameter("patientId"))
+fun ApplicationCall.patientId(): PasientId = PasientId(uuidParameter("patientId"))
 
 fun ApplicationCall.journalnotatId(): JournalnotatId =
   JournalnotatId(uuidParameter("journalnotatId"))

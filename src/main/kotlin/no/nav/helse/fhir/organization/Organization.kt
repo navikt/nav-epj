@@ -1,3 +1,5 @@
 package no.nav.helse.fhir.organization
 
-@JvmInline value class OrganizationId(val value: String)
+import kotlin.uuid.Uuid
+
+@JvmInline value class OrganizationId(val value: Uuid)

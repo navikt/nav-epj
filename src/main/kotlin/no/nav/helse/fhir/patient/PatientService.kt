@@ -6,30 +6,23 @@ import com.google.fhir.model.r4.Identifier
 import com.google.fhir.model.r4.Meta
 import com.google.fhir.model.r4.Patient
 import com.google.fhir.model.r4.Uri
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.request.*
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.pasient.Pasient
+import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.pasient.PasientService
 
-class PatientService(private val epjClient: HttpClient) {
+class PatientService(val epjPatientService: PasientService) {
 
   val log = logger()
 
   @WithSpan
   suspend fun getPatient(patientInputId: PatientInputId): Patient? {
     val span = Span.current()
-    span.setAttribute("patiendId", patientInputId.value.toString())
-    log.debug("Fetching patient for {}", patientInputId)
-    val httpResponse = epjClient.get("/api/patient/${patientInputId.value}")
-    span.setAttribute("status", httpResponse.status.value.toString())
-    if (httpResponse.status.value == 200) {
-      return httpResponse.body<Pasient>().toPatient()
-    }
-
-    return null // TODO tidy
+    span.setAttribute("patientId", patientInputId.value.toString())
+    val epjPatient = epjPatientService.getPasientById(PasientId(patientInputId.value))
+    return epjPatient?.toPatient()
   }
 
   fun Pasient.toPatient(): Patient {

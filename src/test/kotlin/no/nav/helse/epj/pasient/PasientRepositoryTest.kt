@@ -18,7 +18,7 @@ class PasientRepositoryTest : WithPostgresql() {
   val pasientRepository = PasientRepository()
 
   private fun nyPasient(
-    id: PatientId = PatientId(Uuid.generateV4()),
+    id: PasientId = PasientId(Uuid.generateV4()),
     hpr: HelsepersonellHpr = HelsepersonellHpr("123"),
     fnr: String = "fnr-${id.value}",
   ) =

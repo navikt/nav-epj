@@ -13,7 +13,7 @@ import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
-import no.nav.helse.epj.pasient.PatientId
+import no.nav.helse.epj.pasient.PasientId
 import org.junit.Test
 
 class KonsultasjonServiceTest {
@@ -23,7 +23,7 @@ class KonsultasjonServiceTest {
 
   private fun konsultasjon(
     id: KonsultasjonId = KonsultasjonId(Uuid.generateV4()),
-    pasientId: PatientId = PatientId(Uuid.generateV4()),
+    pasientId: PasientId = PasientId(Uuid.generateV4()),
     status: KonsultasjonStatus = KonsultasjonStatus.PÅGÅENDE,
   ) =
     Konsultasjon(
@@ -63,7 +63,7 @@ class KonsultasjonServiceTest {
   @Test
   fun `getOrCreateKonsultasjon returns the active konsultasjon without creating a new one`() =
     runTest {
-      val pasientId = PatientId(Uuid.generateV4())
+      val pasientId = PasientId(Uuid.generateV4())
       val hpr = HelsepersonellHpr("123")
       val aktivKonsultasjon = konsultasjon(pasientId = pasientId)
       coEvery { konsultasjonRepository.findActiveByPasientId(pasientId) } returns aktivKonsultasjon
@@ -76,7 +76,7 @@ class KonsultasjonServiceTest {
 
   @Test
   fun `getOrCreateKonsultasjon creates a new konsultasjon when none is active`() = runTest {
-    val pasientId = PatientId(Uuid.generateV4())
+    val pasientId = PasientId(Uuid.generateV4())
     val hpr = HelsepersonellHpr("123")
     val opprettetId = KonsultasjonId(Uuid.generateV4())
     val opprettetKonsultasjon = konsultasjon(id = opprettetId, pasientId = pasientId)
@@ -95,7 +95,7 @@ class KonsultasjonServiceTest {
   @Test
   fun `createKonsultasjon throws IllegalStateException when konsultasjon does not exist after insert`() =
     runTest {
-      val pasientId = PatientId(Uuid.generateV4())
+      val pasientId = PasientId(Uuid.generateV4())
       val opprettetId = KonsultasjonId(Uuid.generateV4())
       val opprettKonsultasjon =
         OpprettKonsultasjon(
@@ -115,7 +115,7 @@ class KonsultasjonServiceTest {
   @Test
   fun `updateKonsultasjon throws KonsultasjonNotFoundForPatientException when 0 rows are updated`() =
     runTest {
-      val pasientId = PatientId(Uuid.generateV4())
+      val pasientId = PasientId(Uuid.generateV4())
       val request =
         OppdaterKonsultasjonRequest(
           konsultasjonId = KonsultasjonId(Uuid.generateV4()),
@@ -132,7 +132,7 @@ class KonsultasjonServiceTest {
 
   @Test
   fun `updateKonsultasjon completes without error when rows are updated`() = runTest {
-    val pasientId = PatientId(Uuid.generateV4())
+    val pasientId = PasientId(Uuid.generateV4())
     val request =
       OppdaterKonsultasjonRequest(
         konsultasjonId = KonsultasjonId(Uuid.generateV4()),
@@ -153,7 +153,7 @@ class KonsultasjonServiceTest {
       Journalnotat(
         id = JournalnotatId(Uuid.generateV4()),
         konsultasjonId = KonsultasjonId(Uuid.generateV4()),
-        pasientId = PatientId(Uuid.generateV4()),
+        pasientId = PasientId(Uuid.generateV4()),
         journalnotat = "notat",
       )
     coEvery { konsultasjonRepository.insertJournalnotat(journalnotat) } returns 1
@@ -167,7 +167,7 @@ class KonsultasjonServiceTest {
       Journalnotat(
         id = JournalnotatId(Uuid.generateV4()),
         konsultasjonId = KonsultasjonId(Uuid.generateV4()),
-        pasientId = PatientId(Uuid.generateV4()),
+        pasientId = PasientId(Uuid.generateV4()),
         journalnotat = "notat",
       )
     coEvery { konsultasjonRepository.insertJournalnotat(journalnotat) } returns 0

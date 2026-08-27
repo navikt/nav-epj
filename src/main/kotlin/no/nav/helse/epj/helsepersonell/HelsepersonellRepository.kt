@@ -7,7 +7,7 @@ import no.nav.helse.core.db.dbQuery
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.legekontor.LegekontorId
-import no.nav.helse.epj.pasient.PatientId
+import no.nav.helse.epj.pasient.PasientId
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
@@ -28,11 +28,11 @@ class HelsepersonellRepository {
     }
   }
 
-  suspend fun listByPatientId(patientId: PatientId): List<HelsepersonellHpr> = dbQuery {
-    logger.info("Looking up helsepersonell on patientId: ${patientId.value}")
+  suspend fun listByPatientId(pasientId: PasientId): List<HelsepersonellHpr> = dbQuery {
+    logger.info("Looking up helsepersonell on patientId: ${pasientId.value}")
 
     PasientHelsepersonell.select(PasientHelsepersonell.hpr)
-      .where { PasientHelsepersonell.pasientId eq patientId.value }
+      .where { PasientHelsepersonell.pasientId eq pasientId.value }
       .map { row -> HelsepersonellHpr(row[PasientHelsepersonell.hpr]) }
   }
 

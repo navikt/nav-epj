@@ -16,7 +16,6 @@ import no.nav.helse.epj.pasient.PasientService
 import no.nav.helse.fhir.condition.ConditionService
 import no.nav.helse.fhir.documentreference.DocumentReferenceService
 import no.nav.helse.fhir.encounter.EncounterService
-import no.nav.helse.fhir.initEpjClient
 import no.nav.helse.fhir.organization.OrganizationService
 import no.nav.helse.fhir.patient.PatientService
 import no.nav.helse.fhir.practitioner.PractitionerService
@@ -56,7 +55,5 @@ fun Application.configureDependencies() {
     provide(PatientService::class)
     provide(PractitionerService::class)
     provide(PractitionerRoleService::class)
-
-    provide<HttpClient> { initEpjClient(resolve<Environment>().epj.baseUrl) }
   }
 }

@@ -17,7 +17,7 @@ import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.konsultasjon.routes.konsultasjonRoutes
-import no.nav.helse.epj.pasient.PatientId
+import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.helseId.DebugInfo
 import no.nav.helse.helseId.HelseIdPrincipal
 import no.nav.helse.helseId.User
@@ -52,7 +52,7 @@ class KonsultasjonRoutesTest {
 
   private fun konsultasjon(
     id: KonsultasjonId = KonsultasjonId(Uuid.generateV4()),
-    pasientId: PatientId = PatientId(Uuid.generateV4()),
+    pasientId: PasientId = PasientId(Uuid.generateV4()),
   ) =
     Konsultasjon(
       id = id,
@@ -90,11 +90,11 @@ class KonsultasjonRoutesTest {
 
   @Test
   fun `GET konsultasjoner for unknown patient returns 404`() = testApp {
-    val patientId = PatientId(Uuid.generateV4())
-    coEvery { konsultasjonService.getKonsultasjoner(patientId) } throws
-      KonsultasjonNotFoundForPatientException(patientId)
+    val pasientId = PasientId(Uuid.generateV4())
+    coEvery { konsultasjonService.getKonsultasjoner(pasientId) } throws
+      KonsultasjonNotFoundForPatientException(pasientId)
 
-    val response = get("/api/patients/${patientId.value}/konsultasjoner")
+    val response = get("/api/patients/${pasientId.value}/konsultasjoner")
 
     assertEquals(HttpStatusCode.NotFound, response.status)
   }

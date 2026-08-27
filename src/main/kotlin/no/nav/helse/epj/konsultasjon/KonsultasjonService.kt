@@ -6,16 +6,16 @@ import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
-import no.nav.helse.epj.pasient.PatientId
+import no.nav.helse.epj.pasient.PasientId
 
 class KonsultasjonService(private val konsultasjonRepository: KonsultasjonRepository) {
   val log = logger()
 
-  suspend fun getKonsultasjoner(pasientId: PatientId): List<Konsultasjon> {
+  suspend fun getKonsultasjoner(pasientId: PasientId): List<Konsultasjon> {
     return konsultasjonRepository.listByPasientId(pasientId)
   }
 
-  suspend fun getAktivKonsultasjon(pasientId: PatientId): Konsultasjon? {
+  suspend fun getAktivKonsultasjon(pasientId: PasientId): Konsultasjon? {
     return konsultasjonRepository.findActiveByPasientId(pasientId)
   }
 
@@ -24,8 +24,8 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
       ?: throw KonsultasjonNotFoundException(konsultasjonId)
   }
 
-  suspend fun getDiagnoser(patientId: PatientId): List<Diagnose> {
-    return konsultasjonRepository.listDiagnoser(patientId)
+  suspend fun getDiagnoser(pasientId: PasientId): List<Diagnose> {
+    return konsultasjonRepository.listDiagnoser(pasientId)
   }
 
   suspend fun getDiagnoser(konsultasjonId: KonsultasjonId): List<Diagnose> {
@@ -56,7 +56,7 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
     return createdKonsultasjon
   }
 
-  suspend fun getOrCreateKonsultasjon(pasientId: PatientId, hpr: HelsepersonellHpr): Konsultasjon {
+  suspend fun getOrCreateKonsultasjon(pasientId: PasientId, hpr: HelsepersonellHpr): Konsultasjon {
     val aktivKonsultasjon = getAktivKonsultasjon(pasientId)
     if (aktivKonsultasjon != null) return aktivKonsultasjon
     val opprettKonsultasjon =
@@ -71,7 +71,7 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
 
   suspend fun updateKonsultasjon(
     oppdaterKonsultasjon: OppdaterKonsultasjonRequest,
-    pasientId: PatientId,
+    pasientId: PasientId,
   ) {
     log.info("oppdater konsultasjon på pasientId: $pasientId")
     val updatedRows = konsultasjonRepository.update(oppdaterKonsultasjon, pasientId)

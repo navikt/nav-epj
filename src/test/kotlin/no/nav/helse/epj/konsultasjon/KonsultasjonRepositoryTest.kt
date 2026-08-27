@@ -15,8 +15,8 @@ import no.nav.helse.core.utils.UgyldigDiagnoseException
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.legekontor.Legekontor
 import no.nav.helse.epj.pasient.Pasient
+import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.epj.pasient.PasientRepository
-import no.nav.helse.epj.pasient.PatientId
 import no.nav.helse.utils.WithPostgresql
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -32,9 +32,9 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
   val pasientRepository = PasientRepository()
 
   private suspend fun opprettPasient(
-    pasientId: PatientId = PatientId(Uuid.generateV4()),
+    pasientId: PasientId = PasientId(Uuid.generateV4()),
     hpr: HelsepersonellHpr = HelsepersonellHpr("123"),
-  ): PatientId {
+  ): PasientId {
     pasientRepository.insert(
       Pasient(
         id = pasientId,
@@ -50,14 +50,14 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
 
   @Test
   fun `finds no konsultasjon`() = runTest {
-    val pasientId = PatientId(Uuid.generateV4())
+    val pasientId = PasientId(Uuid.generateV4())
     val konsultasjon = konsultasjonRepository.listByPasientId(pasientId)
     assertEquals(0, konsultasjon.size)
   }
 
   @Test
   fun `finds one konsultasjon`() = runTest {
-    val pasientId = PatientId(Uuid.generateV4())
+    val pasientId = PasientId(Uuid.generateV4())
     val hpr = HelsepersonellHpr("123")
     pasientRepository.insert(
       Pasient(

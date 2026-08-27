@@ -8,35 +8,30 @@ import com.google.fhir.model.r4.Encounter
 import com.google.fhir.model.r4.Enumeration
 import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.Uri
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.request.*
-import io.ktor.http.*
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.konsultasjon.Konsultasjon
+import no.nav.helse.epj.konsultasjon.KonsultasjonId
+import no.nav.helse.epj.konsultasjon.KonsultasjonService
+import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.fhir.patient.PatientInputId
 
-class EncounterService(private val epjClient: HttpClient) {
+class EncounterService(val konsultasjonService: KonsultasjonService) {
 
-  suspend fun getEncounterById(encounterId: EncounterId): Encounter? {
-    val response = epjClient.get("/api/konsultasjon/${encounterId.value}")
-    if (response.status != HttpStatusCode.OK) return null // TODO tidy
-    return response.body<Konsultasjon>().toEncounter()
+  suspend fun getEncounterById(encounterId: EncounterId): Encounter {
+    val konsultasjon = konsultasjonService.getKonsultasjon(KonsultasjonId(encounterId.value))
+    return konsultasjon.toEncounter()
   }
 
   suspend fun getActiveEncounterByPatient(patientId: PatientInputId): Encounter? {
-    val response = epjClient.get("/api/patients/${patientId.value}/konsultasjoner/active")
-    if (response.status != HttpStatusCode.OK) return null // TODO tidy
-    return response.body<Konsultasjon>().toEncounter()
+    val konsultasjon = konsultasjonService.getAktivKonsultasjon(PasientId(patientId.value))
+    return konsultasjon?.toEncounter()
   }
 
   suspend fun getEncountersByPatient(patientId: PatientInputId): Bundle {
-    val response = epjClient.get("/api/patients/${patientId.value}/konsultasjoner")
-    if (response.status != HttpStatusCode.OK) {
+    val konsultasjoner = konsultasjonService.getKonsultasjoner(PasientId(patientId.value))
+    if (konsultasjoner.isEmpty()) {
       return Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
     }
-
-    val konsultasjoner = response.body<List<Konsultasjon>>()
     return Bundle(
       type = Enumeration(value = Bundle.BundleType.Searchset),
       entry =
