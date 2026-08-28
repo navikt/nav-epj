@@ -58,7 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: dev
-      url: https://epj.ansatt.dev.nav.no
+      url: https://epj.intern.dev.nav.no
     steps:
       - uses: actions/checkout@v7
 
