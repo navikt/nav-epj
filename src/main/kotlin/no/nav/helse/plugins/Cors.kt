@@ -9,7 +9,7 @@ fun Application.configureCors() {
     allowHost("localhost:5173")
     allowHost("localhost:5174")
     allowHost("localhost:3000")
-    allowHost("epj.intern.dev.nav.no")
+    allowHost("epj.dev.nav.no")
     allowHeader(HttpHeaders.Authorization)
     allowHeader(HttpHeaders.ContentType)
     allowHeader("X-Wonderwall-Id-Token")

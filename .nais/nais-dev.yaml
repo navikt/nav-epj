@@ -61,7 +61,7 @@ spec:
       runtime: java
 
   ingresses:
-    - 'https://epj.intern.dev.nav.no'
+    - 'https://epj.dev.nav.no'
 
   login:
     provider: openid
@@ -90,6 +90,6 @@ spec:
 
   env:
     - name: FHIR_SERVER_URL
-      value: https://epj.intern.dev.nav.no/fhir
+      value: https://epj.dev.nav.no/fhir
     - name: SMART_ISSUER_BASE_URL
-      value: https://epj.intern.dev.nav.no/oidc
+      value: https://epj.dev.nav.no/oidc
