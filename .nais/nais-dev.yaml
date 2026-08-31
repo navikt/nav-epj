@@ -83,6 +83,8 @@ spec:
       rules:
         - application: logging
           namespace: nais-system
+        - application: tsm-pdl-cache
+          namespace: teamsykmelding
       external:
         - host: 'helseid-sts.test.nhn.no'
 

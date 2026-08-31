@@ -15,12 +15,15 @@ fhir = "1.0.0-beta02"
 otel = "2.31.0"
 tsm-diagnoser = "2026.1.13"
 valkey = "2.5.1"
+tsm-pdl-client = "0.0.2"
+arrow = "2.2.3"
 
 [libraries]
 # Monitoring and observability
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 logback-encoder = { module = "net.logstash.logback:logstash-logback-encoder", version.ref = "logbackEncoder" }
 otel-annotations = { module = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations", version.ref = "otel" }
+arrow-core = { module = "io.arrow-kt:arrow-core", version.ref = "arrow" }
 
 # DB
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
@@ -36,8 +39,12 @@ flyway-postgresql = { module = "org.flywaydb:flyway-database-postgresql", versio
 nimbus-oauth2-oidc-sdk = { module = "com.nimbusds:oauth2-oidc-sdk", version.ref = "nimbus" }
 
 fhir-model = { module = "com.google.fhir:fhir-model", version.ref = "fhir" }
-tsm-diagnoser = { module = "no.nav.tsm:diagnoser", version.ref = "tsm-diagnoser" }
 valkey-glide = { module = "io.valkey:valkey-glide", version.ref = "valkey" }
+
+# tsm dependencies
+tsm-pdl-client = { module = "no.nav.tsm:pdl-client", version.ref = "tsm-pdl-client" }
+tsm-diagnoser = { module = "no.nav.tsm:diagnoser", version.ref = "tsm-diagnoser" }
+
 
 # Testing
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }

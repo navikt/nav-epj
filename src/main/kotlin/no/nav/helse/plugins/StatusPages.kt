@@ -12,6 +12,7 @@ import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.LegekontorNotfoundException
 import no.nav.helse.core.utils.PasientCreationException
+import no.nav.helse.core.utils.PasientNotFoundInPdlExeption
 import no.nav.helse.core.utils.UgyldigDiagnoseException
 import no.nav.helse.core.utils.logger
 import no.nav.helse.fhir.security.InsufficientScopeException
@@ -76,6 +77,14 @@ fun Application.configureStatusPages() {
       log.error("Pasient ble ikke opprettet", cause)
       call.respondText(
         text = "En uventet feil oppstod ved opprettelse av pasient",
+        status = HttpStatusCode.InternalServerError,
+      )
+    }
+
+    exception<PasientNotFoundInPdlExeption> { call, cause ->
+      log.error("Pasient ikke funnet i pdl", cause)
+      call.respondText(
+        text = "fant ikke pasient i pdl",
         status = HttpStatusCode.InternalServerError,
       )
     }

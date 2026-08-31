@@ -56,6 +56,8 @@ dependencies {
   implementation(ktorLibs.server.openapi)
   implementation(ktorLibs.server.cors)
   implementation(ktorLibs.server.statusPages)
+  implementation(ktorLibs.client.apache5)
+
   implementation(libs.logback.classic)
   implementation(libs.logback.encoder)
   implementation(libs.exposed.core)
@@ -71,6 +73,8 @@ dependencies {
   implementation(libs.otel.annotations)
   implementation(libs.tsm.diagnoser)
   implementation(libs.valkey.glide)
+  implementation(libs.tsm.pdl.client)
+  implementation(libs.arrow.core)
 
   testImplementation(ktorLibs.server.testHost)
   testImplementation(ktorLibs.client.mock)

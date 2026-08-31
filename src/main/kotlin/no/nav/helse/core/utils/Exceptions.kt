@@ -12,6 +12,8 @@ class HelsepersonellForPatientNotFoundException(patient: PasientId) :
 
 class PasientCreationException : RuntimeException("Pasient ble ikke opprettet")
 
+class PasientNotFoundInPdlExeption : RuntimeException("Pasient ikke funnet i pdl")
+
 class KonsultasjonNotFoundException(konsultasjonId: KonsultasjonId) :
   RuntimeException("Fant ikke konsultasjon med id=${konsultasjonId.value}")
 

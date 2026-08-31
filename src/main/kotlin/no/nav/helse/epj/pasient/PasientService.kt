@@ -1,13 +1,19 @@
 package no.nav.helse.epj.pasient
 
+import arrow.core.getOrElse
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.PasientCreationException
+import no.nav.helse.core.utils.PasientNotFoundInPdlExeption
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.legekontor.Legekontor
 import no.nav.helse.epj.legekontor.LegekontorId
+import no.nav.helse.epj.pdl.PdlArrowed
 
-class PasientService(private val pasientRepository: PasientRepository) {
+class PasientService(
+  private val pasientRepository: PasientRepository,
+  private val pdlClient: PdlArrowed,
+) {
   private val logger = logger()
 
   suspend fun getPasienterByHpr(hpr: HelsepersonellHpr): List<Pasient> {
@@ -19,6 +25,8 @@ class PasientService(private val pasientRepository: PasientRepository) {
   }
 
   suspend fun createPasient(request: OpprettPasientRequest, hpr: String): Pasient {
+    pdlClient.getPerson(request.fnr).getOrElse { throw PasientNotFoundInPdlExeption() }
+
     val newPasient =
       Pasient(
         id = PasientId(Uuid.generateV4()),
