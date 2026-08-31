@@ -7,7 +7,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.uuid.Uuid
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.db.DiagnoseTable
 import no.nav.helse.core.db.dbQuery
@@ -15,7 +14,6 @@ import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.UgyldigDiagnoseException
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.legekontor.Legekontor
-import no.nav.helse.epj.legekontor.LegekontorRepository
 import no.nav.helse.epj.pasient.Pasient
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.epj.pasient.PasientRepository
@@ -28,7 +26,6 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
   init {
     runMigrations(true)
     connect()
-    runBlocking { LegekontorRepository().insertLegekontor(Legekontor.DEFAULT.id.value) }
   }
 
   val konsultasjonRepository = KonsultasjonRepository()
