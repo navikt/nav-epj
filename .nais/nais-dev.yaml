@@ -70,6 +70,8 @@ spec:
       excludePaths:
         - /auth/**
         - /api/**
+        - /oidc/**
+        - /fhir/**
 
   accessPolicy:
     inbound:
