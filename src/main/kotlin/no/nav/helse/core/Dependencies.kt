@@ -28,6 +28,7 @@ import no.nav.helse.smart.security.RemoteClientJwksSetProvider
 import no.nav.helse.smart.valkey.ValkeyService
 import no.nav.helse.smart.valkey.createGlideClient
 import no.nav.helse.smart.valkey.createGlideClientConfiguration
+import no.nav.tsm.ktor.auth.texas.Texas
 import no.nav.tsm.pdl.plugin.PdlPlugin
 
 fun Application.configureDependencies() {
@@ -39,6 +40,7 @@ fun Application.configureDependencies() {
     provide<GlideClientConfiguration> { createGlideClientConfiguration(resolve()) }
     provide<GlideClient> { createGlideClient(resolve()) }
     provide<HttpClient> { configureBaseHttpClient() }
+    provide(Texas::class)
 
     provide(ValkeyService::class)
     provide<ClientJwksSetProvider> { RemoteClientJwksSetProvider() }
@@ -64,6 +66,7 @@ fun Application.configureDependencies() {
     provide(PractitionerService::class)
     provide(PractitionerRoleService::class)
   }
+
 }
 
 private fun configureBaseHttpClient(): HttpClient = HttpClient(Apache5) {}
