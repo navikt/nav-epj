@@ -38,7 +38,7 @@ fun Application.configureEpjModule() {
         filesPath = "static"
       }
       pasientRoutes(pasientService)
-      helsepersonellRoutes(helsepersonellService)
+      helsepersonellRoutes(helsepersonellService, legekontorService)
       konsultasjonRoutes(konsultasjonService, valkeyService)
       legekontorRoutes(legekontorService)
       diagnoseRoutes(konsultasjonService)

@@ -3,9 +3,11 @@ package no.nav.helse.epj.pasient
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.uuid.Uuid
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.legekontor.Legekontor
+import no.nav.helse.epj.legekontor.LegekontorRepository
 import no.nav.helse.utils.WithPostgresql
 import org.junit.Test
 
@@ -13,6 +15,7 @@ class PasientRepositoryTest : WithPostgresql() {
   init {
     runMigrations(true)
     connect()
+    runBlocking { LegekontorRepository().insertLegekontor(Legekontor.DEFAULT.id.value) }
   }
 
   val pasientRepository = PasientRepository()
