@@ -17,44 +17,37 @@ import no.nav.helse.plugins.uuidModule
 
 private val logger = logger()
 
-class PersontjenstenHttpClient(
-  private val baseUrl: String,
-) {
-  val httpClient = HttpClient {
-    install(ContentNegotiation) {
-      jackson {
-        addModule(uuidModule)
-      }
+class PersontjenstenHttpClient(private val baseUrl: String) {
+    val httpClient = HttpClient {
+        install(ContentNegotiation) { jackson { addModule(uuidModule) } }
+        install(HttpRequestRetry) { retryOnServerErrors(maxRetries = 5) }
     }
-    install(HttpRequestRetry) {
-      retryOnServerErrors(maxRetries = 5)
-    }
-  }
 
-  suspend fun getByNin(fnr: String): PersonName? {
-    try {
-      val respone = httpClient.post("$baseUrl/full-access/person/get-by-nin") {
-        parameters {
-          append("informationParts", "Name")
-          append("includeHistory", "false")
+    suspend fun getByNin(fnr: String): PersonName? {
+        try {
+            val respone =
+                httpClient
+                    .post("$baseUrl/full-access/person/get-by-nin") {
+                        parameters {
+                            append("informationParts", "Name")
+                            append("includeHistory", "false")
+                        }
+                        contentType(ContentType.Application.FormUrlEncoded)
+                        accept(ContentType.Application.Json)
+                        setBody("nin=$fnr")
+                        /* TODO lege til støtte for DPoP
+                        headers {
+                          append("Authorization", "DPoP $token")
+                        }
+                         */
+                    }
+                    .body<PersonName>()
+
+            return respone
+        } catch (exception: Exception) {
+            logger.error(exception.message ?: "Feil i persontjensten")
         }
-        contentType(ContentType.Application.FormUrlEncoded)
-        accept(ContentType.Application.Json)
-        setBody("nin=$fnr")
-        /* TODO lege til støtte for DPoP
-        headers {
-          append("Authorization", "DPoP $token")
-        }
-         */
-      }.body<PersonName>()
 
-      return respone
-
-    } catch (exception: Exception) {
-      logger.error(exception.message ?: "Feil i persontjensten")
+        return null
     }
-
-    return null
-  }
-
 }

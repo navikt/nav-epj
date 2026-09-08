@@ -3,7 +3,6 @@ package no.nav.helse.epj.pasient
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.PasientCreationException
-import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.legekontor.Legekontor
 import no.nav.helse.epj.legekontor.LegekontorId
@@ -17,9 +16,9 @@ class PasientService(private val pasientRepository: PasientRepository) {
         return pasientRepository.findById(id.value)
     }
 
-   suspend fun getPasientByFnr(fnr: String): Pasient? {
+    suspend fun getPasientByFnr(fnr: String): Pasient? {
         return pasientRepository.findByFnr(fnr)
-   }
+    }
 
     @OptIn(ExperimentalUuidApi::class)
     suspend fun createPasient(request: OpprettPasientRequest, hpr: String): Pasient {

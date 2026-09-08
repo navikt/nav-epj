@@ -11,7 +11,7 @@ class Environment(
     val smart: SmartConfig,
     val valkey: ValkeyConfig,
     val epj: EpjConfig,
-    val persontjensten: PersontjenstenConfig
+    val persontjensten: PersontjenstenConfig,
 )
 
 data class PersontjenstenConfig(val baseUrl: String)
@@ -103,7 +103,7 @@ fun initEnvironment(config: ApplicationConfig): Environment {
                 password = config.propertyOrNull("valkey.password")?.getString(),
             ),
         epj = EpjConfig(baseUrl = config.property("epj.baseUrl").getString()),
-        persontjensten = PersontjenstenConfig(baseUrl = config.property("persontjensten.baseUrl").getString()),
-
-      )
+        persontjensten =
+            PersontjenstenConfig(baseUrl = config.property("persontjensten.baseUrl").getString()),
+    )
 }
