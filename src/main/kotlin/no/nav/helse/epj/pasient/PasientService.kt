@@ -9,8 +9,6 @@ import no.nav.helse.epj.legekontor.Legekontor
 import no.nav.helse.epj.legekontor.LegekontorId
 
 class PasientService(private val pasientRepository: PasientRepository) {
-    private val logger = logger()
-
     suspend fun getPasienterByHpr(hpr: HelsepersonellHpr): List<Pasient> {
         return pasientRepository.listByHpr(hpr)
     }
@@ -18,6 +16,10 @@ class PasientService(private val pasientRepository: PasientRepository) {
     suspend fun getPasientById(id: PasientId): Pasient? {
         return pasientRepository.findById(id.value)
     }
+
+   suspend fun getPasientByFnr(fnr: String): Pasient? {
+        return pasientRepository.findByFnr(fnr)
+   }
 
     @OptIn(ExperimentalUuidApi::class)
     suspend fun createPasient(request: OpprettPasientRequest, hpr: String): Pasient {

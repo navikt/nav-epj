@@ -8,5 +8,3 @@ TODO:
 
 - Ha en forhåndsdefinert liste over pasienter (koblet til en test lege man logger seg inn med) og et søkefelt for å finne testpersoner
 - Finn ut og dokumenter hvordan dolly skal brukes med dette
-
- nav-epj -> syk-inn, dev

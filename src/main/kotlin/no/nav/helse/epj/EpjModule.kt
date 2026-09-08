@@ -49,6 +49,9 @@ fun Application.configureEpjModule() {
 
 fun ApplicationCall.patientId(): PasientId = PasientId(uuidParameter("patientId"))
 
+fun ApplicationCall.pasientFnr(): String = stringParameter("fnr")
+
+
 fun ApplicationCall.journalnotatId(): JournalnotatId =
     JournalnotatId(uuidParameter("journalnotatId"))
 

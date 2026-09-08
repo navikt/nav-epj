@@ -15,4 +15,6 @@ data class Pasient(
     val fnr: String,
 )
 
-data class OpprettPasientRequest(val fornavn: String, val etternavn: String, val fnr: String)
+data class OpprettPasientRequest(val fornavn: String, val etternavn: String, val fnr: String) {
+  constructor(fornavn: String?, etternavn: String?, fnr: String) : this(fornavn, etternavn, fnr)
+}
