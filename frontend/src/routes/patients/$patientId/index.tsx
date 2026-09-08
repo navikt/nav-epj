@@ -44,6 +44,11 @@ function RouteComponent() {
     router.invalidate()
   }
 
+  if (konsultasjoner.error) {
+    console.error(konsultasjoner.error.message);
+    return <div>Feil ved lasting av konsultasjoner</div>;
+  }
+
 
   return (
     <div className="flex flex-col items-start gap-4">
