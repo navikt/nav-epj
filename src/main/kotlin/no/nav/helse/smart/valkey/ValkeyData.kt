@@ -3,11 +3,11 @@ package no.nav.helse.smart.valkey
 data class LaunchContext(val patientId: String, val encounterId: String, val hpr: String)
 
 data class AuthCodeContext(
-  val username: String,
-  val redirectUrl: String,
-  val launch: LaunchContext,
-  val subject: String,
-  val scope: String,
-  val clientId: String,
-  val codeChallenge: String,
+    val username: String,
+    val redirectUrl: String,
+    val launch: LaunchContext,
+    val subject: String,
+    val scope: String,
+    val clientId: String,
+    val codeChallenge: String,
 )

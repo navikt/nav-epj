@@ -11,25 +11,28 @@ import no.nav.helse.epj.konsultasjon.KonsultasjonService
 
 fun Route.journalnotatRoutes(konsultasjonService: KonsultasjonService) {
 
-  val log = logger()
+    val log = logger()
 
-  route("/api") {
-    route("/journalnotat") {
-      get("/{journalnotatId}") {
-        val id = call.journalnotatId()
-        val journalnotat =
-          konsultasjonService.getJournalnotat(id) ?: call.respond(HttpStatusCode.NotFound)
-        log.info("journalnotat: $journalnotat")
-        call.respond(journalnotat)
-      }
-      post {
-        val request = call.receive<Journalnotat>()
-        if (konsultasjonService.createJournalnotat(request)) {
-          call.respond(HttpStatusCode.Created)
-        } else {
-          call.respond(HttpStatusCode.InternalServerError, "Kunne ikke opprette journalnotat")
+    route("/api") {
+        route("/journalnotat") {
+            get("/{journalnotatId}") {
+                val id = call.journalnotatId()
+                val journalnotat =
+                    konsultasjonService.getJournalnotat(id) ?: call.respond(HttpStatusCode.NotFound)
+                log.info("journalnotat: $journalnotat")
+                call.respond(journalnotat)
+            }
+            post {
+                val request = call.receive<Journalnotat>()
+                if (konsultasjonService.createJournalnotat(request)) {
+                    call.respond(HttpStatusCode.Created)
+                } else {
+                    call.respond(
+                        HttpStatusCode.InternalServerError,
+                        "Kunne ikke opprette journalnotat",
+                    )
+                }
+            }
         }
-      }
     }
-  }
 }

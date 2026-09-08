@@ -15,30 +15,34 @@ import tools.jackson.databind.module.SimpleModule
 import tools.jackson.module.kotlin.KotlinModule
 
 val uuidModule: SimpleModule =
-  SimpleModule().apply {
-    addSerializer(
-      Uuid::class.java,
-      object : ValueSerializer<Uuid>() {
-        override fun serialize(value: Uuid, gen: JsonGenerator, ctxt: SerializationContext) {
-          gen.writeString(value.toString())
-        }
-      },
-    )
-    addDeserializer(
-      Uuid::class.java,
-      object : ValueDeserializer<Uuid>() {
-        override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Uuid =
-          Uuid.parse(p.string)
-      },
-    )
-  }
+    SimpleModule().apply {
+        addSerializer(
+            Uuid::class.java,
+            object : ValueSerializer<Uuid>() {
+                override fun serialize(
+                    value: Uuid,
+                    gen: JsonGenerator,
+                    ctxt: SerializationContext,
+                ) {
+                    gen.writeString(value.toString())
+                }
+            },
+        )
+        addDeserializer(
+            Uuid::class.java,
+            object : ValueDeserializer<Uuid>() {
+                override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Uuid =
+                    Uuid.parse(p.string)
+            },
+        )
+    }
 
 fun Application.configureSerialization() {
-  install(ContentNegotiation) {
-    jackson {
-      enable(SerializationFeature.INDENT_OUTPUT)
-      addModule(KotlinModule.Builder().build())
-      addModule(uuidModule)
+    install(ContentNegotiation) {
+        jackson {
+            enable(SerializationFeature.INDENT_OUTPUT)
+            addModule(KotlinModule.Builder().build())
+            addModule(uuidModule)
+        }
     }
-  }
 }

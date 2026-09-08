@@ -17,19 +17,19 @@ import no.nav.helse.smart.security.configureSmartSecurity
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
 fun Application.module() {
-  configureSerialization()
-  configureDependencies()
-  configureStatusPages()
+    configureSerialization()
+    configureDependencies()
+    configureStatusPages()
 
-  configureDatabases()
-  configureHealthCheck()
-  configureCors()
-  configureCallLogging()
+    configureDatabases()
+    configureHealthCheck()
+    configureCors()
+    configureCallLogging()
 
-  configureHelseId()
-  configureSmartSecurity()
-  configureSmartRouting()
-  configureFhirModule()
+    configureHelseId()
+    configureSmartSecurity()
+    configureSmartRouting()
+    configureFhirModule()
 
-  configureEpjModule()
+    configureEpjModule()
 }

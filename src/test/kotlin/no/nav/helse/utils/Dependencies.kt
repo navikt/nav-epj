@@ -30,78 +30,82 @@ private val encounterService = mockk<EncounterService>(relaxed = true)
 private val patientService = mockk<PatientService>(relaxed = true)
 
 fun Application.configureTestSmartDependencies() {
-  configureSerialization()
-  dependencies {
-    provide<Environment>() { simpleTestEnvironment }
-    provide<ValkeyService> { valkeyService }
-    provide<EncounterService> { encounterService }
-    provide<PatientService> { patientService }
-    provide<ClientAssertionVerifier> { clientAssertionVerifier }
-  }
-  authentication {
-    provider("wonderwall-helseid") {
-      authenticate { ctx ->
-        ctx.principal(HelseIdPrincipal(User(name = "Test", hpr = "111"), DebugInfo("", "")))
-      }
+    configureSerialization()
+    dependencies {
+        provide<Environment> { simpleTestEnvironment }
+        provide<ValkeyService> { valkeyService }
+        provide<EncounterService> { encounterService }
+        provide<PatientService> { patientService }
+        provide<ClientAssertionVerifier> { clientAssertionVerifier }
     }
-  }
-  configureSmartRouting()
+    authentication {
+        provider("wonderwall-helseid") {
+            authenticate { ctx ->
+                ctx.principal(HelseIdPrincipal(User(name = "Test", hpr = "111"), DebugInfo("", "")))
+            }
+        }
+    }
+    configureSmartRouting()
 }
 
 fun createIntegrationEnvironment(postgres: PostgreSQLContainer) =
-  Environment(
-    postgres =
-      PostgresConfig(
-        url = "jdbc:${postgres.jdbcUrl.removePrefix("jdbc:")}",
-        username = postgres.username,
-        password = postgres.password,
-      ),
-    smart =
-      SmartConfig(
-        issuerBaseUrl = "http://test/oidc",
-        fhirServerUrl = "http://test/fhir",
-        clients =
-          listOf(
-            SmartClient(
-              clientId = "test-client-id",
-              redirectUris = listOf("http://test"),
-              launchUris = listOf("http://test/fhir/launch"),
-              tokenEndpointAuthMethod = TokenEndpointAuthMethod.NONE,
-              allowedScopes =
-                parseRegisteredScopes(listOf("openid", "fhirUser", "launch", "patient/*.cruds")),
-            )
-          ),
-      ),
-    valkey = ValkeyConfig("valkey", 8080, false, null, null),
-    epj = EpjConfig(baseUrl = "testurl"),
-  )
+    Environment(
+        postgres =
+            PostgresConfig(
+                url = "jdbc:${postgres.jdbcUrl.removePrefix("jdbc:")}",
+                username = postgres.username,
+                password = postgres.password,
+            ),
+        smart =
+            SmartConfig(
+                issuerBaseUrl = "http://test/oidc",
+                fhirServerUrl = "http://test/fhir",
+                clients =
+                    listOf(
+                        SmartClient(
+                            clientId = "test-client-id",
+                            redirectUris = listOf("http://test"),
+                            launchUris = listOf("http://test/fhir/launch"),
+                            tokenEndpointAuthMethod = TokenEndpointAuthMethod.NONE,
+                            allowedScopes =
+                                parseRegisteredScopes(
+                                    listOf("openid", "fhirUser", "launch", "patient/*.cruds")
+                                ),
+                        )
+                    ),
+            ),
+        valkey = ValkeyConfig("valkey", 8080, false, null, null),
+        epj = EpjConfig(baseUrl = "testurl"),
+    )
 
 val simpleTestEnvironment =
-  Environment(
-    postgres = mockk(relaxed = true),
-    smart =
-      SmartConfig(
-        issuerBaseUrl = "http://test/oidc",
-        fhirServerUrl = "http://test/fhir",
-        clients =
-          listOf(
-            SmartClient(
-              clientId = "test-client-id",
-              redirectUris = listOf("http://test"),
-              launchUris = listOf("http://test/fhir/launch"),
-              tokenEndpointAuthMethod = TokenEndpointAuthMethod.NONE,
-              allowedScopes =
-                parseRegisteredScopes(listOf("openid", "fhirUser", "launch", "patient/*.cruds")),
-            )
-          ),
-      ),
-    valkey = ValkeyConfig("valkey", 8080, false, null, null),
-    epj = EpjConfig(baseUrl = "testurl"),
-  )
+    Environment(
+        postgres = mockk(relaxed = true),
+        smart =
+            SmartConfig(
+                issuerBaseUrl = "http://test/oidc",
+                fhirServerUrl = "http://test/fhir",
+                clients =
+                    listOf(
+                        SmartClient(
+                            clientId = "test-client-id",
+                            redirectUris = listOf("http://test"),
+                            launchUris = listOf("http://test/fhir/launch"),
+                            tokenEndpointAuthMethod = TokenEndpointAuthMethod.NONE,
+                            allowedScopes =
+                                parseRegisteredScopes(
+                                    listOf("openid", "fhirUser", "launch", "patient/*.cruds")
+                                ),
+                        )
+                    ),
+            ),
+        valkey = ValkeyConfig("valkey", 8080, false, null, null),
+        epj = EpjConfig(baseUrl = "testurl"),
+    )
 
 private val clientAssertionVerifier =
-  ClientAssertionVerifier(
-    env = simpleTestEnvironment,
-    jtiStore = valkeyService,
-    jwkSetProvider = { ImmutableJWKSet(JWKSet()) },
-  )
+    ClientAssertionVerifier(
+        env = simpleTestEnvironment,
+        jtiStore = valkeyService,
+        jwkSetProvider = { ImmutableJWKSet(JWKSet()) },
+    )

@@ -18,80 +18,80 @@ import no.nav.helse.fhir.security.InsufficientScopeException
 import no.nav.helse.fhir.security.PatientMismatchException
 
 fun Application.configureStatusPages() {
-  val log = logger()
-  install(StatusPages) {
-    exception<KonsultasjonNotFoundException> { call, cause ->
-      call.respondText(
-        text = "Konsultasjon not found: ${cause.message}",
-        status = HttpStatusCode.NotFound,
-      )
+    val log = logger()
+    install(StatusPages) {
+        exception<KonsultasjonNotFoundException> { call, cause ->
+            call.respondText(
+                text = "Konsultasjon not found: ${cause.message}",
+                status = HttpStatusCode.NotFound,
+            )
+        }
+        exception<KonsultasjonNotFoundForPatientException> { call, cause ->
+            call.respondText(
+                text = "Konsultasjon not found for patient: ${cause.message}",
+                status = HttpStatusCode.NotFound,
+            )
+        }
+        exception<AktivKonsultasjonNotFoundException> { call, cause ->
+            call.respondText(
+                text = "Aktiv konsultasjon not found: ${cause.message}",
+                status = HttpStatusCode.NotFound,
+            )
+        }
+        exception<HelsepersonellNotFoundException> { call, cause ->
+            call.respondText(
+                text = "Helsepersonell not found: ${cause.message}",
+                status = HttpStatusCode.NotFound,
+            )
+        }
+        exception<LegekontorNotfoundException> { call, cause ->
+            call.respondText(
+                text = "Legekontor not found: ${cause.message}",
+                status = HttpStatusCode.NotFound,
+            )
+        }
+        exception<UgyldigDiagnoseException> { call, cause ->
+            call.respondText(
+                text = "Ugyldig diagnose: ${cause.message}",
+                status = HttpStatusCode.BadRequest,
+            )
+        }
+        exception<InsufficientScopeException> { call, cause ->
+            call.response.header(
+                HttpHeaders.WWWAuthenticate,
+                "Bearer error=\"insufficient_scope\", scope=\"${cause.resourceType}.${cause.interaction.code}\"",
+            )
+            call.respondText(text = cause.message ?: "Forbidden", status = HttpStatusCode.Forbidden)
+        }
+        exception<PatientMismatchException> { call, cause ->
+            call.respondText(text = "Not found", status = HttpStatusCode.NotFound)
+        }
+        exception<BadRequestException> { call, cause ->
+            call.respondText(
+                text = cause.message ?: "Ugyldig forespørsel",
+                status = HttpStatusCode.BadRequest,
+            )
+        }
+        exception<PasientCreationException> { call, cause ->
+            log.error("Pasient ble ikke opprettet", cause)
+            call.respondText(
+                text = "En uventet feil oppstod ved opprettelse av pasient",
+                status = HttpStatusCode.InternalServerError,
+            )
+        }
+        exception<HelsepersonellForPatientNotFoundException> { call, cause ->
+            log.error("Uventet feil i helsepersonell-API", cause)
+            call.respondText(
+                text = "En uventet feil oppstod",
+                status = HttpStatusCode.InternalServerError,
+            )
+        }
+        exception<Throwable> { call, cause ->
+            log.error("Uventet feil", cause)
+            call.respondText(
+                text = "En uventet feil oppstod",
+                status = HttpStatusCode.InternalServerError,
+            )
+        }
     }
-    exception<KonsultasjonNotFoundForPatientException> { call, cause ->
-      call.respondText(
-        text = "Konsultasjon not found for patient: ${cause.message}",
-        status = HttpStatusCode.NotFound,
-      )
-    }
-    exception<AktivKonsultasjonNotFoundException> { call, cause ->
-      call.respondText(
-        text = "Aktiv konsultasjon not found: ${cause.message}",
-        status = HttpStatusCode.NotFound,
-      )
-    }
-    exception<HelsepersonellNotFoundException> { call, cause ->
-      call.respondText(
-        text = "Helsepersonell not found: ${cause.message}",
-        status = HttpStatusCode.NotFound,
-      )
-    }
-    exception<LegekontorNotfoundException> { call, cause ->
-      call.respondText(
-        text = "Legekontor not found: ${cause.message}",
-        status = HttpStatusCode.NotFound,
-      )
-    }
-    exception<UgyldigDiagnoseException> { call, cause ->
-      call.respondText(
-        text = "Ugyldig diagnose: ${cause.message}",
-        status = HttpStatusCode.BadRequest,
-      )
-    }
-    exception<InsufficientScopeException> { call, cause ->
-      call.response.header(
-        HttpHeaders.WWWAuthenticate,
-        "Bearer error=\"insufficient_scope\", scope=\"${cause.resourceType}.${cause.interaction.code}\"",
-      )
-      call.respondText(text = cause.message ?: "Forbidden", status = HttpStatusCode.Forbidden)
-    }
-    exception<PatientMismatchException> { call, cause ->
-      call.respondText(text = "Not found", status = HttpStatusCode.NotFound)
-    }
-    exception<BadRequestException> { call, cause ->
-      call.respondText(
-        text = cause.message ?: "Ugyldig forespørsel",
-        status = HttpStatusCode.BadRequest,
-      )
-    }
-    exception<PasientCreationException> { call, cause ->
-      log.error("Pasient ble ikke opprettet", cause)
-      call.respondText(
-        text = "En uventet feil oppstod ved opprettelse av pasient",
-        status = HttpStatusCode.InternalServerError,
-      )
-    }
-    exception<HelsepersonellForPatientNotFoundException> { call, cause ->
-      log.error("Uventet feil i helsepersonell-API", cause)
-      call.respondText(
-        text = "En uventet feil oppstod",
-        status = HttpStatusCode.InternalServerError,
-      )
-    }
-    exception<Throwable> { call, cause ->
-      log.error("Uventet feil", cause)
-      call.respondText(
-        text = "En uventet feil oppstod",
-        status = HttpStatusCode.InternalServerError,
-      )
-    }
-  }
 }

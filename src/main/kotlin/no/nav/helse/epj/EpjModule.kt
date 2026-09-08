@@ -25,52 +25,52 @@ import no.nav.helse.epj.pasient.pasientRoutes
 import no.nav.helse.smart.valkey.ValkeyService
 
 fun Application.configureEpjModule() {
-  val pasientService: PasientService by dependencies
-  val helsepersonellService: HelsepersonellService by dependencies
-  val konsultasjonService: KonsultasjonService by dependencies
-  val legekontorService: LegekontorService by dependencies
-  val valkeyService: ValkeyService by dependencies
-  routing {
-    authenticate("wonderwall-helseid") {
-      singlePageApplication {
-        useResources = true
-        defaultPage = "index.html"
-        filesPath = "static"
-      }
-      pasientRoutes(pasientService)
-      helsepersonellRoutes(helsepersonellService, legekontorService)
-      konsultasjonRoutes(konsultasjonService, valkeyService)
-      legekontorRoutes(legekontorService)
-      diagnoseRoutes(konsultasjonService)
-      journalnotatRoutes(konsultasjonService)
+    val pasientService: PasientService by dependencies
+    val helsepersonellService: HelsepersonellService by dependencies
+    val konsultasjonService: KonsultasjonService by dependencies
+    val legekontorService: LegekontorService by dependencies
+    val valkeyService: ValkeyService by dependencies
+    routing {
+        authenticate("wonderwall-helseid") {
+            singlePageApplication {
+                useResources = true
+                defaultPage = "index.html"
+                filesPath = "static"
+            }
+            pasientRoutes(pasientService)
+            helsepersonellRoutes(helsepersonellService, legekontorService)
+            konsultasjonRoutes(konsultasjonService, valkeyService)
+            legekontorRoutes(legekontorService)
+            diagnoseRoutes(konsultasjonService)
+            journalnotatRoutes(konsultasjonService)
+        }
     }
-  }
 }
 
 fun ApplicationCall.patientId(): PasientId = PasientId(uuidParameter("patientId"))
 
 fun ApplicationCall.journalnotatId(): JournalnotatId =
-  JournalnotatId(uuidParameter("journalnotatId"))
+    JournalnotatId(uuidParameter("journalnotatId"))
 
 fun ApplicationCall.helsepersonellHpr(): HelsepersonellHpr =
-  HelsepersonellHpr(stringParameter("hpr"))
+    HelsepersonellHpr(stringParameter("hpr"))
 
 fun ApplicationCall.legekontorId(): LegekontorId = LegekontorId(uuidParameter("legekontorId"))
 
 fun ApplicationCall.konsultasjonId(): KonsultasjonId =
-  KonsultasjonId(uuidParameter("konsultasjonId"))
+    KonsultasjonId(uuidParameter("konsultasjonId"))
 
 private fun ApplicationCall.uuidParameter(name: String): Uuid {
-  val value = parameters[name] ?: throw BadRequestException("Mangler parameteren '$name'")
+    val value = parameters[name] ?: throw BadRequestException("Mangler parameteren '$name'")
 
-  return try {
-    Uuid.parse(value)
-  } catch (exception: IllegalArgumentException) {
-    throw BadRequestException("Parameteren '$name' er ikke en gyldig UUID", exception)
-  }
+    return try {
+        Uuid.parse(value)
+    } catch (exception: IllegalArgumentException) {
+        throw BadRequestException("Parameteren '$name' er ikke en gyldig UUID", exception)
+    }
 }
 
 private fun ApplicationCall.stringParameter(name: String): String {
-  val value = parameters[name] ?: throw BadRequestException("Mangler parameteren '$name'")
-  return value
+    val value = parameters[name] ?: throw BadRequestException("Mangler parameteren '$name'")
+    return value
 }

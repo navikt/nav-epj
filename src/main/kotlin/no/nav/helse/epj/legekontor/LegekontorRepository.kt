@@ -10,34 +10,34 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 
 class LegekontorRepository {
 
-  suspend fun insertLegekontor(id: Uuid) = dbQuery {
-    LegekontorTable.insert {
-      it[LegekontorTable.id] = id
-      it[navn] = "navn"
-      it[tlf] = "tlf"
-      it[orgnummer] = id.toString()
+    suspend fun insertLegekontor(id: Uuid) = dbQuery {
+        LegekontorTable.insert {
+            it[LegekontorTable.id] = id
+            it[navn] = "navn"
+            it[tlf] = "tlf"
+            it[orgnummer] = id.toString()
+        }
     }
-  }
 
-  suspend fun findByLegekontorId(id: Uuid): Legekontor? {
-    return dbQuery {
-      val legekontor =
-        LegekontorTable.selectAll().where { LegekontorTable.id eq id }.singleOrNull()
-          ?: return@dbQuery null
-      legekontor.toLegekontor()
+    suspend fun findByLegekontorId(id: Uuid): Legekontor? {
+        return dbQuery {
+            val legekontor =
+                LegekontorTable.selectAll().where { LegekontorTable.id eq id }.singleOrNull()
+                    ?: return@dbQuery null
+            legekontor.toLegekontor()
+        }
     }
-  }
 
-  fun ResultRow.toLegekontor(): Legekontor {
-    return Legekontor(
-      id = LegekontorId(this[LegekontorTable.id]),
-      navn = this[LegekontorTable.navn],
-      orgnummer = this[LegekontorTable.orgnummer],
-      tlf = this[LegekontorTable.tlf],
-    )
-  }
+    fun ResultRow.toLegekontor(): Legekontor {
+        return Legekontor(
+            id = LegekontorId(this[LegekontorTable.id]),
+            navn = this[LegekontorTable.navn],
+            orgnummer = this[LegekontorTable.orgnummer],
+            tlf = this[LegekontorTable.tlf],
+        )
+    }
 
-  suspend fun legekontorInDb(id: Uuid): Boolean {
-    return dbQuery { LegekontorTable.selectAll().where { LegekontorTable.id eq id }.any() }
-  }
+    suspend fun legekontorInDb(id: Uuid): Boolean {
+        return dbQuery { LegekontorTable.selectAll().where { LegekontorTable.id eq id }.any() }
+    }
 }

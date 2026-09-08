@@ -14,46 +14,46 @@ import no.nav.helse.helseId.loggedInUser
 import no.nav.helse.smart.valkey.ValkeyService
 
 fun Route.konsultasjonRoutes(
-  konsultasjonService: KonsultasjonService,
-  valkeyService: ValkeyService,
+    konsultasjonService: KonsultasjonService,
+    valkeyService: ValkeyService,
 ) {
 
-  val log = logger()
-  route("/api") {
-    route("/patients/{patientId}/konsultasjoner") {
-      get {
-        val pasientId = call.patientId()
-        val konsultasjoner = konsultasjonService.getKonsultasjoner(pasientId)
-        call.respond(konsultasjoner)
-      }
-      post {
-        val pasientId = call.patientId()
-        val principal = loggedInUser()
-        val hpr = HelsepersonellHpr(principal.hpr)
-        val konsultasjon = konsultasjonService.getOrCreateKonsultasjon(pasientId, hpr)
-        valkeyService.setActivePatient(principal.hpr, pasientId.value.toString())
-        call.respond(konsultasjon)
-      }
-      patch {
-        val request = call.receive<OppdaterKonsultasjonRequest>()
-        val pasientId = call.patientId()
-        konsultasjonService.updateKonsultasjon(request, pasientId)
-        call.respond(HttpStatusCode.OK)
-      }
-      get("/active") {
-        val pasientId = call.patientId()
-        val konsultasjoner =
-          konsultasjonService.getAktivKonsultasjon(pasientId)
-            ?: return@get call.respond(HttpStatusCode.NotFound)
-        call.respond(konsultasjoner)
-      }
+    val log = logger()
+    route("/api") {
+        route("/patients/{patientId}/konsultasjoner") {
+            get {
+                val pasientId = call.patientId()
+                val konsultasjoner = konsultasjonService.getKonsultasjoner(pasientId)
+                call.respond(konsultasjoner)
+            }
+            post {
+                val pasientId = call.patientId()
+                val principal = loggedInUser()
+                val hpr = HelsepersonellHpr(principal.hpr)
+                val konsultasjon = konsultasjonService.getOrCreateKonsultasjon(pasientId, hpr)
+                valkeyService.setActivePatient(principal.hpr, pasientId.value.toString())
+                call.respond(konsultasjon)
+            }
+            patch {
+                val request = call.receive<OppdaterKonsultasjonRequest>()
+                val pasientId = call.patientId()
+                konsultasjonService.updateKonsultasjon(request, pasientId)
+                call.respond(HttpStatusCode.OK)
+            }
+            get("/active") {
+                val pasientId = call.patientId()
+                val konsultasjoner =
+                    konsultasjonService.getAktivKonsultasjon(pasientId)
+                        ?: return@get call.respond(HttpStatusCode.NotFound)
+                call.respond(konsultasjoner)
+            }
+        }
+        route("/konsultasjon/{konsultasjonId}") {
+            get {
+                val konsultasjonId = call.konsultasjonId()
+                val konsultasjon = konsultasjonService.getKonsultasjon(konsultasjonId)
+                call.respond(konsultasjon)
+            }
+        }
     }
-    route("/konsultasjon/{konsultasjonId}") {
-      get {
-        val konsultasjonId = call.konsultasjonId()
-        val konsultasjon = konsultasjonService.getKonsultasjon(konsultasjonId)
-        call.respond(konsultasjon)
-      }
-    }
-  }
 }

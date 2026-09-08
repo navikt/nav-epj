@@ -8,23 +8,23 @@ import org.flywaydb.core.Flyway
 import org.jetbrains.exposed.v1.jdbc.Database
 
 fun Application.configureDatabases() {
-  val env: Environment by dependencies
+    val env: Environment by dependencies
 
-  val flyway = getFlyway(env.postgres)
+    val flyway = getFlyway(env.postgres)
 
-  flyway.clean()
-  flyway.migrate()
+    flyway.clean()
+    flyway.migrate()
 
-  Database.connect(
-    url = env.postgres.url,
-    user = env.postgres.username,
-    password = env.postgres.password,
-  )
+    Database.connect(
+        url = env.postgres.url,
+        user = env.postgres.username,
+        password = env.postgres.password,
+    )
 }
 
 fun getFlyway(postgresConfig: PostgresConfig): Flyway =
-  Flyway.configure()
-    .dataSource(postgresConfig.url, postgresConfig.username, postgresConfig.password)
-    .locations("db/migration")
-    .cleanDisabled(false)
-    .load()
+    Flyway.configure()
+        .dataSource(postgresConfig.url, postgresConfig.username, postgresConfig.password)
+        .locations("db/migration")
+        .cleanDisabled(false)
+        .load()

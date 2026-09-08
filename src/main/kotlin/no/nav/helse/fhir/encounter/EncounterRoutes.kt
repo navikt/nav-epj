@@ -13,43 +13,47 @@ import no.nav.helse.fhir.security.requirePatientMatch
 import no.nav.helse.smart.security.Interaction
 
 fun Route.encounterRoutes(
-  encounterService: EncounterService,
-  fhirR4Json: FhirR4Json,
-  fhirContentType: ContentType,
+    encounterService: EncounterService,
+    fhirR4Json: FhirR4Json,
+    fhirContentType: ContentType,
 ) {
-  val log = logger()
-  route("/fhir") {
-    get("/Encounter/{encounter}") {
-      val id = call.encounterId()
-      val principal = call.requireFhirScope("Encounter", Interaction.READ)
+    val log = logger()
+    route("/fhir") {
+        get("/Encounter/{encounter}") {
+            val id = call.encounterId()
+            val principal = call.requireFhirScope("Encounter", Interaction.READ)
 
-      val encounter = encounterService.getEncounterById(id)
-      principal.requirePatientMatch(
-        "Encounter",
-        Interaction.READ,
-        encounter.subject?.reference?.value?.substringAfter("Patient/"),
-      )
+            val encounter = encounterService.getEncounterById(id)
+            principal.requirePatientMatch(
+                "Encounter",
+                Interaction.READ,
+                encounter.subject?.reference?.value?.substringAfter("Patient/"),
+            )
 
-      val fhirJson = fhirR4Json.encodeToString(encounter)
-      log.info("encounter: $fhirJson")
-      call.respondText(fhirJson, fhirContentType)
+            val fhirJson = fhirR4Json.encodeToString(encounter)
+            log.info("encounter: $fhirJson")
+            call.respondText(fhirJson, fhirContentType)
+        }
+
+        get("/Encounter") {
+            val patientRef =
+                call.parameters["subject"]
+                    ?: call.parameters["patient"]
+                    ?: return@get call.respond(
+                        HttpStatusCode.BadRequest,
+                        "missing subject or patient parameter",
+                    )
+            val principal = call.requireFhirScope("Encounter", Interaction.SEARCH)
+
+            val patientId = PatientInputId(Uuid.parse(patientRef.substringAfterLast('/')))
+            principal.requirePatientMatch(
+                "Encounter",
+                Interaction.SEARCH,
+                patientId.value.toString(),
+            )
+
+            val bundle = encounterService.getEncountersByPatient(patientId)
+            call.respondText(fhirR4Json.encodeToString(bundle), fhirContentType)
+        }
     }
-
-    get("/Encounter") {
-      val patientRef =
-        call.parameters["subject"]
-          ?: call.parameters["patient"]
-          ?: return@get call.respond(
-            HttpStatusCode.BadRequest,
-            "missing subject or patient parameter",
-          )
-      val principal = call.requireFhirScope("Encounter", Interaction.SEARCH)
-
-      val patientId = PatientInputId(Uuid.parse(patientRef.substringAfterLast('/')))
-      principal.requirePatientMatch("Encounter", Interaction.SEARCH, patientId.value.toString())
-
-      val bundle = encounterService.getEncountersByPatient(patientId)
-      call.respondText(fhirR4Json.encodeToString(bundle), fhirContentType)
-    }
-  }
 }

@@ -11,15 +11,15 @@ import tools.jackson.databind.SerializationFeature
 import tools.jackson.module.kotlin.KotlinModule
 
 fun initEpjClient(baseUrl: String): HttpClient {
-  return HttpClient(CIO) {
-    install(Logging)
-    install(ContentNegotiation) {
-      jackson {
-        enable(SerializationFeature.INDENT_OUTPUT)
-        addModule(KotlinModule.Builder().build())
-        addModule(uuidModule)
-      }
+    return HttpClient(CIO) {
+        install(Logging)
+        install(ContentNegotiation) {
+            jackson {
+                enable(SerializationFeature.INDENT_OUTPUT)
+                addModule(KotlinModule.Builder().build())
+                addModule(uuidModule)
+            }
+        }
+        defaultRequest { url(baseUrl) }
     }
-    defaultRequest { url(baseUrl) }
-  }
 }

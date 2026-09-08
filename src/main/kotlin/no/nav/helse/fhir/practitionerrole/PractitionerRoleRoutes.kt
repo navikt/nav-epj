@@ -8,20 +8,23 @@ import no.nav.helse.fhir.security.requireFhirScope
 import no.nav.helse.smart.security.Interaction
 
 fun Route.practitionerRoleRoutes(
-  practitionerRoleService: PractitionerRoleService,
-  fhirR4Json: FhirR4Json,
-  fhirContentType: ContentType,
+    practitionerRoleService: PractitionerRoleService,
+    fhirR4Json: FhirR4Json,
+    fhirContentType: ContentType,
 ) {
-  route("/fhir") {
-    get("/PractitionerRole") {
-      val practitionerRef =
-        call.parameters["practitioner"]
-          ?: return@get call.respond(HttpStatusCode.BadRequest, "missing practitioner parameter")
-      call.requireFhirScope("PractitionerRole", Interaction.SEARCH)
+    route("/fhir") {
+        get("/PractitionerRole") {
+            val practitionerRef =
+                call.parameters["practitioner"]
+                    ?: return@get call.respond(
+                        HttpStatusCode.BadRequest,
+                        "missing practitioner parameter",
+                    )
+            call.requireFhirScope("PractitionerRole", Interaction.SEARCH)
 
-      val hpr = practitionerRef.substringAfterLast('/')
-      val bundle = practitionerRoleService.getPractitionerRolesByPractitioner(hpr)
-      call.respondText(fhirR4Json.encodeToString(bundle), fhirContentType)
+            val hpr = practitionerRef.substringAfterLast('/')
+            val bundle = practitionerRoleService.getPractitionerRolesByPractitioner(hpr)
+            call.respondText(fhirR4Json.encodeToString(bundle), fhirContentType)
+        }
     }
-  }
 }

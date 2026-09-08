@@ -14,6 +14,8 @@ Before running the application, make sure you have the following installed:
 - [Node.js](https://nodejs.org/en/) (LTS)
 - [Yarn](https://yarnpkg.com/) (`corepack enable`)
 - [Docker](https://www.docker.com/)
+- [Java 25](https://openjdk.org/projects/jdk/25/)
+
 
 ### Running the application locally
 
@@ -56,3 +58,21 @@ flow.
 Read [this guide](./docs/smart-client-authentication-guide.md) for instructions and code examples on
 how to make your SMART on FHIR application work with nav-epj.
 
+### Finding new available dependencies
+``` bash
+./gradlew dependencyUpdates
+```
+
+### Upgrading the Gradle wrapper version to latest
+``` bash
+./gradlew :wrapper --gradle-version latest
+```
+
+### Contact
+
+This project is maintained by [navikt/tsm](CODEOWNERS)
+
+Questions and/or feature requests? Please create an [issue](https://github.com/navikt/nav-epj/issues)
+
+If you work in [@navikt](https://github.com/navikt) you can reach us at the Slack
+channel [#team-symfoni](https://nav-it.slack.com/archives/C07MY3KCDS5)

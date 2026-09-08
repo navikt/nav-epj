@@ -12,39 +12,44 @@ import no.nav.helse.fhir.security.requirePatientMatch
 import no.nav.helse.smart.security.Interaction
 
 fun Route.conditionRoutes(
-  conditionService: ConditionService,
-  fhirR4Json: FhirR4Json,
-  fhirContentType: ContentType,
+    conditionService: ConditionService,
+    fhirR4Json: FhirR4Json,
+    fhirContentType: ContentType,
 ) {
 
-  route("/fhir") {
-    get("/Condition") {
-      val encounterId = call.parameters["encounter"]
-      val patientId = call.parameters["subject"]
-      val principal = call.requireFhirScope("Condition", Interaction.SEARCH)
+    route("/fhir") {
+        get("/Condition") {
+            val encounterId = call.parameters["encounter"]
+            val patientId = call.parameters["subject"]
+            val principal = call.requireFhirScope("Condition", Interaction.SEARCH)
 
-      val conditions =
-        when {
-          patientId != null -> {
-            val id = call.patientReferenceInputId()
-            principal.requirePatientMatch("Condition", Interaction.SEARCH, id.value.toString())
-            conditionService.getConditionsByPatientId(id)
-          }
-          encounterId != null -> {
-            val bundle = conditionService.getConditionsByEncounterId(call.encounterReferenceId())
-            bundle.entry.forEach { entry ->
-              val subject = (entry.resource as? Condition)?.subject?.reference?.value
-              principal.requirePatientMatch(
-                "Condition",
-                Interaction.SEARCH,
-                subject?.substringAfter("Patient/"),
-              )
-            }
-            bundle
-          }
-          else -> return@get call.respond(HttpStatusCode.BadRequest)
+            val conditions =
+                when {
+                    patientId != null -> {
+                        val id = call.patientReferenceInputId()
+                        principal.requirePatientMatch(
+                            "Condition",
+                            Interaction.SEARCH,
+                            id.value.toString(),
+                        )
+                        conditionService.getConditionsByPatientId(id)
+                    }
+                    encounterId != null -> {
+                        val bundle =
+                            conditionService.getConditionsByEncounterId(call.encounterReferenceId())
+                        bundle.entry.forEach { entry ->
+                            val subject = (entry.resource as? Condition)?.subject?.reference?.value
+                            principal.requirePatientMatch(
+                                "Condition",
+                                Interaction.SEARCH,
+                                subject?.substringAfter("Patient/"),
+                            )
+                        }
+                        bundle
+                    }
+                    else -> return@get call.respond(HttpStatusCode.BadRequest)
+                }
+            call.respondText(fhirR4Json.encodeToString(conditions), fhirContentType)
         }
-      call.respondText(fhirR4Json.encodeToString(conditions), fhirContentType)
     }
-  }
 }

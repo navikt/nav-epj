@@ -34,409 +34,456 @@ import no.nav.helse.smart.valkey.LaunchContext
 import no.nav.helse.smart.valkey.ValkeyService
 
 fun Application.configureSmartRouting() {
-  val env: Environment by dependencies
-  val patientService: PatientService by dependencies
-  val encounterService: EncounterService by dependencies
-  val valkeyService: ValkeyService by dependencies
-  val clientAssertionVerifier: ClientAssertionVerifier by dependencies
+    val env: Environment by dependencies
+    val patientService: PatientService by dependencies
+    val encounterService: EncounterService by dependencies
+    val valkeyService: ValkeyService by dependencies
+    val clientAssertionVerifier: ClientAssertionVerifier by dependencies
 
-  val issuerUrl = env.smart.issuerBaseUrl
-  val clients = env.smart.clients
-  val logger = logger()
+    val issuerUrl = env.smart.issuerBaseUrl
+    val clients = env.smart.clients
+    val logger = logger()
 
-  routing {
-    authenticate("wonderwall-helseid") {
-      route("/fhir") {
-        get("/launch") {
-          val appUrl =
-            call.request.queryParameters["url"]
-              ?: return@get rejectDirect(HttpStatusCode.BadRequest, "missing app url")
-          clients.find { appUrl in it.launchUris }
-            ?: return@get rejectDirect(
-              HttpStatusCode.BadRequest,
-              "The given launch url $appUrl is not registered for any known clients",
-            )
-          val user = loggedInUser()
-          logger.debug("Logged in user: {}", user)
+    routing {
+        authenticate("wonderwall-helseid") {
+            route("/fhir") {
+                get("/launch") {
+                    val appUrl =
+                        call.request.queryParameters["url"]
+                            ?: return@get rejectDirect(HttpStatusCode.BadRequest, "missing app url")
+                    clients.find { appUrl in it.launchUris }
+                        ?: return@get rejectDirect(
+                            HttpStatusCode.BadRequest,
+                            "The given launch url $appUrl is not registered for any known clients",
+                        )
+                    val user = loggedInUser()
+                    logger.debug("Logged in user: {}", user)
 
-          val cachedPatientId =
-            valkeyService.getActivePatient(user.hpr)
-              ?: return@get call.respond(
-                HttpStatusCode.Conflict,
-                "No active patient context for clinician",
-              )
+                    val cachedPatientId =
+                        valkeyService.getActivePatient(user.hpr)
+                            ?: return@get call.respond(
+                                HttpStatusCode.Conflict,
+                                "No active patient context for clinician",
+                            )
 
-          logger.debug("Patient id from valkey: {}", cachedPatientId)
-          // FHIR launch requires an active patient
-          val patientInputId = PatientInputId(Uuid.parse(cachedPatientId))
-          logger.debug("PatientInputId: {}", patientInputId)
-          val patient =
-            patientService.getPatient(patientInputId)
-              ?: return@get call.respond(HttpStatusCode.BadRequest, "Unknown patient")
+                    logger.debug("Patient id from valkey: {}", cachedPatientId)
+                    // FHIR launch requires an active patient
+                    val patientInputId = PatientInputId(Uuid.parse(cachedPatientId))
+                    logger.debug("PatientInputId: {}", patientInputId)
+                    val patient =
+                        patientService.getPatient(patientInputId)
+                            ?: return@get call.respond(HttpStatusCode.BadRequest, "Unknown patient")
 
-          // FHIR launch requires an active encounter
-          val encounter =
-            encounterService.getActiveEncounterByPatient(patientInputId)
-              ?: return@get call.respond(
-                HttpStatusCode.BadRequest,
-                "Found no active encounter for patient",
-              )
+                    // FHIR launch requires an active encounter
+                    val encounter =
+                        encounterService.getActiveEncounterByPatient(patientInputId)
+                            ?: return@get call.respond(
+                                HttpStatusCode.BadRequest,
+                                "Found no active encounter for patient",
+                            )
 
-          val launchId = UUID.randomUUID().toString()
-          val patientId =
-            patient.id
-              ?: return@get call.respond(
-                HttpStatusCode.InternalServerError,
-                "FHIR Patient returned without an id",
-              )
-          val encounterId =
-            encounter.id
-              ?: return@get call.respond(
-                HttpStatusCode.InternalServerError,
-                "FHIR Encounter returned without an id",
-              )
+                    val launchId = UUID.randomUUID().toString()
+                    val patientId =
+                        patient.id
+                            ?: return@get call.respond(
+                                HttpStatusCode.InternalServerError,
+                                "FHIR Patient returned without an id",
+                            )
+                    val encounterId =
+                        encounter.id
+                            ?: return@get call.respond(
+                                HttpStatusCode.InternalServerError,
+                                "FHIR Encounter returned without an id",
+                            )
 
-          valkeyService.saveLaunchContext(launchId, LaunchContext(patientId, encounterId, user.hpr))
+                    valkeyService.saveLaunchContext(
+                        launchId,
+                        LaunchContext(patientId, encounterId, user.hpr),
+                    )
 
-          val iss = env.smart.fhirServerUrl
-          call.respondRedirect("$appUrl/?iss=$iss&launch=$launchId")
-        }
-      }
-
-      route("/oidc") {
-        get("/authorize") {
-          val query = call.request.queryParameters
-          // Deliberate test diagnostics
-          logger.debug("/oidc/authorize request with params {}", query.entries())
-
-          val redirectUri =
-            query["redirect_uri"]
-              ?: return@get rejectDirect(HttpStatusCode.BadRequest, "missing redirect_uri")
-
-          val state =
-            query["state"] ?: return@get rejectDirect(HttpStatusCode.BadRequest, "missing state")
-
-          val scope =
-            query["scope"] ?: return@get rejectMissingViaRedirect(redirectUri, state, "scope")
-
-          val clientId =
-            query["client_id"]
-              ?: return@get rejectDirect(HttpStatusCode.BadRequest, "missing client_id")
-
-          val acceptedClient =
-            clients.find { it.clientId == clientId }
-              ?: return@get rejectDirect(
-                HttpStatusCode.BadRequest,
-                "Unexpected client with id $clientId is not permitted",
-              )
-          if (redirectUri !in acceptedClient.redirectUris) {
-            return@get rejectDirect(
-              HttpStatusCode.BadRequest,
-              "The given redirect uri $redirectUri is not permitted for $clientId",
-            )
-          }
-
-          val launchId =
-            query["launch"] ?: return@get rejectMissingViaRedirect(redirectUri, state, "launch")
-
-          // verdier som trengs for OAuth/SMART-flow
-          val responseType =
-            query["response_type"]
-              ?: return@get rejectMissingViaRedirect(redirectUri, state, "response_type")
-          val aud = query["aud"] ?: return@get rejectMissingViaRedirect(redirectUri, state, "aud")
-          val codeChallenge =
-            query["code_challenge"]
-              ?: return@get rejectMissingViaRedirect(redirectUri, state, "code_challenge")
-          val codeChallengeMethod =
-            query["code_challenge_method"]
-              ?: return@get rejectMissingViaRedirect(redirectUri, state, "code_challenge_method")
-
-          if (responseType != "code") {
-            return@get rejectViaRedirect(
-              redirectUri = redirectUri,
-              state = state,
-              error =
-                OAuth2Error.UNSUPPORTED_RESPONSE_TYPE.appendDescription(
-                  "Unexpected response type $responseType. Must be fixed value 'code'"
-                ),
-            )
-          }
-
-          if (aud != env.smart.fhirServerUrl) {
-            return@get rejectViaRedirect(
-              redirectUri = redirectUri,
-              state = state,
-              error =
-                OAuth2Error.INVALID_REQUEST.appendDescription("Unexpected $aud is not permitted"),
-            )
-          }
-
-          if (codeChallengeMethod != "S256") {
-            return@get rejectViaRedirect(
-              redirectUri = redirectUri,
-              state = state,
-              error =
-                OAuth2Error.INVALID_REQUEST.appendDescription(
-                  "Unexpected code $codeChallengeMethod"
-                ),
-            )
-          }
-          val user = loggedInUser()
-
-          val launchContext =
-            valkeyService.getAndDeleteLaunchContext(launchId)
-              ?: return@get rejectViaRedirect(
-                redirectUri = redirectUri,
-                state = state,
-                error =
-                  OAuth2Error.INVALID_REQUEST.appendDescription(
-                    "Opaque launch token was missing, wrong or already used."
-                  ),
-              )
-
-          if (launchContext.hpr != user.hpr) {
-            return@get rejectViaRedirect(
-              redirectUri = redirectUri,
-              state = state,
-              error =
-                OAuth2Error.INVALID_REQUEST.appendDescription(
-                  "Launch token was not issued to the authenticated clinician."
-                ),
-            )
-          }
-
-          /**
-           * The scopes granted may differ from those requested (SMART app-launch:
-           * https://build.fhir.org/ig/HL7/smart-app-launch/scopes-and-launch-context.html)
-           */
-          val grantedScope = grantScopes(parseScopes(scope), acceptedClient.allowedScopes)
-
-          val code = UUID.randomUUID().toString()
-
-          valkeyService.saveAuthCode(
-            code,
-            AuthCodeContext(
-              username = user.name,
-              redirectUrl = redirectUri,
-              launch = launchContext,
-              subject = user.hpr,
-              scope = grantedScope.serialize(),
-              clientId = clientId,
-              codeChallenge = codeChallenge,
-            ),
-          )
-          call.respondRedirect("$redirectUri?code=$code&state=$state")
-        }
-      }
-    }
-
-    // NO AUTH
-    route("/oidc") {
-      // Step 4: exchange the authorisation code for an access token.
-      post("/token") {
-        val params = call.receiveParameters()
-        // Deliberate test diagnostics
-        log.debug("SMART: /token called with params: {}", params)
-        val code = params["code"] ?: return@post rejectMissingToken("code")
-        val grantType = params["grant_type"] ?: return@post rejectMissingToken("grant_type")
-        if (grantType != "authorization_code") {
-          return@post rejectToken(
-            HttpStatusCode.BadRequest,
-            OAuth2Error.UNSUPPORTED_GRANT_TYPE.appendDescription(
-              "Unexpected grant_type $grantType. Must be fixed value 'authorization_code'"
-            ),
-          )
-        }
-        val redirectUri = params["redirect_uri"] ?: return@post rejectMissingToken("redirect_uri")
-        val codeVerifier =
-          params["code_verifier"] ?: return@post rejectMissingToken("code_verifier")
-
-        val assertedClientId =
-          resolveAssertedClientId(call.request, params)
-            ?: return@post rejectMissingToken("client_id")
-        val acceptedClient =
-          clients.find { it.clientId == assertedClientId }
-            ?: return@post rejectToken(
-              HttpStatusCode.BadRequest,
-              OAuth2Error.INVALID_CLIENT.appendDescription("unknown client"),
-            )
-        authenticateClient(call.request, acceptedClient, params, clientAssertionVerifier)?.let {
-          val challenge =
-            if (
-              acceptedClient.tokenEndpointAuthMethod == TokenEndpointAuthMethod.CLIENT_SECRET_BASIC
-            ) {
-              "Basic"
-            } else {
-              null
+                    val iss = env.smart.fhirServerUrl
+                    call.respondRedirect("$appUrl/?iss=$iss&launch=$launchId")
+                }
             }
-          return@post rejectToken(HttpStatusCode.Unauthorized, it, challenge)
+
+            route("/oidc") {
+                get("/authorize") {
+                    val query = call.request.queryParameters
+                    // Deliberate test diagnostics
+                    logger.debug("/oidc/authorize request with params {}", query.entries())
+
+                    val redirectUri =
+                        query["redirect_uri"]
+                            ?: return@get rejectDirect(
+                                HttpStatusCode.BadRequest,
+                                "missing redirect_uri",
+                            )
+
+                    val state =
+                        query["state"]
+                            ?: return@get rejectDirect(HttpStatusCode.BadRequest, "missing state")
+
+                    val scope =
+                        query["scope"]
+                            ?: return@get rejectMissingViaRedirect(redirectUri, state, "scope")
+
+                    val clientId =
+                        query["client_id"]
+                            ?: return@get rejectDirect(
+                                HttpStatusCode.BadRequest,
+                                "missing client_id",
+                            )
+
+                    val acceptedClient =
+                        clients.find { it.clientId == clientId }
+                            ?: return@get rejectDirect(
+                                HttpStatusCode.BadRequest,
+                                "Unexpected client with id $clientId is not permitted",
+                            )
+                    if (redirectUri !in acceptedClient.redirectUris) {
+                        return@get rejectDirect(
+                            HttpStatusCode.BadRequest,
+                            "The given redirect uri $redirectUri is not permitted for $clientId",
+                        )
+                    }
+
+                    val launchId =
+                        query["launch"]
+                            ?: return@get rejectMissingViaRedirect(redirectUri, state, "launch")
+
+                    // verdier som trengs for OAuth/SMART-flow
+                    val responseType =
+                        query["response_type"]
+                            ?: return@get rejectMissingViaRedirect(
+                                redirectUri,
+                                state,
+                                "response_type",
+                            )
+                    val aud =
+                        query["aud"]
+                            ?: return@get rejectMissingViaRedirect(redirectUri, state, "aud")
+                    val codeChallenge =
+                        query["code_challenge"]
+                            ?: return@get rejectMissingViaRedirect(
+                                redirectUri,
+                                state,
+                                "code_challenge",
+                            )
+                    val codeChallengeMethod =
+                        query["code_challenge_method"]
+                            ?: return@get rejectMissingViaRedirect(
+                                redirectUri,
+                                state,
+                                "code_challenge_method",
+                            )
+
+                    if (responseType != "code") {
+                        return@get rejectViaRedirect(
+                            redirectUri = redirectUri,
+                            state = state,
+                            error =
+                                OAuth2Error.UNSUPPORTED_RESPONSE_TYPE.appendDescription(
+                                    "Unexpected response type $responseType. Must be fixed value 'code'"
+                                ),
+                        )
+                    }
+
+                    if (aud != env.smart.fhirServerUrl) {
+                        return@get rejectViaRedirect(
+                            redirectUri = redirectUri,
+                            state = state,
+                            error =
+                                OAuth2Error.INVALID_REQUEST.appendDescription(
+                                    "Unexpected $aud is not permitted"
+                                ),
+                        )
+                    }
+
+                    if (codeChallengeMethod != "S256") {
+                        return@get rejectViaRedirect(
+                            redirectUri = redirectUri,
+                            state = state,
+                            error =
+                                OAuth2Error.INVALID_REQUEST.appendDescription(
+                                    "Unexpected code $codeChallengeMethod"
+                                ),
+                        )
+                    }
+                    val user = loggedInUser()
+
+                    val launchContext =
+                        valkeyService.getAndDeleteLaunchContext(launchId)
+                            ?: return@get rejectViaRedirect(
+                                redirectUri = redirectUri,
+                                state = state,
+                                error =
+                                    OAuth2Error.INVALID_REQUEST.appendDescription(
+                                        "Opaque launch token was missing, wrong or already used."
+                                    ),
+                            )
+
+                    if (launchContext.hpr != user.hpr) {
+                        return@get rejectViaRedirect(
+                            redirectUri = redirectUri,
+                            state = state,
+                            error =
+                                OAuth2Error.INVALID_REQUEST.appendDescription(
+                                    "Launch token was not issued to the authenticated clinician."
+                                ),
+                        )
+                    }
+
+                    /**
+                     * The scopes granted may differ from those requested (SMART app-launch:
+                     * https://build.fhir.org/ig/HL7/smart-app-launch/scopes-and-launch-context.html)
+                     */
+                    val grantedScope = grantScopes(parseScopes(scope), acceptedClient.allowedScopes)
+
+                    val code = UUID.randomUUID().toString()
+
+                    valkeyService.saveAuthCode(
+                        code,
+                        AuthCodeContext(
+                            username = user.name,
+                            redirectUrl = redirectUri,
+                            launch = launchContext,
+                            subject = user.hpr,
+                            scope = grantedScope.serialize(),
+                            clientId = clientId,
+                            codeChallenge = codeChallenge,
+                        ),
+                    )
+                    call.respondRedirect("$redirectUri?code=$code&state=$state")
+                }
+            }
         }
 
-        val ctx =
-          valkeyService.getAndDeleteAuthCode(code)
-            ?: return@post rejectToken(
-              HttpStatusCode.BadRequest,
-              OAuth2Error.INVALID_GRANT.appendDescription("unknown or already used code"),
-            )
-        if (ctx.clientId != acceptedClient.clientId) {
-          return@post rejectToken(
-            HttpStatusCode.BadRequest,
-            OAuth2Error.INVALID_GRANT.appendDescription("code was not issued to this client"),
-          )
+        // NO AUTH
+        route("/oidc") {
+            // Step 4: exchange the authorisation code for an access token.
+            post("/token") {
+                val params = call.receiveParameters()
+                // Deliberate test diagnostics
+                log.debug("SMART: /token called with params: {}", params)
+                val code = params["code"] ?: return@post rejectMissingToken("code")
+                val grantType = params["grant_type"] ?: return@post rejectMissingToken("grant_type")
+                if (grantType != "authorization_code") {
+                    return@post rejectToken(
+                        HttpStatusCode.BadRequest,
+                        OAuth2Error.UNSUPPORTED_GRANT_TYPE.appendDescription(
+                            "Unexpected grant_type $grantType. Must be fixed value 'authorization_code'"
+                        ),
+                    )
+                }
+                val redirectUri =
+                    params["redirect_uri"] ?: return@post rejectMissingToken("redirect_uri")
+                val codeVerifier =
+                    params["code_verifier"] ?: return@post rejectMissingToken("code_verifier")
+
+                val assertedClientId =
+                    resolveAssertedClientId(call.request, params)
+                        ?: return@post rejectMissingToken("client_id")
+                val acceptedClient =
+                    clients.find { it.clientId == assertedClientId }
+                        ?: return@post rejectToken(
+                            HttpStatusCode.BadRequest,
+                            OAuth2Error.INVALID_CLIENT.appendDescription("unknown client"),
+                        )
+                authenticateClient(call.request, acceptedClient, params, clientAssertionVerifier)
+                    ?.let {
+                        val challenge =
+                            if (
+                                acceptedClient.tokenEndpointAuthMethod ==
+                                    TokenEndpointAuthMethod.CLIENT_SECRET_BASIC
+                            ) {
+                                "Basic"
+                            } else {
+                                null
+                            }
+                        return@post rejectToken(HttpStatusCode.Unauthorized, it, challenge)
+                    }
+
+                val ctx =
+                    valkeyService.getAndDeleteAuthCode(code)
+                        ?: return@post rejectToken(
+                            HttpStatusCode.BadRequest,
+                            OAuth2Error.INVALID_GRANT.appendDescription(
+                                "unknown or already used code"
+                            ),
+                        )
+                if (ctx.clientId != acceptedClient.clientId) {
+                    return@post rejectToken(
+                        HttpStatusCode.BadRequest,
+                        OAuth2Error.INVALID_GRANT.appendDescription(
+                            "code was not issued to this client"
+                        ),
+                    )
+                }
+
+                if (codeChallengeS256(codeVerifier) != ctx.codeChallenge) {
+                    return@post rejectToken(
+                        HttpStatusCode.BadRequest,
+                        OAuth2Error.INVALID_GRANT.appendDescription(
+                            "code_verifier does not match code_challenge"
+                        ),
+                    )
+                }
+
+                if (redirectUri != ctx.redirectUrl) {
+                    return@post rejectToken(
+                        HttpStatusCode.BadRequest,
+                        OAuth2Error.INVALID_GRANT.appendDescription(
+                            "redirect_uri does not match the one used in the authorization request"
+                        ),
+                    )
+                }
+
+                log.info(
+                    "SMART: issuing token for client={}, user={}, patient={}",
+                    ctx.clientId,
+                    ctx.username,
+                    ctx.launch.patientId,
+                )
+
+                val now = Date()
+                val expiresAt = Date(now.time + 3600_000)
+                val grantedScopes = parseScopes(ctx.scope)
+                val accessToken =
+                    buildAccessToken(
+                        issuerUrl,
+                        env.smart.fhirServerUrl,
+                        ctx,
+                        ctx.scope,
+                        now,
+                        expiresAt,
+                    )
+                val idToken =
+                    if (SmartScope.Other("openid") in grantedScopes)
+                        buildIdToken(issuerUrl, ctx, grantedScopes, now, expiresAt)
+                    else null
+
+                val hasLaunchContext = SmartScope.Other("launch") in grantedScopes
+                val tokenResponse =
+                    TokenResponse(
+                        accessToken = accessToken,
+                        idToken = idToken,
+                        patient = if (hasLaunchContext) ctx.launch.patientId else null,
+                        encounter = if (hasLaunchContext) ctx.launch.encounterId else null,
+                        // TODO token refresh is not implemented yet.
+                        refreshToken =
+                            if (SmartScope.Other("offline_access") in grantedScopes)
+                                UUID.randomUUID().toString()
+                            else null,
+                        scope = ctx.scope,
+                        needPatientBanner = hasLaunchContext,
+                    )
+                call.respond(tokenResponse)
+            }
+            get("/jwks") {
+                call.respondText(
+                    """{"keys": [${SmartKeys.jwk.toPublicJWK().toJSONString()}]}""",
+                    ContentType.Application.Json,
+                )
+            }
         }
 
-        if (codeChallengeS256(codeVerifier) != ctx.codeChallenge) {
-          return@post rejectToken(
-            HttpStatusCode.BadRequest,
-            OAuth2Error.INVALID_GRANT.appendDescription(
-              "code_verifier does not match code_challenge"
-            ),
-          )
+        route("/fhir") {
+            get("/.well-known/smart-configuration") {
+                call.respond(
+                    HttpStatusCode.OK,
+                    SmartDiscoveryDocument(
+                        issuer = issuerUrl,
+                        jwksUri = "$issuerUrl/jwks",
+                        authorizationEndpoint = "$issuerUrl/authorize",
+                        tokenEndpoint = "$issuerUrl/token",
+                        grantTypesSupported =
+                            listOf("authorization_code"), // TODO implement client_credentials
+                        registrationEndpoint = "$issuerUrl/register",
+                        scopesSupported =
+                            listOf(
+                                "openid",
+                                "fhirUser",
+                                "launch",
+                                "patient/*.cruds",
+                                "user/*.cruds",
+                                "system/*.cruds",
+                                "offline_access",
+                            ),
+                        responseTypesSupported = listOf("code"),
+                        managementEndpoint = "$issuerUrl/user/manage",
+                        introspectionEndpoint = "$issuerUrl/user/introspect",
+                        revocationEndpoint = "$issuerUrl/user/revoke",
+                        codeChallengeMethodsSupported = listOf("S256"),
+                        capabilities =
+                            listOf(
+                                "launch-ehr",
+                                "permission-patient",
+                                "permission-user",
+                                "permission-offline",
+                                "permission-v1",
+                                "permission-v2",
+                                "client-public",
+                                "client-confidential-symmetric",
+                                "client-confidential-asymmetric",
+                                "context-ehr-patient",
+                                "context-ehr-encounter",
+                                "context-banner",
+                                "sso-openid-connect",
+                            ),
+                        tokenEndpointAuthMethodsSupported =
+                            listOf(
+                                "client_secret_basic",
+                                "private_key_jwt",
+                            ), // TODO implement client_secret_post
+                        tokenEndpointAuthSigningAlgValuesSupported = listOf("RS384", "ES384"),
+                    ),
+                )
+            }
         }
-
-        if (redirectUri != ctx.redirectUrl) {
-          return@post rejectToken(
-            HttpStatusCode.BadRequest,
-            OAuth2Error.INVALID_GRANT.appendDescription(
-              "redirect_uri does not match the one used in the authorization request"
-            ),
-          )
-        }
-
-        log.info(
-          "SMART: issuing token for client={}, user={}, patient={}",
-          ctx.clientId,
-          ctx.username,
-          ctx.launch.patientId,
-        )
-
-        val now = Date()
-        val expiresAt = Date(now.time + 3600_000)
-        val grantedScopes = parseScopes(ctx.scope)
-        val accessToken =
-          buildAccessToken(issuerUrl, env.smart.fhirServerUrl, ctx, ctx.scope, now, expiresAt)
-        val idToken =
-          if (SmartScope.Other("openid") in grantedScopes)
-            buildIdToken(issuerUrl, ctx, grantedScopes, now, expiresAt)
-          else null
-
-        val hasLaunchContext = SmartScope.Other("launch") in grantedScopes
-        val tokenResponse =
-          TokenResponse(
-            accessToken = accessToken,
-            idToken = idToken,
-            patient = if (hasLaunchContext) ctx.launch.patientId else null,
-            encounter = if (hasLaunchContext) ctx.launch.encounterId else null,
-            // TODO token refresh is not implemented yet.
-            refreshToken =
-              if (SmartScope.Other("offline_access") in grantedScopes) UUID.randomUUID().toString()
-              else null,
-            scope = ctx.scope,
-            needPatientBanner = hasLaunchContext,
-          )
-        call.respond(tokenResponse)
-      }
-      get("/jwks") {
-        call.respondText(
-          """{"keys": [${SmartKeys.jwk.toPublicJWK().toJSONString()}]}""",
-          ContentType.Application.Json,
-        )
-      }
     }
-
-    route("/fhir") {
-      get("/.well-known/smart-configuration") {
-        call.respond(
-          HttpStatusCode.OK,
-          SmartDiscoveryDocument(
-            issuer = issuerUrl,
-            jwksUri = "$issuerUrl/jwks",
-            authorizationEndpoint = "$issuerUrl/authorize",
-            tokenEndpoint = "$issuerUrl/token",
-            grantTypesSupported = listOf("authorization_code"), // TODO implement client_credentials
-            registrationEndpoint = "$issuerUrl/register",
-            scopesSupported =
-              listOf(
-                "openid",
-                "fhirUser",
-                "launch",
-                "patient/*.cruds",
-                "user/*.cruds",
-                "system/*.cruds",
-                "offline_access",
-              ),
-            responseTypesSupported = listOf("code"),
-            managementEndpoint = "$issuerUrl/user/manage",
-            introspectionEndpoint = "$issuerUrl/user/introspect",
-            revocationEndpoint = "$issuerUrl/user/revoke",
-            codeChallengeMethodsSupported = listOf("S256"),
-            capabilities =
-              listOf(
-                "launch-ehr",
-                "permission-patient",
-                "permission-user",
-                "permission-offline",
-                "permission-v1",
-                "permission-v2",
-                "client-public",
-                "client-confidential-symmetric",
-                "client-confidential-asymmetric",
-                "context-ehr-patient",
-                "context-ehr-encounter",
-                "context-banner",
-                "sso-openid-connect",
-              ),
-            tokenEndpointAuthMethodsSupported =
-              listOf("client_secret_basic", "private_key_jwt"), // TODO implement client_secret_post
-            tokenEndpointAuthSigningAlgValuesSupported = listOf("RS384", "ES384"),
-          ),
-        )
-      }
-    }
-  }
 }
 
 private fun buildAccessToken(
-  issuerUrl: String,
-  fhirServerUrl: String,
-  ctx: AuthCodeContext,
-  grantedScope: String,
-  now: Date,
-  expiresAt: Date,
+    issuerUrl: String,
+    fhirServerUrl: String,
+    ctx: AuthCodeContext,
+    grantedScope: String,
+    now: Date,
+    expiresAt: Date,
 ): String =
-  JWT.create()
-    .withHeader(mapOf("typ" to "at+jwt"))
-    .withIssuer(issuerUrl)
-    .withAudience(fhirServerUrl) // RFC 9068 2.2: resource server(s) this token is valid for
-    .withSubject(ctx.subject)
-    .withKeyId(SmartKeys.keyId)
-    .withIssuedAt(now)
-    .withExpiresAt(expiresAt)
-    .withJWTId(
-      UUID.randomUUID().toString()
-    ) // RFC 9068 2.2: unique identifier for revocation/logging
-    .withClaim("scope", grantedScope)
-    .withClaim("patient", ctx.launch.patientId)
-    .withClaim("encounter", ctx.launch.encounterId)
-    .sign(SmartKeys.algorithm)
+    JWT.create()
+        .withHeader(mapOf("typ" to "at+jwt"))
+        .withIssuer(issuerUrl)
+        .withAudience(fhirServerUrl) // RFC 9068 2.2: resource server(s) this token is valid for
+        .withSubject(ctx.subject)
+        .withKeyId(SmartKeys.keyId)
+        .withIssuedAt(now)
+        .withExpiresAt(expiresAt)
+        .withJWTId(
+            UUID.randomUUID().toString()
+        ) // RFC 9068 2.2: unique identifier for revocation/logging
+        .withClaim("scope", grantedScope)
+        .withClaim("patient", ctx.launch.patientId)
+        .withClaim("encounter", ctx.launch.encounterId)
+        .sign(SmartKeys.algorithm)
 
 private fun buildIdToken(
-  issuerUrl: String,
-  ctx: AuthCodeContext,
-  grantedScopes: Set<SmartScope>,
-  now: Date,
-  expiresAt: Date,
+    issuerUrl: String,
+    ctx: AuthCodeContext,
+    grantedScopes: Set<SmartScope>,
+    now: Date,
+    expiresAt: Date,
 ): String =
-  JWT.create()
-    .apply {
-      if (SmartScope.Other("profile") in grantedScopes)
-        withClaim("profile", "Practitioner/${ctx.subject}")
-      if (SmartScope.Other("fhirUser") in grantedScopes)
-        withClaim("fhirUser", "Practitioner/${ctx.subject}")
-    }
-    .withIssuer(issuerUrl)
-    .withAudience(ctx.clientId)
-    .withSubject(ctx.subject)
-    .withIssuedAt(now)
-    .withExpiresAt(expiresAt)
-    .sign(SmartKeys.algorithm)
+    JWT.create()
+        .apply {
+            if (SmartScope.Other("profile") in grantedScopes)
+                withClaim("profile", "Practitioner/${ctx.subject}")
+            if (SmartScope.Other("fhirUser") in grantedScopes)
+                withClaim("fhirUser", "Practitioner/${ctx.subject}")
+        }
+        .withIssuer(issuerUrl)
+        .withAudience(ctx.clientId)
+        .withSubject(ctx.subject)
+        .withIssuedAt(now)
+        .withExpiresAt(expiresAt)
+        .sign(SmartKeys.algorithm)

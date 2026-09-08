@@ -13,42 +13,45 @@ import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.legekontor.LegekontorService
 
 class OrganizationService(val legekontorService: LegekontorService) {
-  val log = logger()
+    val log = logger()
 
-  suspend fun getOrganization(id: OrganizationId): Organization? {
-    val legekontor = legekontorService.getLegekontor(LegekontorId(id.value))
-    return legekontor.toOrganization()
-  }
+    suspend fun getOrganization(id: OrganizationId): Organization? {
+        val legekontor = legekontorService.getLegekontor(LegekontorId(id.value))
+        return legekontor.toOrganization()
+    }
 
-  fun Legekontor.toOrganization(): Organization {
-    return Organization(
-      id = this.id.value.toString(),
-      name = com.google.fhir.model.r4.String(value = this.navn),
-      meta =
-        Meta(
-          profile =
-            listOf(
-              Canonical(value = "http://hl7.no/fhir/StructureDefinition/no-basis-Organization")
-            )
-        ),
-      identifier =
-        listOf(
-          Identifier(
-            system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.101"),
-            value = com.google.fhir.model.r4.String(value = this.id.value.toString()),
-          ),
-          Identifier(
-            system = Uri(value = "urn:oid:2.16.578.1.12.4.1.2"),
-            value = com.google.fhir.model.r4.String(value = "organisasjonsnummer / HER"),
-          ),
-        ),
-      telecom =
-        listOf(
-          ContactPoint(
-            system = Enumeration(value = ContactPoint.ContactPointSystem.Phone),
-            value = com.google.fhir.model.r4.String(value = this.tlf),
-          )
-        ),
-    )
-  }
+    fun Legekontor.toOrganization(): Organization {
+        return Organization(
+            id = this.id.value.toString(),
+            name = com.google.fhir.model.r4.String(value = this.navn),
+            meta =
+                Meta(
+                    profile =
+                        listOf(
+                            Canonical(
+                                value =
+                                    "http://hl7.no/fhir/StructureDefinition/no-basis-Organization"
+                            )
+                        )
+                ),
+            identifier =
+                listOf(
+                    Identifier(
+                        system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.101"),
+                        value = com.google.fhir.model.r4.String(value = this.id.value.toString()),
+                    ),
+                    Identifier(
+                        system = Uri(value = "urn:oid:2.16.578.1.12.4.1.2"),
+                        value = com.google.fhir.model.r4.String(value = "organisasjonsnummer / HER"),
+                    ),
+                ),
+            telecom =
+                listOf(
+                    ContactPoint(
+                        system = Enumeration(value = ContactPoint.ContactPointSystem.Phone),
+                        value = com.google.fhir.model.r4.String(value = this.tlf),
+                    )
+                ),
+        )
+    }
 }

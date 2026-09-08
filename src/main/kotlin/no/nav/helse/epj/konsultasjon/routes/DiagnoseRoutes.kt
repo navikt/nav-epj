@@ -8,20 +8,21 @@ import no.nav.helse.epj.patientId
 
 fun Route.diagnoseRoutes(konsultasjonService: KonsultasjonService) {
 
-  route("/api") {
-    route("/diagnoser") {
-      get {
-        val pasientId = call.parameters["patientId"]
-        val konsultasjonId = call.parameters["konsultasjonId"]
+    route("/api") {
+        route("/diagnoser") {
+            get {
+                val pasientId = call.parameters["patientId"]
+                val konsultasjonId = call.parameters["konsultasjonId"]
 
-        val diagnoser =
-          when {
-            pasientId != null -> konsultasjonService.getDiagnoser(call.patientId())
-            konsultasjonId != null -> konsultasjonService.getDiagnoser(call.konsultasjonId())
-            else -> emptyList()
-          }
-        call.respond(diagnoser)
-      }
+                val diagnoser =
+                    when {
+                        pasientId != null -> konsultasjonService.getDiagnoser(call.patientId())
+                        konsultasjonId != null ->
+                            konsultasjonService.getDiagnoser(call.konsultasjonId())
+                        else -> emptyList()
+                    }
+                call.respond(diagnoser)
+            }
+        }
     }
-  }
 }

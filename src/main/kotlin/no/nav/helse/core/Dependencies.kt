@@ -28,32 +28,32 @@ import no.nav.helse.smart.valkey.createGlideClient
 import no.nav.helse.smart.valkey.createGlideClientConfiguration
 
 fun Application.configureDependencies() {
-  val config = environment.config
-  dependencies {
-    provide<Environment> { initEnvironment(config) }
-    provide<GlideClientConfiguration> { createGlideClientConfiguration(resolve()) }
-    provide<GlideClient> { createGlideClient(resolve()) }
+    val config = environment.config
+    dependencies {
+        provide<Environment> { initEnvironment(config) }
+        provide<GlideClientConfiguration> { createGlideClientConfiguration(resolve()) }
+        provide<GlideClient> { createGlideClient(resolve()) }
 
-    provide(ValkeyService::class)
-    provide<ClientJwksSetProvider> { RemoteClientJwksSetProvider() }
-    provide(ClientAssertionVerifier::class)
+        provide(ValkeyService::class)
+        provide<ClientJwksSetProvider> { RemoteClientJwksSetProvider() }
+        provide(ClientAssertionVerifier::class)
 
-    provide(PasientRepository::class)
-    provide(HelsepersonellRepository::class)
-    provide(KonsultasjonRepository::class)
-    provide(LegekontorRepository::class)
+        provide(PasientRepository::class)
+        provide(HelsepersonellRepository::class)
+        provide(KonsultasjonRepository::class)
+        provide(LegekontorRepository::class)
 
-    provide(HelsepersonellService::class)
-    provide(KonsultasjonService::class)
-    provide(PasientService::class)
-    provide(LegekontorService::class)
+        provide(HelsepersonellService::class)
+        provide(KonsultasjonService::class)
+        provide(PasientService::class)
+        provide(LegekontorService::class)
 
-    provide(ConditionService::class)
-    provide(DocumentReferenceService::class)
-    provide(EncounterService::class)
-    provide(OrganizationService::class)
-    provide(PatientService::class)
-    provide(PractitionerService::class)
-    provide(PractitionerRoleService::class)
-  }
+        provide(ConditionService::class)
+        provide(DocumentReferenceService::class)
+        provide(EncounterService::class)
+        provide(OrganizationService::class)
+        provide(PatientService::class)
+        provide(PractitionerService::class)
+        provide(PractitionerRoleService::class)
+    }
 }

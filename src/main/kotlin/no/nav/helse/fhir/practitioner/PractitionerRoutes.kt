@@ -10,20 +10,24 @@ import no.nav.helse.fhir.security.requireFhirScopeOrFhirUserSelf
 import no.nav.helse.smart.security.Interaction
 
 fun Route.pracitionerRoutes(
-  practitionerService: PractitionerService,
-  fhirR4Json: FhirR4Json,
-  fhirContentType: ContentType,
+    practitionerService: PractitionerService,
+    fhirR4Json: FhirR4Json,
+    fhirContentType: ContentType,
 ) {
-  val log = logger()
-  route("/fhir") {
-    get("/Practitioner/{practitionerId}") {
-      val practitionerId = call.practitionerId()
-      call.requireFhirScopeOrFhirUserSelf("Practitioner", Interaction.READ, practitionerId.value)
+    val log = logger()
+    route("/fhir") {
+        get("/Practitioner/{practitionerId}") {
+            val practitionerId = call.practitionerId()
+            call.requireFhirScopeOrFhirUserSelf(
+                "Practitioner",
+                Interaction.READ,
+                practitionerId.value,
+            )
 
-      val practitioner =
-        practitionerService.getPractitioner(practitionerId)
-          ?: return@get call.respond(HttpStatusCode.NotFound)
-      call.respondText(fhirR4Json.encodeToString(practitioner), fhirContentType)
+            val practitioner =
+                practitionerService.getPractitioner(practitionerId)
+                    ?: return@get call.respond(HttpStatusCode.NotFound)
+            call.respondText(fhirR4Json.encodeToString(practitioner), fhirContentType)
+        }
     }
-  }
 }

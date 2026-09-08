@@ -11,22 +11,22 @@ import no.nav.helse.fhir.security.requirePatientMatch
 import no.nav.helse.smart.security.Interaction
 
 fun Route.patientRoutes(
-  patientService: PatientService,
-  fhirR4Json: FhirR4Json,
-  fhirContentType: ContentType,
+    patientService: PatientService,
+    fhirR4Json: FhirR4Json,
+    fhirContentType: ContentType,
 ) {
 
-  val log = logger()
+    val log = logger()
 
-  route("/fhir") {
-    get("/Patient/{subject}") {
-      val id = call.patientInputId()
-      val principal = call.requireFhirScope("Patient", Interaction.READ)
-      principal.requirePatientMatch("Patient", Interaction.READ, id.value.toString())
+    route("/fhir") {
+        get("/Patient/{subject}") {
+            val id = call.patientInputId()
+            val principal = call.requireFhirScope("Patient", Interaction.READ)
+            principal.requirePatientMatch("Patient", Interaction.READ, id.value.toString())
 
-      val patient =
-        patientService.getPatient(id) ?: return@get call.respond(HttpStatusCode.NotFound)
-      call.respondText(fhirR4Json.encodeToString(patient), fhirContentType)
+            val patient =
+                patientService.getPatient(id) ?: return@get call.respond(HttpStatusCode.NotFound)
+            call.respondText(fhirR4Json.encodeToString(patient), fhirContentType)
+        }
     }
-  }
 }

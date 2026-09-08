@@ -30,62 +30,62 @@ import no.nav.helse.fhir.practitionerrole.PractitionerRoleService
 import no.nav.helse.fhir.practitionerrole.practitionerRoleRoutes
 
 fun Application.configureFhirModule() {
-  val conditionService: ConditionService by dependencies
-  val encounterService: EncounterService by dependencies
-  val organizationService: OrganizationService by dependencies
-  val patientService: PatientService by dependencies
-  val practitionerService: PractitionerService by dependencies
-  val practitionerRoleService: PractitionerRoleService by dependencies
-  val documentReferenceService: DocumentReferenceService by dependencies
-  val fhirJson = FhirR4Json()
-  val fhirContentType = ContentType("application", "fhir+json")
+    val conditionService: ConditionService by dependencies
+    val encounterService: EncounterService by dependencies
+    val organizationService: OrganizationService by dependencies
+    val patientService: PatientService by dependencies
+    val practitionerService: PractitionerService by dependencies
+    val practitionerRoleService: PractitionerRoleService by dependencies
+    val documentReferenceService: DocumentReferenceService by dependencies
+    val fhirJson = FhirR4Json()
+    val fhirContentType = ContentType("application", "fhir+json")
 
-  routing {
-    capabilityStatementRoutes(fhirJson, fhirContentType)
-    authenticate("smart-access-token") {
-      conditionRoutes(conditionService, fhirJson, fhirContentType)
-      encounterRoutes(encounterService, fhirJson, fhirContentType)
-      organizationRoutes(organizationService, fhirJson, fhirContentType)
-      patientRoutes(patientService, fhirJson, fhirContentType)
-      pracitionerRoutes(practitionerService, fhirJson, fhirContentType)
-      practitionerRoleRoutes(practitionerRoleService, fhirJson, fhirContentType)
-      documentReferenceRoutes(documentReferenceService, fhirJson, fhirContentType)
+    routing {
+        capabilityStatementRoutes(fhirJson, fhirContentType)
+        authenticate("smart-access-token") {
+            conditionRoutes(conditionService, fhirJson, fhirContentType)
+            encounterRoutes(encounterService, fhirJson, fhirContentType)
+            organizationRoutes(organizationService, fhirJson, fhirContentType)
+            patientRoutes(patientService, fhirJson, fhirContentType)
+            pracitionerRoutes(practitionerService, fhirJson, fhirContentType)
+            practitionerRoleRoutes(practitionerRoleService, fhirJson, fhirContentType)
+            documentReferenceRoutes(documentReferenceService, fhirJson, fhirContentType)
+        }
     }
-  }
 }
 
 fun ApplicationCall.encounterId(): EncounterId = EncounterId(uuidParameter("encounter"))
 
 fun ApplicationCall.documentReferenceId(): DocumentReferenceId =
-  DocumentReferenceId(uuidParameter("documentreferenceId"))
+    DocumentReferenceId(uuidParameter("documentreferenceId"))
 
 fun ApplicationCall.organizationId(): OrganizationId =
-  OrganizationId(uuidParameter("organizationId"))
+    OrganizationId(uuidParameter("organizationId"))
 
 fun ApplicationCall.patientInputId(): PatientInputId = PatientInputId(uuidParameter("subject"))
 
 fun ApplicationCall.practitionerId(): PractitionerId =
-  PractitionerId(stringParameter("practitionerId"))
+    PractitionerId(stringParameter("practitionerId"))
 
 private fun ApplicationCall.uuidParameter(name: String): Uuid {
-  val value = parameters[name] ?: throw BadRequestException("Mangler parameteren '$name'")
+    val value = parameters[name] ?: throw BadRequestException("Mangler parameteren '$name'")
 
-  return try {
-    Uuid.parse(value)
-  } catch (exception: IllegalArgumentException) {
-    throw BadRequestException("Parameteren '$name' er ikke en gyldig UUID", exception)
-  }
+    return try {
+        Uuid.parse(value)
+    } catch (exception: IllegalArgumentException) {
+        throw BadRequestException("Parameteren '$name' er ikke en gyldig UUID", exception)
+    }
 }
 
 fun ApplicationCall.patientReferenceInputId(): PatientInputId =
-  PatientInputId(uuidReferenceParameter("subject"))
+    PatientInputId(uuidReferenceParameter("subject"))
 
 fun ApplicationCall.encounterReferenceId(): EncounterId =
-  EncounterId(uuidReferenceParameter("encounter"))
+    EncounterId(uuidReferenceParameter("encounter"))
 
 private fun ApplicationCall.stringParameter(name: String): String {
-  val value = parameters[name] ?: throw BadRequestException("Mangler parameteren '$name'")
-  return value
+    val value = parameters[name] ?: throw BadRequestException("Mangler parameteren '$name'")
+    return value
 }
 
 /**
@@ -95,12 +95,12 @@ private fun ApplicationCall.stringParameter(name: String): String {
  * before parsing the UUID.
  */
 private fun ApplicationCall.uuidReferenceParameter(name: String): Uuid {
-  val value = parameters[name] ?: throw BadRequestException("Mangler parameteren '$name'")
-  val id = value.substringAfterLast('/')
+    val value = parameters[name] ?: throw BadRequestException("Mangler parameteren '$name'")
+    val id = value.substringAfterLast('/')
 
-  return try {
-    Uuid.parse(id)
-  } catch (exception: IllegalArgumentException) {
-    throw BadRequestException("Parameteren '$name' er ikke en gyldig UUID", exception)
-  }
+    return try {
+        Uuid.parse(id)
+    } catch (exception: IllegalArgumentException) {
+        throw BadRequestException("Parameteren '$name' er ikke en gyldig UUID", exception)
+    }
 }

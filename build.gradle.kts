@@ -1,3 +1,10 @@
+import com.diffplug.gradle.spotless.SpotlessExtension
+import dev.detekt.gradle.Detekt
+import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.withType
+import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
+
+
 plugins {
   alias(libs.plugins.kotlin.jvm)
   alias(ktorLibs.plugins.ktor)
@@ -24,11 +31,7 @@ tasks {
 }
 
 kotlin {
-  compilerOptions {
-    freeCompilerArgs.add("-opt-in=kotlin.uuid.ExperimentalUuidApi")
-    freeCompilerArgs.add("-opt-in=kotlin.uuid.ExperimentalKtorApi")
-  }
-  jvmToolchain(21)
+  jvmToolchain(libs.versions.jvmVersion.get().toInt())
 }
 
 repositories {
@@ -80,27 +83,43 @@ dependencies {
   testImplementation(libs.kotest.assertions)
 }
 
-configure<com.diffplug.gradle.spotless.SpotlessExtension> {
-  kotlin { ktfmt("0.62").googleStyle() }
-}
+tasks {
+  configure<SpotlessExtension> {
+    kotlin { ktfmt(libs.versions.ktfmt.get()).kotlinlangStyle() }
+    check {
+      dependsOn("spotlessApply")
+    }
+  }
 
-tasks.named("spotlessCheck") {
-  dependsOn("spotlessApply")
-}
+  register<JavaExec>("runLocal") {
+    description = "Running the application localy"
+    group = "application"
+    mainClass.set("io.ktor.server.netty.EngineMain")
+    classpath = sourceSets["main"].runtimeClasspath
 
-tasks.register<JavaExec>("runLocal") {
-  group = "application"
-  mainClass.set("io.ktor.server.netty.EngineMain")
-  classpath = sourceSets["main"].runtimeClasspath
+    args("-config=application-local.yaml")
+    jvmArgs("-Dio.ktor.development=true", "-Dlogback.configurationFile=logback-local.xml")
+  }
 
-  args("-config=application-local.yaml")
-  jvmArgs("-Dio.ktor.development=true", "-Dlogback.configurationFile=logback-local.xml")
-}
+  withType<Detekt>().configureEach {
+    config.setFrom(file("detekt.yml"))
+    buildUponDefaultConfig = true
 
-tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
-  config.setFrom(file("detekt.yml"))
-  buildUponDefaultConfig = true
-  dependsOn("spotlessApply")
+    dependsOn("spotlessApply")
+  }
+
+  named<DependencyUpdatesTask>("dependencyUpdates") {
+    fun String.isNonStable(): Boolean {
+      val stableKeyword = listOf("RELEASE", "FINAL", "GA").any { uppercase().contains(it) }
+      val regex = "^[0-9,.v-]+(-r)?$".toRegex()
+      val isStable = stableKeyword || regex.matches(this)
+      return isStable.not()
+    }
+
+    rejectVersionIf {
+      candidate.version.isNonStable()
+    }
+  }
 }
 
 afterEvaluate {

@@ -6,17 +6,17 @@ import no.nav.tsm.diagnoser.ICPC2
 import no.nav.tsm.diagnoser.ICPC2B
 
 fun DiagnoseType.oid(): String =
-  if (this == DiagnoseType.ICPC2) {
-    ICPC2.OID
-  } else if (this == DiagnoseType.ICPC2B) {
-    ICPC2B.OID
-  } else {
-    ICD10.OID
-  }
+    if (this == DiagnoseType.ICPC2) {
+        ICPC2.OID
+    } else if (this == DiagnoseType.ICPC2B) {
+        ICPC2B.OID
+    } else {
+        ICD10.OID
+    }
 
 enum class KonsultasjonStatus {
-  PLANLAGT,
-  PÅGÅENDE,
-  FULLFØRT,
-  AVLYST,
+    PLANLAGT,
+    PÅGÅENDE,
+    FULLFØRT,
+    AVLYST,
 }

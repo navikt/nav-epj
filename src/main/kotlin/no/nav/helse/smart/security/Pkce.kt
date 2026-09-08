@@ -11,7 +11,7 @@ import java.util.*
  * PKCE effective.
  */
 fun codeChallengeS256(codeVerifier: String): String {
-  val digest =
-    MessageDigest.getInstance("SHA-256").digest(codeVerifier.toByteArray(Charsets.US_ASCII))
-  return Base64.getUrlEncoder().withoutPadding().encodeToString(digest)
+    val digest =
+        MessageDigest.getInstance("SHA-256").digest(codeVerifier.toByteArray(Charsets.US_ASCII))
+    return Base64.getUrlEncoder().withoutPadding().encodeToString(digest)
 }
