@@ -34,7 +34,7 @@ Navigate to the frontend directory and start the development server:
 
 ```bash
 cd frontend
-yarn install
+yarn
 yarn dev
 ```
 
@@ -70,7 +70,7 @@ how to make your SMART on FHIR application work with nav-epj.
 
 ### Contact
 
-This project is maintained by [navikt/tsm](CODEOWNERS)
+This project is maintained by [navikt/helseopplysninger](CODEOWNERS)
 
 Questions and/or feature requests? Please create an [issue](https://github.com/navikt/nav-epj/issues)
 
