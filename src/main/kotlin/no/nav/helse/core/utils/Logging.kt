@@ -7,3 +7,5 @@ fun logger(): Logger =
     LoggerFactory.getLogger(
         StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE).callerClass
     )
+
+fun securelog(): Logger = LoggerFactory.getLogger("securelog")

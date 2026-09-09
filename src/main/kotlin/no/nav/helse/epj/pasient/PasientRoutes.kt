@@ -1,13 +1,19 @@
 package no.nav.helse.epj.pasient
 
 import io.ktor.http.*
+import io.ktor.server.auth.principal
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import no.nav.helse.core.utils.securelog
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.patientId
 import no.nav.helse.epj.persontjensten.PersontjenstenService
+import no.nav.helse.helseId.HelseIdPrincipal
 import no.nav.helse.helseId.loggedInUser
+import tools.jackson.module.kotlin.jacksonMapperBuilder
+
+private val securelog = securelog()
 
 fun Route.pasientRoutes(
     pasientService: PasientService,
@@ -41,6 +47,13 @@ fun Route.pasientRoutes(
                 if (pasientInDb != null) {
                     return@post call.respond(pasientFnr)
                 }
+
+                securelog.info(
+                    "logger tokens: ${
+            jacksonMapperBuilder().build()
+              .writeValueAsString(call.principal<HelseIdPrincipal>()?.debug)
+          }"
+                )
 
                 val personFraPersontjensten = persontjenstenService.serachByFnr(pasientFnr)
 

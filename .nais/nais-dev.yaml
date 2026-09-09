@@ -59,7 +59,9 @@ spec:
     autoInstrumentation:
       enabled: true
       runtime: java
-
+    logging:
+      destinations:
+        - id: loki
   ingresses:
     - 'https://epj.ekstern.dev.nav.no'
 
