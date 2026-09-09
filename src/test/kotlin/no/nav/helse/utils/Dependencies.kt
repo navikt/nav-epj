@@ -8,6 +8,7 @@ import io.ktor.server.plugins.di.dependencies
 import io.mockk.mockk
 import no.nav.helse.core.Environment
 import no.nav.helse.core.EpjConfig
+import no.nav.helse.core.PersontjenstenConfig
 import no.nav.helse.core.PostgresConfig
 import no.nav.helse.core.SmartConfig
 import no.nav.helse.core.ValkeyConfig
@@ -76,6 +77,7 @@ fun createIntegrationEnvironment(postgres: PostgreSQLContainer) =
             ),
         valkey = ValkeyConfig("valkey", 8080, false, null, null),
         epj = EpjConfig(baseUrl = "testurl"),
+        persontjensten = PersontjenstenConfig(baseUrl = "testurl"),
     )
 
 val simpleTestEnvironment =
@@ -101,6 +103,7 @@ val simpleTestEnvironment =
             ),
         valkey = ValkeyConfig("valkey", 8080, false, null, null),
         epj = EpjConfig(baseUrl = "testurl"),
+        persontjensten = PersontjenstenConfig(baseUrl = "testurl"),
     )
 
 private val clientAssertionVerifier =

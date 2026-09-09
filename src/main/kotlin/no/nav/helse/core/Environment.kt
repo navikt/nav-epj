@@ -11,7 +11,10 @@ class Environment(
     val smart: SmartConfig,
     val valkey: ValkeyConfig,
     val epj: EpjConfig,
+    val persontjensten: PersontjenstenConfig,
 )
+
+data class PersontjenstenConfig(val baseUrl: String)
 
 data class PostgresConfig(val url: String, val username: String, val password: String)
 
@@ -100,5 +103,7 @@ fun initEnvironment(config: ApplicationConfig): Environment {
                 password = config.propertyOrNull("valkey.password")?.getString(),
             ),
         epj = EpjConfig(baseUrl = config.property("epj.baseUrl").getString()),
+        persontjensten =
+            PersontjenstenConfig(baseUrl = config.property("persontjensten.baseUrl").getString()),
     )
 }

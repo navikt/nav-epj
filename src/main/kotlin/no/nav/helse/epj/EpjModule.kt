@@ -22,6 +22,7 @@ import no.nav.helse.epj.legekontor.legekontorRoutes
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.epj.pasient.PasientService
 import no.nav.helse.epj.pasient.pasientRoutes
+import no.nav.helse.epj.persontjensten.PersontjenstenService
 import no.nav.helse.smart.valkey.ValkeyService
 
 fun Application.configureEpjModule() {
@@ -30,6 +31,8 @@ fun Application.configureEpjModule() {
     val konsultasjonService: KonsultasjonService by dependencies
     val legekontorService: LegekontorService by dependencies
     val valkeyService: ValkeyService by dependencies
+    val persontjenstenService: PersontjenstenService by dependencies
+
     routing {
         authenticate("wonderwall-helseid") {
             singlePageApplication {
@@ -37,7 +40,7 @@ fun Application.configureEpjModule() {
                 defaultPage = "index.html"
                 filesPath = "static"
             }
-            pasientRoutes(pasientService)
+            pasientRoutes(pasientService, persontjenstenService)
             helsepersonellRoutes(helsepersonellService, legekontorService)
             konsultasjonRoutes(konsultasjonService, valkeyService)
             legekontorRoutes(legekontorService)
@@ -48,6 +51,8 @@ fun Application.configureEpjModule() {
 }
 
 fun ApplicationCall.patientId(): PasientId = PasientId(uuidParameter("patientId"))
+
+fun ApplicationCall.pasientFnr(): String = stringParameter("fnr")
 
 fun ApplicationCall.journalnotatId(): JournalnotatId =
     JournalnotatId(uuidParameter("journalnotatId"))
