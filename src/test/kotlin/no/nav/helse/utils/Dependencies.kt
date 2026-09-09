@@ -77,7 +77,13 @@ fun createIntegrationEnvironment(postgres: PostgreSQLContainer) =
             ),
         valkey = ValkeyConfig("valkey", 8080, false, null, null),
         epj = EpjConfig(baseUrl = "testurl"),
-        persontjensten = PersontjenstenConfig(baseUrl = "testurl"),
+        persontjensten =
+            PersontjenstenConfig(
+                baseUrl = "testurl",
+                privateKey = "testkey",
+                clientJwk = "sasd",
+                wellKnownUrl = "sasd",
+            ),
     )
 
 val simpleTestEnvironment =
@@ -103,7 +109,13 @@ val simpleTestEnvironment =
             ),
         valkey = ValkeyConfig("valkey", 8080, false, null, null),
         epj = EpjConfig(baseUrl = "testurl"),
-        persontjensten = PersontjenstenConfig(baseUrl = "testurl"),
+        persontjensten =
+            PersontjenstenConfig(
+                baseUrl = "testurl",
+                privateKey = "testkey",
+                clientJwk = "sasd",
+                wellKnownUrl = "sasd",
+            ),
     )
 
 private val clientAssertionVerifier =

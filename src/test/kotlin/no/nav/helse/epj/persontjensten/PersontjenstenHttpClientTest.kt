@@ -5,20 +5,24 @@ import org.junit.Test
 
 internal class PersontjenstenHttpClientTest {
 
-  @Test
-  fun `call persontjensten with valid token`() = runTest {
-    val baseurl = "https://et.persontjenesten.test.nhn.no/api/v3"
-    val dpopProf = "wrong"
-    val acessToken = "wrong"
+    @Test
+    fun `call persontjensten with valid token`() = runTest {
+        val baseurl = "https://et.persontjenesten.test.nhn.no/api/v3"
+        val dpopProf = "wrong"
+        val acessToken = "wrong"
 
-    val fnr = "17718407281"
+        val fnr = "17718407281"
 
-    val persontjenstenHttpClient =
-      PersontjenstenHttpClient(baseUrl = baseurl, dpopProf = dpopProf, accessToken = acessToken)
+        val persontjenstenHttpClient =
+            PersontjenstenHttpClient(
+                baseUrl = baseurl,
+                dpopProf = dpopProf,
+                accessToken = acessToken,
+            )
 
-    val personWithName = persontjenstenHttpClient.getByNin(fnr)
+        val personWithName = persontjenstenHttpClient.getByNin(fnr)
 
-    // assertEquals("Per", personWithName?.givenName)
+        // assertEquals("Per", personWithName?.givenName)
 
-  }
+    }
 }
