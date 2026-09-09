@@ -14,7 +14,7 @@ epj:
   baseUrl: "http://localhost:8080"
 
 persontjensten:
-  baseUrl: "https://et.persontjenesten.test.nhn.no/api/v3/"
+  baseUrl: "https://et.persontjenesten.test.nhn.no/api/v3"
 
 auth:
   helseId:

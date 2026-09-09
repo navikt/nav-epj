@@ -9,6 +9,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.headers
 import io.ktor.http.parameters
 import io.ktor.serialization.jackson3.jackson
 import no.nav.helse.core.utils.logger
@@ -17,7 +18,7 @@ import no.nav.helse.plugins.uuidModule
 
 private val logger = logger()
 
-class PersontjenstenHttpClient(private val baseUrl: String) {
+class PersontjenstenHttpClient(private val baseUrl: String, private val dpopToken: String) {
     val httpClient = HttpClient {
         install(ContentNegotiation) { jackson { addModule(uuidModule) } }
         install(HttpRequestRetry) { retryOnServerErrors(maxRetries = 5) }
@@ -25,7 +26,7 @@ class PersontjenstenHttpClient(private val baseUrl: String) {
 
     suspend fun getByNin(fnr: String): PersonName? {
         try {
-            val respone =
+            val response =
                 httpClient
                     .post("$baseUrl/full-access/person/get-by-nin") {
                         parameters {
@@ -35,15 +36,11 @@ class PersontjenstenHttpClient(private val baseUrl: String) {
                         contentType(ContentType.Application.FormUrlEncoded)
                         accept(ContentType.Application.Json)
                         setBody("nin=$fnr")
-                        /* TODO lege til støtte for DPoP
-                        headers {
-                          append("Authorization", "DPoP $token")
-                        }
-                         */
+                        headers { append("Authorization", "DPoP $dpopToken") }
                     }
                     .body<PersonName>()
 
-            return respone
+            return response
         } catch (exception: Exception) {
             logger.error(exception.message ?: "Feil i persontjensten")
         }
