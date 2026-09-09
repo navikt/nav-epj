@@ -53,9 +53,6 @@ spec:
     http:
       path: /internal/shutdown
   observability:
-    autoInstrumentation:
-      enabled: true
-      runtime: java
     logging:
       destinations:
         - id: loki
