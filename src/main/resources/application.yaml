@@ -13,9 +13,12 @@ database:
 epj:
   baseUrl: "http://localhost:8080"
 
+
 persontjensten:
   baseUrl: "https://et.persontjenesten.test.nhn.no/api/v3"
-
+  clientId: ${WONDERWALL_OPENID_CLIENT_ID}
+  clientJwk: ${WONDERWALL_OPENID_CLIENT_JWK}
+  wellKnownUrl: ${WONDERWALL_OPENID_WELL_KNOWN_URL}
 auth:
   helseId:
     wellKnownUrl: ${WONDERWALL_OPENID_WELL_KNOWN_URL}

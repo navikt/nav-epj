@@ -14,7 +14,7 @@ class Environment(
     val persontjensten: PersontjenstenConfig,
 )
 
-data class PersontjenstenConfig(val baseUrl: String)
+data class PersontjenstenConfig(val baseUrl: String, val privateKey: String, val clientJwk: String, val wellKnownUrl: String)
 
 data class PostgresConfig(val url: String, val username: String, val password: String)
 
@@ -104,6 +104,11 @@ fun initEnvironment(config: ApplicationConfig): Environment {
             ),
         epj = EpjConfig(baseUrl = config.property("epj.baseUrl").getString()),
         persontjensten =
-            PersontjenstenConfig(baseUrl = config.property("persontjensten.baseUrl").getString()),
+            PersontjenstenConfig(
+              baseUrl = config.property("persontjensten.baseUrl").getString(),
+              privateKey = config.property("persontjensten.privateKey").getString(),
+              clientJwk = config.property("persontjensten.clientJwk").getString(),
+              wellKnownUrl = config.property("persontjensten.wellKnownUrl").getString()
+            ),
     )
 }
