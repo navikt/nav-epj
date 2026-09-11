@@ -1,39 +1,40 @@
 package no.nav.helse.helseId
 
+import com.nimbusds.jose.JOSEObjectType
+import com.nimbusds.jose.JWSAlgorithm
+import com.nimbusds.jose.JWSHeader
+import com.nimbusds.jose.crypto.RSASSASigner
 import com.nimbusds.jose.jwk.RSAKey
+import com.nimbusds.jwt.JWTClaimsSet
+import com.nimbusds.jwt.SignedJWT
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.accept
 import io.ktor.client.request.forms.FormDataContent
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Parameters
 import io.ktor.http.contentType
 import io.ktor.http.headers
-import java.util.Base64
+import java.time.Instant
+import java.util.Date
+import java.util.UUID
 import no.nav.helse.core.Environment
 import no.nav.helse.core.utils.logger
-import tools.jackson.module.kotlin.jacksonObjectMapper
 
-class DpopTokenClient(private val httpClient: HttpClient, private val env: Environment) {
+class DpopClient(private val httpClient: HttpClient, private val env: Environment) {
     val logger = logger()
 
-    // This is the doc
     // https://utviklerportal.nhn.no/informasjonstjenester/helseid/bruksmoenstre-og-eksempelkode/bruk-av-helseid/docs/dpop/dpop_no_nbmd
 
-    suspend fun getDpopProfAndAccesTokenToken(): DpopPRofAndAccessToken {
+    suspend fun getDpopProfAndAccesToken(): DpopPRofAndAccessToken {
         val helseidTokenUrl: String = env.dpop.helseidTokenAuthUrl
-        val helseidClientJWT: RSAKey = RSAKey.parse(env.dpop.clientJwk)
         val clientId: String = env.dpop.clientId
-
-        val base64EncodeRSAKey =
-            Base64.getEncoder()
-                .encodeToString(
-                    jacksonObjectMapper().writeValueAsBytes(helseidClientJWT.toString())
-                )
+        val clientAssertion = createClientAssertion(env.dpop.clientJwk, helseidTokenUrl, clientId)
 
         val response =
             httpClient.post(helseidTokenUrl) {
@@ -44,7 +45,7 @@ class DpopTokenClient(private val httpClient: HttpClient, private val env: Envir
                     FormDataContent(
                         Parameters.build {
                             append("client_id", clientId)
-                            append("client_assertion", base64EncodeRSAKey)
+                            append("client_assertion", clientAssertion)
                             append(
                                 "client_assertion_type",
                                 "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
@@ -53,27 +54,17 @@ class DpopTokenClient(private val httpClient: HttpClient, private val env: Envir
                         }
                     )
                 )
-                headers { append("DPoP", base64EncodeRSAKey) }
+                headers { append("DPoP", createDpopProof(env.dpop.clientJwk, helseidTokenUrl)) }
             }
 
+        logger.info("First response http: " + response.status.toString())
+
         if (response.status == HttpStatusCode.BadRequest) {
+            logger.info("Response body is" + response.bodyAsText())
+
             val dpopNonceResponse = response.body<DpopNonceResponse>()
             if (dpopNonceResponse.error.equals("use_dpop_nonce")) {
-
                 val dpopNonceHeader = response.headers["DPoP-Nonce"]!!
-
-                // get private key
-                // get public key
-                // add nonce
-                // create a RSAKey
-                // base64EncodeRSAKeyWithNonce
-
-                val base64EncodeRSAKeyWithNonce =
-                    Base64.getEncoder()
-                        .encodeToString(
-                            jacksonObjectMapper().writeValueAsBytes(helseidClientJWT.toString())
-                        )
-
                 val dpopResponse =
                     httpClient
                         .post(helseidTokenUrl) {
@@ -84,7 +75,7 @@ class DpopTokenClient(private val httpClient: HttpClient, private val env: Envir
                                 FormDataContent(
                                     Parameters.build {
                                         append("client_id", clientId)
-                                        append("client_assertion", base64EncodeRSAKey)
+                                        append("client_assertion", clientAssertion)
                                         append(
                                             "client_assertion_type",
                                             "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
@@ -93,20 +84,76 @@ class DpopTokenClient(private val httpClient: HttpClient, private val env: Envir
                                     }
                                 )
                             )
-                            headers { append("DPoP", dpopNonceHeader) }
+                            headers {
+                                append(
+                                    "DPoP",
+                                    createDpopProof(
+                                        env.dpop.clientJwk,
+                                        helseidTokenUrl,
+                                        dpopNonceHeader,
+                                    ),
+                                )
+                            }
                         }
                         .body<DpopResponse>()
 
-                val dpopPRofAndAccessToken =
-                    DpopPRofAndAccessToken(
-                        access_token = dpopResponse.access_token,
-                        dpopProf = base64EncodeRSAKeyWithNonce,
-                    )
-                return dpopPRofAndAccessToken
+                return DpopPRofAndAccessToken(
+                    access_token = dpopResponse.access_token,
+                    dpopProf = createDpopProof(env.dpop.clientJwk, helseidTokenUrl, dpopNonceHeader),
+                )
             }
         }
-        throw RuntimeException("Faild to get DpopProf snd AccesTokenToken")
+        throw RuntimeException("Faild to get DpopProf and AccesTokenToken")
     }
+}
+
+internal fun createClientAssertion(clientJwk: String, tokenUrl: String, clientId: String): String {
+    val helseidClientJWT: RSAKey = RSAKey.parse(clientJwk)
+    val now = Instant.now()
+    val claims =
+        JWTClaimsSet.Builder()
+            .issuer(clientId)
+            .subject(clientId)
+            .audience(tokenUrl)
+            .issueTime(Date.from(now))
+            .expirationTime(Date.from(now.plusSeconds(300)))
+            .jwtID(UUID.randomUUID().toString())
+            .build()
+
+    val header =
+        JWSHeader.Builder(JWSAlgorithm.parse(helseidClientJWT.algorithm.name))
+            .keyID(helseidClientJWT.keyID)
+            .type(JOSEObjectType("JWT"))
+            .build()
+
+    return SignedJWT(header, claims)
+        .apply { sign(RSASSASigner(helseidClientJWT.toPrivateKey())) }
+        .serialize()
+}
+
+internal fun createDpopProof(clientJwk: String, tokenUrl: String, nonce: String? = null): String {
+    val helseidClientJWT: RSAKey = RSAKey.parse(clientJwk)
+    val now = Instant.now()
+    val claimsBuilder =
+        JWTClaimsSet.Builder()
+            .jwtID(UUID.randomUUID().toString())
+            .issueTime(Date.from(now))
+            .claim("htm", HttpMethod.Post.value)
+            .claim("htu", tokenUrl)
+
+    if (!nonce.isNullOrBlank()) {
+        claimsBuilder.claim("nonce", nonce)
+    }
+
+    val header =
+        JWSHeader.Builder(JWSAlgorithm.parse(helseidClientJWT.algorithm.name))
+            .type(JOSEObjectType("dpop+jwt"))
+            .jwk(helseidClientJWT.toPublicJWK())
+            .build()
+
+    return SignedJWT(header, claimsBuilder.build())
+        .apply { sign(RSASSASigner(helseidClientJWT.toPrivateKey())) }
+        .serialize()
 }
 
 data class DpopNonceResponse(val error: String, val error_description: String)
