@@ -16,9 +16,12 @@ epj:
 
 persontjensten:
   baseUrl: "https://et.persontjenesten.test.nhn.no/api/v3"
-  clientId: ${WONDERWALL_OPENID_CLIENT_ID}
-  clientJwk: ${WONDERWALL_OPENID_CLIENT_JWK}
-  wellKnownUrl: ${WONDERWALL_OPENID_WELL_KNOWN_URL}
+
+dpop:
+  helseidTokenAuthUrl: "https://helseid-sts.test.nhn.no/connect/authorize"
+  clientId: ${HELSE_ID_CLIENT_ID}
+  clientJwk: ${HELSE_ID_CLIENT_JWK}
+
 auth:
   helseId:
     wellKnownUrl: ${WONDERWALL_OPENID_WELL_KNOWN_URL}

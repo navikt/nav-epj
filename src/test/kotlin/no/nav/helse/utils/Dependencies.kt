@@ -6,6 +6,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.auth.authentication
 import io.ktor.server.plugins.di.dependencies
 import io.mockk.mockk
+import no.nav.helse.core.DpopConfig
 import no.nav.helse.core.Environment
 import no.nav.helse.core.EpjConfig
 import no.nav.helse.core.PersontjenstenConfig
@@ -77,13 +78,8 @@ fun createIntegrationEnvironment(postgres: PostgreSQLContainer) =
             ),
         valkey = ValkeyConfig("valkey", 8080, false, null, null),
         epj = EpjConfig(baseUrl = "testurl"),
-        persontjensten =
-            PersontjenstenConfig(
-                baseUrl = "testurl",
-                privateKey = "testkey",
-                clientJwk = "sasd",
-                wellKnownUrl = "sasd",
-            ),
+        persontjensten = PersontjenstenConfig(baseUrl = "testurl"),
+        dpop = DpopConfig(helseidTokenAuthUrl = "dsfdsfs", clientJwk = "sadsad", clientId = "3131"),
     )
 
 val simpleTestEnvironment =
@@ -109,13 +105,8 @@ val simpleTestEnvironment =
             ),
         valkey = ValkeyConfig("valkey", 8080, false, null, null),
         epj = EpjConfig(baseUrl = "testurl"),
-        persontjensten =
-            PersontjenstenConfig(
-                baseUrl = "testurl",
-                privateKey = "testkey",
-                clientJwk = "sasd",
-                wellKnownUrl = "sasd",
-            ),
+        persontjensten = PersontjenstenConfig(baseUrl = "testurl"),
+        dpop = DpopConfig(helseidTokenAuthUrl = "dsfdsfs", clientJwk = "sadsad", clientId = "3131"),
     )
 
 private val clientAssertionVerifier =
