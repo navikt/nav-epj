@@ -79,7 +79,7 @@ internal class DpopClientTest {
 
         val dpopClient = DpopClient(httpClient, env)
         // used for local testing
-        dpopClient.getDpopProfAndAccesToken()
+      //  dpopClient.getDpopProfAndAccesToken()
 
         // assertNotNull(dpopPRofAndAccessToken)
     }
