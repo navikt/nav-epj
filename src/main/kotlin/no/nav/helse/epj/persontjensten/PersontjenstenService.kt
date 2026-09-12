@@ -8,8 +8,9 @@ class PersontjenstenService(private val env: Environment) {
     suspend fun serachByFnr(fnr: String): PersonName? {
 
         return PersontjenstenHttpClient(
-                env.persontjensten.baseUrl,
-                dpopToken = "21312313", // TODO this is where i need my token
+                baseUrl = env.persontjensten.baseUrl,
+                dpopProf = "21312313",
+                accessToken = "1321231",
             )
             .getByNin(fnr)
     }

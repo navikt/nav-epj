@@ -12,7 +12,10 @@ class Environment(
     val valkey: ValkeyConfig,
     val epj: EpjConfig,
     val persontjensten: PersontjenstenConfig,
+    val dpop: DpopConfig,
 )
+
+data class DpopConfig(val helseidTokenAuthUrl: String, val clientJwk: String, val clientId: String)
 
 data class PersontjenstenConfig(val baseUrl: String)
 
@@ -105,5 +108,11 @@ fun initEnvironment(config: ApplicationConfig): Environment {
         epj = EpjConfig(baseUrl = config.property("epj.baseUrl").getString()),
         persontjensten =
             PersontjenstenConfig(baseUrl = config.property("persontjensten.baseUrl").getString()),
+        dpop =
+            DpopConfig(
+                helseidTokenAuthUrl = config.property("dpop.helseidTokenAuthUrl").getString(),
+                clientJwk = config.property("dpop.clientJwk").getString(),
+                clientId = config.property("dpop.clientId").getString(),
+            ),
     )
 }

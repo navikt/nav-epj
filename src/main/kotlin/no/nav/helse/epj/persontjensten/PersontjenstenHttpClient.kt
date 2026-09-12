@@ -22,7 +22,11 @@ import no.nav.helse.plugins.uuidModule
 
 private val logger = logger()
 
-class PersontjenstenHttpClient(private val baseUrl: String, private val dpopToken: String) {
+class PersontjenstenHttpClient(
+    private val baseUrl: String,
+    private val accessToken: String,
+    private val dpopProf: String,
+) {
     val httpClient = HttpClient {
         install(ContentNegotiation) { jackson { addModule(uuidModule) } }
         install(HttpRequestRetry) { retryOnServerErrors(maxRetries = 5) }
@@ -39,7 +43,10 @@ class PersontjenstenHttpClient(private val baseUrl: String, private val dpopToke
                     contentType(ContentType.Application.FormUrlEncoded)
                     accept(ContentType.Application.Json)
                     setBody("nin=$fnr")
-                    headers { append("Authorization", "DPoP $dpopToken") }
+                    headers {
+                        append("Authorization", "DPoP $accessToken")
+                        append("DPoP", dpopProf)
+                    }
                 }
             when (httpResponse.status) {
                 InternalServerError -> {
