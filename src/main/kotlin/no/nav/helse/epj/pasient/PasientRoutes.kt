@@ -31,8 +31,9 @@ fun Route.pasientRoutes(
             post {
                 val principal = loggedInUser()
                 val request = call.receive<OpprettPasientRequest>()
-                val pasient = pasientService.createPasient(request, principal.hpr)
-                call.respond(HttpStatusCode.Created, pasient)
+                //val pasient = pasientService.createPasient(request, principal.hpr)
+                //call.respond(HttpStatusCode.Created, pasient)
+                call.respond(HttpStatusCode.Created)
             }
             get("/{patientId}") {
                 val id = call.patientId()
