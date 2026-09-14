@@ -37,6 +37,7 @@ suspend fun RoutingContext.rejectToken(
     wwwAuthenticateScheme: String? = null,
 ) {
     logger.warn("SMART token request rejected: error={}", error.code)
+    logger.warn("SMART token request rejected: error={}", error.description)
     wwwAuthenticateScheme?.let { call.response.headers.append(HttpHeaders.WWWAuthenticate, it) }
     call.respond(status, error.toJSONObject())
 }
