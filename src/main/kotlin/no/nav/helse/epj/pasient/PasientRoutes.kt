@@ -8,17 +8,11 @@ import io.ktor.server.routing.*
 import no.nav.helse.core.utils.securelog
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.patientId
-import no.nav.helse.epj.persontjensten.PersontjenstenService
-import no.nav.helse.helseId.HelseIdPrincipal
 import no.nav.helse.helseId.loggedInUser
-import tools.jackson.module.kotlin.jacksonMapperBuilder
 
 private val securelog = securelog()
 
-fun Route.pasientRoutes(
-    pasientService: PasientService,
-    persontjenstenService: PersontjenstenService,
-) {
+fun Route.pasientRoutes(pasientService: PasientService) {
 
     route("/api") {
         route("/patient") {
@@ -31,8 +25,8 @@ fun Route.pasientRoutes(
             post {
                 val principal = loggedInUser()
                 val request = call.receive<OpprettPasientRequest>()
-                //val pasient = pasientService.createPasient(request, principal.hpr)
-                //call.respond(HttpStatusCode.Created, pasient)
+                // val pasient = pasientService.createPasient(request, principal.hpr)
+                // call.respond(HttpStatusCode.Created, pasient)
                 call.respond(HttpStatusCode.Created)
             }
             get("/{patientId}") {
@@ -41,35 +35,36 @@ fun Route.pasientRoutes(
                     pasientService.getPasientById(id)
                         ?: return@get call.respond(HttpStatusCode.NotFound, "Pasient not found")
                 call.respond(pasient)
-            }
-            post("/serach/{pasientFnr}") {
-                val pasientFnr = call.receiveText()
-                val pasientInDb = pasientService.getPasientByFnr(pasientFnr)
-                if (pasientInDb != null) {
-                    return@post call.respond(pasientFnr)
-                }
+            } /*
+                  post("/serach/{pasientFnr}") {
+                      val pasientFnr = call.receiveText()
+                      val pasientInDb = pasientService.getPasientByFnr(pasientFnr)
+                      if (pasientInDb != null) {
+                          return@post call.respond(pasientFnr)
+                      }
 
-                securelog.info(
-                    "logger tokens: ${
-            jacksonMapperBuilder().build()
-              .writeValueAsString(call.principal<HelseIdPrincipal>()?.debug)
-          }"
-                )
+                      securelog.info(
+                          "logger tokens: ${
+                  jacksonMapperBuilder().build()
+                    .writeValueAsString(call.principal<HelseIdPrincipal>()?.debug)
+                }"
+                      )
 
-                val personFraPersontjensten = persontjenstenService.serachByFnr(pasientFnr)
+                      val personFraPersontjensten = persontjenstenService.serachByFnr(pasientFnr)
 
-                if (personFraPersontjensten != null) {
-                    val opprettPasientRequest =
-                        OpprettPasientRequest(
-                            fornavn = personFraPersontjensten.givenName!!,
-                            etternavn = personFraPersontjensten.familyName!!,
-                            fnr = pasientFnr,
-                        )
+                      if (personFraPersontjensten != null) {
+                          val opprettPasientRequest =
+                              OpprettPasientRequest(
+                                  fornavn = personFraPersontjensten.givenName!!,
+                                  etternavn = personFraPersontjensten.familyName!!,
+                                  fnr = pasientFnr,
+                              )
 
-                    val principal = loggedInUser()
-                    pasientService.createPasient(opprettPasientRequest, principal.hpr)
-                }
-            }
+                          val principal = loggedInUser()
+                          pasientService.createPasient(opprettPasientRequest, principal.hpr)
+                      }
+                  }
+              */
         }
     }
 }

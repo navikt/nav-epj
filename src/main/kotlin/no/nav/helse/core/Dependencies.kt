@@ -13,7 +13,6 @@ import no.nav.helse.epj.legekontor.LegekontorRepository
 import no.nav.helse.epj.legekontor.LegekontorService
 import no.nav.helse.epj.pasient.PasientRepository
 import no.nav.helse.epj.pasient.PasientService
-import no.nav.helse.epj.persontjensten.PersontjenstenService
 import no.nav.helse.fhir.condition.ConditionService
 import no.nav.helse.fhir.documentreference.DocumentReferenceService
 import no.nav.helse.fhir.encounter.EncounterService
@@ -56,6 +55,6 @@ fun Application.configureDependencies() {
         provide(PatientService::class)
         provide(PractitionerService::class)
         provide(PractitionerRoleService::class)
-        provide(PersontjenstenService::class)
+        // provide(PersontjenstenService::class)
     }
 }
