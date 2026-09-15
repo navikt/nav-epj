@@ -41,7 +41,6 @@ fun Route.documentReferenceRoutes(
         post("/DocumentReference") {
             val body = call.receiveText()
 
-          log.info("Hentet data fra documentReferenceId: ${body}")
             val documentReference = fhirjson.decodeFromString(body) as DocumentReference
             val principal = call.requireFhirScope("DocumentReference", Interaction.CREATE)
             principal.requirePatientMatch(
@@ -60,9 +59,7 @@ fun Route.documentReferenceRoutes(
         put("/DocumentReference/{documentReferenceId}") {
             log.info("documentReference PUT hit")
             val body = call.receiveText()
-            log.info("documentReference PUT hit, $body")
             val documentReference = fhirjson.decodeFromString(body) as DocumentReference
-            log.info("documentReference fhirjson, $body")
             val principal = call.requireFhirScope("DocumentReference", Interaction.CREATE)
             principal.requirePatientMatch(
                 "DocumentReference",
@@ -71,9 +68,8 @@ fun Route.documentReferenceRoutes(
             )
 
             val created = documentReferenceService.createDocumentReference(documentReference)
-            log.info("documentReference: $body, created: $created, fhirjson: $documentReference")
             if (created) {
-                call.respond(HttpStatusCode.OK)
+              call.respondText(fhirjson.encodeToString(documentReference), fhirContentType)
             } else {
                 call.respond(HttpStatusCode.Conflict)
             }
