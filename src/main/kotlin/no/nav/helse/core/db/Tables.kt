@@ -42,6 +42,10 @@ object KonsultasjonTable : Table("konsultasjon") {
     val problemstilling = text("problemstilling").nullable()
     val created = datetime("created_at")
     val updated = datetime("updated_at")
+
+    init {
+        index(isUnique = true, id)
+    }
 }
 
 object JournalnotatTable : Table("journalnotat") {
