@@ -36,11 +36,11 @@ fun Route.documentReferenceRoutes(
                 documentReference.subject?.reference?.value?.substringAfter("Patient/"),
             )
 
-            call.respondText(fhirjson.encodeToString(documentReference), fhirContentType)
+            val json = fhirjson.encodeToString(documentReference).replace("\"no-NO\"", "\"NO-nb\"")
+            call.respondText(json, fhirContentType)
         }
         post("/DocumentReference") {
-            val body = call.receiveText()
-
+            val body = call.receiveText().replace("\"NO-nb\"", "\"no-NO\"")
             val documentReference = fhirjson.decodeFromString(body) as DocumentReference
             val principal = call.requireFhirScope("DocumentReference", Interaction.CREATE)
             principal.requirePatientMatch(
@@ -51,14 +51,17 @@ fun Route.documentReferenceRoutes(
 
             val created = documentReferenceService.createDocumentReference(documentReference)
             if (created) {
-                call.respondText(fhirjson.encodeToString(documentReference), fhirContentType)
+                val json =
+                    fhirjson.encodeToString(documentReference).replace("\"no-NO\"", "\"NO-nb\"")
+                call.respondText(json, fhirContentType)
             } else {
                 call.respond(HttpStatusCode.Conflict)
             }
         }
         put("/DocumentReference/{documentReferenceId}") {
-            log.info("documentReference PUT hit")
-            val body = call.receiveText()
+            val id = call.documentReferenceId()
+            log.info("Updating documentReference with id: $id")
+            val body = call.receiveText().replace("\"NO-nb\"", "\"no-NO\"")
             val documentReference = fhirjson.decodeFromString(body) as DocumentReference
             val principal = call.requireFhirScope("DocumentReference", Interaction.CREATE)
             principal.requirePatientMatch(
@@ -69,7 +72,9 @@ fun Route.documentReferenceRoutes(
 
             val created = documentReferenceService.createDocumentReference(documentReference)
             if (created) {
-              call.respondText(fhirjson.encodeToString(documentReference), fhirContentType)
+                val json =
+                    fhirjson.encodeToString(documentReference).replace("\"no-NO\"", "\"NO-nb\"")
+                call.respondText(json, fhirContentType)
             } else {
                 call.respond(HttpStatusCode.Conflict)
             }

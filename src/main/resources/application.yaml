@@ -46,7 +46,6 @@ smart:
         - patient/Encounter.rs
         - patient/Condition.rs
         - patient/DocumentReference.crs
-        - user/Organization.rs
     - clientId: "NAV_SMART_on_FHIR_validator"
       redirectUris: [ "https://nav-on-fhir.ekstern.dev.nav.no" ]
       launchUris: [ "https://nav-on-fhir.ekstern.dev.nav.no/launch" ]

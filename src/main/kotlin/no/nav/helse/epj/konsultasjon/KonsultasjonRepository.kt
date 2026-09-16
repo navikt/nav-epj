@@ -25,6 +25,7 @@ import org.jetbrains.exposed.v1.jdbc.insertReturning
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
+import org.jetbrains.exposed.v1.jdbc.upsert
 
 class KonsultasjonRepository {
     private val logger = logger()
@@ -206,7 +207,7 @@ class KonsultasjonRepository {
     }
 
     suspend fun insertJournalnotat(journalnotat: Journalnotat): Int = dbQuery {
-        JournalnotatTable.insert {
+        JournalnotatTable.upsert(onUpdateExclude = listOf(JournalnotatTable.id)) {
                 it[JournalnotatTable.id] = journalnotat.id.value
                 it[JournalnotatTable.konsultasjonId] = journalnotat.konsultasjonId.value
                 it[JournalnotatTable.pasientId] = journalnotat.pasientId.value
