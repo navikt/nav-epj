@@ -82,20 +82,21 @@ fun createIntegrationEnvironment(postgres: PostgreSQLContainer) =
         dpop =
             DpopConfig(
                 helseidTokenAuthUrl = "dsfdsfs",
-                clientJwk = "{\n" +
-                  "  \"kty\": \"RSA\",\n" +
-                  "  \"use\": \"sig\",\n" +
-                  "  \"alg\": \"RS256\",\n" +
-                  "  \"kid\": \"test-rsa-key-2048\",\n" +
-                  "  \"n\": \"sXTdO8GT08gDfJ1MyXJk-Enlw8mTSkLyCa169Xsur1Jy5DfVuhE794W1fNHSK6_dfeC7_AeGuY8npknX4sdPFhmZKd1fHBn0aet8tXZZKo_O9SNFOcH9_RinJ4ObIRWRwC0qwKVICgKxGjjKhJhbbLtune2MJII45XlBVcq0x029hbXKoO_B8ivpoIcz8YXUb5wOJMTQLZ6lcBb5d0GEvBwymb-VHFuvMzygZO5kl9dIIQ4jWSW0fBrQidiOIMy9l-qSnC_PVV18fCBJkrRdJ7kTSCMoyXenCF05a8JH3iJSo3yZ4UyRcHGPqk8WLV52MbdGIKmnkX_XwSPAr3BHDQ\",\n" +
-                  "  \"e\": \"AQAB\",\n" +
-                  "  \"d\": \"UY6MPvJwply-fX8t00en8BTGbH0wHGk4JAp_AGNkyV7zPsAKkkFpdhEVoBAur7Vb7oZi3yn2WUHZzysQ9UD0sAuDwSHknF2xXxzDbALAaDc_vpo_LpRhzviNmjN6EHKBUflwNKnBuhgSnSKMsPP00Lwz0pFiX0UaMRzRUkSfYRkr5TnPC-ixTVNPOG7BWzqokGUdrj1xkX0s8uYEo93unNvjei3DNy1udjNdIapu6qFTtjBY42ct72xcvYteJmwjo3P34lNq59P_69EZ8ZvC2eeMJVhpIdXkPbjPhat4b_I-6o1Lb9BpjcnMY0hQuOvSlQyFKN7xtqkBWLsz7ubFYQ\",\n" +
-                  "  \"p\": \"81vByPSdRpaacm5vZbwhz7ErAnrrO8cXPb3aH5UeE6yaB_lhafCYZWODU6-H4j9dr9chwn9mkiLzVZDN3C1o5BCGYzTRS-gKtjScxF72eGcQBMMePK9Czl7P2CxXpEsmk_ixKbMt6shT9xw0Ln5B2JrKfm2ym1b6jX41U68QNjs\",\n" +
-                  "  \"q\": \"uqy5-INkQI8jElPnT2GwaY3YWIl1OJ3jJKchHPpkA_kvWJt2MWJs0bOxyrpeJA_axfw9KfJtmN_32UPnK6Vhc8_x7PzLH9rwqQsOyt-m35rVvuyauj5AfWH6mk7k12zQyCVJCp7j5Ffad3dsQrfplvyVqPzXIuQk8QmkIs0m-1c\",\n" +
-                  "  \"dp\": \"QqGk9XjEd0dVEm_aYGiaeVtxA0TUk5F3c5g_2NXjXk-r_PLzESanE1uj4Y32DqR66mJlA_QOCYU4Sv1S4C4uwgMkSJV1mOr3w9uz8LBvm5fccvFZnhP-nrKnBfFeLcXF0k4Nc_VzZQ1ksAww3WoEbWI0f1lZxd6Sy5r6zubn8XE\",\n" +
-                  "  \"dq\": \"HTUVS-rS7r72j9GM6YCxZ3KIHSI0sw0RExULO0t6Bp0gaU65qXRq7kydTsjmHeJVKpESyNNjjn3Me7QCIXQY0VQB2ECdT3ikGu7d-6QOqgHB28ONWgKPeI6x9R7O813VNNuQmBbQNVQBnJuU1sOLytHuYKheyNjFZulJQyCyLrU\",\n" +
-                  "  \"qi\": \"nSti2m8HxBqq10M_ILWW-_LqJg8rgGpHRQJoI6W1Sg5zdRVegHyrIUriSN522JxzRVzgwaJC4NXYmwzTBGDeByfvzmIIiVt3EArxfar2j_9tRWuuzKH6djU_CY_s5z7zEQbAEeZDWTcbiupZanejkd4l_pRtLCFAUZtDoxthiwc\"\n" +
-                  "}",
+                clientJwk =
+                    "{\n" +
+                        "  \"kty\": \"RSA\",\n" +
+                        "  \"use\": \"sig\",\n" +
+                        "  \"alg\": \"RS256\",\n" +
+                        "  \"kid\": \"test-rsa-key-2048\",\n" +
+                        "  \"n\": \"sXTdO8GT08gDfJ1MyXJk-Enlw8mTSkLyCa169Xsur1Jy5DfVuhE794W1fNHSK6_dfeC7_AeGuY8npknX4sdPFhmZKd1fHBn0aet8tXZZKo_O9SNFOcH9_RinJ4ObIRWRwC0qwKVICgKxGjjKhJhbbLtune2MJII45XlBVcq0x029hbXKoO_B8ivpoIcz8YXUb5wOJMTQLZ6lcBb5d0GEvBwymb-VHFuvMzygZO5kl9dIIQ4jWSW0fBrQidiOIMy9l-qSnC_PVV18fCBJkrRdJ7kTSCMoyXenCF05a8JH3iJSo3yZ4UyRcHGPqk8WLV52MbdGIKmnkX_XwSPAr3BHDQ\",\n" +
+                        "  \"e\": \"AQAB\",\n" +
+                        "  \"d\": \"UY6MPvJwply-fX8t00en8BTGbH0wHGk4JAp_AGNkyV7zPsAKkkFpdhEVoBAur7Vb7oZi3yn2WUHZzysQ9UD0sAuDwSHknF2xXxzDbALAaDc_vpo_LpRhzviNmjN6EHKBUflwNKnBuhgSnSKMsPP00Lwz0pFiX0UaMRzRUkSfYRkr5TnPC-ixTVNPOG7BWzqokGUdrj1xkX0s8uYEo93unNvjei3DNy1udjNdIapu6qFTtjBY42ct72xcvYteJmwjo3P34lNq59P_69EZ8ZvC2eeMJVhpIdXkPbjPhat4b_I-6o1Lb9BpjcnMY0hQuOvSlQyFKN7xtqkBWLsz7ubFYQ\",\n" +
+                        "  \"p\": \"81vByPSdRpaacm5vZbwhz7ErAnrrO8cXPb3aH5UeE6yaB_lhafCYZWODU6-H4j9dr9chwn9mkiLzVZDN3C1o5BCGYzTRS-gKtjScxF72eGcQBMMePK9Czl7P2CxXpEsmk_ixKbMt6shT9xw0Ln5B2JrKfm2ym1b6jX41U68QNjs\",\n" +
+                        "  \"q\": \"uqy5-INkQI8jElPnT2GwaY3YWIl1OJ3jJKchHPpkA_kvWJt2MWJs0bOxyrpeJA_axfw9KfJtmN_32UPnK6Vhc8_x7PzLH9rwqQsOyt-m35rVvuyauj5AfWH6mk7k12zQyCVJCp7j5Ffad3dsQrfplvyVqPzXIuQk8QmkIs0m-1c\",\n" +
+                        "  \"dp\": \"QqGk9XjEd0dVEm_aYGiaeVtxA0TUk5F3c5g_2NXjXk-r_PLzESanE1uj4Y32DqR66mJlA_QOCYU4Sv1S4C4uwgMkSJV1mOr3w9uz8LBvm5fccvFZnhP-nrKnBfFeLcXF0k4Nc_VzZQ1ksAww3WoEbWI0f1lZxd6Sy5r6zubn8XE\",\n" +
+                        "  \"dq\": \"HTUVS-rS7r72j9GM6YCxZ3KIHSI0sw0RExULO0t6Bp0gaU65qXRq7kydTsjmHeJVKpESyNNjjn3Me7QCIXQY0VQB2ECdT3ikGu7d-6QOqgHB28ONWgKPeI6x9R7O813VNNuQmBbQNVQBnJuU1sOLytHuYKheyNjFZulJQyCyLrU\",\n" +
+                        "  \"qi\": \"nSti2m8HxBqq10M_ILWW-_LqJg8rgGpHRQJoI6W1Sg5zdRVegHyrIUriSN522JxzRVzgwaJC4NXYmwzTBGDeByfvzmIIiVt3EArxfar2j_9tRWuuzKH6djU_CY_s5z7zEQbAEeZDWTcbiupZanejkd4l_pRtLCFAUZtDoxthiwc\"\n" +
+                        "}",
                 clientId = "3131",
             ),
     )

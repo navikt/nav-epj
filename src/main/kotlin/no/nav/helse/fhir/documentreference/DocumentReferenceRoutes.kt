@@ -2,6 +2,7 @@ package no.nav.helse.fhir.documentreference
 
 import com.google.fhir.model.r4.DocumentReference
 import com.google.fhir.model.r4.FhirR4Json
+import com.google.fhir.model.r4.QuestionnaireResponse
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -35,11 +36,14 @@ fun Route.documentReferenceRoutes(
                 documentReference.subject?.reference?.value?.substringAfter("Patient/"),
             )
 
-            call.respondText(fhirjson.encodeToString(documentReference), fhirContentType)
+            val json = fhirjson.encodeToString(documentReference).replace("\"no-NO\"", "\"NO-nb\"")
+            call.respondText(json, fhirContentType)
         }
         post("/DocumentReference") {
             val body = call.receiveText()
-            val documentReference = fhirjson.decodeFromString(body) as DocumentReference
+            val bodyWithReplacement = body.replace("\"NO-nb\"", "\"no-NO\"")
+            val documentReference =
+                fhirjson.decodeFromString(bodyWithReplacement) as DocumentReference
             val principal = call.requireFhirScope("DocumentReference", Interaction.CREATE)
             principal.requirePatientMatch(
                 "DocumentReference",
@@ -49,10 +53,40 @@ fun Route.documentReferenceRoutes(
 
             val created = documentReferenceService.createDocumentReference(documentReference)
             if (created) {
-                call.respond(HttpStatusCode.OK)
+                val json =
+                    fhirjson.encodeToString(documentReference).replace("\"no-NO\"", "\"NO-nb\"")
+                call.respondText(json, fhirContentType)
             } else {
                 call.respond(HttpStatusCode.Conflict)
             }
+        }
+        put("/DocumentReference/{documentReferenceId}") {
+            val id = call.documentReferenceId()
+            log.info("Updating documentReference with id: $id")
+            val body = call.receiveText()
+            val bodyWithReplacement = body.replace("\"NO-nb\"", "\"no-NO\"")
+            val documentReference =
+                fhirjson.decodeFromString(bodyWithReplacement) as DocumentReference
+            val principal = call.requireFhirScope("DocumentReference", Interaction.CREATE)
+            principal.requirePatientMatch(
+                "DocumentReference",
+                Interaction.UPDATE,
+                documentReference.subject?.reference?.value?.substringAfter("Patient/"),
+            )
+
+            val created = documentReferenceService.createDocumentReference(documentReference)
+            if (created) {
+                val json =
+                    fhirjson.encodeToString(documentReference).replace("\"no-NO\"", "\"NO-nb\"")
+                call.respondText(json, fhirContentType)
+            } else {
+                call.respond(HttpStatusCode.Conflict)
+            }
+        }
+        put("/QuestionnaireResponse/{documentReferenceId}") {
+            val body = call.receiveText()
+            val questionnaireResponse = fhirjson.decodeFromString(body) as QuestionnaireResponse
+            call.respondText(fhirjson.encodeToString(questionnaireResponse), fhirContentType)
         }
     }
 }

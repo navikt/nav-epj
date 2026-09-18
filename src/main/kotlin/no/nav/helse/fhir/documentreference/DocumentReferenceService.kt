@@ -12,7 +12,9 @@ import com.google.fhir.model.r4.String
 import com.google.fhir.model.r4.Uri
 import com.google.fhir.model.r4.terminologies.CommonLanguages
 import com.google.fhir.model.r4.terminologies.DocumentReferenceStatus
+import kotlin.text.substringAfter
 import kotlin.uuid.Uuid
+import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.helsepersonell.HelsepersonellService
 import no.nav.helse.epj.konsultasjon.Journalnotat
@@ -26,7 +28,18 @@ class DocumentReferenceService(
     val helsepersonellService: HelsepersonellService,
 ) {
 
+    val log = logger()
+
     suspend fun createDocumentReference(documentReference: DocumentReference): Boolean {
+        val konsultasjonId =
+            documentReference.context
+                ?.encounter
+                ?.first()
+                ?.reference
+                ?.value
+                ?.substringAfter("Encounter/")
+        val pasientId = documentReference.subject?.reference?.value?.substringAfter("Patient/")
+
         val createJournalnotat =
             Journalnotat(
                 id =
@@ -38,24 +51,25 @@ class DocumentReferenceService(
                 konsultasjonId =
                     KonsultasjonId(
                         Uuid.parse(
-                            requireNotNull(documentReference.context?.id) {
-                                "DocumentReference mangler context.id"
+                            requireNotNull(konsultasjonId) {
+                                "DocumentReference mangler context.encounter.reference"
                             }
                         )
                     ),
                 pasientId =
                     PasientId(
                         Uuid.parse(
-                            requireNotNull(documentReference.subject?.id) {
-                                "DocumentReference mangler subject.id"
+                            requireNotNull(pasientId) {
+                                "DocumentReference mangler subject.reference"
                             }
                         )
                     ),
                 journalnotat =
-                    requireNotNull(documentReference.description.toString()) {
+                    requireNotNull(documentReference.description?.value) {
                         "DocumentReference mangler description"
                     },
             )
+
         return konsultasjonService.createJournalnotat(createJournalnotat)
     }
 

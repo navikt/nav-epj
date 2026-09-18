@@ -31,7 +31,6 @@ fun Route.encounterRoutes(
             )
 
             val fhirJson = fhirR4Json.encodeToString(encounter)
-            log.info("encounter: $fhirJson")
             call.respondText(fhirJson, fhirContentType)
         }
 

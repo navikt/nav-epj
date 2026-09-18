@@ -16,6 +16,14 @@ database:
 epj:
   baseUrl: "http://localhost:8080"
 
+persontjensten:
+  baseUrl: "https://et.persontjenesten.test.nhn.no/api/v3"
+
+dpop:
+  helseidTokenAuthUrl: "https://helseid-sts.test.nhn.no/connect/authorize"
+  clientId: "clientId"
+  clientJwk: "clientJwk"
+
 smart:
   issuerBaseUrl: "http://localhost:8080/oidc"
   fhirServerUrl: "http://localhost:8080/fhir"
@@ -35,7 +43,6 @@ smart:
         - patient/Encounter.rs
         - patient/Condition.rs
         - patient/DocumentReference.crs
-        - user/Organization.rs
     - clientId: "NAV_SMART_on_FHIR_validator"
       redirectUris: ["http://localhost:3001/callback"]
       launchUris: ["http://localhost:3001/launch"]

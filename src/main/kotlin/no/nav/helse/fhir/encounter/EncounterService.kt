@@ -102,7 +102,7 @@ class EncounterService(val konsultasjonService: KonsultasjonService) {
                 Reference(
                     reference =
                         com.google.fhir.model.r4.String(
-                            value = "Organization/a1000000-0000-0000-0000-000000000001" // TODO hent
+                            value = "Organization/aed5c75c-3b12-4652-83d7-223bdd69062d" // TODO hent
                         )
                 ),
             status = Enumeration(value = status),

@@ -265,6 +265,7 @@ fun Application.configureSmartRouting() {
                 val params = call.receiveParameters()
                 // Deliberate test diagnostics
                 log.debug("SMART: /token called with params: {}", params)
+
                 val code = params["code"] ?: return@post rejectMissingToken("code")
                 val grantType = params["grant_type"] ?: return@post rejectMissingToken("grant_type")
                 if (grantType != "authorization_code") {
