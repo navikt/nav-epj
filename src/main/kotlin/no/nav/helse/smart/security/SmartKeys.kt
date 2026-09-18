@@ -20,11 +20,13 @@ import java.util.*
  * verified by another (nor would its `/oidc/jwks` list the other's key).
  */
 internal object SmartKeys {
-    private val keyPair = JWK.parse(System.getenv("PRIVATE_KEY_JWK")!!).toRSAKey().toKeyPair()
+    private val rsaKey = JWK.parse(System.getenv("PRIVATE_KEY_JWK")!!).toRSAKey()
+    private val keyPair = rsaKey.toKeyPair()
+
     // KeyPairGenerator.getInstance("RSA").apply { initialize(2048) }.genKeyPair()
 
     /** JOSE `kid`, so a verifier holding multiple keys can pick the right one. */
-    // val keyId: String = UUID.randomUUID().toString()
+    val keyId: String = rsaKey.keyID
     val rsaPublic: RSAPublicKey = keyPair.public as RSAPublicKey
 
     /**
@@ -38,7 +40,7 @@ internal object SmartKeys {
         RSAKey.Builder(rsaPublic)
             .privateKey(keyPair.private as RSAPrivateKey)
             .keyUse(KeyUse.SIGNATURE)
-            // .keyID(keyId)
+            .keyID(keyId)
             .algorithm(JWSAlgorithm.RS256)
             .build()
 }

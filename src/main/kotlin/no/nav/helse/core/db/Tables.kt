@@ -55,7 +55,7 @@ object JournalnotatTable : Table("journalnotat") {
     val journalnotat = text("journalnotat").nullable()
 
     init {
-        index(isUnique = true, JournalnotatTable.id)
+        index(isUnique = true, id)
     }
 }
 
