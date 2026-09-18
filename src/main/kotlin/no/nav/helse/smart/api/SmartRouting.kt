@@ -457,7 +457,7 @@ private fun buildAccessToken(
         .withIssuer(issuerUrl)
         .withAudience(fhirServerUrl) // RFC 9068 2.2: resource server(s) this token is valid for
         .withSubject(ctx.subject)
-        .withKeyId(SmartKeys.keyId)
+        // .withKeyId(SmartKeys.keyId)
         .withIssuedAt(now)
         .withExpiresAt(expiresAt)
         .withJWTId(
