@@ -40,8 +40,10 @@ fun Route.documentReferenceRoutes(
             call.respondText(json, fhirContentType)
         }
         post("/DocumentReference") {
-            val body = call.receiveText().replace("\"NO-nb\"", "\"no-NO\"")
-            val documentReference = fhirjson.decodeFromString(body) as DocumentReference
+            val body = call.receiveText()
+            val bodyWithReplacement = body.replace("\"NO-nb\"", "\"no-NO\"")
+            val documentReference =
+                fhirjson.decodeFromString(bodyWithReplacement) as DocumentReference
             val principal = call.requireFhirScope("DocumentReference", Interaction.CREATE)
             principal.requirePatientMatch(
                 "DocumentReference",
@@ -61,12 +63,14 @@ fun Route.documentReferenceRoutes(
         put("/DocumentReference/{documentReferenceId}") {
             val id = call.documentReferenceId()
             log.info("Updating documentReference with id: $id")
-            val body = call.receiveText().replace("\"NO-nb\"", "\"no-NO\"")
-            val documentReference = fhirjson.decodeFromString(body) as DocumentReference
+            val body = call.receiveText()
+            val bodyWithReplacement = body.replace("\"NO-nb\"", "\"no-NO\"")
+            val documentReference =
+                fhirjson.decodeFromString(bodyWithReplacement) as DocumentReference
             val principal = call.requireFhirScope("DocumentReference", Interaction.CREATE)
             principal.requirePatientMatch(
                 "DocumentReference",
-                Interaction.CREATE,
+                Interaction.UPDATE,
                 documentReference.subject?.reference?.value?.substringAfter("Patient/"),
             )
 

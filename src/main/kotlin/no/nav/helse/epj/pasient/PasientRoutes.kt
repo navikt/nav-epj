@@ -35,36 +35,38 @@ fun Route.pasientRoutes(pasientService: PasientService) {
                     pasientService.getPasientById(id)
                         ?: return@get call.respond(HttpStatusCode.NotFound, "Pasient not found")
                 call.respond(pasient)
-            } /*
-                  post("/serach/{pasientFnr}") {
-                      val pasientFnr = call.receiveText()
-                      val pasientInDb = pasientService.getPasientByFnr(pasientFnr)
-                      if (pasientInDb != null) {
-                          return@post call.respond(pasientFnr)
-                      }
+            }
+            // TODO: integrasjon med persontjenesten
+            /*
+                post("/serach/{pasientFnr}") {
+                    val pasientFnr = call.receiveText()
+                    val pasientInDb = pasientService.getPasientByFnr(pasientFnr)
+                    if (pasientInDb != null) {
+                        return@post call.respond(pasientFnr)
+                    }
 
-                      securelog.info(
-                          "logger tokens: ${
-                  jacksonMapperBuilder().build()
-                    .writeValueAsString(call.principal<HelseIdPrincipal>()?.debug)
-                }"
-                      )
+                    securelog.info(
+                        "logger tokens: ${
+                jacksonMapperBuilder().build()
+                  .writeValueAsString(call.principal<HelseIdPrincipal>()?.debug)
+              }"
+                    )
 
-                      val personFraPersontjensten = persontjenstenService.serachByFnr(pasientFnr)
+                    val personFraPersontjensten = persontjenstenService.serachByFnr(pasientFnr)
 
-                      if (personFraPersontjensten != null) {
-                          val opprettPasientRequest =
-                              OpprettPasientRequest(
-                                  fornavn = personFraPersontjensten.givenName!!,
-                                  etternavn = personFraPersontjensten.familyName!!,
-                                  fnr = pasientFnr,
-                              )
+                    if (personFraPersontjensten != null) {
+                        val opprettPasientRequest =
+                            OpprettPasientRequest(
+                                fornavn = personFraPersontjensten.givenName!!,
+                                etternavn = personFraPersontjensten.familyName!!,
+                                fnr = pasientFnr,
+                            )
 
-                          val principal = loggedInUser()
-                          pasientService.createPasient(opprettPasientRequest, principal.hpr)
-                      }
-                  }
-              */
+                        val principal = loggedInUser()
+                        pasientService.createPasient(opprettPasientRequest, principal.hpr)
+                    }
+                }
+            */
         }
     }
 }

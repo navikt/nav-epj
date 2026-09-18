@@ -30,6 +30,7 @@ fun Application.configureEpjModule() {
     val konsultasjonService: KonsultasjonService by dependencies
     val legekontorService: LegekontorService by dependencies
     val valkeyService: ValkeyService by dependencies
+    // TODO: integrasjon med persontjenesten
     // val persontjenstenService: PersontjenstenService by dependencies
 
     routing {

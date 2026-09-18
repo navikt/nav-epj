@@ -42,8 +42,6 @@ object KonsultasjonTable : Table("konsultasjon") {
     val problemstilling = text("problemstilling").nullable()
     val created = datetime("created_at")
     val updated = datetime("updated_at")
-
-
 }
 
 object JournalnotatTable : Table("journalnotat") {
@@ -53,7 +51,7 @@ object JournalnotatTable : Table("journalnotat") {
     val journalnotat = text("journalnotat").nullable()
 
     init {
-      index(isUnique = true, JournalnotatTable.id)
+        index(isUnique = true, JournalnotatTable.id)
     }
 }
 
