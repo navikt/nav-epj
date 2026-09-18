@@ -23,6 +23,7 @@ dpop:
   clientJwk: ${HELSE_ID_CLIENT_JWK}
 
 auth:
+  serverJwk: ${PRIVATE_KEY_JWK}
   helseId:
     wellKnownUrl: ${WONDERWALL_OPENID_WELL_KNOWN_URL}
     clientId: ${WONDERWALL_OPENID_CLIENT_ID}

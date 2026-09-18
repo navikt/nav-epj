@@ -2,9 +2,9 @@ package no.nav.helse.smart.security
 
 import com.auth0.jwt.algorithms.Algorithm
 import com.nimbusds.jose.JWSAlgorithm
+import com.nimbusds.jose.jwk.JWK
 import com.nimbusds.jose.jwk.KeyUse
 import com.nimbusds.jose.jwk.RSAKey
-import java.security.KeyPairGenerator
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 import java.util.*
@@ -20,11 +20,11 @@ import java.util.*
  * verified by another (nor would its `/oidc/jwks` list the other's key).
  */
 internal object SmartKeys {
-    private val keyPair =
-        KeyPairGenerator.getInstance("RSA").apply { initialize(2048) }.genKeyPair()
+    private val keyPair = JWK.parse(System.getenv("PRIVATE_KEY_JWK")!!).toRSAKey().toKeyPair()
+    // KeyPairGenerator.getInstance("RSA").apply { initialize(2048) }.genKeyPair()
 
     /** JOSE `kid`, so a verifier holding multiple keys can pick the right one. */
-    val keyId: String = UUID.randomUUID().toString()
+    // val keyId: String = UUID.randomUUID().toString()
     val rsaPublic: RSAPublicKey = keyPair.public as RSAPublicKey
 
     /**
@@ -38,7 +38,7 @@ internal object SmartKeys {
         RSAKey.Builder(rsaPublic)
             .privateKey(keyPair.private as RSAPrivateKey)
             .keyUse(KeyUse.SIGNATURE)
-            .keyID(keyId)
+            // .keyID(keyId)
             .algorithm(JWSAlgorithm.RS256)
             .build()
 }

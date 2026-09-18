@@ -83,6 +83,7 @@ spec:
         - host: 'helseid-sts.test.nhn.no'
 
   envFrom:
+    - secret: nav-epj-config
     - secret: login-config-nav-epj
     - secret: nav-epj-client-config
 
