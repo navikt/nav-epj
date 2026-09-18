@@ -43,9 +43,7 @@ object KonsultasjonTable : Table("konsultasjon") {
     val created = datetime("created_at")
     val updated = datetime("updated_at")
 
-    init {
-        index(isUnique = true, id)
-    }
+
 }
 
 object JournalnotatTable : Table("journalnotat") {
@@ -53,6 +51,10 @@ object JournalnotatTable : Table("journalnotat") {
     val konsultasjonId = reference("konsultasjon_id", refColumn = KonsultasjonTable.id)
     val pasientId = reference("pasient_id", refColumn = PasientTable.id)
     val journalnotat = text("journalnotat").nullable()
+
+    init {
+      index(isUnique = true, JournalnotatTable.id)
+    }
 }
 
 object DiagnoseTable : Table("diagnose") {
