@@ -1,13 +1,16 @@
 <component name="ProjectRunConfigurationManager">
-    <configuration default="false" name="Run Local" type="JetRunConfigurationType">
-        <option name="MAIN_CLASS_NAME" value="no.nav.helse.ApplicationKt" />
-        <module name="nav-epj.main" />
-        <option name="PROGRAM_PARAMETERS" value="-config=application-local.yaml" />
-        <shortenClasspath name="NONE" />
-        <option name="VM_PARAMETERS" value="-Dio.ktor.development=true -Dlogback.configurationFile=logback-local.xml" />
-        <extension name="com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor" myConfigEnvironmentStrategy="use_project_settings" myMiseDirEnvCb="false" myMiseConfigEnvironmentTf="" />
-        <method v="2">
-            <option name="Make" enabled="true" />
-        </method>
-    </configuration>
+  <configuration default="false" name="run-local" type="JetRunConfigurationType">
+    <envs>
+      <env name="PRIVATE_KEY_JWK" value="{   &quot;d&quot;: &quot;CB0sB1XtGYeULLMEqsA0jBqZT8Op5TT-ijfYYJGPb2njoG9Scc9JRUyh_r1jV9PyEytuIXruadd4G7tGyWLfeNzFYdHO0JgMAGFyKanCs1bhBhnSf0hgz4YNYF5-ynzxtE6WXEb5n2BLKwyfNjcsb4F0ygssi9FIiowEWQY9eC3F6Zij2eB9PE6FWNb0WnqJWHLJjLnKcAcIRDR8eZrVzGpXkHOx2KKoNzhfVyojlkrsqN1890m0VlyVd2Vc2CMyyXmFZl1y4qtQZLGkmtYGkFSwHrymwyeH2jFkYsyWkwBh82kGM3SlHpgP6pwswuAlVUyd4Jfcz3qaCbTZex5VqQ&quot;,   &quot;dp&quot;: &quot;bnb9LPNt7Xm3BmhHsq6FhwrwubUVhe-BekANpOfQibMB8A3nknnsO-k4Slvq0KkbUlUSLjE87r3zFi3BCTntLAachl-Mjpq4eI0tdzPqpq5JcgWt0uHp6k2QcuAKK3F6icYkh6SN_BcbC4ztWzCqrEnR6DLo1uCTU55IF56_ay8&quot;,   &quot;dq&quot;: &quot;rUyuMt-UU6M_TmV9Uv6dqf3CL2tsre-4pdeRb11SvqmhFW73aYpwGNyzsUBaddUBAdILnu_OGkbSa-i81nPe21SCyjM5xTg5klR3RlDO8fzR7jnt41hOfdsToRzRFs8jRO7z8GQ169lcLTz17UqlH6x7oZUx3hwttk3W0dvzGfU&quot;,   &quot;e&quot;: &quot;AQAB&quot;,   &quot;kty&quot;: &quot;RSA&quot;,   &quot;n&quot;: &quot;uCRAlNHRLj8FU2r6dy-T4Dk3HlnlKdUbZMHEpFlt4wFQyavlpcRhx0GXO3_kYOId4oZUXjQmylJVI2w3F4hdYH06r0aIMz6V7N-w_PYfDb0evdq20iPJdF2xY10qld0pDIZ8d_i4z4mBz-8JvKk8Lox7NoQIWZdR4POUb-1JIw_r3DtcDm17ST1Wr8DuObG9qRplkxHOgQ9esOO_zYFqwZ2TmTv3ZEHa9Fnawix4F8uN69DSslN21w3zGicgLEH3NrcNxCRHb7ipfKIScgBfDqDTkyOb-p2XwHudR4_nvBeuSYBprjYGVy9yuQ_DkzRjOcYkUem3zW0XjQvG9LiKBw&quot;,   &quot;p&quot;: &quot;-Ht3oVHtC9mfyXI4EUbLz-Njdk-eP5JoRziBmCv7Mr01kGzhnDbITLzzWi329G1gYE40uy-2eQ2XbAomh4jEqcG-Dkms_BnlH7nCaKBbDYfsHBMVVIjMT1JUO6X2l_0rp4qqUbVGV9LdLyPrTLL7yDD6iyuwDpAsdlpplHVYs3M&quot;,   &quot;q&quot;: &quot;vbZ06p0yPLGcBa6frpCYrZeI1mDsbOO1De2m-YH9swoe3Hg_sxsP6sbRRjxi8TcPGBMuLqragunzbmb212AYSPuILUjRf7LRpzo1oE8LsKr-gOh4Bz6fmoIUAS6fqT8cqc6C-bxwMG_l9fkYQEgOCSHVi_Uef6-XMZjbCjxxch0&quot;,   &quot;qi&quot;: &quot;8tPVQ91dU9qgPq_3WuvltW0e23M6DSzyocAeWm2tXaPZJHi23CgFzKnL3oeUZEK7hyGgHJg-IErPa36xNXpGwWV9wl94hyAS7tRhj9KVu_JvvOhvfCwS6SKlwhK0VzD1PJAMYr7LbOwfovXtUS9JgcnaZQRcnFsCDacblYSBUVA&quot;,   &quot;alg&quot;: &quot;RS256&quot;,   &quot;use&quot;: &quot;sig&quot;,   &quot;kid&quot;: &quot;DtgV2DoWliPOh10s70VJy7BrPTfxZ2XhQH0AR4kAek8&quot; }" />
+    </envs>
+    <option name="MAIN_CLASS_NAME" value="no.nav.helse.ApplicationKt" />
+    <module name="nav-epj.main" />
+    <option name="PROGRAM_PARAMETERS" value="-config=application-local.yaml" />
+    <shortenClasspath name="NONE" />
+    <option name="VM_PARAMETERS" value="-Dio.ktor.development=true -Dlogback.configurationFile=logback-local.xml" />
+    <extension name="com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor" myConfigEnvironmentStrategy="use_project_settings" myMiseDirEnvCb="false" myMiseConfigEnvironmentTf="" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
 </component>

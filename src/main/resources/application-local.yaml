@@ -24,6 +24,9 @@ dpop:
   clientId: "clientId"
   clientJwk: "clientJwk"
 
+auth:
+  serverJwk: "TODO random jwk"
+
 smart:
   issuerBaseUrl: "http://localhost:8080/oidc"
   fhirServerUrl: "http://localhost:8080/fhir"
