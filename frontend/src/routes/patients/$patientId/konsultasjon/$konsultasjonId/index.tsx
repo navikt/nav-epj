@@ -22,6 +22,7 @@ function RouteComponent() {
     const { patientId, konsultasjonId } = Route.useParams();
     const [diagnoser, setDiagnoser] = useState<{ kode: string, system: string, beskrivelse: string }[]>([])
     const [journalnotat, setJournalnotat] = useState<string>('')
+    const [saveError, setSaveError] = useState<string | null>(null)
 
     const [diagnoseOptions, setDiagnoseOptions] = useState<{ label: string, system: string, value: string }[]>([])
 
@@ -51,6 +52,7 @@ function RouteComponent() {
 
     async function handleSubmit(e: MouseEvent, ferdigstill: boolean) {
         e.preventDefault()
+        setSaveError(null)
         const requestBody: PostKonsultasjonBody = {
             diagnoser: diagnoser,
             journalNotat: journalnotat,
@@ -59,12 +61,16 @@ function RouteComponent() {
         }
         const res = await fetch(`/api/patients/${patientId}/konsultasjoner`, { method: 'PATCH', body: JSON.stringify(requestBody), headers: { "Content-Type": "application/json" } }).then((res) => res.ok)
         if (!res) {
-            console.error('Kunne ikke lagre')
+            setSaveError('Kunne ikke lagre konsultasjon')
+        }
+        if (ferdigstill && res) {
+            navigate({ to: `/patients/$patientId`, params: { patientId } })
         }
     }
 
     return (
         <div className="flex flex-col gap-4 items-start">
+            {saveError && <div className="text-red-600">{saveError}</div>}
             <form className="flex flex-col gap-4 items-start max-w-sm">
                 <UNSAFE_Combobox
                     label="Hvilke diagnoser har pasienten"

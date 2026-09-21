@@ -26,6 +26,10 @@ const getEnv = () => {
     }
 }
 
+export const isLocalhost = () => {
+    return getEnv() === 'localhost'
+}
+
 export const getSykInnUrl = () => {
     const env = getEnv()
     return envUrls[env].sykInnUrl

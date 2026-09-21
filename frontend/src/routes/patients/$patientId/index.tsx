@@ -1,10 +1,10 @@
-import { Button } from "@navikt/ds-react";
+import { Button, Heading, Table } from "@navikt/ds-react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import {
   KonsultasjonSchema,
   PasientSchema,
-  type Pasient,
 } from "@utils/mapping/epj";
+import { fetchPatient, fetchKonsultasjoner } from "@utils/fetch";
 import { format } from "date-fns";
 
 export const Route = createFileRoute("/patients/$patientId/")({
@@ -16,15 +16,7 @@ export const Route = createFileRoute("/patients/$patientId/")({
   component: RouteComponent,
 });
 
-async function fetchPatient(id: string): Promise<Pasient> {
-  return await fetch(`/api/patient/${id}`).then((res) => res.json());
-}
 
-async function fetchKonsultasjoner(patientId: string) {
-  return await fetch(`/api/patients/${patientId}/konsultasjoner`).then((res) =>
-    res.json(),
-  );
-}
 
 async function opprettKonsultasjon(patientId: string) {
   return await fetch(`/api/patients/${patientId}/konsultasjoner`, { method: 'POST' }).then((res) => res.json())
@@ -40,7 +32,8 @@ function RouteComponent() {
   );
 
   async function handleOnClickOpprettKonsultasjon() {
-    await opprettKonsultasjon(patientId)
+    const res = await opprettKonsultasjon(patientId)
+    console.log(res);
     router.invalidate()
   }
 
@@ -54,18 +47,39 @@ function RouteComponent() {
     <div className="flex flex-col items-start gap-4">
       {(patient.success && konsultasjoner.success) &&
         <div>
-          Pasientnavn: {patient.data?.fornavn} {patient.data?.etternavn}
-          <ul>
-            {konsultasjoner.data.map((konsultasjon) => (
-              <li key={konsultasjon.id}><Link className="aksel-link" to="/patients/$patientId/konsultasjon/$konsultasjonId" params={{ patientId, konsultasjonId: konsultasjon.id }}>
-                {format(konsultasjon.startetTidspunkt, "dd.MM.yyyy HH:mm")} - {konsultasjon.status}
-              </Link>
-              </li>
-            ))}
-          </ul>
+          <Button variant={'primary'} onClick={() => handleOnClickOpprettKonsultasjon()}>Opprett ny konsultasjon</Button>
+          <Heading size="medium" level="2">
+            Konsultasjoner
+          </Heading>
+          {konsultasjoner.data.length === 0 && <div>Ingen konsultasjoner funnet</div>}
+          {konsultasjoner.data.length > 0 && 
+          <Table>
+            <Table.Header>
+              <Table.Row>
+                <Table.HeaderCell>Startet</Table.HeaderCell>
+                <Table.HeaderCell>Status</Table.HeaderCell>
+                <Table.HeaderCell />
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
+              {konsultasjoner.data.map((konsultasjon) => (
+                <Table.Row key={konsultasjon.id}>
+                  <Table.DataCell>
+                    {format(konsultasjon.startetTidspunkt, "dd.MM.yyyy HH:mm")}
+                  </Table.DataCell>
+                  <Table.DataCell>{konsultasjon.status}</Table.DataCell>
+                  <Table.DataCell>
+                    <Link className="aksel-link" to="/patients/$patientId/konsultasjon/$konsultasjonId" params={{ patientId, konsultasjonId: konsultasjon.id }}>
+                      Se konsultasjon
+                    </Link>
+                  </Table.DataCell>
+                </Table.Row>
+              ))}
+            </Table.Body>
+          </Table>}
         </div>
       }
-      <Button variant={'primary'} onClick={() => handleOnClickOpprettKonsultasjon()}>Opprett ny konsultasjon</Button>
+      
 
     </div>
   );

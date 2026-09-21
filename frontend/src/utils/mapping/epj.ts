@@ -19,6 +19,7 @@ export const PasientSchema = z.object({
     id: z.string(),
     fornavn: z.string(),
     etternavn: z.string(),
+    fnr: z.string(),
 });
 
 export type Pasient = z.infer<typeof PasientSchema>;
