@@ -22,6 +22,7 @@ import no.nav.helse.plugins.configureSerialization
 import no.nav.helse.smart.api.configureSmartRouting
 import no.nav.helse.smart.security.ClientAssertionVerifier
 import no.nav.helse.smart.security.SmartClient
+import no.nav.helse.smart.security.SmartKeys
 import no.nav.helse.smart.security.TokenEndpointAuthMethod
 import no.nav.helse.smart.security.parseRegisteredScopes
 import no.nav.helse.smart.valkey.ValkeyService
@@ -75,6 +76,7 @@ fun createIntegrationEnvironment(postgres: PostgreSQLContainer) =
                                 ),
                         )
                     ),
+                smartKeys = SmartKeys("test-smart-key"),
             ),
         valkey = ValkeyConfig("valkey", 8080, false, null, null),
         epj = EpjConfig(baseUrl = "testurl"),
@@ -121,6 +123,7 @@ val simpleTestEnvironment =
                                 ),
                         )
                     ),
+                smartKeys = SmartKeys("ÆØÅ-1234567890-abcdefghijklmnopqrstuvwxyz"),
             ),
         valkey = ValkeyConfig("valkey", 8080, false, null, null),
         epj = EpjConfig(baseUrl = "testurl"),

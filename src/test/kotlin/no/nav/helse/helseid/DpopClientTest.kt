@@ -14,6 +14,7 @@ import no.nav.helse.core.SmartConfig
 import no.nav.helse.core.ValkeyConfig
 import no.nav.helse.helseId.DpopClient
 import no.nav.helse.smart.security.SmartClient
+import no.nav.helse.smart.security.SmartKeys
 import no.nav.helse.smart.security.TokenEndpointAuthMethod
 import no.nav.helse.smart.security.parseRegisteredScopes
 import org.junit.Test
@@ -47,6 +48,7 @@ internal class DpopClientTest {
                                         ),
                                 )
                             ),
+                        smartKeys = SmartKeys("ÆØÅ-1234567890-abcdefghijklmnopqrstuvwxyz"),
                     ),
                 valkey = ValkeyConfig("valkey", 8080, false, null, null),
                 epj = EpjConfig(baseUrl = "testurl"),

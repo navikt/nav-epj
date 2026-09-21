@@ -19,8 +19,8 @@ import java.util.*
  * TODO Kubernetes: each replica would generate its own key, so tokens issued by one could not be
  * verified by another (nor would its `/oidc/jwks` list the other's key).
  */
-internal object SmartKeys {
-    private val rsaKey = JWK.parse(System.getenv("PRIVATE_KEY_JWK")!!).toRSAKey()
+class SmartKeys(rsaKeyString: String) {
+    private val rsaKey = JWK.parse(rsaKeyString).toRSAKey()
     private val keyPair = rsaKey.toKeyPair()
 
     // KeyPairGenerator.getInstance("RSA").apply { initialize(2048) }.genKeyPair()

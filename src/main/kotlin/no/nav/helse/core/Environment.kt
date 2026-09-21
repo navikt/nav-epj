@@ -3,6 +3,7 @@ package no.nav.helse.core
 import io.ktor.server.config.*
 import java.net.URI
 import no.nav.helse.smart.security.SmartClient
+import no.nav.helse.smart.security.SmartKeys
 import no.nav.helse.smart.security.TokenEndpointAuthMethod
 import no.nav.helse.smart.security.parseRegisteredScopes
 
@@ -27,6 +28,7 @@ class SmartConfig(
     val issuerBaseUrl: String,
     val fhirServerUrl: String,
     val clients: List<SmartClient>,
+    val smartKeys: SmartKeys,
 )
 
 private fun smartClient(c: ApplicationConfig): SmartClient {
@@ -41,14 +43,20 @@ private fun smartClient(c: ApplicationConfig): SmartClient {
     when (method) {
         TokenEndpointAuthMethod.PRIVATE_KEY_JWT -> {
             require(jwksUri != null) {
-                "smart.clients: client '${c.property("clientId").getString()}' declares private_key_jwt but has no jwksUri"
+                "smart.clients: client '${
+          c.property("clientId").getString()
+        }' declares private_key_jwt but has no jwksUri"
             }
             requireSecureJwksUri(clientId, jwksUri)
         }
+
         TokenEndpointAuthMethod.CLIENT_SECRET_BASIC ->
             require(clientSecret != null) {
-                "smart.clients: client '${c.property("clientId").getString()}' declares client_secret_basic but has no clientSecret"
+                "smart.clients: client '${
+          c.property("clientId").getString()
+        }' declares client_secret_basic but has no clientSecret"
             }
+
         TokenEndpointAuthMethod.NONE -> Unit
     }
 
@@ -96,6 +104,7 @@ fun initEnvironment(config: ApplicationConfig): Environment {
                 issuerBaseUrl = config.property("smart.issuerBaseUrl").getString(),
                 fhirServerUrl = config.property("smart.fhirServerUrl").getString(),
                 clients = config.configList("smart.clients").map { c -> smartClient(c) },
+                smartKeys = SmartKeys(rsaKeyString = config.property("auth.serverJwk").getString()),
             ),
         valkey =
             ValkeyConfig(

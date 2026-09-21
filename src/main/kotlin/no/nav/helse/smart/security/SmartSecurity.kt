@@ -20,7 +20,7 @@ fun Application.configureSmartSecurity() {
         jwt("smart-access-token") {
             realm = "fhir"
             verifier(
-                JWT.require(SmartKeys.algorithm)
+                JWT.require(env.smart.smartKeys.algorithm)
                     .withIssuer(env.smart.issuerBaseUrl)
                     .withAudience(env.smart.fhirServerUrl)
                     .build()

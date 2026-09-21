@@ -357,10 +357,18 @@ fun Application.configureSmartRouting() {
                         ctx.scope,
                         now,
                         expiresAt,
+                        env.smart.smartKeys,
                     )
                 val idToken =
                     if (SmartScope.Other("openid") in grantedScopes)
-                        buildIdToken(issuerUrl, ctx, grantedScopes, now, expiresAt)
+                        buildIdToken(
+                            issuerUrl,
+                            ctx,
+                            grantedScopes,
+                            now,
+                            expiresAt,
+                            env.smart.smartKeys,
+                        )
                     else null
 
                 val hasLaunchContext = SmartScope.Other("launch") in grantedScopes
@@ -382,7 +390,7 @@ fun Application.configureSmartRouting() {
             }
             get("/jwks") {
                 call.respondText(
-                    """{"keys": [${SmartKeys.jwk.toPublicJWK().toJSONString()}]}""",
+                    """{"keys": [${env.smart.smartKeys.jwk.toPublicJWK().toJSONString()}]}""",
                     ContentType.Application.Json,
                 )
             }
@@ -451,13 +459,14 @@ private fun buildAccessToken(
     grantedScope: String,
     now: Date,
     expiresAt: Date,
+    smartKeys: SmartKeys,
 ): String =
     JWT.create()
         .withHeader(mapOf("typ" to "at+jwt"))
         .withIssuer(issuerUrl)
         .withAudience(fhirServerUrl) // RFC 9068 2.2: resource server(s) this token is valid for
         .withSubject(ctx.subject)
-        .withKeyId(SmartKeys.keyId)
+        .withKeyId(smartKeys.keyId)
         .withIssuedAt(now)
         .withExpiresAt(expiresAt)
         .withJWTId(
@@ -466,7 +475,7 @@ private fun buildAccessToken(
         .withClaim("scope", grantedScope)
         .withClaim("patient", ctx.launch.patientId)
         .withClaim("encounter", ctx.launch.encounterId)
-        .sign(SmartKeys.algorithm)
+        .sign(smartKeys.algorithm)
 
 private fun buildIdToken(
     issuerUrl: String,
@@ -474,6 +483,7 @@ private fun buildIdToken(
     grantedScopes: Set<SmartScope>,
     now: Date,
     expiresAt: Date,
+    smartKeys: SmartKeys,
 ): String =
     JWT.create()
         .apply {
@@ -487,4 +497,4 @@ private fun buildIdToken(
         .withSubject(ctx.subject)
         .withIssuedAt(now)
         .withExpiresAt(expiresAt)
-        .sign(SmartKeys.algorithm)
+        .sign(smartKeys.algorithm)
