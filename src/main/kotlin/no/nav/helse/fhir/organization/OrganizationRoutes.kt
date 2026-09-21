@@ -15,6 +15,7 @@ fun Route.organizationRoutes(
     val log = logger()
     route("/fhir") {
         get("/Organization/{organizationId}") {
+            // TODO: add scope check
             // call.requireFhirScope("fhiruser", Interaction.READ)
             val organizationId = call.organizationId()
             val organization =
