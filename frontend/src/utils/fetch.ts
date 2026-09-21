@@ -9,3 +9,7 @@ export async function fetchKonsultasjoner(patientId: string) {
     res.json(),
   );
 }
+
+export async function fetchKonsultasjon(konsultasjonId: string) {
+  return await fetch(`/api/konsultasjon/${konsultasjonId}`).then((res) => res.json());
+}

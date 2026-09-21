@@ -1,12 +1,18 @@
-import { Button, Link, Textarea, UNSAFE_Combobox } from '@navikt/ds-react'
+import { Button, Heading, Link, Table, Textarea, UNSAFE_Combobox } from '@navikt/ds-react'
 import {createFileRoute, useNavigate} from '@tanstack/react-router'
 import { useEffect, useState, type MouseEvent } from 'react'
 import { epjDiagnoser } from '@data/diagnoses'
 import {getSykInnUrl} from "@utils/env.ts";
+import { fetchKonsultasjon } from '@utils/fetch';
+import { KonsultasjonSchema } from '@utils/mapping/epj';
 
 export const Route = createFileRoute(
     '/patients/$patientId/konsultasjon/$konsultasjonId/',
 )({
+      loader: async ({ params }) => {
+        const konsultasjon = await fetchKonsultasjon(params.konsultasjonId);
+        return { konsultasjon };
+      },
     component: RouteComponent,
 })
 
@@ -20,6 +26,10 @@ type PostKonsultasjonBody = {
 function RouteComponent() {
     const navigate = useNavigate()
     const { patientId, konsultasjonId } = Route.useParams();
+    const data = Route.useLoaderData();
+    const konsultasjon = KonsultasjonSchema.safeParse(
+        data.konsultasjon,
+      );
     const [diagnoser, setDiagnoser] = useState<{ kode: string, system: string, beskrivelse: string }[]>([])
     const [journalnotat, setJournalnotat] = useState<string>('')
     const [saveError, setSaveError] = useState<string | null>(null)
@@ -71,25 +81,54 @@ function RouteComponent() {
     return (
         <div className="flex flex-col gap-4 items-start">
             {saveError && <div className="text-red-600">{saveError}</div>}
-            <form className="flex flex-col gap-4 items-start max-w-sm">
-                <UNSAFE_Combobox
-                    label="Hvilke diagnoser har pasienten"
-                    options={diagnoseOptions}
-                    isMultiSelect
-                    onToggleSelected={(option, isSelected) => handleToggleSelect(option, isSelected)}
+            {konsultasjon.data?.status === 'PÅGÅENDE' && (
+                <div>
+                    <form className="flex flex-col gap-4 items-start max-w-sm">
+                        <UNSAFE_Combobox
+                            label="Hvilke diagnoser har pasienten"
+                            options={diagnoseOptions}
+                            isMultiSelect
+                            onToggleSelected={(option, isSelected) => handleToggleSelect(option, isSelected)}
 
-                />
-                <Textarea label="Journalnotat" onChange={(e) => setJournalnotat(e.target.value)} value={journalnotat} />
-                <div className="flex flex-row gap-4">
-                    <Button onClick={(e) => handleSubmit(e, false)}>Lagre konsultasjon</Button>
-                    <Button variant={'secondary'} onClick={(e) => handleSubmit(e, true)}>Fullfør konsultasjon</Button>
+                        />
+                        <Textarea label="Journalnotat" onChange={(e) => setJournalnotat(e.target.value)} value={journalnotat} />
+                        <div className="flex flex-row gap-4">
+                            <Button onClick={(e) => handleSubmit(e, false)}>Lagre konsultasjon</Button>
+                            <Button variant={'secondary'} onClick={(e) => handleSubmit(e, true)}>Fullfør konsultasjon</Button>
+                        </div>
+                    </form>
+
+                    <div className="flex flex-row gap-4">
+                        <Button onClick={() => { navigate({ to: `/patients/$patientId/konsultasjon/$konsultasjonId/sykmelding`, params: { patientId, konsultasjonId } }) }}>Start sykmelding (not implemented)</Button>
+                        <Link href={`/fhir/launch?url=${getSykInnUrl()}`} target="_blank" > åpne sykmelding i ny fane </Link>
+                        <Button onClick={() => { navigate({ to: `/patients/$patientId/konsultasjon/$konsultasjonId/validator`, params: { patientId, konsultasjonId } }) }}>Start valideringsapp</Button>
+                    </div>
                 </div>
-            </form>
-
-            <div className="flex flex-row gap-4">
-                <Button onClick={() => { navigate({ to: `/patients/$patientId/konsultasjon/$konsultasjonId/sykmelding`, params: { patientId, konsultasjonId } }) }}>Start sykmelding (not implemented)</Button>
-                <Link href={`/fhir/launch?url=${getSykInnUrl()}`} target="_blank" > åpne sykmelding i ny fane </Link>
-                <Button onClick={() => { navigate({ to: `/patients/$patientId/konsultasjon/$konsultasjonId/validator`, params: { patientId, konsultasjonId } }) }}>Start valideringsapp</Button>
-            </div>
+            )}
+            {konsultasjon.data?.status === 'FULLFØRT' && (
+                <div>
+                    <p>Starttidspunkt: {konsultasjon.data.startetTidspunkt}</p>
+                    <p>Sluttidspunkt: {konsultasjon.data.avsluttetTidspunkt}</p>
+                    <p>Diagnoser: {konsultasjon.data.diagnoser.map(d => d.beskrivelse).join(', ')}</p>
+                </div>
+            )}
+            <Heading size="medium" level="2">Journalnotater</Heading>
+            {konsultasjon.success && (
+                <Table>
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.HeaderCell>Notat</Table.HeaderCell>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+                        {konsultasjon.data.journalnotat.map((journalnotat, index) => (
+                            <Table.Row key={index}>
+                                <Table.DataCell>{journalnotat.journalnotat}</Table.DataCell>
+                            </Table.Row>
+                        ))}
+                   
+                    </Table.Body>
+                </Table>
+            )}
         </div>)
 }
