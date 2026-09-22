@@ -15,12 +15,13 @@ import no.nav.helse.core.Environment
  */
 fun Application.configureSmartSecurity() {
     val env: Environment by dependencies
+    val smartKeys: SmartKeys by dependencies
 
     authentication {
         jwt("smart-access-token") {
             realm = "fhir"
             verifier(
-                JWT.require(SmartKeys.algorithm)
+                JWT.require(smartKeys.algorithm)
                     .withIssuer(env.smart.issuerBaseUrl)
                     .withAudience(env.smart.fhirServerUrl)
                     .build()

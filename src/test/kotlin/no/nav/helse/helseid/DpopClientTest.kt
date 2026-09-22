@@ -47,6 +47,7 @@ internal class DpopClientTest {
                                         ),
                                 )
                             ),
+                        privateKeyJwk = "unused-in-this-test",
                     ),
                 valkey = ValkeyConfig("valkey", 8080, false, null, null),
                 epj = EpjConfig(baseUrl = "testurl"),

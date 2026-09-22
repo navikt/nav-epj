@@ -27,6 +27,7 @@ class SmartConfig(
     val issuerBaseUrl: String,
     val fhirServerUrl: String,
     val clients: List<SmartClient>,
+    val privateKeyJwk: String,
 )
 
 private fun smartClient(c: ApplicationConfig): SmartClient {
@@ -96,6 +97,7 @@ fun initEnvironment(config: ApplicationConfig): Environment {
                 issuerBaseUrl = config.property("smart.issuerBaseUrl").getString(),
                 fhirServerUrl = config.property("smart.fhirServerUrl").getString(),
                 clients = config.configList("smart.clients").map { c -> smartClient(c) },
+                privateKeyJwk = config.property("smart.privateKeyJwk").getString(),
             ),
         valkey =
             ValkeyConfig(

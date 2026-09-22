@@ -23,6 +23,7 @@ import no.nav.helse.fhir.practitionerrole.PractitionerRoleService
 import no.nav.helse.smart.security.ClientAssertionVerifier
 import no.nav.helse.smart.security.ClientJwksSetProvider
 import no.nav.helse.smart.security.RemoteClientJwksSetProvider
+import no.nav.helse.smart.security.SmartKeys
 import no.nav.helse.smart.valkey.ValkeyService
 import no.nav.helse.smart.valkey.createGlideClient
 import no.nav.helse.smart.valkey.createGlideClientConfiguration
@@ -37,6 +38,7 @@ fun Application.configureDependencies() {
         provide(ValkeyService::class)
         provide<ClientJwksSetProvider> { RemoteClientJwksSetProvider() }
         provide(ClientAssertionVerifier::class)
+        provide<SmartKeys> { SmartKeys(resolve<Environment>().smart.privateKeyJwk) }
 
         provide(PasientRepository::class)
         provide(HelsepersonellRepository::class)

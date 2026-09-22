@@ -23,12 +23,12 @@ dpop:
   clientJwk: ${HELSE_ID_CLIENT_JWK}
 
 auth:
-  serverJwk: ${PRIVATE_KEY_JWK}
   helseId:
     wellKnownUrl: ${WONDERWALL_OPENID_WELL_KNOWN_URL}
     clientId: ${WONDERWALL_OPENID_CLIENT_ID}
 
 smart:
+  privateKeyJwk: ${PRIVATE_KEY_JWK}
   issuerBaseUrl: ${SMART_ISSUER_BASE_URL}
   fhirServerUrl: ${FHIR_SERVER_URL}
   clients:

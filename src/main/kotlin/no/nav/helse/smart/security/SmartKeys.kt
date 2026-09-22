@@ -13,17 +13,13 @@ import java.util.*
  * This app's own RSA signing key for SMART access/id tokens, exposed as a public JWK at
  * `/oidc/jwks` (step 5).
  *
- * Generated fresh in memory once per process; never persisted or shared. Fine for a single instance
- * that both issues (`/oidc/token`) and verifies ([configureSmartSecurity]) tokens.
- *
- * TODO Kubernetes: each replica would generate its own key, so tokens issued by one could not be
- * verified by another (nor would its `/oidc/jwks` list the other's key).
+ * Sourced from the `smart.privateKeyJwk` config value (backed by a nais secret in production),
+ * shared across all replicas. Used to both issue (`/oidc/token`) and verify
+ * ([configureSmartSecurity]) tokens.
  */
-internal object SmartKeys {
-    private val rsaKey = JWK.parse(System.getenv("PRIVATE_KEY_JWK")!!).toRSAKey()
+class SmartKeys(privateKeyJwk: String) {
+    private val rsaKey = JWK.parse(privateKeyJwk).toRSAKey()
     private val keyPair = rsaKey.toKeyPair()
-
-    // KeyPairGenerator.getInstance("RSA").apply { initialize(2048) }.genKeyPair()
 
     /** JOSE `kid`, so a verifier holding multiple keys can pick the right one. */
     val keyId: String = rsaKey.keyID
