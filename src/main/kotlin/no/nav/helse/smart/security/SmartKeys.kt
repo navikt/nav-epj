@@ -7,7 +7,6 @@ import com.nimbusds.jose.jwk.KeyUse
 import com.nimbusds.jose.jwk.RSAKey
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
-import java.util.*
 
 /**
  * This app's own RSA signing key for SMART access/id tokens, exposed as a public JWK at
