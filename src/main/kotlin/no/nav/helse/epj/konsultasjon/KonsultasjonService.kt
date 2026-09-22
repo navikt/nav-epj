@@ -65,7 +65,7 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
         val opprettKonsultasjon =
             OpprettKonsultasjon(
                 pasientId = pasientId,
-                hpr = listOf(hpr), // TODO: send inn liste med hpr i funksjonen - ikke kun en
+                hpr = listOf(hpr),
                 startetTidspunkt = LocalDateTime.now(),
                 status = KonsultasjonStatus.PÅGÅENDE,
             )
