@@ -67,10 +67,12 @@ fun Route.documentReferenceRoutes(
             val bodyWithReplacement = body.replace("\"NO-nb\"", "\"no-NO\"")
             val documentReference =
                 fhirjson.decodeFromString(bodyWithReplacement) as DocumentReference
+
+            // TODO: scope should be UPDATE. Requires scope DocumentReference.u in syk-inn
             val principal = call.requireFhirScope("DocumentReference", Interaction.CREATE)
             principal.requirePatientMatch(
                 "DocumentReference",
-                Interaction.UPDATE,
+                Interaction.CREATE,
                 documentReference.subject?.reference?.value?.substringAfter("Patient/"),
             )
 
