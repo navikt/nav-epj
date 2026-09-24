@@ -19,7 +19,6 @@ fun Route.helsepersonellRoutes(
         route("/helsepersonell") {
             get("/me") {
                 val principal = loggedInUser()
-                // TODO: connect legekontor to logged in user
                 legekontorService.insertIfNotExists(Legekontor.DEFAULT.id.value)
                 val hpr = HelsepersonellHpr(principal.hpr)
                 val loggedInUser =

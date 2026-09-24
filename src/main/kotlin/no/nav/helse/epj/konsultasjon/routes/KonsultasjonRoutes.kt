@@ -23,7 +23,9 @@ fun Route.konsultasjonRoutes(
         route("/patients/{patientId}/konsultasjoner") {
             get {
                 val pasientId = call.patientId()
+                val principal = loggedInUser()
                 val konsultasjoner = konsultasjonService.getKonsultasjoner(pasientId)
+                valkeyService.setActivePatient(principal.hpr, pasientId.value.toString())
                 call.respond(konsultasjoner)
             }
             post {

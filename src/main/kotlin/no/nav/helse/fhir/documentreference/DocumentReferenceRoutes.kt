@@ -67,6 +67,7 @@ fun Route.documentReferenceRoutes(
             val bodyWithReplacement = body.replace("\"NO-nb\"", "\"no-NO\"")
             val documentReference =
                 fhirjson.decodeFromString(bodyWithReplacement) as DocumentReference
+
             val principal = call.requireFhirScope("DocumentReference", Interaction.CREATE)
             principal.requirePatientMatch(
                 "DocumentReference",
