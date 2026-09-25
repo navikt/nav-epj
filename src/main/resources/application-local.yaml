@@ -16,14 +16,6 @@ database:
 epj:
   baseUrl: "http://localhost:8080"
 
-persontjensten:
-  baseUrl: "https://et.persontjenesten.test.nhn.no/api/v3"
-
-dpop:
-  helseidTokenAuthUrl: "https://helseid-sts.test.nhn.no/connect/authorize"
-  clientId: "clientId"
-  clientJwk: "clientJwk"
-
 smart:
   privateKeyJwk: '{"kty": "RSA", "n": "2UcYcoM08P6gVXTAG82nRlNWo4tm1loqEnKMwq--UzJ3yUWeFNJcqDSWbWM7I1KnPIqihIB2Dm4mhT8AGN-WmUfVDVQN7EZkSwyS-9RkG7BgDPjLT1-PFmdaZ3gLYkm454bryKonmGfE3GFCUzFfAtCsjlFQYoHgBcq1-tDiE1hRKCu62W7ybMZU8ClUpI1PJFLEolMwtk_lHGAjk4_yW4CJo2yynsdPLl22_R1x-ZGIsgE3xGPushI9fNOutFgmO9gU4uFRQscqvmVhw5LUwv6t96M44DmPAhzV3PFoh8y3N-9YIBA8hXvKi_NpDinS1oHVfarOoKNQzBAkO1Reuw", "e": "AQAB", "d": "FJ8WxueFAspn1TR7dygRlC8crfDxFa8BBzcv_NpJKgREMioVUsyUVrKHBGLCnhueG7Tcr86xZbU2mrbb_4BY_rs-kUFFAQO9SRIscRI7XhVjSFfkk-fx4KJ2hhNyoSV2EyNPBYCAuYo_uNrSPKsW5WGAvxEgm_jPlj0jAGcKzeMLGt5xRzuNmVZESkBn1IzSchzbrzvxbLVHagRs3plg2sxjg_7R6fn6s4xrYgvJPlCLfkspr34umrW93Iqu_qNgSzKm_h1OUyZ2DQj89fDiHikIpIXT6UOPUZBhh0ctvTfSD6Sh0zu5Qg7x_8zOXNw-J3GDx_yjanRKRlWOjwF3QQ", "p": "-S1Wrk8OQCTnDOrFZC9BWBHuLMUusVh4jwX-BoXwnKLIp5OBmjTqfKGOm20FJ4fiGzFh6bh2sLhikPWv_G-NiTrWRjiuW5xv8AqX2IyEqTw4Cxpkd2asD_V8r1MOj6Fw7OHWXEaHAyT0UDTSC_ZMYnH3Bs5viU_kJUYB6GlzyRM", "q": "3zomsxPPSy-DL6JrQxAv2syeTfDp3K9i8AuwW9FGdP54Z7ninuI2MFONyx8xWAWdPndLLf-_4ekLWXXUsWQjZJguVPi3I7o6iMIAKPNRAeoVNs2A61QJ7sl4BKOKEdh3Jg6zrP9WVUp13C6uMrb0hx_nsNMaiK_AILb1LFJJsLk", "dp": "VKwhbm4Sy50-nlcQ6HBeZg0BwFjo-v6zSPaiUZkmIDP4t2kae0pL_Dnx-cLcI4i7Pr5TJVa3jmm5pMS4HrHRiLZjpc0RArRwHUOcQcvOMKvz52H6jdBn26xxyCoTIp-bfgNoEkctDdZ65t5sGgCCCFnttXRk1mY9gqT9dPqQi90", "dq": "mCiLOIXIRveb9FxBwPTHqdzQC1CsGEF0rytIi02bOSQ77nhGgQaw6UAK5uncOKObC3lFRZWOte6kTdaDpGcduPQCoOjn7PKD87RJZ6BzF1r4GuL5fW9LVfj-VisjcgabMNXUo5dowbp_nBY1p1wOUgztYRqEe6dQzvvnIs70bAE", "qi": "zKqgE0ETD8yv6yJVw4x6a6XM8J8yhPlD9xJMwM9Ig1rouDIX4KkaWDWCXDA1odQtO-rjEz-2jwZpNnCpOgjNqwwLE7ziSeQ46LPUMpGZnfaXa31AkzmuScaFQOfG9Te_yOIyiDAiV_ZPl4Ks2nCb3DYJwWO7PqHGaHD2OA9JHac", "alg": "RS256", "use": "sig", "kid": "local-dev-668b1a59"}'
   issuerBaseUrl: "http://localhost:8080/oidc"
