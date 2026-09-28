@@ -30,9 +30,12 @@ class PasientRepository {
         patient?.toPasient(hpr)
     }
 
-    suspend fun findByFnr(fnr: String) = dbQuery {
-        logger.info("Looking up pasient by fnr")
-        val patient = PasientTable.selectAll().where { PasientTable.fnr eq fnr }.singleOrNull()
+    suspend fun findByPersonident(personident: String) = dbQuery {
+        logger.info("Looking up pasient by personident")
+        val patient =
+            PasientTable.selectAll()
+                .where { PasientTable.personident eq personident }
+                .singleOrNull()
         val patientId = patient?.get(PasientTable.id) ?: return@dbQuery null
 
         val hpr =
@@ -81,7 +84,10 @@ class PasientRepository {
             it[legekontorId] = pasient.legekontorId.value
             it[fornavn] = pasient.fornavn
             it[etternavn] = pasient.etternavn
-            it[fnr] = pasient.fnr
+            it[personident] = pasient.personident
+            it[personidentType] = pasient.personidentType
+            it[birthDate] = pasient.birthDate
+            it[gender] = pasient.gender
         }
 
         pasient.hprNumbers.forEach { it ->
@@ -100,6 +106,9 @@ class PasientRepository {
             hprNumbers = hpr,
             fornavn = this[PasientTable.fornavn],
             etternavn = this[PasientTable.etternavn],
-            fnr = this[PasientTable.fnr],
+            personident = this[PasientTable.personident],
+            personidentType = this[PasientTable.personidentType],
+            birthDate = this[PasientTable.birthDate],
+            gender = this[PasientTable.gender],
         )
 }

@@ -16,8 +16,8 @@ class PasientService(private val pasientRepository: PasientRepository) {
         return pasientRepository.findById(id.value)
     }
 
-    suspend fun getPasientByFnr(fnr: String): Pasient? {
-        return pasientRepository.findByFnr(fnr)
+    suspend fun getPasientByPersonident(personident: String): Pasient? {
+        return pasientRepository.findByPersonident(personident)
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -29,9 +29,13 @@ class PasientService(private val pasientRepository: PasientRepository) {
                 hprNumbers = listOf(HelsepersonellHpr(hpr)),
                 fornavn = request.fornavn,
                 etternavn = request.etternavn,
-                fnr = request.fnr,
+                personident = request.personident,
+                personidentType = request.personidentType,
+                birthDate = request.birthDate,
+                gender = request.gender,
             )
         pasientRepository.insert(newPasient)
-        return pasientRepository.findByFnr(request.fnr) ?: throw PasientCreationException()
+        return pasientRepository.findByPersonident(request.personident)
+            ?: throw PasientCreationException()
     }
 }

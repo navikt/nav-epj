@@ -45,7 +45,8 @@ function RouteComponent() {
           <Table.Row>
             <Table.HeaderCell>Fornavn</Table.HeaderCell>
             <Table.HeaderCell>Etternavn</Table.HeaderCell>
-            <Table.HeaderCell>Fødselsnummer</Table.HeaderCell>
+            <Table.HeaderCell>Identitetstype</Table.HeaderCell>
+            <Table.HeaderCell>Personident</Table.HeaderCell>
             <Table.HeaderCell />
           </Table.Row>
         </Table.Header>
@@ -54,7 +55,8 @@ function RouteComponent() {
             <Table.Row key={patient.id}>
               <Table.DataCell>{patient.fornavn}</Table.DataCell>
               <Table.DataCell>{patient.etternavn}</Table.DataCell>
-              <Table.DataCell>{patient.fnr}</Table.DataCell>
+              <Table.DataCell>{patient.personidentType ?? "Ukjent"}</Table.DataCell>
+              <Table.DataCell>{patient.personident}</Table.DataCell>
               <Table.DataCell>
                 <Link className="aksel-link" to="/patients/$patientId" params={{ patientId: patient.id }}>
                   Gå til pasient

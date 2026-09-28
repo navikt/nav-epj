@@ -1,5 +1,6 @@
 package no.nav.helse.epj.pasient
 
+import java.time.LocalDate
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.uuid.ExperimentalUuidApi
@@ -22,7 +23,10 @@ class PasientRepositoryTest : WithPostgresql() {
     private fun nyPasient(
         id: PasientId = PasientId(Uuid.generateV4()),
         hpr: HelsepersonellHpr = HelsepersonellHpr("123"),
-        fnr: String = "fnr-${id.value}",
+        personident: String = "personident-${id.value}",
+        personidentType: PersonidentType = PersonidentType.FNR,
+        birthDate: LocalDate = LocalDate.of(1980, 1, 2),
+        gender: AdministrativeGender = AdministrativeGender.FEMALE,
     ) =
         Pasient(
             id = id,
@@ -30,7 +34,10 @@ class PasientRepositoryTest : WithPostgresql() {
             hprNumbers = listOf(hpr),
             fornavn = "fornavn",
             etternavn = "etternavn",
-            fnr = fnr,
+            personident = personident,
+            personidentType = personidentType,
+            birthDate = birthDate,
+            gender = gender,
         )
 
     @OptIn(ExperimentalUuidApi::class)
@@ -47,24 +54,53 @@ class PasientRepositoryTest : WithPostgresql() {
         val funnet = pasientRepository.findById(pasient.id.value)
 
         assertEquals(pasient.id, funnet?.id)
-        assertEquals(pasient.fnr, funnet?.fnr)
+        assertEquals(pasient.personident, funnet?.personident)
+        assertEquals(pasient.personidentType, funnet?.personidentType)
+        assertEquals(pasient.birthDate, funnet?.birthDate)
+        assertEquals(pasient.gender, funnet?.gender)
         assertEquals(pasient.fornavn, funnet?.fornavn)
         assertEquals(pasient.etternavn, funnet?.etternavn)
     }
 
     @Test
-    fun `findByFnr returns null when fnr does not exist`() = runTest {
-        assertNull(pasientRepository.findByFnr("finnes-ikke"))
+    fun `findByPersonident returns null when personident does not exist`() = runTest {
+        assertNull(pasientRepository.findByPersonident("finnes-ikke"))
     }
 
     @Test
-    fun `findByFnr returns patient with the correct fnr`() = runTest {
-        val pasient = nyPasient(fnr = "12345678910")
+    fun `findByPersonident returns patient with FNR demographics`() = runTest {
+        val pasient = nyPasient(personident = "12345678910")
         pasientRepository.insert(pasient)
 
-        val funnet = pasientRepository.findByFnr("12345678910")
+        val funnet = pasientRepository.findByPersonident("12345678910")
 
-        assertEquals(pasient.id, funnet?.id)
+        assertEquals(pasient, funnet)
+    }
+
+    @Test
+    fun `findByPersonident returns patient with DNR demographics`() = runTest {
+        val pasient =
+            nyPasient(
+                personident = "45128012345",
+                personidentType = PersonidentType.DNR,
+                birthDate = LocalDate.of(1980, 12, 5),
+                gender = AdministrativeGender.MALE,
+            )
+        pasientRepository.insert(pasient)
+
+        val funnet = pasientRepository.findByPersonident("45128012345")
+
+        assertEquals(pasient, funnet)
+    }
+
+    @Test
+    fun `legacy patient remains readable without invented demographics`() = runTest {
+        val legacyPatient = pasientRepository.findByPersonident("21914897936")
+
+        assertEquals("21914897936", legacyPatient?.personident)
+        assertNull(legacyPatient?.personidentType)
+        assertNull(legacyPatient?.birthDate)
+        assertNull(legacyPatient?.gender)
     }
 
     @Test

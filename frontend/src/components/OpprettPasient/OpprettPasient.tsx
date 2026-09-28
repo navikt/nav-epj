@@ -1,4 +1,4 @@
-import { Alert, Button, Heading, TextField } from "@navikt/ds-react"
+import { Alert, Button, Heading, Select, TextField } from "@navikt/ds-react"
 import { OpprettPasientSchema, type OpprettPasientRequest, type Pasient } from "@utils/mapping/epj";
 import { useState } from "react";
 
@@ -18,7 +18,10 @@ async function opprettPasient(request: OpprettPasientRequest): Promise<Pasient> 
 export const OpprettPasient = ({lastPasienter}: { lastPasienter: () => void}) => {
     const [fornavn, setFornavn] = useState("");
     const [etternavn, setEtternavn] = useState("");
-    const [fnr, setFnr] = useState("");
+    const [personident, setPersonident] = useState("");
+    const [personidentType, setPersonidentType] = useState("");
+    const [birthDate, setBirthDate] = useState("");
+    const [gender, setGender] = useState("");
     const [feilmelding, setFeilmelding] = useState<string | null>(null);
     const [lagrer, setLagrer] = useState(false);
 
@@ -26,7 +29,14 @@ export const OpprettPasient = ({lastPasienter}: { lastPasienter: () => void}) =>
         e.preventDefault();
         setFeilmelding(null);
 
-        const parsed = OpprettPasientSchema.safeParse({ fornavn, etternavn, fnr });
+        const parsed = OpprettPasientSchema.safeParse({
+            fornavn,
+            etternavn,
+            personident,
+            personidentType,
+            birthDate,
+            gender,
+        });
         if (!parsed.success) {
             setFeilmelding(parsed.error.issues[0].message);
             return;
@@ -37,7 +47,10 @@ export const OpprettPasient = ({lastPasienter}: { lastPasienter: () => void}) =>
             await opprettPasient(parsed.data);
             setFornavn("");
             setEtternavn("");
-            setFnr("");
+            setPersonident("");
+            setPersonidentType("");
+            setBirthDate("");
+            setGender("");
             lastPasienter();
         } catch {
             setFeilmelding("Kunne ikke opprette pasient. Sjekk at fødselsnummeret ikke allerede finnes.");
@@ -65,11 +78,37 @@ export const OpprettPasient = ({lastPasienter}: { lastPasienter: () => void}) =>
                         onChange={(e) => setEtternavn(e.target.value)}
                     />
                 </div>
+                <Select
+                    label="Identitetstype"
+                    value={personidentType}
+                    onChange={(e) => setPersonidentType(e.target.value)}
+                >
+                    <option value="">Velg identitetstype</option>
+                    <option value="FNR">Fødselsnummer</option>
+                    <option value="DNR">D-nummer</option>
+                </Select>
                 <TextField
-                    label="Fødselsnummer"
-                    value={fnr}
-                    onChange={(e) => setFnr(e.target.value)}
+                    label="Personident"
+                    value={personident}
+                    onChange={(e) => setPersonident(e.target.value)}
                 />
+                <TextField
+                    label="Fødselsdato"
+                    type="date"
+                    value={birthDate}
+                    onChange={(e) => setBirthDate(e.target.value)}
+                />
+                <Select
+                    label="Administrativt kjønn"
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                >
+                    <option value="">Velg kjønn</option>
+                    <option value="FEMALE">Kvinne</option>
+                    <option value="MALE">Mann</option>
+                    <option value="OTHER">Annet</option>
+                    <option value="UNKNOWN">Ukjent</option>
+                </Select>
                 <Button type="submit" loading={lagrer}>
                     Opprett pasient
                 </Button>

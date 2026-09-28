@@ -43,7 +43,7 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
                 legekontorId = Legekontor.DEFAULT.id,
                 fornavn = "fornavn",
                 etternavn = "etternavn",
-                fnr = "fnr-${pasientId.value}",
+                personident = "personident-${pasientId.value}",
                 hprNumbers = listOf(hpr),
             )
         )
@@ -69,7 +69,7 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
                 legekontorId = Legekontor.DEFAULT.id,
                 fornavn = "fornavn",
                 etternavn = "etternavn",
-                fnr = "fnr",
+                personident = "personident",
                 hprNumbers = listOf(hpr),
             )
         )

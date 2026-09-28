@@ -41,7 +41,7 @@ class PatientService(val epjPatientService: PasientService) {
                 listOf(
                     Identifier(
                         system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.1"),
-                        value = com.google.fhir.model.r4.String(value = this.fnr),
+                        value = com.google.fhir.model.r4.String(value = this.personident),
                     )
                 ),
             name =

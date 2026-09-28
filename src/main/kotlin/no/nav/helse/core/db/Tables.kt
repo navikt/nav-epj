@@ -1,7 +1,10 @@
 package no.nav.helse.core.db
 
 import no.nav.helse.core.utils.KonsultasjonStatus
+import no.nav.helse.epj.pasient.AdministrativeGender
+import no.nav.helse.epj.pasient.PersonidentType
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.javatime.date
 import org.jetbrains.exposed.v1.javatime.datetime
 
 object PasientTable : Table("pasient") {
@@ -9,7 +12,11 @@ object PasientTable : Table("pasient") {
     val legekontorId = reference("legekontor_id", refColumn = LegekontorTable.id)
     val fornavn = text("fornavn")
     val etternavn = text("etternavn")
-    val fnr = text("fnr")
+    val personident = text("personident")
+    val personidentType =
+        enumerationByName<PersonidentType>("personident_type", length = 3).nullable()
+    val birthDate = date("birth_date").nullable()
+    val gender = enumerationByName<AdministrativeGender>("gender", length = 7).nullable()
     val created = datetime("created_at")
     val updated = datetime("updated_at")
 }
