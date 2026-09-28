@@ -77,7 +77,7 @@ class PasientRepository {
     }
 
     suspend fun insert(pasient: Pasient) = dbQuery {
-        logger.info("Inserting pasient: ${pasient}")
+        logger.info("Inserting pasient with id: ${pasient.id.value}")
 
         PasientTable.insertIgnore {
             it[id] = pasient.id.value

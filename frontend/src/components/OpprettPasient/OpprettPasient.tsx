@@ -53,7 +53,7 @@ export const OpprettPasient = ({lastPasienter}: { lastPasienter: () => void}) =>
             setGender("");
             lastPasienter();
         } catch {
-            setFeilmelding("Kunne ikke opprette pasient. Sjekk at fødselsnummeret ikke allerede finnes.");
+            setFeilmelding("Kunne ikke opprette pasient. Sjekk at fødselsnummeret eller d-nummeret ikke allerede finnes.");
         } finally {
             setLagrer(false);
         }
@@ -88,7 +88,7 @@ export const OpprettPasient = ({lastPasienter}: { lastPasienter: () => void}) =>
                     <option value="DNR">D-nummer</option>
                 </Select>
                 <TextField
-                    label="Personident"
+                    label="Fødselsnummer eller D-nummer"
                     value={personident}
                     onChange={(e) => setPersonident(e.target.value)}
                 />
@@ -103,7 +103,7 @@ export const OpprettPasient = ({lastPasienter}: { lastPasienter: () => void}) =>
                     value={gender}
                     onChange={(e) => setGender(e.target.value)}
                 >
-                    <option value="">Velg kjønn</option>
+                    <option value="">Velg administrativt kjønn</option>
                     <option value="FEMALE">Kvinne</option>
                     <option value="MALE">Mann</option>
                     <option value="OTHER">Annet</option>

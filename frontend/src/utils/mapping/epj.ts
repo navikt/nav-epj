@@ -32,12 +32,12 @@ export const OpprettPasientSchema = z.object({
     etternavn: z.string().min(1, "Etternavn er påkrevd"),
     personident: z
         .string()
-        .regex(/^\d{11}$/, "Personident må bestå av 11 siffer"),
-    personidentType: z.enum(["FNR", "DNR"]),
+        .regex(/^\d{11}$/, "Fødselsnummer eller D-nummer må bestå av 11 siffer"),
+    personidentType: z.enum(["FNR", "DNR"], "Velg om det er fødselsnummer eller D-nummer"),
     birthDate: z
         .string()
         .regex(/^\d{4}-\d{2}-\d{2}$/, "Fødselsdato må være en gyldig dato"),
-    gender: z.enum(["FEMALE", "MALE", "OTHER", "UNKNOWN"]),
+    gender: z.enum(["FEMALE", "MALE", "OTHER", "UNKNOWN"], "Velg administrativt kjønn"),
 });
 
 export type OpprettPasientRequest = z.infer<typeof OpprettPasientSchema>;

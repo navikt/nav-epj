@@ -13,6 +13,7 @@ import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.LegekontorNotfoundException
 import no.nav.helse.core.utils.PasientCreationException
 import no.nav.helse.core.utils.UgyldigDiagnoseException
+import no.nav.helse.core.utils.UgyldigPersonidentException
 import no.nav.helse.core.utils.logger
 import no.nav.helse.fhir.security.InsufficientScopeException
 import no.nav.helse.fhir.security.PatientMismatchException
@@ -53,6 +54,12 @@ fun Application.configureStatusPages() {
         exception<UgyldigDiagnoseException> { call, cause ->
             call.respondText(
                 text = "Ugyldig diagnose: ${cause.message}",
+                status = HttpStatusCode.BadRequest,
+            )
+        }
+        exception<UgyldigPersonidentException> { call, cause ->
+            call.respondText(
+                text = "Ugyldig personident: ${cause.message}",
                 status = HttpStatusCode.BadRequest,
             )
         }

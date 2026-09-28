@@ -6,12 +6,18 @@ import io.mockk.mockk
 import io.mockk.slot
 import java.time.LocalDate
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlinx.coroutines.test.runTest
+import no.nav.helse.core.utils.UgyldigPersonidentException
 import org.junit.Test
 
 class PasientServiceTest {
     private val repository = mockk<PasientRepository>()
     private val service = PasientService(repository)
+
+    // Valid synthetic FNR for 1985-06-15 (modulus-11 checksum: 15068500017).
+    private val validFnr = "15068500017"
+    private val validBirthDate = LocalDate.of(1985, 6, 15)
 
     @Test
     fun `createPasient persists complete demographics`() = runTest {
@@ -20,9 +26,9 @@ class PasientServiceTest {
             OpprettPasientRequest(
                 fornavn = "Kari",
                 etternavn = "Nordmann",
-                personident = "12345678910",
+                personident = validFnr,
                 personidentType = PersonidentType.FNR,
-                birthDate = LocalDate.of(1980, 1, 2),
+                birthDate = validBirthDate,
                 gender = AdministrativeGender.FEMALE,
             )
         coEvery { repository.insert(capture(inserted)) } returns Unit
@@ -36,5 +42,41 @@ class PasientServiceTest {
         assertEquals(request.gender, created.gender)
         coVerify(exactly = 1) { repository.insert(any()) }
         coVerify(exactly = 1) { repository.findByPersonident(request.personident) }
+    }
+
+    @Test
+    fun `createPasient rejects invalid personident without inserting`() = runTest {
+        val request =
+            OpprettPasientRequest(
+                fornavn = "Kari",
+                etternavn = "Nordmann",
+                personident = "00000000000",
+                personidentType = PersonidentType.FNR,
+                birthDate = validBirthDate,
+                gender = AdministrativeGender.FEMALE,
+            )
+
+        assertFailsWith<UgyldigPersonidentException> { service.createPasient(request, "123") }
+
+        coVerify(exactly = 0) { repository.insert(any()) }
+        coVerify(exactly = 0) { repository.findByPersonident(any()) }
+    }
+
+    @Test
+    fun `createPasient rejects birth date mismatch without inserting`() = runTest {
+        val request =
+            OpprettPasientRequest(
+                fornavn = "Kari",
+                etternavn = "Nordmann",
+                personident = validFnr,
+                personidentType = PersonidentType.FNR,
+                birthDate = validBirthDate.plusDays(1),
+                gender = AdministrativeGender.FEMALE,
+            )
+
+        assertFailsWith<UgyldigPersonidentException> { service.createPasient(request, "123") }
+
+        coVerify(exactly = 0) { repository.insert(any()) }
+        coVerify(exactly = 0) { repository.findByPersonident(any()) }
     }
 }

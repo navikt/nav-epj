@@ -22,6 +22,12 @@ class PasientService(private val pasientRepository: PasientRepository) {
 
     @OptIn(ExperimentalUuidApi::class)
     suspend fun createPasient(request: OpprettPasientRequest, hpr: String): Pasient {
+        PersonidentValidator.validate(
+            personident = request.personident,
+            personidentType = request.personidentType,
+            birthDate = request.birthDate,
+        )
+
         val newPasient =
             Pasient(
                 id = PasientId(Uuid.generateV4()),
