@@ -58,6 +58,11 @@ flow.
 Read [this guide](./docs/smart-client-authentication-guide.md) for instructions and code examples on
 how to make your SMART on FHIR application work with nav-epj.
 
+### SMART on FHIR Hackathon track
+
+Read [the track contract matrix](./docs/smart-hackathon-contract.md) for the mapping between the
+published hackathon track and this repository's endpoints, cohort data, and acceptance tests.
+
 ### Finding new available dependencies
 ``` bash
 ./gradlew dependencyUpdates
