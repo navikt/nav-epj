@@ -34,40 +34,42 @@ import no.nav.helse.fhir.practitionerrole.PractitionerRoleService
 import no.nav.helse.fhir.practitionerrole.practitionerRoleRoutes
 
 fun Application.configureFhirModule() {
-    val conditionService: ConditionService by dependencies
-    val encounterService: EncounterService by dependencies
-    val observationService: ObservationService by dependencies
-    val organizationService: OrganizationService by dependencies
-    val patientService: PatientService by dependencies
-    val practitionerService: PractitionerService by dependencies
-    val practitionerRoleService: PractitionerRoleService by dependencies
-    val documentReferenceService: DocumentReferenceService by dependencies
-    val environment: Environment by dependencies
+    routing { fhirRoutes() }
+}
+
+fun Route.fhirRoutes() {
+    val conditionService: ConditionService by application.dependencies
+    val encounterService: EncounterService by application.dependencies
+    val observationService: ObservationService by application.dependencies
+    val organizationService: OrganizationService by application.dependencies
+    val patientService: PatientService by application.dependencies
+    val practitionerService: PractitionerService by application.dependencies
+    val practitionerRoleService: PractitionerRoleService by application.dependencies
+    val documentReferenceService: DocumentReferenceService by application.dependencies
+    val environment: Environment by application.dependencies
     val fhirJson = FhirR4Json()
     val fhirContentType = ContentType("application", "fhir+json")
 
-    routing {
-        capabilityStatementRoutes(fhirJson, fhirContentType)
-        authenticate("smart-access-token") {
-            conditionRoutes(conditionService, fhirJson, fhirContentType)
-            encounterRoutes(encounterService, fhirJson, fhirContentType)
-            observationRoutes(
-                observationService,
-                fhirJson,
-                fhirContentType,
-                environment.smart.fhirServerUrl,
-            )
-            organizationRoutes(organizationService, fhirJson, fhirContentType)
-            patientRoutes(patientService, fhirJson, fhirContentType)
-            pracitionerRoutes(practitionerService, fhirJson, fhirContentType)
-            practitionerRoleRoutes(practitionerRoleService, fhirJson, fhirContentType)
-            documentReferenceRoutes(
-                documentReferenceService,
-                fhirJson,
-                fhirContentType,
-                environment.smart.fhirServerUrl,
-            )
-        }
+    capabilityStatementRoutes(fhirJson, fhirContentType)
+    authenticate("smart-access-token") {
+        conditionRoutes(conditionService, fhirJson, fhirContentType)
+        encounterRoutes(encounterService, fhirJson, fhirContentType)
+        observationRoutes(
+            observationService,
+            fhirJson,
+            fhirContentType,
+            environment.smart.fhirServerUrl,
+        )
+        organizationRoutes(organizationService, fhirJson, fhirContentType)
+        patientRoutes(patientService, fhirJson, fhirContentType)
+        pracitionerRoutes(practitionerService, fhirJson, fhirContentType)
+        practitionerRoleRoutes(practitionerRoleService, fhirJson, fhirContentType)
+        documentReferenceRoutes(
+            documentReferenceService,
+            fhirJson,
+            fhirContentType,
+            environment.smart.fhirServerUrl,
+        )
     }
 }
 
