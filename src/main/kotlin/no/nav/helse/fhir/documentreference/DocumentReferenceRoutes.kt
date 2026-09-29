@@ -167,7 +167,7 @@ fun Route.documentReferenceRoutes(
             val principal = call.requireFhirScope("DocumentReference", Interaction.CREATE)
             principal.requirePatientMatch(
                 "DocumentReference",
-                Interaction.UPDATE,
+                Interaction.CREATE,
                 documentReference.subject?.reference?.value?.substringAfter("Patient/"),
             )
 

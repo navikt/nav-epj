@@ -526,4 +526,78 @@ class DocumentReferenceRoutesTest {
             documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>())
         }
     }
+
+    private fun crsScope() =
+        setOf(
+            documentReferenceScope(setOf(Interaction.CREATE, Interaction.READ, Interaction.SEARCH))
+        )
+
+    private fun putDocumentReferenceForOtherPatient(scopes: Set<SmartScope>) {
+        val boundPatientId = Uuid.generateV4().toString()
+        val otherPatientId = Uuid.generateV4().toString()
+        val documentReferenceId = Uuid.generateV4().toString()
+        coEvery {
+            documentReferenceService.createDocumentReference(any<DocumentReference>())
+        } returns true
+
+        testApp(scopes = scopes, boundPatient = boundPatientId) {
+            val response =
+                put("/fhir/DocumentReference/$documentReferenceId") {
+                    contentType(fhirContentType)
+                    setBody(
+                        fhirJson.encodeToString(
+                            sampleDocumentReference(documentReferenceId, otherPatientId)
+                        )
+                    )
+                }
+
+            assertEquals(HttpStatusCode.NotFound, response.status)
+        }
+        coVerify(exactly = 0) {
+            documentReferenceService.createDocumentReference(any<DocumentReference>())
+        }
+    }
+
+    @Test
+    fun `PUT DocumentReference with create-only patient scope rejects another patient and writes nothing`() {
+        putDocumentReferenceForOtherPatient(createScope())
+    }
+
+    @Test
+    fun `PUT DocumentReference with crs patient scope rejects another patient and writes nothing`() {
+        putDocumentReferenceForOtherPatient(crsScope())
+    }
+
+    @Test
+    fun `PUT DocumentReference with crs patient scope stores a document for the launched patient`() {
+        val patientId = Uuid.generateV4().toString()
+        val documentReferenceId = Uuid.generateV4().toString()
+        coEvery {
+            documentReferenceService.createDocumentReference(any<DocumentReference>())
+        } returns true
+
+        testApp(scopes = crsScope(), boundPatient = patientId) {
+            val response =
+                put("/fhir/DocumentReference/$documentReferenceId") {
+                    contentType(fhirContentType)
+                    setBody(
+                        fhirJson.encodeToString(
+                            sampleDocumentReference(documentReferenceId, patientId)
+                        )
+                    )
+                }
+
+            assertEquals(HttpStatusCode.OK, response.status)
+            assertEquals(
+                "application/fhir+json",
+                response.contentType()?.withoutParameters().toString(),
+            )
+            val body = response.bodyAsText()
+            assertEquals(true, body.contains(documentReferenceId))
+            assertEquals(true, body.contains("Patient/$patientId"))
+        }
+        coVerify(exactly = 1) {
+            documentReferenceService.createDocumentReference(any<DocumentReference>())
+        }
+    }
 }
