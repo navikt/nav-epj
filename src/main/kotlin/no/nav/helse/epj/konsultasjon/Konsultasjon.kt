@@ -33,6 +33,12 @@ data class Journalnotat(
     val journalnotat: String?,
 )
 
+data class OpprettJournalnotatRequest(
+    val pasientId: PasientId,
+    val konsultasjonId: KonsultasjonId,
+    val journalnotat: String,
+)
+
 data class OpprettKonsultasjon(
     val pasientId: PasientId,
     val hpr: List<HelsepersonellHpr>,

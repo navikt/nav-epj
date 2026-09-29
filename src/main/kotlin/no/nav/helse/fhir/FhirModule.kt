@@ -61,7 +61,12 @@ fun Application.configureFhirModule() {
             patientRoutes(patientService, fhirJson, fhirContentType)
             pracitionerRoutes(practitionerService, fhirJson, fhirContentType)
             practitionerRoleRoutes(practitionerRoleService, fhirJson, fhirContentType)
-            documentReferenceRoutes(documentReferenceService, fhirJson, fhirContentType)
+            documentReferenceRoutes(
+                documentReferenceService,
+                fhirJson,
+                fhirContentType,
+                environment.smart.fhirServerUrl,
+            )
         }
     }
 }

@@ -8,7 +8,10 @@ import no.nav.helse.core.db.KonsultasjonHelsepersonell
 import no.nav.helse.core.db.KonsultasjonTable
 import no.nav.helse.core.db.PasientTable
 import no.nav.helse.core.db.dbQuery
+import no.nav.helse.core.utils.DuplikatJournalnotatException
+import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonStatus
+import no.nav.helse.core.utils.KonsultasjonTilhorerAnnenPasientException
 import no.nav.helse.core.utils.UgyldigDiagnoseException
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.legekontor.LegekontorId
@@ -284,6 +287,61 @@ class KonsultasjonRepository {
             .where { (JournalnotatTable.id eq journalnotatId.value) }
             .singleOrNull()
             ?.toJournalnotat()
+    }
+
+    suspend fun listJournalnotat(
+        pasientId: PasientId,
+        konsultasjonId: KonsultasjonId?,
+    ): List<Journalnotat> = dbQuery {
+        JournalnotatTable.selectAll()
+            .where {
+                if (konsultasjonId != null) {
+                    (JournalnotatTable.pasientId eq pasientId.value) and
+                        (JournalnotatTable.konsultasjonId eq konsultasjonId.value)
+                } else {
+                    JournalnotatTable.pasientId eq pasientId.value
+                }
+            }
+            .map { it.toJournalnotat() }
+    }
+
+    suspend fun opprettJournalnotat(
+        id: JournalnotatId,
+        request: OpprettJournalnotatRequest,
+    ): Journalnotat = dbQuery {
+        val konsultasjonPasientId =
+            KonsultasjonTable.select(KonsultasjonTable.pasientId)
+                .where { KonsultasjonTable.id eq request.konsultasjonId.value }
+                .singleOrNull()
+                ?.get(KonsultasjonTable.pasientId)
+                ?: throw KonsultasjonNotFoundException(request.konsultasjonId)
+
+        if (konsultasjonPasientId != request.pasientId.value) {
+            throw KonsultasjonTilhorerAnnenPasientException(
+                request.konsultasjonId,
+                request.pasientId,
+            )
+        }
+
+        val insertedCount =
+            JournalnotatTable.insertIgnore {
+                    it[JournalnotatTable.id] = id.value
+                    it[JournalnotatTable.konsultasjonId] = request.konsultasjonId.value
+                    it[JournalnotatTable.pasientId] = request.pasientId.value
+                    it[JournalnotatTable.journalnotat] = request.journalnotat
+                }
+                .insertedCount
+
+        if (insertedCount == 0) {
+            throw DuplikatJournalnotatException()
+        }
+
+        Journalnotat(
+            id = id,
+            konsultasjonId = request.konsultasjonId,
+            pasientId = request.pasientId,
+            journalnotat = request.journalnotat,
+        )
     }
 
     fun ResultRow.toJournalnotat(): Journalnotat =

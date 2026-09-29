@@ -32,6 +32,8 @@ class DuplikatPasientException : RuntimeException("Pasienten finnes allerede")
 
 class DuplikatMaalingException : RuntimeException("Målingen finnes allerede")
 
+class DuplikatJournalnotatException : RuntimeException("Journalnotatet finnes allerede")
+
 class KonsultasjonTilhorerAnnenPasientException(
     konsultasjonId: KonsultasjonId,
     pasientId: PasientId,

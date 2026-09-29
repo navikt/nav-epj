@@ -1,6 +1,8 @@
 package no.nav.helse.epj.konsultasjon
 
 import java.time.LocalDateTime
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.KonsultasjonStatus
@@ -41,6 +43,19 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
         val insertedRows = konsultasjonRepository.insertJournalnotat(journalnotat)
 
         return insertedRows == 1
+    }
+
+    suspend fun getJournalnotater(
+        pasientId: PasientId,
+        konsultasjonId: KonsultasjonId?,
+    ): List<Journalnotat> {
+        return konsultasjonRepository.listJournalnotat(pasientId, konsultasjonId)
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    suspend fun opprettJournalnotat(request: OpprettJournalnotatRequest): Journalnotat {
+        val id = JournalnotatId(Uuid.generateV4())
+        return konsultasjonRepository.opprettJournalnotat(id, request)
     }
 
     suspend fun createKonsultasjon(opprettKonsultasjon: OpprettKonsultasjon): Konsultasjon {

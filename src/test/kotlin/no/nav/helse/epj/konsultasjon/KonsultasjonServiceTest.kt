@@ -202,4 +202,54 @@ class KonsultasjonServiceTest {
 
         assertEquals(false, konsultasjonService.createJournalnotat(journalnotat))
     }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `opprettJournalnotat assigns a server-generated id and delegates to the repository`() =
+        runTest {
+            val request =
+                OpprettJournalnotatRequest(
+                    pasientId = PasientId(Uuid.generateV4()),
+                    konsultasjonId = KonsultasjonId(Uuid.generateV4()),
+                    journalnotat = "notat",
+                )
+            val slot = mutableListOf<JournalnotatId>()
+            coEvery { konsultasjonRepository.opprettJournalnotat(capture(slot), request) } answers
+                {
+                    Journalnotat(
+                        id = slot.single(),
+                        konsultasjonId = request.konsultasjonId,
+                        pasientId = request.pasientId,
+                        journalnotat = request.journalnotat,
+                    )
+                }
+
+            val resultat = konsultasjonService.opprettJournalnotat(request)
+
+            assertEquals(slot.single(), resultat.id)
+            assertEquals(request.pasientId, resultat.pasientId)
+            assertEquals(request.konsultasjonId, resultat.konsultasjonId)
+            assertEquals(request.journalnotat, resultat.journalnotat)
+        }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `getJournalnotater delegates to the repository with the given patient and encounter filter`() =
+        runTest {
+            val pasientId = PasientId(Uuid.generateV4())
+            val konsultasjonId = KonsultasjonId(Uuid.generateV4())
+            val journalnotat =
+                Journalnotat(
+                    id = JournalnotatId(Uuid.generateV4()),
+                    konsultasjonId = konsultasjonId,
+                    pasientId = pasientId,
+                    journalnotat = "notat",
+                )
+            coEvery { konsultasjonRepository.listJournalnotat(pasientId, konsultasjonId) } returns
+                listOf(journalnotat)
+
+            val resultat = konsultasjonService.getJournalnotater(pasientId, konsultasjonId)
+
+            assertEquals(listOf(journalnotat), resultat)
+        }
 }
