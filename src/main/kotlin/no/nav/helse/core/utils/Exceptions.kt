@@ -29,3 +29,13 @@ class UgyldigDiagnoseException(kode: String, system: String) :
 class UgyldigPersonidentException(message: String) : RuntimeException(message)
 
 class DuplikatPasientException : RuntimeException("Pasienten finnes allerede")
+
+class DuplikatMaalingException : RuntimeException("Målingen finnes allerede")
+
+class KonsultasjonTilhorerAnnenPasientException(
+    konsultasjonId: KonsultasjonId,
+    pasientId: PasientId,
+) :
+    RuntimeException(
+        "Konsultasjon med id=${konsultasjonId.value} tilhører ikke pasient med id=${pasientId.value}"
+    )

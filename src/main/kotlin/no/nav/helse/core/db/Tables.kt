@@ -1,6 +1,7 @@
 package no.nav.helse.core.db
 
 import no.nav.helse.core.utils.KonsultasjonStatus
+import no.nav.helse.epj.maaling.MaalingStatus
 import no.nav.helse.epj.pasient.AdministrativeGender
 import no.nav.helse.epj.pasient.PersonidentType
 import org.jetbrains.exposed.v1.core.Table
@@ -92,4 +93,20 @@ object KonsultasjonHelsepersonell : Table("konsultasjon_helsepersonell") {
 object PasientHelsepersonell : Table("pasient_helsepersonell") {
     val pasientId = reference("pasient_id", refColumn = PasientTable.id)
     val hpr = text("hpr")
+}
+
+object MaalingTable : Table("maaling") {
+    val id = uuid("id")
+    val pasientId = reference("pasient_id", refColumn = PasientTable.id)
+    val konsultasjonId = reference("konsultasjon_id", refColumn = KonsultasjonTable.id)
+    val hpr = text("hpr").nullable()
+    val loincKode = text("loinc_kode")
+    val loincVisningsnavn = text("loinc_visningsnavn")
+    val verdi = decimal("verdi", precision = 12, scale = 4)
+    val enhetKode = text("enhet_kode")
+    val enhetVisningsnavn = text("enhet_visningsnavn")
+    val effektivTidspunkt = datetime("effektiv_tidspunkt")
+    val status = enumerationByName<MaalingStatus>("status", length = 20)
+    val created = datetime("created_at")
+    val updated = datetime("updated_at")
 }

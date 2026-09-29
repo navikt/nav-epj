@@ -10,6 +10,8 @@ import no.nav.helse.epj.konsultasjon.KonsultasjonRepository
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
 import no.nav.helse.epj.legekontor.LegekontorRepository
 import no.nav.helse.epj.legekontor.LegekontorService
+import no.nav.helse.epj.maaling.MaalingRepository
+import no.nav.helse.epj.maaling.MaalingService
 import no.nav.helse.epj.pasient.PasientRepository
 import no.nav.helse.epj.pasient.PasientService
 import no.nav.helse.fhir.condition.ConditionService
@@ -43,11 +45,13 @@ fun Application.configureDependencies() {
         provide(HelsepersonellRepository::class)
         provide(KonsultasjonRepository::class)
         provide(LegekontorRepository::class)
+        provide(MaalingRepository::class)
 
         provide(HelsepersonellService::class)
         provide(KonsultasjonService::class)
         provide(PasientService::class)
         provide(LegekontorService::class)
+        provide(MaalingService::class)
 
         provide(ConditionService::class)
         provide(DocumentReferenceService::class)
