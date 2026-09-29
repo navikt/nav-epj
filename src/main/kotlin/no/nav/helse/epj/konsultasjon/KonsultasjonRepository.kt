@@ -236,8 +236,6 @@ class KonsultasjonRepository {
                 Diagnose.from(diagnose.system, diagnose.kode)
                     ?: throw UgyldigDiagnoseException(diagnose.kode, diagnose.system.toString())
 
-            // Persist the katalog's canonical code, not the client-supplied one, so equivalent
-            // codes with different formatting (e.g. ICD10 with/without dots) are not stored twice.
             KonsultasjonDiagnosekodeTable.insertIgnore {
                     it[KonsultasjonDiagnosekodeTable.konsultasjonId] = konsultasjonId
                     it[diagnosekode] = kodeverkDiagnose.code
@@ -306,10 +304,6 @@ class KonsultasjonRepository {
             diagnoser = diagnoseListe,
         )
 
-    /**
-     * The official display text is resolved from `no.nav.tsm.diagnoser` rather than persisted,
-     * since the catalogue is the single source of truth for diagnosis text.
-     */
     fun ResultRow.toDiagnose(): Diagnose {
         val system = this[KonsultasjonDiagnosekodeTable.diagnosesystem]
         val kode = this[KonsultasjonDiagnosekodeTable.diagnosekode]

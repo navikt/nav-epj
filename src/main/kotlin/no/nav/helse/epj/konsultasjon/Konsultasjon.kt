@@ -45,8 +45,4 @@ data class OppdaterKonsultasjonRequest(
     val ferdigstill: Boolean,
 )
 
-/**
- * A selected diagnosis code for a konsultasjon. The official display text is resolved from
- * `no.nav.tsm.diagnoser` at write time; client-supplied text is never trusted or stored.
- */
 data class OpprettDiagnoseRequest(val kode: String, val system: DiagnoseType)
