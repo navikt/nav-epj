@@ -1,7 +1,8 @@
 package no.nav.helse.smart.security
 
-import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSHeader
+import com.nimbusds.jose.jwk.source.ImmutableJWKSet
+import com.nimbusds.jose.jwk.source.JWKSource
 import com.nimbusds.jose.proc.JWSVerificationKeySelector
 import com.nimbusds.jose.proc.SecurityContext
 import com.nimbusds.jwt.JWTClaimsSet
@@ -21,7 +22,6 @@ import no.nav.helse.core.Environment
 import no.nav.helse.core.utils.logger
 import no.nav.helse.smart.valkey.ValkeyService
 
-private val SUPPORTED_ALGORITHMS = setOf(JWSAlgorithm.RS384, JWSAlgorithm.ES384)
 private const val MAX_ASSERTION_LIFETIME_SECONDS = 300L
 
 class ClientAssertionVerifier(
@@ -32,25 +32,34 @@ class ClientAssertionVerifier(
     private val log = logger()
 
     suspend fun verify(client: SmartClient, params: Parameters): ErrorObject? {
-        val jwksUri = client.jwksUri ?: return invalidClient("client has no registered jwks_uri")
+        val jwkSource =
+            jwkSourceFor(client) ?: return invalidClient("client has no registered jwks material")
         val jwt =
             extractAssertion(params, client.clientId)
                 ?: return invalidClient("invalid client_assertion")
-        validateHeader(jwt.header, jwksUri)?.let {
+        validateHeader(jwt.header, client)?.let {
             return it
         }
         val claims =
-            verifyClaims(client, jwt, jwksUri)
+            verifyClaims(client, jwt, jwkSource)
                 ?: return invalidClient("client_assertion verification failed")
         return validateLifetime(claims) ?: claimJti(client.clientId, claims)
     }
 
+    /**
+     * An inline registered JWK Set (never fetched) takes precedence over a remote `jwksUri`, so a
+     * deployed `nav-epj` never has to reach a participant's localhost.
+     */
+    private fun jwkSourceFor(client: SmartClient): JWKSource<SecurityContext>? =
+        client.inlineJwkSet?.let { ImmutableJWKSet(it) }
+            ?: client.jwksUri?.let { jwkSetProvider.sourceFor(it) }
+
     private suspend fun verifyClaims(
         client: SmartClient,
         jwt: SignedJWT,
-        jwksUri: String,
+        jwkSource: JWKSource<SecurityContext>,
     ): JWTClaimsSet? {
-        val processor = buildProcessor(client, jwksUri)
+        val processor = buildProcessor(client, jwkSource)
         return runCatching { withContext(Dispatchers.IO) { processor.process(jwt, null) } }
             .onFailure {
                 log.warn(
@@ -75,11 +84,11 @@ class ClientAssertionVerifier(
 
     private fun buildProcessor(
         client: SmartClient,
-        jwksUri: String,
+        jwkSource: JWKSource<SecurityContext>,
     ): DefaultJWTProcessor<SecurityContext> =
         DefaultJWTProcessor<SecurityContext>().apply {
             jwsKeySelector =
-                JWSVerificationKeySelector(SUPPORTED_ALGORITHMS, jwkSetProvider.sourceFor(jwksUri))
+                JWSVerificationKeySelector(SUPPORTED_CLIENT_ASSERTION_ALGORITHMS, jwkSource)
             jwtClaimsSetVerifier =
                 DefaultJWTClaimsVerifier(
                     "${env.smart.issuerBaseUrl}/token",
@@ -105,12 +114,12 @@ class ClientAssertionVerifier(
         return invalidClient("client_assertion jti already used")
     }
 
-    private fun validateHeader(header: JWSHeader, jwksUri: String): ErrorObject? =
+    private fun validateHeader(header: JWSHeader, client: SmartClient): ErrorObject? =
         listOfNotNull(
                 validateType(header),
                 validateKid(header),
                 validateAlgorithm(header),
-                validateJku(header, jwksUri),
+                validateJku(header, client),
             )
             .firstOrNull()
 
@@ -122,12 +131,18 @@ class ClientAssertionVerifier(
         if (header.keyID != null) null else invalidClient("client_assertion missing kid")
 
     private fun validateAlgorithm(header: JWSHeader): ErrorObject? =
-        if (header.algorithm in SUPPORTED_ALGORITHMS) null
+        if (header.algorithm in SUPPORTED_CLIENT_ASSERTION_ALGORITHMS) null
         else invalidClient("unsupported client_assertion alg ${header.algorithm.name}")
 
-    private fun validateJku(header: JWSHeader, jwksUri: String): ErrorObject? =
+    /**
+     * A `jku` header claim is only meaningful for a client registered with a remote `jwksUri`, and
+     * even then must match exactly what was registered. A client registered with an inline JWK Set
+     * has no `jwksUri` to compare against, so any `jku` on its assertions is rejected rather than
+     * trusted.
+     */
+    private fun validateJku(header: JWSHeader, client: SmartClient): ErrorObject? =
         header.jwkurl?.let { jku ->
-            if (jku.toString() == jwksUri) null
+            if (client.jwksUri != null && jku.toString() == client.jwksUri) null
             else invalidClient("client_assertion jku does not match registered jwks_uri")
         }
 
