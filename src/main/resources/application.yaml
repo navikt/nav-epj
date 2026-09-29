@@ -38,6 +38,7 @@ smart:
         - patient/Patient.rs
         - patient/Encounter.rs
         - patient/Condition.rs
+        - patient/Observation.rs
         - patient/DocumentReference.crs
     - clientId: "NAV_SMART_on_FHIR_validator"
       redirectUris: [ "https://nav-on-fhir.ekstern.dev.nav.no" ]
@@ -56,6 +57,7 @@ smart:
         - patient/Organization.rs
         - patient/Encounter.rs
         - patient/Condition.rs
+        - patient/Observation.rs
         - patient/DocumentReference.cruds
         - patient/Binary.cruds
         - patient/QuestionnaireResponse.cruds
