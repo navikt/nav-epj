@@ -4,10 +4,15 @@ import com.google.fhir.model.r4.Bundle
 import com.google.fhir.model.r4.Code
 import com.google.fhir.model.r4.CodeableConcept
 import com.google.fhir.model.r4.Coding
+import com.google.fhir.model.r4.DateTime
 import com.google.fhir.model.r4.Encounter
 import com.google.fhir.model.r4.Enumeration
+import com.google.fhir.model.r4.FhirDateTime
+import com.google.fhir.model.r4.Period
 import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.Uri
+import kotlinx.datetime.UtcOffset
+import kotlinx.datetime.toKotlinLocalDateTime
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.oid
 import no.nav.helse.epj.konsultasjon.Konsultasjon
@@ -97,12 +102,26 @@ class EncounterService(val konsultasjonService: KonsultasjonService) {
                             )
                     )
                 },
-            serviceProvider =
-                Reference(
-                    reference =
-                        com.google.fhir.model.r4.String(
-                            value = "Organization/aed5c75c-3b12-4652-83d7-223bdd69062d" // TODO hent
-                        )
+            period =
+                Period(
+                    start =
+                        DateTime(
+                            value =
+                                FhirDateTime.DateTime(
+                                    this.startetTidspunkt.toKotlinLocalDateTime(),
+                                    UtcOffset.ZERO,
+                                )
+                        ),
+                    end =
+                        this.avsluttetTidspunkt?.let {
+                            DateTime(
+                                value =
+                                    FhirDateTime.DateTime(
+                                        it.toKotlinLocalDateTime(),
+                                        UtcOffset.ZERO,
+                                    )
+                            )
+                        },
                 ),
             status = Enumeration(value = status),
             `class` =

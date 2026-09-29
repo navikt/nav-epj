@@ -21,6 +21,8 @@ import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
 import no.nav.tsm.diagnoser.Diagnose
 import no.nav.tsm.diagnoser.DiagnoseType
+import no.nav.tsm.diagnoser.ICD10
+import no.nav.tsm.diagnoser.ICPC2
 import org.junit.Test
 
 class ConditionServiceTest {
@@ -73,6 +75,14 @@ class ConditionServiceTest {
                     condition.encounter?.reference?.value,
                 )
             }
+            assertEquals(
+                "urn:oid:${ICPC2.OID}",
+                conditions[0].code?.coding?.single()?.system?.value,
+            )
+            assertEquals(
+                "urn:oid:${ICD10.OID}",
+                conditions[1].code?.coding?.single()?.system?.value,
+            )
         }
 
     @OptIn(ExperimentalUuidApi::class)
