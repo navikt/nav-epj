@@ -10,6 +10,7 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import java.time.LocalDate
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -91,28 +92,37 @@ class PasientRoutesTest {
 
     @Test
     fun `POST patient with invalid personident returns 400`() = testApp {
+        val personident = "00000000000"
         coEvery { pasientService.createPasient(any(), any()) } throws
-            UgyldigPersonidentException("Personident har ugyldig kontrollsiffer")
+            UgyldigPersonidentException("Personident $personident har ugyldig kontrollsiffer")
 
         val response =
             post("/api/patient") {
                 contentType(ContentType.Application.Json)
-                setBody(opprettPasientJson("00000000000", "1985-06-15"))
+                setBody(opprettPasientJson(personident, "1985-06-15"))
             }
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
+        val body = response.bodyAsText()
+        assertEquals("Ugyldig personident", body)
+        assertFalse(body.contains(personident))
+        assertFalse(body.contains("kontrollsiffer"))
     }
 
     @Test
     fun `POST patient with a duplicate personident returns 409`() = testApp {
+        val personident = "15068500017"
         coEvery { pasientService.createPasient(any(), any()) } throws DuplikatPasientException()
 
         val response =
             post("/api/patient") {
                 contentType(ContentType.Application.Json)
-                setBody(opprettPasientJson("15068500017", "1985-06-15"))
+                setBody(opprettPasientJson(personident, "1985-06-15"))
             }
 
         assertEquals(HttpStatusCode.Conflict, response.status)
+        val body = response.bodyAsText()
+        assertEquals("Pasienten finnes allerede", body)
+        assertFalse(body.contains(personident))
     }
 }

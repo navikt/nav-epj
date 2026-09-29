@@ -2,6 +2,7 @@ package no.nav.helse.epj.pasient
 
 import java.time.LocalDate
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import no.nav.helse.core.utils.UgyldigPersonidentException
 import org.junit.Test
 
@@ -120,6 +121,25 @@ class PersonidentValidatorTest {
                 birthDate = LocalDate.of(1987, 7, 14),
             )
         }
+    }
+
+    @Test
+    fun `rejects an individual number with no valid century mapping without leaking it`() {
+        // Individual number 750 falls in the gap between the 500-749 (year>=54) and
+        // 900-999 (year>=40) rules, and year 40 excludes the 500-999&&year<=39 rule, so no
+        // century resolves for any of these combinations.
+        val personident = "01014075069"
+
+        val exception =
+            assertFailsWith<UgyldigPersonidentException> {
+                PersonidentValidator.validate(
+                    personident = personident,
+                    personidentType = PersonidentType.FNR,
+                    birthDate = LocalDate.of(1940, 1, 1),
+                )
+            }
+
+        assertFalse(exception.message.orEmpty().contains("750"))
     }
 
     @Test

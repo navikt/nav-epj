@@ -50,7 +50,7 @@ object PersonidentValidator {
         val century =
             resolveCentury(individualNumber, twoDigitYear)
                 ?: throw UgyldigPersonidentException(
-                    "Fant ikke noe gyldig århundre for individnummer $individualNumber"
+                    "Fant ikke noe gyldig århundre for individnummeret i personidenten"
                 )
 
         val encodedBirthDate =
