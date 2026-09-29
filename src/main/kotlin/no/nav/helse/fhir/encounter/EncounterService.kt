@@ -129,6 +129,13 @@ class EncounterService(val konsultasjonService: KonsultasjonService) {
                     code = Code(value = "VR"),
                     system = Uri(value = "http://terminology.hl7.org/CodeSystem/v3-ActCode"),
                 ),
+            serviceProvider =
+                this.legekontorId?.let {
+                    Reference(
+                        reference =
+                            com.google.fhir.model.r4.String(value = "Organization/${it.value}")
+                    )
+                },
         )
     }
 }

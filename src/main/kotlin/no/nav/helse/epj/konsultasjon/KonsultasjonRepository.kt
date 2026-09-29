@@ -6,10 +6,12 @@ import no.nav.helse.core.db.JournalnotatTable
 import no.nav.helse.core.db.KonsultasjonDiagnosekodeTable
 import no.nav.helse.core.db.KonsultasjonHelsepersonell
 import no.nav.helse.core.db.KonsultasjonTable
+import no.nav.helse.core.db.PasientTable
 import no.nav.helse.core.db.dbQuery
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.UgyldigDiagnoseException
 import no.nav.helse.core.utils.logger
+import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.tsm.diagnoser.Diagnose
 import org.jetbrains.exposed.v1.core.ResultRow
@@ -92,9 +94,14 @@ class KonsultasjonRepository {
     }
 
     suspend fun insert(opprettKonsultasjon: OpprettKonsultasjon) = dbQuery {
+        val legekontorId =
+            PasientTable.select(PasientTable.legekontorId)
+                .where { PasientTable.id eq opprettKonsultasjon.pasientId.value }
+                .single()[PasientTable.legekontorId]
         val konsultasjon =
             KonsultasjonTable.insertReturning {
                     it[pasientId] = opprettKonsultasjon.pasientId.value
+                    it[KonsultasjonTable.legekontorId] = legekontorId
                     it[startetTidspunkt] = opprettKonsultasjon.startetTidspunkt
                     it[status] = opprettKonsultasjon.status
                 }
@@ -295,6 +302,7 @@ class KonsultasjonRepository {
         Konsultasjon(
             id = KonsultasjonId(this[KonsultasjonTable.id]),
             pasientId = PasientId(this[KonsultasjonTable.pasientId]),
+            legekontorId = this[KonsultasjonTable.legekontorId]?.let { LegekontorId(it) },
             hpr = hprListe,
             startetTidspunkt = this[KonsultasjonTable.startetTidspunkt],
             avsluttetTidspunkt = this[KonsultasjonTable.avsluttetTidspunkt],

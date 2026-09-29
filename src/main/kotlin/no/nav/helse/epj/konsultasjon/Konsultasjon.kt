@@ -4,6 +4,7 @@ import java.time.LocalDateTime
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
+import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.tsm.diagnoser.Diagnose
 import no.nav.tsm.diagnoser.DiagnoseType
@@ -15,6 +16,7 @@ import no.nav.tsm.diagnoser.DiagnoseType
 data class Konsultasjon(
     val id: KonsultasjonId,
     val pasientId: PasientId,
+    val legekontorId: LegekontorId? = null,
     val hpr: List<String>,
     val journalnotat: List<Journalnotat>,
     val diagnoser: List<Diagnose>,

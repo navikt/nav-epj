@@ -16,6 +16,7 @@ import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.konsultasjon.Konsultasjon
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
+import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.fhir.patient.PatientInputId
 import no.nav.tsm.diagnoser.Diagnose
@@ -33,6 +34,7 @@ class EncounterServiceTest {
     private fun konsultasjon(
         id: KonsultasjonId = KonsultasjonId(Uuid.generateV4()),
         pasientId: PasientId = PasientId(Uuid.generateV4()),
+        legekontorId: LegekontorId? = null,
         hpr: List<String> = emptyList(),
         diagnoser: List<Diagnose> = emptyList(),
         status: KonsultasjonStatus = KonsultasjonStatus.PÅGÅENDE,
@@ -42,6 +44,7 @@ class EncounterServiceTest {
         Konsultasjon(
             id = id,
             pasientId = pasientId,
+            legekontorId = legekontorId,
             hpr = hpr,
             journalnotat = emptyList(),
             diagnoser = diagnoser,
@@ -94,6 +97,23 @@ class EncounterServiceTest {
             val encounter = encounterService.getEncounterById(EncounterId(konsultasjonId.value))
 
             assertNull(encounter.serviceProvider)
+        }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `getEncounterById maps serviceProvider when the konsultasjon has an organization`() =
+        runTest {
+            val konsultasjonId = KonsultasjonId(Uuid.generateV4())
+            val legekontorId = LegekontorId(Uuid.generateV4())
+            coEvery { konsultasjonService.getKonsultasjon(konsultasjonId) } returns
+                konsultasjon(id = konsultasjonId, legekontorId = legekontorId)
+
+            val encounter = encounterService.getEncounterById(EncounterId(konsultasjonId.value))
+
+            assertEquals(
+                "Organization/${legekontorId.value}",
+                encounter.serviceProvider?.reference?.value,
+            )
         }
 
     @OptIn(ExperimentalUuidApi::class)

@@ -44,6 +44,7 @@ object HelsepersonellTable : Table("helsepersonell") {
 object KonsultasjonTable : Table("konsultasjon") {
     val id = uuid("id")
     val pasientId = reference("pasient_id", refColumn = PasientTable.id)
+    val legekontorId = reference("legekontor_id", refColumn = LegekontorTable.id).nullable()
     val startetTidspunkt = datetime("startet_tidspunkt")
     val avsluttetTidspunkt = datetime("avsluttet_tidspunkt")
     val status = enumerationByName<KonsultasjonStatus>("status", 20)
