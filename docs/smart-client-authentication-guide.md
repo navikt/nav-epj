@@ -2,20 +2,21 @@
 
 `nav-epj` is the authorization server for the SMART on FHIR launch flow. Every registered client
 authenticates itself at the token endpoint (`POST /oidc/token`) using one of the methods listed in
-`tokenEndpointAuthMethodsSupported` in the discovery document
+`token_endpoint_auth_methods_supported` in the discovery document
 (`GET /fhir/.well-known/smart-configuration`).
 
 ## Supported methods
 
-| `tokenEndpointAuthMethodsSupported` | Client config                        | Verification                                                                                          |
-|-------------------------------------|--------------------------------------|-------------------------------------------------------------------------------------------------------|
-| `none`                              | no `clientSecret` / `jwksUri` needed | public client, no authentication (PKCE only)                                                          |
-| `client_secret_basic`               | `clientSecret`                       | HTTP Basic auth, constant-time comparison                                                             |
-| `private_key_jwt`                   | `jwksUri` or `jwkSet`                | Signed JWT assertion, verified against the client's published JWKS (`client-confidential-assymetric`) |
+| `token_endpoint_auth_methods_supported` | Client config                        | Verification                                                                                                            |
+|-----------------------------------------|--------------------------------------|-------------------------------------------------------------------------------------------------------------------------|
+| `none`                                  | no `clientSecret` / `jwksUri` needed | public client, no authentication (PKCE only)                                                                            |
+| `client_secret_basic`                   | `clientSecret`                       | HTTP Basic auth, constant-time comparison                                                                               |
+| `private_key_jwt`                       | `jwksUri` or `jwkSet`                | Signed JWT assertion, verified against the client's published JWKS or inline JWK Set (`client-confidential-asymmetric`) |
 
-### Future supported methods
+### Unsupported methods and grants
 
-`client_credentials` and `client_secret_post` auth are not implemented yet.
+`client_secret_post` is not implemented. The `client_credentials` grant is planned separately and
+will use `private_key_jwt`.
 
 ## Registering a client for `private_key_jwt`
 
@@ -33,7 +34,7 @@ smart:
     - clientId: "my-app"
       redirectUris: [ "https://my-app.example.com/fhir/callback" ]
       launchUris: [ "https://my-app.example.com/fhir/launch" ]
-      tokenEndpointAuthMethod: [ "private_key_jwt" ]
+      tokenEndpointAuthMethod: "private_key_jwt"
       jwksUri: "https://my-app.example.com/fhir/jwks.json"
 ```
 
@@ -48,28 +49,28 @@ smart:
     - clientId: "team-01-private-key-jwt"
       redirectUris: [ "http://localhost:3000/callback" ]
       launchUris: [ "http://localhost:3000/launch" ]
-      tokenEndpointAuthMethod: [ "private_key_jwt" ]
+      tokenEndpointAuthMethod: "private_key_jwt"
       jwkSet: |
         {"keys":[{"kty":"EC","crv":"P-384","kid":"team-01-key-1","use":"sig","alg":"ES384","x":"...","y":"..."}]}
 ```
 
 `jwkSet` must contain **public** key material only. Registration fails startup if any key is
 private, has an unsupported type/curve (only RSA and EC P-384 are accepted, matching
-`tokenEndpointAuthSigningAlgValuesSupported`), declares a `use` other than `sig`, declares
+`token_endpoint_auth_signing_alg_values_supported`), declares a `use` other than `sig`, declares
 encryption/derivation `key_ops`, is missing a unique `kid`, or declares an `alg` outside `RS384`/
 `ES384`. A client may configure `jwksUri` or `jwkSet`, never both.
 
 Client implementation requirements:
 
-1. Generate an asymmetric key pair (RSA or EC) and publish the public key at `jwksUri` as a JWK Set
-   (`{"keys": [...]}`)
+1. Generate an asymmetric key pair (RSA or EC) and either publish the public key at `jwksUri` as a
+   JWK Set (`{"keys": [...]}`) or configure it inline under `jwkSet`
 2. Sign the client assertion with `RS384` or `ES384`
    (see [/fhir/.well-known/smart-configuration](../src/main/kotlin/no/nav/helse/smart/api/SmartRouting.kt)
-   `tokenEndpointAuthSigningAlgValuesSupported`)
+   `token_endpoint_auth_signing_alg_values_supported`)
 3. Set the JWS header:
     1. `alg`: `RS384` or `ES384`
     2. `typ`: JWT
-    3. `kid`: matching the `kid` of the key published at `jwksUri`
+    3. `kid`: matching the `kid` of the key published at `jwksUri` or registered in `jwkSet`
 4. Set the JWT claims:
     1. `iss` and `sub`: the client's `clientId`
     2. `aud`: the token endpoint URL (`{issuerBaseUrl}/token`)
