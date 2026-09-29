@@ -328,6 +328,8 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
         assertNotNull(konsultasjon.avsluttetTidspunkt)
         assertEquals(1, konsultasjon.journalnotat.size)
         assertEquals("oppdatert notat", konsultasjon.journalnotat.last().journalnotat)
+        assertEquals(1, konsultasjon.diagnoser.size)
+        assertEquals(konsultasjonId, konsultasjon.diagnoser.single().konsultasjonId)
     }
 
     @Test
@@ -493,4 +495,34 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
 
         assertEquals(2, lagredeDiagnoser.size)
     }
+
+    @Test
+    fun `listDiagnoser retains konsultasjonId for both patient and konsultasjon lookups`() =
+        runTest {
+            val hpr = HelsepersonellHpr("123")
+            val pasientId = opprettPasient(hpr = hpr)
+            val konsultasjonId =
+                konsultasjonRepository.insert(
+                    OpprettKonsultasjon(
+                        pasientId,
+                        listOf(hpr),
+                        LocalDateTime.now(),
+                        KonsultasjonStatus.PÅGÅENDE,
+                    )
+                )
+            val diagnose =
+                OpprettDiagnoseRequest(
+                    kode = "A01",
+                    system = DiagnoseSystem.ICPC2,
+                    beskrivelse = "",
+                )
+
+            konsultasjonRepository.updateDiagnose(diagnose, pasientId.value, konsultasjonId.value)
+
+            val diagnoserByPasient = konsultasjonRepository.listDiagnoser(pasientId)
+            val diagnoserByKonsultasjon = konsultasjonRepository.listDiagnoser(konsultasjonId)
+
+            assertEquals(konsultasjonId, diagnoserByPasient.single().konsultasjonId)
+            assertEquals(konsultasjonId, diagnoserByKonsultasjon.single().konsultasjonId)
+        }
 }

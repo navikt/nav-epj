@@ -298,6 +298,7 @@ class KonsultasjonRepository {
         Diagnose(
             id = DiagnoseId(this[DiagnoseTable.id]),
             pasientId = PasientId(this[patientId]),
+            konsultasjonId = KonsultasjonId(this[konsultasjonId]),
             kode = this[DiagnoseTable.diagnosekode],
             system = DiagnoseSystem.valueOf(this[DiagnoseTable.diagnosesystem]),
             beskrivelse = this[DiagnoseTable.beskrivelse],

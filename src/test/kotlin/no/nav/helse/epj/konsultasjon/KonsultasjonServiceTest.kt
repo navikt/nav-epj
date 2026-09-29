@@ -159,6 +159,28 @@ class KonsultasjonServiceTest {
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
+    fun `getDiagnoser by konsultasjonId returns diagnoser that retain their konsultasjonId`() =
+        runTest {
+            val konsultasjonId = KonsultasjonId(Uuid.generateV4())
+            val diagnose =
+                Diagnose(
+                    id = DiagnoseId(Uuid.generateV4()),
+                    pasientId = PasientId(Uuid.generateV4()),
+                    konsultasjonId = konsultasjonId,
+                    kode = "A01",
+                    system = DiagnoseSystem.ICPC2,
+                    beskrivelse = "Diagnose",
+                )
+            coEvery { konsultasjonRepository.listDiagnoser(konsultasjonId) } returns
+                listOf(diagnose)
+
+            val resultat = konsultasjonService.getDiagnoser(konsultasjonId)
+
+            assertEquals(konsultasjonId, resultat.single().konsultasjonId)
+        }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
     fun `createJournalnotat returns true when exactly one row is inserted`() = runTest {
         val journalnotat =
             Journalnotat(

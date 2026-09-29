@@ -54,6 +54,7 @@ data class OpprettDiagnoseRequest(
 data class Diagnose(
     val id: DiagnoseId,
     val pasientId: PasientId,
+    val konsultasjonId: KonsultasjonId,
     val kode: String,
     val system: DiagnoseSystem,
     val beskrivelse: String,
