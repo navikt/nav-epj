@@ -37,7 +37,7 @@ export const OpprettPasientSchema = z.object({
     birthDate: z
         .string()
         .regex(/^\d{4}-\d{2}-\d{2}$/, "Fødselsdato må være en gyldig dato"),
-    gender: z.enum(["FEMALE", "MALE", "OTHER", "UNKNOWN"], "Velg administrativt kjønn"),
+    gender: z.enum(["FEMALE", "MALE", "OTHER", "UNKNOWN"], "Velg kjønn"),
 });
 
 export type OpprettPasientRequest = z.infer<typeof OpprettPasientSchema>;

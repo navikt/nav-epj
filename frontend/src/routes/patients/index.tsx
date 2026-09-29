@@ -56,7 +56,7 @@ function RouteComponent() {
           <Table.Row>
             <Table.HeaderCell>Fornavn</Table.HeaderCell>
             <Table.HeaderCell>Etternavn</Table.HeaderCell>
-            <Table.HeaderCell>Identitetstype</Table.HeaderCell>
+            <Table.HeaderCell>Identtype</Table.HeaderCell>
             <Table.HeaderCell>Fødselsnummer / D-nummer</Table.HeaderCell>
             <Table.HeaderCell />
           </Table.Row>

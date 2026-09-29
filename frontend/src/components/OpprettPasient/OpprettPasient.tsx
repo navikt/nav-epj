@@ -53,7 +53,7 @@ export const OpprettPasient = ({lastPasienter}: { lastPasienter: () => void}) =>
             setGender("");
             lastPasienter();
         } catch {
-            setFeilmelding("Kunne ikke opprette pasient. Sjekk at fødselsnummeret eller D-nummeret ikke allerede finnes.");
+            setFeilmelding("Kunne ikke opprette pasient. Kontroller opplysningene eller sjekk om pasienten finnes fra før.");
         } finally {
             setLagrer(false);
         }
@@ -79,11 +79,11 @@ export const OpprettPasient = ({lastPasienter}: { lastPasienter: () => void}) =>
                     />
                 </div>
                 <Select
-                    label="Identitetstype"
+                    label="Identtype"
                     value={personidentType}
                     onChange={(e) => setPersonidentType(e.target.value)}
                 >
-                    <option value="">Velg identitetstype</option>
+                    <option value="">Velg identtype</option>
                     <option value="FNR">Fødselsnummer</option>
                     <option value="DNR">D-nummer</option>
                 </Select>
@@ -93,17 +93,16 @@ export const OpprettPasient = ({lastPasienter}: { lastPasienter: () => void}) =>
                     onChange={(e) => setPersonident(e.target.value)}
                 />
                 <TextField
-                    label="Fødselsdato"
-                    type="date"
+                    label="Fødselsdato (åååå-mm-dd)"
                     value={birthDate}
                     onChange={(e) => setBirthDate(e.target.value)}
                 />
                 <Select
-                    label="Administrativt kjønn"
+                    label="Kjønn"
                     value={gender}
                     onChange={(e) => setGender(e.target.value)}
                 >
-                    <option value="">Velg administrativt kjønn</option>
+                    <option value="">Velg kjønn</option>
                     <option value="FEMALE">Kvinne</option>
                     <option value="MALE">Mann</option>
                     <option value="OTHER">Annet</option>
