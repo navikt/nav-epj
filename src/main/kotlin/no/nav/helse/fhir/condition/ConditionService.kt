@@ -29,6 +29,17 @@ class ConditionService(val konsultasjonService: KonsultasjonService) {
         return toBundle(listOf(konsultasjon))
     }
 
+    suspend fun getConditionsByPatientIdAndEncounterId(
+        patientId: PatientInputId,
+        encounterId: EncounterId,
+    ): Bundle {
+        val konsultasjoner =
+            konsultasjonService.getKonsultasjoner(PasientId(patientId.value)).filter {
+                it.id.value == encounterId.value
+            }
+        return toBundle(konsultasjoner)
+    }
+
     private fun toBundle(konsultasjoner: List<Konsultasjon>): Bundle {
         val conditions = konsultasjoner.flatMap { it.toConditions() }
         return Bundle(
