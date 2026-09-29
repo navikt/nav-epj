@@ -14,6 +14,7 @@ import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
+import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.tsm.diagnoser.Diagnose
 import no.nav.tsm.diagnoser.DiagnoseType
@@ -33,6 +34,7 @@ class KonsultasjonServiceTest {
         Konsultasjon(
             id = id,
             pasientId = pasientId,
+            legekontorId = LegekontorId(Uuid.generateV4()),
             hpr = emptyList(),
             journalnotat = emptyList(),
             diagnoser = emptyList(),

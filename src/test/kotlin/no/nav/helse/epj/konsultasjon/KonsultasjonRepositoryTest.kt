@@ -10,7 +10,6 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.db.KonsultasjonDiagnosekodeTable
-import no.nav.helse.core.db.KonsultasjonTable
 import no.nav.helse.core.db.dbQuery
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.UgyldigDiagnoseException
@@ -23,7 +22,6 @@ import no.nav.helse.utils.WithPostgresql
 import no.nav.tsm.diagnoser.Diagnose
 import no.nav.tsm.diagnoser.DiagnoseType
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.Test
 
@@ -276,24 +274,29 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `findByKonsultasjonId returns a null legekontorId for a legacy konsultasjon without an organization`() =
-        runTest {
-            val pasientId = opprettPasient()
-            val konsultasjonId = KonsultasjonId(Uuid.generateV4())
-            dbQuery {
-                KonsultasjonTable.insert {
-                    it[id] = konsultasjonId.value
-                    it[KonsultasjonTable.pasientId] = pasientId.value
-                    it[legekontorId] = null
-                    it[startetTidspunkt] = LocalDateTime.now()
-                    it[status] = KonsultasjonStatus.PÅGÅENDE
-                }
-            }
+    fun `the database rejects a konsultasjon without an organization`() = runTest {
+        val pasientId = opprettPasient()
+        val konsultasjonId = Uuid.generateV4()
 
-            val konsultasjon = konsultasjonRepository.findByKonsultasjonId(konsultasjonId)
-            assertNotNull(konsultasjon)
-            assertNull(konsultasjon.legekontorId)
+        assertFailsWith<java.sql.SQLException> {
+            java.sql.DriverManager.getConnection(
+                    config.postgres.url,
+                    config.postgres.username,
+                    config.postgres.password,
+                )
+                .use { connection ->
+                    connection.createStatement().use { statement ->
+                        statement.execute(
+                            """
+                            INSERT INTO konsultasjon (id, pasient_id, legekontor_id, startet_tidspunkt, status)
+                            VALUES ('$konsultasjonId', '${pasientId.value}', NULL, now(), 'PÅGÅENDE')
+                            """
+                                .trimIndent()
+                        )
+                    }
+                }
         }
+    }
 
     @Test
     fun `update returns 0 rows and makes no changes when pasientId does not own the konsultasjon`() =

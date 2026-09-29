@@ -16,6 +16,7 @@ import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.konsultasjon.Konsultasjon
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
+import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
@@ -39,6 +40,7 @@ class ConditionServiceTest {
         Konsultasjon(
             id = id,
             pasientId = pasientId,
+            legekontorId = LegekontorId(Uuid.generateV4()),
             hpr = emptyList(),
             journalnotat = emptyList(),
             diagnoser = diagnoser,

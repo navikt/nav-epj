@@ -16,7 +16,7 @@ import no.nav.tsm.diagnoser.DiagnoseType
 data class Konsultasjon(
     val id: KonsultasjonId,
     val pasientId: PasientId,
-    val legekontorId: LegekontorId? = null,
+    val legekontorId: LegekontorId,
     val hpr: List<String>,
     val journalnotat: List<Journalnotat>,
     val diagnoser: List<Diagnose>,

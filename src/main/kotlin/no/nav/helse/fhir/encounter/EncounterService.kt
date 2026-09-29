@@ -130,12 +130,12 @@ class EncounterService(val konsultasjonService: KonsultasjonService) {
                     system = Uri(value = "http://terminology.hl7.org/CodeSystem/v3-ActCode"),
                 ),
             serviceProvider =
-                this.legekontorId?.let {
-                    Reference(
-                        reference =
-                            com.google.fhir.model.r4.String(value = "Organization/${it.value}")
-                    )
-                },
+                Reference(
+                    reference =
+                        com.google.fhir.model.r4.String(
+                            value = "Organization/${this.legekontorId.value}"
+                        )
+                ),
         )
     }
 }

@@ -18,6 +18,7 @@ import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.konsultasjon.routes.konsultasjonRoutes
+import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.helseId.DebugInfo
 import no.nav.helse.helseId.HelseIdPrincipal
@@ -61,6 +62,7 @@ class KonsultasjonRoutesTest {
         Konsultasjon(
             id = id,
             pasientId = pasientId,
+            legekontorId = LegekontorId(Uuid.generateV4()),
             hpr = emptyList(),
             journalnotat = emptyList(),
             diagnoser = emptyList(),

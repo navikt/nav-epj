@@ -87,7 +87,7 @@ class KonsultasjonLegekontorMigrationTest : WithPostgresql() {
     }
 
     @Test
-    fun `V6 applies cleanly on an empty database migrated through all versions`() {
+    fun `V6 applies cleanly on an empty database migrated through all versions and enforces a mandatory organization`() {
         runMigrations(true)
 
         DriverManager.getConnection(
@@ -103,10 +103,11 @@ class KonsultasjonLegekontorMigrationTest : WithPostgresql() {
 
                     val legekontorIdColumn =
                         statement.executeQuery(
-                            "SELECT column_name FROM information_schema.columns " +
+                            "SELECT is_nullable FROM information_schema.columns " +
                                 "WHERE table_name = 'konsultasjon' AND column_name = 'legekontor_id'"
                         )
                     assertEquals(true, legekontorIdColumn.next())
+                    assertEquals("NO", legekontorIdColumn.getString("is_nullable"))
                 }
             }
     }

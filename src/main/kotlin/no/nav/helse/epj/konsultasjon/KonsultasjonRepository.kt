@@ -302,7 +302,7 @@ class KonsultasjonRepository {
         Konsultasjon(
             id = KonsultasjonId(this[KonsultasjonTable.id]),
             pasientId = PasientId(this[KonsultasjonTable.pasientId]),
-            legekontorId = this[KonsultasjonTable.legekontorId]?.let { LegekontorId(it) },
+            legekontorId = LegekontorId(this[KonsultasjonTable.legekontorId]),
             hpr = hprListe,
             startetTidspunkt = this[KonsultasjonTable.startetTidspunkt],
             avsluttetTidspunkt = this[KonsultasjonTable.avsluttetTidspunkt],

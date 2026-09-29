@@ -34,7 +34,7 @@ class EncounterServiceTest {
     private fun konsultasjon(
         id: KonsultasjonId = KonsultasjonId(Uuid.generateV4()),
         pasientId: PasientId = PasientId(Uuid.generateV4()),
-        legekontorId: LegekontorId? = null,
+        legekontorId: LegekontorId = LegekontorId(Uuid.generateV4()),
         hpr: List<String> = emptyList(),
         diagnoser: List<Diagnose> = emptyList(),
         status: KonsultasjonStatus = KonsultasjonStatus.PÅGÅENDE,
@@ -88,7 +88,7 @@ class EncounterServiceTest {
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `getEncounterById omits serviceProvider when no organization is linked to the konsultasjon`() =
+    fun `getEncounterById always emits a serviceProvider organization reference required by downstream FHIR consumers such as syk-inn and smart-on-fhir-validator`() =
         runTest {
             val konsultasjonId = KonsultasjonId(Uuid.generateV4())
             coEvery { konsultasjonService.getKonsultasjon(konsultasjonId) } returns
@@ -96,25 +96,24 @@ class EncounterServiceTest {
 
             val encounter = encounterService.getEncounterById(EncounterId(konsultasjonId.value))
 
-            assertNull(encounter.serviceProvider)
+            assertNotNull(encounter.serviceProvider)
         }
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `getEncounterById maps serviceProvider when the konsultasjon has an organization`() =
-        runTest {
-            val konsultasjonId = KonsultasjonId(Uuid.generateV4())
-            val legekontorId = LegekontorId(Uuid.generateV4())
-            coEvery { konsultasjonService.getKonsultasjon(konsultasjonId) } returns
-                konsultasjon(id = konsultasjonId, legekontorId = legekontorId)
+    fun `getEncounterById maps serviceProvider to the konsultasjon's organization`() = runTest {
+        val konsultasjonId = KonsultasjonId(Uuid.generateV4())
+        val legekontorId = LegekontorId(Uuid.generateV4())
+        coEvery { konsultasjonService.getKonsultasjon(konsultasjonId) } returns
+            konsultasjon(id = konsultasjonId, legekontorId = legekontorId)
 
-            val encounter = encounterService.getEncounterById(EncounterId(konsultasjonId.value))
+        val encounter = encounterService.getEncounterById(EncounterId(konsultasjonId.value))
 
-            assertEquals(
-                "Organization/${legekontorId.value}",
-                encounter.serviceProvider?.reference?.value,
-            )
-        }
+        assertEquals(
+            "Organization/${legekontorId.value}",
+            encounter.serviceProvider?.reference?.value,
+        )
+    }
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
