@@ -3,10 +3,12 @@ package no.nav.helse.fhir.observation
 import com.google.fhir.model.r4.FhirDateTime
 import com.google.fhir.model.r4.Observation
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.uuid.ExperimentalUuidApi
@@ -14,12 +16,14 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.UtcOffset
 import kotlinx.datetime.toKotlinLocalDateTime
+import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.maaling.Maaling
 import no.nav.helse.epj.maaling.MaalingId
 import no.nav.helse.epj.maaling.MaalingService
 import no.nav.helse.epj.maaling.MaalingStatus
+import no.nav.helse.epj.maaling.OpprettMaalingRequest
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
@@ -57,6 +61,69 @@ class ObservationServiceTest {
             effektivTidspunkt = effektivTidspunkt,
             status = status,
         )
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `createObservation persists through MaalingService and maps the server-generated id back`() =
+        runTest {
+            val request =
+                OpprettMaalingRequest(
+                    pasientId = PasientId(Uuid.generateV4()),
+                    konsultasjonId = KonsultasjonId(Uuid.generateV4()),
+                    hpr = null,
+                    loincKode = "8310-5",
+                    loincVisningsnavn = "Body temperature",
+                    verdi = BigDecimal("37.2000"),
+                    enhetKode = "Cel",
+                    enhetVisningsnavn = "degree Celsius",
+                    effektivTidspunkt = LocalDateTime.of(2025, 1, 15, 10, 30),
+                    status = MaalingStatus.FINAL,
+                )
+            val persisted =
+                maaling(
+                    pasientId = request.pasientId,
+                    konsultasjonId = request.konsultasjonId,
+                    hpr = request.hpr,
+                    loincKode = request.loincKode,
+                    loincVisningsnavn = request.loincVisningsnavn,
+                    verdi = request.verdi,
+                    enhetKode = request.enhetKode,
+                    enhetVisningsnavn = request.enhetVisningsnavn,
+                    effektivTidspunkt = request.effektivTidspunkt,
+                    status = request.status,
+                )
+            coEvery { maalingService.opprettMaaling(request) } returns persisted
+
+            val observation = observationService.createObservation(request)
+
+            assertEquals(persisted.id.value.toString(), observation.id)
+            coVerify(exactly = 1) { maalingService.opprettMaaling(request) }
+        }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `createObservation propagates encounter-not-found without swallowing the error`() =
+        runTest {
+            val request =
+                OpprettMaalingRequest(
+                    pasientId = PasientId(Uuid.generateV4()),
+                    konsultasjonId = KonsultasjonId(Uuid.generateV4()),
+                    hpr = null,
+                    loincKode = "8310-5",
+                    loincVisningsnavn = "Body temperature",
+                    verdi = BigDecimal("37.2000"),
+                    enhetKode = "Cel",
+                    enhetVisningsnavn = "degree Celsius",
+                    effektivTidspunkt = LocalDateTime.of(2025, 1, 15, 10, 30),
+                    status = MaalingStatus.FINAL,
+                )
+            coEvery { maalingService.opprettMaaling(request) } throws
+                KonsultasjonNotFoundException(request.konsultasjonId)
+
+            assertFailsWith<KonsultasjonNotFoundException> {
+                observationService.createObservation(request)
+            }
+        }
 
     @OptIn(ExperimentalUuidApi::class)
     @Test

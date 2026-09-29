@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package no.nav.helse.fhir.observation
 
 import com.google.fhir.model.r4.Bundle
@@ -36,6 +38,7 @@ class ObservationRoutesTest {
     private val observationService = mockk<ObservationService>()
     private val fhirJson = FhirR4Json()
     private val fhirContentType = ContentType("application", "fhir+json")
+    private val fhirServerUrl = "https://fhir.example.test/fhir"
 
     private fun observationScope(interactions: Set<Interaction>) =
         SmartScope.Fhir(
@@ -86,7 +89,7 @@ class ObservationRoutesTest {
             }
             routing {
                 authenticate("smart-access-token") {
-                    observationRoutes(observationService, fhirJson, fhirContentType)
+                    observationRoutes(observationService, fhirJson, fhirContentType, fhirServerUrl)
                 }
             }
         }
@@ -307,5 +310,235 @@ class ObservationRoutesTest {
 
             assertEquals(HttpStatusCode.NotFound, response.status)
         }
+    }
+
+    private fun createScope() = setOf(observationScope(setOf(Interaction.CREATE)))
+
+    private fun validCreateBody(
+        patientId: Uuid = Uuid.generateV4(),
+        encounterId: Uuid = Uuid.generateV4(),
+        clientSuppliedId: String? = null,
+    ): String {
+        val observation =
+            Observation(
+                id = clientSuppliedId,
+                status = Enumeration(value = Observation.ObservationStatus.Final),
+                code =
+                    CodeableConcept(
+                        coding =
+                            listOf(
+                                Coding(
+                                    system = Uri(value = "http://loinc.org"),
+                                    code = Code(value = "8310-5"),
+                                    display = FhirString(value = "Body temperature"),
+                                )
+                            )
+                    ),
+                subject = Reference(reference = FhirString(value = "Patient/$patientId")),
+                encounter = Reference(reference = FhirString(value = "Encounter/$encounterId")),
+                effective =
+                    Observation.Effective.DateTime(
+                        com.google.fhir.model.r4.DateTime(
+                            value =
+                                com.google.fhir.model.r4.FhirDateTime.DateTime(
+                                    kotlinx.datetime.LocalDateTime(2025, 1, 15, 10, 30),
+                                    kotlinx.datetime.UtcOffset.ZERO,
+                                )
+                        )
+                    ),
+                value =
+                    Observation.Value.Quantity(
+                        com.google.fhir.model.r4.Quantity(
+                            value =
+                                com.google.fhir.model.r4.Decimal(
+                                    value =
+                                        com.ionspin.kotlin.bignum.decimal.BigDecimal.parseString(
+                                            "37.2"
+                                        )
+                                ),
+                            unit = FhirString(value = "degree Celsius"),
+                            system = Uri(value = "http://unitsofmeasure.org"),
+                            code = Code(value = "Cel"),
+                        )
+                    ),
+            )
+        return fhirJson.encodeToString(observation)
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `POST Observation creates the resource with a server-generated id and returns 201 with Location`() {
+        val patientId = Uuid.generateV4()
+        val encounterId = Uuid.generateV4()
+        val generatedId = ObservationId(Uuid.generateV4())
+        val persisted = sampleObservation(generatedId.value.toString(), patientId.toString())
+        coEvery { observationService.createObservation(any()) } returns persisted
+
+        testApp(scopes = createScope(), boundPatient = patientId.toString()) {
+            val response =
+                post("/fhir/Observation") {
+                    contentType(fhirContentType)
+                    setBody(
+                        validCreateBody(
+                            patientId = patientId,
+                            encounterId = encounterId,
+                            clientSuppliedId = "client-chosen-id",
+                        )
+                    )
+                }
+
+            assertEquals(HttpStatusCode.Created, response.status)
+            assertEquals(
+                "$fhirServerUrl/Observation/${generatedId.value}",
+                response.headers[HttpHeaders.Location],
+            )
+            val body = response.bodyAsText()
+            assertEquals(true, body.contains(generatedId.value.toString()))
+            assertEquals(false, body.contains("client-chosen-id"))
+        }
+        coVerify(exactly = 1) { observationService.createObservation(any()) }
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `POST Observation rejects a token missing the Observation create scope`() {
+        val patientId = Uuid.generateV4()
+
+        testApp(scopes = emptySet(), boundPatient = patientId.toString()) {
+            val response =
+                post("/fhir/Observation") {
+                    contentType(fhirContentType)
+                    setBody(validCreateBody(patientId = patientId))
+                }
+
+            assertEquals(HttpStatusCode.Forbidden, response.status)
+        }
+        coVerify(exactly = 0) { observationService.createObservation(any()) }
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `POST Observation rejects a subject that does not match the launched patient and writes nothing`() {
+        val patientId = Uuid.generateV4()
+        val otherPatientId = Uuid.generateV4()
+
+        testApp(scopes = createScope(), boundPatient = otherPatientId.toString()) {
+            val response =
+                post("/fhir/Observation") {
+                    contentType(fhirContentType)
+                    setBody(validCreateBody(patientId = patientId))
+                }
+
+            assertEquals(HttpStatusCode.NotFound, response.status)
+        }
+        coVerify(exactly = 0) { observationService.createObservation(any()) }
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `POST Observation rejects an encounter belonging to another patient and writes nothing`() {
+        val patientId = Uuid.generateV4()
+        val encounterId = Uuid.generateV4()
+        coEvery { observationService.createObservation(any()) } throws
+            no.nav.helse.core.utils.KonsultasjonTilhorerAnnenPasientException(
+                no.nav.helse.epj.konsultasjon.KonsultasjonId(encounterId),
+                no.nav.helse.epj.pasient.PasientId(patientId),
+            )
+
+        testApp(scopes = createScope(), boundPatient = patientId.toString()) {
+            val response =
+                post("/fhir/Observation") {
+                    contentType(fhirContentType)
+                    setBody(validCreateBody(patientId = patientId, encounterId = encounterId))
+                }
+
+            assertEquals(HttpStatusCode.BadRequest, response.status)
+            val body = response.bodyAsText()
+            assertEquals(true, body.contains("\"OperationOutcome\""))
+        }
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `POST Observation rejects an unknown encounter and writes nothing`() {
+        val patientId = Uuid.generateV4()
+        val encounterId = Uuid.generateV4()
+        coEvery { observationService.createObservation(any()) } throws
+            no.nav.helse.core.utils.KonsultasjonNotFoundException(
+                no.nav.helse.epj.konsultasjon.KonsultasjonId(encounterId)
+            )
+
+        testApp(scopes = createScope(), boundPatient = patientId.toString()) {
+            val response =
+                post("/fhir/Observation") {
+                    contentType(fhirContentType)
+                    setBody(validCreateBody(patientId = patientId, encounterId = encounterId))
+                }
+
+            assertEquals(HttpStatusCode.BadRequest, response.status)
+        }
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `POST Observation surfaces a duplicate id collision explicitly instead of a fallback success`() {
+        val patientId = Uuid.generateV4()
+        coEvery { observationService.createObservation(any()) } throws
+            no.nav.helse.core.utils.DuplikatMaalingException()
+
+        testApp(scopes = createScope(), boundPatient = patientId.toString()) {
+            val response =
+                post("/fhir/Observation") {
+                    contentType(fhirContentType)
+                    setBody(validCreateBody(patientId = patientId))
+                }
+
+            assertEquals(HttpStatusCode.Conflict, response.status)
+        }
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `POST Observation rejects invalid content with an OperationOutcome and writes nothing`() {
+        val patientId = Uuid.generateV4()
+        val invalidObservation =
+            Observation(
+                status = Enumeration(value = Observation.ObservationStatus.Final),
+                code = CodeableConcept(coding = emptyList()),
+                subject = Reference(reference = FhirString(value = "Patient/$patientId")),
+            )
+
+        testApp(scopes = createScope(), boundPatient = patientId.toString()) {
+            val response =
+                post("/fhir/Observation") {
+                    contentType(fhirContentType)
+                    setBody(fhirJson.encodeToString(invalidObservation))
+                }
+
+            assertEquals(HttpStatusCode.BadRequest, response.status)
+            val body = response.bodyAsText()
+            assertEquals(true, body.contains("\"OperationOutcome\""))
+            assertEquals(true, body.contains("\"issue\""))
+        }
+        coVerify(exactly = 0) { observationService.createObservation(any()) }
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `POST Observation rejects malformed JSON with a structural OperationOutcome`() {
+        val patientId = Uuid.generateV4()
+
+        testApp(scopes = createScope(), boundPatient = patientId.toString()) {
+            val response =
+                post("/fhir/Observation") {
+                    contentType(fhirContentType)
+                    setBody("{ this is not valid json")
+                }
+
+            assertEquals(HttpStatusCode.BadRequest, response.status)
+            val body = response.bodyAsText()
+            assertEquals(true, body.contains("\"OperationOutcome\""))
+        }
+        coVerify(exactly = 0) { observationService.createObservation(any()) }
     }
 }

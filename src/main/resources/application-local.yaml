@@ -36,6 +36,7 @@ smart:
         - patient/Encounter.rs
         - patient/Condition.rs
         - patient/Observation.rs
+        - patient/Observation.write
         - patient/DocumentReference.crs
     - clientId: "NAV_SMART_on_FHIR_validator"
       redirectUris: [ "http://localhost:3001/callback" ]
@@ -55,6 +56,7 @@ smart:
         - patient/Encounter.rs
         - patient/Condition.rs
         - patient/Observation.rs
+        - patient/Observation.write
         - patient/DocumentReference.cruds
         - patient/Binary.cruds
         - patient/QuestionnaireResponse.cruds
