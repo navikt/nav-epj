@@ -7,6 +7,7 @@ import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.pasient.PasientId
+import no.nav.tsm.diagnoser.Diagnose
 
 class KonsultasjonService(private val konsultasjonRepository: KonsultasjonRepository) {
     val log = logger()

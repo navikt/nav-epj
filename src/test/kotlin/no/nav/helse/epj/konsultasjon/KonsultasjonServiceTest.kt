@@ -15,6 +15,8 @@ import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.pasient.PasientId
+import no.nav.tsm.diagnoser.Diagnose
+import no.nav.tsm.diagnoser.DiagnoseType
 import org.junit.Test
 
 class KonsultasjonServiceTest {
@@ -159,25 +161,15 @@ class KonsultasjonServiceTest {
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `getDiagnoser by konsultasjonId returns diagnoser that retain their konsultasjonId`() =
-        runTest {
-            val konsultasjonId = KonsultasjonId(Uuid.generateV4())
-            val diagnose =
-                Diagnose(
-                    id = DiagnoseId(Uuid.generateV4()),
-                    pasientId = PasientId(Uuid.generateV4()),
-                    konsultasjonId = konsultasjonId,
-                    kode = "A01",
-                    system = DiagnoseSystem.ICPC2,
-                    beskrivelse = "Diagnose",
-                )
-            coEvery { konsultasjonRepository.listDiagnoser(konsultasjonId) } returns
-                listOf(diagnose)
+    fun `getDiagnoser by konsultasjonId returns diagnoser resolved from the katalog`() = runTest {
+        val konsultasjonId = KonsultasjonId(Uuid.generateV4())
+        val diagnose = Diagnose(system = DiagnoseType.ICPC2, code = "A01", text = "Diagnose")
+        coEvery { konsultasjonRepository.listDiagnoser(konsultasjonId) } returns listOf(diagnose)
 
-            val resultat = konsultasjonService.getDiagnoser(konsultasjonId)
+        val resultat = konsultasjonService.getDiagnoser(konsultasjonId)
 
-            assertEquals(konsultasjonId, resultat.single().konsultasjonId)
-        }
+        assertEquals(listOf(diagnose), resultat)
+    }
 
     @OptIn(ExperimentalUuidApi::class)
     @Test

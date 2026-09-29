@@ -8,88 +8,69 @@ import com.google.fhir.model.r4.Condition
 import com.google.fhir.model.r4.Enumeration
 import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.Uri
-import no.nav.helse.epj.konsultasjon.Diagnose
-import no.nav.helse.epj.konsultasjon.DiagnoseSystem
+import no.nav.helse.core.utils.oid
+import no.nav.helse.epj.konsultasjon.Konsultasjon
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
+import no.nav.tsm.diagnoser.Diagnose
 
 class ConditionService(val konsultasjonService: KonsultasjonService) {
 
     suspend fun getConditionsByPatientId(patientId: PatientInputId): Bundle {
-        val diagnoser = konsultasjonService.getDiagnoser(PasientId(patientId.value))
-        if (diagnoser.isEmpty()) {
-            return Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
-        }
-        return toBundle(diagnoser, null)
+        val konsultasjoner = konsultasjonService.getKonsultasjoner(PasientId(patientId.value))
+        return toBundle(konsultasjoner)
     }
 
     suspend fun getConditionsByEncounterId(encounterId: EncounterId): Bundle {
-        val diagnoser = konsultasjonService.getDiagnoser(KonsultasjonId(encounterId.value))
-        if (diagnoser.isEmpty()) {
-            return Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
-        }
-        return toBundle(diagnoser, encounterId)
+        val konsultasjon = konsultasjonService.getKonsultasjon(KonsultasjonId(encounterId.value))
+        return toBundle(listOf(konsultasjon))
     }
 
-    private fun toBundle(diagnoser: List<Diagnose>, encounterId: EncounterId?): Bundle {
-        val conditions = diagnoser.toCondition(encounterId)
-        val bundle =
-            Bundle(
-                type = Enumeration(value = Bundle.BundleType.Searchset),
-                entry =
-                    conditions.map { condition ->
-                        Bundle.Entry(
-                            fullUrl = Uri(value = "Condition/${condition.id}"),
-                            resource = condition,
-                        )
-                    },
-            )
-        return bundle
+    private fun toBundle(konsultasjoner: List<Konsultasjon>): Bundle {
+        val conditions = konsultasjoner.flatMap { it.toConditions() }
+        return Bundle(
+            type = Enumeration(value = Bundle.BundleType.Searchset),
+            entry =
+                conditions.map { condition ->
+                    Bundle.Entry(
+                        fullUrl = Uri(value = "Condition/${condition.id}"),
+                        resource = condition,
+                    )
+                },
+        )
     }
 
-    private fun List<Diagnose>.toCondition(encounterId: EncounterId? = null): List<Condition> {
-        val conditionList =
-            this.map { diagnose ->
-                val oid =
-                    "urn:oid:" +
-                        when (diagnose.system) {
-                            DiagnoseSystem.ICPC2 -> no.nav.tsm.diagnoser.ICPC2.OID
-                            DiagnoseSystem.ICD10 -> no.nav.tsm.diagnoser.ICD10.OID
-                        }
-                Condition(
-                    id = diagnose.id.value.toString(),
-                    subject =
-                        Reference(
-                            reference =
-                                com.google.fhir.model.r4.String(
-                                    value = "Patient/${diagnose.pasientId.value}"
-                                )
-                        ),
-                    encounter =
-                        encounterId?.value?.let {
-                            Reference(
-                                reference = com.google.fhir.model.r4.String(value = "Encounter/$it")
+    private fun Konsultasjon.toConditions(): List<Condition> = diagnoser.map { diagnose ->
+        toCondition(diagnose)
+    }
+
+    private fun Konsultasjon.toCondition(diagnose: Diagnose): Condition {
+        val oid = "urn:oid:" + diagnose.system.oid()
+        return Condition(
+            id = conditionFhirId(id, diagnose),
+            subject =
+                Reference(
+                    reference =
+                        com.google.fhir.model.r4.String(value = "Patient/${pasientId.value}")
+                ),
+            encounter =
+                Reference(
+                    reference = com.google.fhir.model.r4.String(value = "Encounter/${id.value}")
+                ),
+            code =
+                CodeableConcept(
+                    coding =
+                        listOf(
+                            Coding(
+                                system = Uri(value = oid),
+                                code = Code(value = diagnose.code),
+                                display = com.google.fhir.model.r4.String(value = diagnose.text),
                             )
-                        },
-                    code =
-                        CodeableConcept(
-                            coding =
-                                listOf(
-                                    Coding(
-                                        system = Uri(value = oid),
-                                        code = Code(value = diagnose.kode),
-                                        display =
-                                            com.google.fhir.model.r4.String(
-                                                value = diagnose.beskrivelse
-                                            ),
-                                    )
-                                )
-                        ),
-                )
-            }
-        return conditionList
+                        )
+                ),
+        )
     }
 }

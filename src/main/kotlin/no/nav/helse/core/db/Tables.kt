@@ -67,22 +67,12 @@ object JournalnotatTable : Table("journalnotat") {
     }
 }
 
-object DiagnoseTable : Table("diagnose") {
-    val id = uuid("id")
-    val patientId = reference("patient_id", refColumn = PasientTable.id)
+object KonsultasjonDiagnosekodeTable : Table("konsultasjon_diagnosekode") {
     val konsultasjonId = reference("konsultasjon_id", refColumn = KonsultasjonTable.id)
-    val diagnosekode = text("diagnosekode")
     val diagnosesystem = text("diagnosesystem")
-    val beskrivelse = text("beskrivelse")
+    val diagnosekode = text("diagnosekode")
 
-    init {
-        uniqueIndex(
-            "diagnose_konsultasjon_system_kode_unique",
-            konsultasjonId,
-            diagnosekode,
-            diagnosesystem,
-        )
-    }
+    override val primaryKey = PrimaryKey(konsultasjonId, diagnosesystem, diagnosekode)
 }
 
 object KonsultasjonHelsepersonell : Table("konsultasjon_helsepersonell") {

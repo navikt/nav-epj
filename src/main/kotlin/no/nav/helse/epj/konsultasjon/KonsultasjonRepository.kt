@@ -2,10 +2,8 @@ package no.nav.helse.epj.konsultasjon
 
 import java.time.LocalDateTime
 import kotlin.uuid.Uuid
-import no.nav.helse.core.db.DiagnoseTable
-import no.nav.helse.core.db.DiagnoseTable.konsultasjonId
-import no.nav.helse.core.db.DiagnoseTable.patientId
 import no.nav.helse.core.db.JournalnotatTable
+import no.nav.helse.core.db.KonsultasjonDiagnosekodeTable
 import no.nav.helse.core.db.KonsultasjonHelsepersonell
 import no.nav.helse.core.db.KonsultasjonTable
 import no.nav.helse.core.db.dbQuery
@@ -13,6 +11,7 @@ import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.UgyldigDiagnoseException
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.pasient.PasientId
+import no.nav.tsm.diagnoser.Diagnose
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
@@ -54,26 +53,42 @@ class KonsultasjonRepository {
                     valueTransform = { it.toJournalnotat() },
                 )
 
-        val diagnoser =
-            DiagnoseTable.selectAll()
-                .where { konsultasjonId inList konsultasjonIder }
-                .groupBy(keySelector = { it[konsultasjonId] }, valueTransform = { it.toDiagnose() })
+        val diagnoserByKonsultasjonId =
+            KonsultasjonDiagnosekodeTable.selectAll()
+                .where { KonsultasjonDiagnosekodeTable.konsultasjonId inList konsultasjonIder }
+                .groupBy(
+                    keySelector = { it[KonsultasjonDiagnosekodeTable.konsultasjonId] },
+                    valueTransform = { it.toDiagnose() },
+                )
 
         konsultasjoner.map { row ->
             val konsultasjonId = row[KonsultasjonTable.id]
             val hprListe = hprByKonsultasjonId[konsultasjonId].orEmpty()
             val journalnotatListe = journalnotatByKonsultasjonId[konsultasjonId].orEmpty()
-            val diagnoseListe = diagnoser[konsultasjonId].orEmpty()
+            val diagnoseListe = diagnoserByKonsultasjonId[konsultasjonId].orEmpty()
             row.toKonsultasjonWithHprAndJournalnotat(hprListe, journalnotatListe, diagnoseListe)
         }
     }
 
-    suspend fun listDiagnoser(id: PasientId) = dbQuery {
-        DiagnoseTable.selectAll().where { (patientId eq id.value) }.map { it.toDiagnose() }
+    suspend fun listDiagnoser(id: PasientId): List<Diagnose> = dbQuery {
+        val konsultasjonIder =
+            KonsultasjonTable.select(KonsultasjonTable.id)
+                .where { KonsultasjonTable.pasientId eq id.value }
+                .map { it[KonsultasjonTable.id] }
+
+        if (konsultasjonIder.isEmpty()) {
+            return@dbQuery emptyList()
+        }
+
+        KonsultasjonDiagnosekodeTable.selectAll()
+            .where { KonsultasjonDiagnosekodeTable.konsultasjonId inList konsultasjonIder }
+            .map { it.toDiagnose() }
     }
 
-    suspend fun listDiagnoser(id: KonsultasjonId) = dbQuery {
-        DiagnoseTable.selectAll().where { (konsultasjonId eq id.value) }.map { it.toDiagnose() }
+    suspend fun listDiagnoser(id: KonsultasjonId): List<Diagnose> = dbQuery {
+        KonsultasjonDiagnosekodeTable.selectAll()
+            .where { KonsultasjonDiagnosekodeTable.konsultasjonId eq id.value }
+            .map { it.toDiagnose() }
     }
 
     suspend fun insert(opprettKonsultasjon: OpprettKonsultasjon) = dbQuery {
@@ -150,7 +165,6 @@ class KonsultasjonRepository {
             updatedRows +=
                 updateDiagnose(
                     diagnose = diagnose,
-                    patientId = pasientId.value,
                     konsultasjonId = oppdaterKonsultasjon.konsultasjonId.value,
                 )
         }
@@ -216,26 +230,21 @@ class KonsultasjonRepository {
             .insertedCount
     }
 
-    suspend fun updateDiagnose(
-        diagnose: OpprettDiagnoseRequest,
-        patientId: Uuid,
-        konsultasjonId: Uuid,
-    ): Int = dbQuery {
-        val system = diagnose.system.toString()
+    suspend fun updateDiagnose(diagnose: OpprettDiagnoseRequest, konsultasjonId: Uuid): Int =
+        dbQuery {
+            val kodeverkDiagnose =
+                Diagnose.from(diagnose.system, diagnose.kode)
+                    ?: throw UgyldigDiagnoseException(diagnose.kode, diagnose.system.toString())
 
-        val kodeverkDiagnose =
-            no.nav.tsm.diagnoser.Diagnose.from(diagnose.system.toString(), diagnose.kode)
-                ?: throw UgyldigDiagnoseException(diagnose.kode, diagnose.system.toString())
-
-        DiagnoseTable.insertIgnore {
-                it[DiagnoseTable.konsultasjonId] = konsultasjonId
-                it[DiagnoseTable.patientId] = patientId
-                it[diagnosekode] = diagnose.kode
-                it[diagnosesystem] = system
-                it[beskrivelse] = kodeverkDiagnose.text
-            }
-            .insertedCount
-    }
+            // Persist the katalog's canonical code, not the client-supplied one, so equivalent
+            // codes with different formatting (e.g. ICD10 with/without dots) are not stored twice.
+            KonsultasjonDiagnosekodeTable.insertIgnore {
+                    it[KonsultasjonDiagnosekodeTable.konsultasjonId] = konsultasjonId
+                    it[diagnosekode] = kodeverkDiagnose.code
+                    it[diagnosesystem] = kodeverkDiagnose.system.toString()
+                }
+                .insertedCount
+        }
 
     private fun toEpjKonsultasjon(konsultasjon: ResultRow): Konsultasjon {
         val hprListe =
@@ -251,8 +260,11 @@ class KonsultasjonRepository {
                 .map { it.toJournalnotat() }
 
         val diagnoseListe =
-            DiagnoseTable.selectAll()
-                .where { (konsultasjonId eq konsultasjon[KonsultasjonTable.id]) }
+            KonsultasjonDiagnosekodeTable.selectAll()
+                .where {
+                    (KonsultasjonDiagnosekodeTable.konsultasjonId eq
+                        konsultasjon[KonsultasjonTable.id])
+                }
                 .map { it.toDiagnose() }
 
         return konsultasjon.toKonsultasjonWithHprAndJournalnotat(
@@ -294,13 +306,13 @@ class KonsultasjonRepository {
             diagnoser = diagnoseListe,
         )
 
-    fun ResultRow.toDiagnose() =
-        Diagnose(
-            id = DiagnoseId(this[DiagnoseTable.id]),
-            pasientId = PasientId(this[patientId]),
-            konsultasjonId = KonsultasjonId(this[konsultasjonId]),
-            kode = this[DiagnoseTable.diagnosekode],
-            system = DiagnoseSystem.valueOf(this[DiagnoseTable.diagnosesystem]),
-            beskrivelse = this[DiagnoseTable.beskrivelse],
-        )
+    /**
+     * The official display text is resolved from `no.nav.tsm.diagnoser` rather than persisted,
+     * since the catalogue is the single source of truth for diagnosis text.
+     */
+    fun ResultRow.toDiagnose(): Diagnose {
+        val system = this[KonsultasjonDiagnosekodeTable.diagnosesystem]
+        val kode = this[KonsultasjonDiagnosekodeTable.diagnosekode]
+        return Diagnose.from(system, kode) ?: throw UgyldigDiagnoseException(kode, system)
+    }
 }

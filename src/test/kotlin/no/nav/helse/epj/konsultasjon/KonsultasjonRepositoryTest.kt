@@ -9,7 +9,7 @@ import kotlin.test.assertTrue
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
-import no.nav.helse.core.db.DiagnoseTable
+import no.nav.helse.core.db.KonsultasjonDiagnosekodeTable
 import no.nav.helse.core.db.dbQuery
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.UgyldigDiagnoseException
@@ -19,6 +19,8 @@ import no.nav.helse.epj.pasient.Pasient
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.epj.pasient.PasientRepository
 import no.nav.helse.utils.WithPostgresql
+import no.nav.tsm.diagnoser.Diagnose
+import no.nav.tsm.diagnoser.DiagnoseType
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.Test
@@ -274,11 +276,7 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
                         konsultasjonId = konsultasjonId,
                         diagnoser =
                             listOf(
-                                OpprettDiagnoseRequest(
-                                    kode = "A01",
-                                    system = DiagnoseSystem.ICPC2,
-                                    beskrivelse = "",
-                                )
+                                OpprettDiagnoseRequest(kode = "A01", system = DiagnoseType.ICPC2)
                             ),
                         journalNotat = "notat",
                         ferdigstill = true,
@@ -307,13 +305,7 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
                 OppdaterKonsultasjonRequest(
                     konsultasjonId = konsultasjonId,
                     diagnoser =
-                        listOf(
-                            OpprettDiagnoseRequest(
-                                kode = "A01",
-                                system = DiagnoseSystem.ICPC2,
-                                beskrivelse = "",
-                            )
-                        ),
+                        listOf(OpprettDiagnoseRequest(kode = "A01", system = DiagnoseType.ICPC2)),
                     journalNotat = "oppdatert notat",
                     ferdigstill = true,
                 ),
@@ -329,7 +321,10 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
         assertEquals(1, konsultasjon.journalnotat.size)
         assertEquals("oppdatert notat", konsultasjon.journalnotat.last().journalnotat)
         assertEquals(1, konsultasjon.diagnoser.size)
-        assertEquals(konsultasjonId, konsultasjon.diagnoser.single().konsultasjonId)
+        val lagretDiagnose = konsultasjon.diagnoser.single()
+        assertEquals(DiagnoseType.ICPC2, lagretDiagnose.system)
+        assertEquals("A01", lagretDiagnose.code)
+        assertEquals(Diagnose.from(DiagnoseType.ICPC2, "A01")!!.text, lagretDiagnose.text)
     }
 
     @Test
@@ -398,8 +393,7 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
                         listOf(
                             OpprettDiagnoseRequest(
                                 kode = "IKKE-EN-GYLDIG-KODE",
-                                system = DiagnoseSystem.ICPC2,
-                                beskrivelse = "",
+                                system = DiagnoseType.ICPC2,
                             )
                         ),
                     journalNotat = "notat",
@@ -424,34 +418,52 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
                         KonsultasjonStatus.PÅGÅENDE,
                     )
                 )
-            val diagnose =
-                OpprettDiagnoseRequest(
-                    kode = "A01",
-                    system = DiagnoseSystem.ICPC2,
-                    beskrivelse = "",
-                )
+            val diagnose = OpprettDiagnoseRequest(kode = "A01", system = DiagnoseType.ICPC2)
 
-            val forsteInsert =
-                konsultasjonRepository.updateDiagnose(
-                    diagnose,
-                    pasientId.value,
-                    konsultasjonId.value,
-                )
-            val andreInsert =
-                konsultasjonRepository.updateDiagnose(
-                    diagnose,
-                    pasientId.value,
-                    konsultasjonId.value,
-                )
+            val forsteInsert = konsultasjonRepository.updateDiagnose(diagnose, konsultasjonId.value)
+            val andreInsert = konsultasjonRepository.updateDiagnose(diagnose, konsultasjonId.value)
 
             assertEquals(1, forsteInsert)
             assertEquals(0, andreInsert)
             val antallDiagnoser = dbQuery {
-                DiagnoseTable.selectAll()
-                    .where { DiagnoseTable.konsultasjonId eq konsultasjonId.value }
+                KonsultasjonDiagnosekodeTable.selectAll()
+                    .where { KonsultasjonDiagnosekodeTable.konsultasjonId eq konsultasjonId.value }
                     .count()
             }
             assertEquals(1, antallDiagnoser)
+        }
+
+    @Test
+    fun `updateDiagnose stores the katalog's canonical ICD10 code regardless of dot formatting`() =
+        runTest {
+            val hpr = HelsepersonellHpr("123")
+            val pasientId = opprettPasient(hpr = hpr)
+            val konsultasjonId =
+                konsultasjonRepository.insert(
+                    OpprettKonsultasjon(
+                        pasientId,
+                        listOf(hpr),
+                        LocalDateTime.now(),
+                        KonsultasjonStatus.PÅGÅENDE,
+                    )
+                )
+
+            val utenPunktum =
+                konsultasjonRepository.updateDiagnose(
+                    OpprettDiagnoseRequest(kode = "A000", system = DiagnoseType.ICD10),
+                    konsultasjonId.value,
+                )
+            val medPunktum =
+                konsultasjonRepository.updateDiagnose(
+                    OpprettDiagnoseRequest(kode = "A00.0", system = DiagnoseType.ICD10),
+                    konsultasjonId.value,
+                )
+
+            assertEquals(1, utenPunktum)
+            assertEquals(0, medPunktum)
+            val lagredeDiagnoser = konsultasjonRepository.listDiagnoser(konsultasjonId)
+            assertEquals(1, lagredeDiagnoser.size)
+            assertEquals("A00.0", lagredeDiagnoser.single().code)
         }
 
     @Test
@@ -479,14 +491,11 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
                 )
             )
 
-        val diagnose =
-            OpprettDiagnoseRequest(kode = "A01", system = DiagnoseSystem.ICPC2, beskrivelse = "")
+        val diagnose = OpprettDiagnoseRequest(kode = "A01", system = DiagnoseType.ICPC2)
 
-        val førsteInsert =
-            konsultasjonRepository.updateDiagnose(diagnose, pasientId.value, konsultasjonId1.value)
+        val førsteInsert = konsultasjonRepository.updateDiagnose(diagnose, konsultasjonId1.value)
 
-        val andreInsert =
-            konsultasjonRepository.updateDiagnose(diagnose, pasientId.value, konsultasjonId2.value)
+        val andreInsert = konsultasjonRepository.updateDiagnose(diagnose, konsultasjonId2.value)
 
         assertEquals(1, førsteInsert)
         assertEquals(1, andreInsert)
@@ -497,7 +506,46 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
     }
 
     @Test
-    fun `listDiagnoser retains konsultasjonId for both patient and konsultasjon lookups`() =
+    fun `listDiagnoser by pasientId only includes diagnoser for konsultasjoner owned by that patient`() =
+        runTest {
+            val hpr = HelsepersonellHpr("123")
+            val pasientA = opprettPasient(hpr = hpr)
+            val pasientB = opprettPasient(hpr = hpr)
+            val konsultasjonA =
+                konsultasjonRepository.insert(
+                    OpprettKonsultasjon(
+                        pasientA,
+                        listOf(hpr),
+                        LocalDateTime.now(),
+                        KonsultasjonStatus.PÅGÅENDE,
+                    )
+                )
+            val konsultasjonB =
+                konsultasjonRepository.insert(
+                    OpprettKonsultasjon(
+                        pasientB,
+                        listOf(hpr),
+                        LocalDateTime.now(),
+                        KonsultasjonStatus.PÅGÅENDE,
+                    )
+                )
+            konsultasjonRepository.updateDiagnose(
+                OpprettDiagnoseRequest(kode = "A01", system = DiagnoseType.ICPC2),
+                konsultasjonA.value,
+            )
+            konsultasjonRepository.updateDiagnose(
+                OpprettDiagnoseRequest(kode = "A02", system = DiagnoseType.ICPC2),
+                konsultasjonB.value,
+            )
+
+            val diagnoserForA = konsultasjonRepository.listDiagnoser(pasientA)
+
+            assertEquals(1, diagnoserForA.size)
+            assertEquals("A01", diagnoserForA.single().code)
+        }
+
+    @Test
+    fun `listDiagnoser resolves official catalogue text for both patient and konsultasjon lookups`() =
         runTest {
             val hpr = HelsepersonellHpr("123")
             val pasientId = opprettPasient(hpr = hpr)
@@ -510,19 +558,15 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
                         KonsultasjonStatus.PÅGÅENDE,
                     )
                 )
-            val diagnose =
-                OpprettDiagnoseRequest(
-                    kode = "A01",
-                    system = DiagnoseSystem.ICPC2,
-                    beskrivelse = "",
-                )
+            val diagnose = OpprettDiagnoseRequest(kode = "A01", system = DiagnoseType.ICPC2)
 
-            konsultasjonRepository.updateDiagnose(diagnose, pasientId.value, konsultasjonId.value)
+            konsultasjonRepository.updateDiagnose(diagnose, konsultasjonId.value)
 
+            val forventetTekst = Diagnose.from(DiagnoseType.ICPC2, "A01")!!.text
             val diagnoserByPasient = konsultasjonRepository.listDiagnoser(pasientId)
             val diagnoserByKonsultasjon = konsultasjonRepository.listDiagnoser(konsultasjonId)
 
-            assertEquals(konsultasjonId, diagnoserByPasient.single().konsultasjonId)
-            assertEquals(konsultasjonId, diagnoserByKonsultasjon.single().konsultasjonId)
+            assertEquals(forventetTekst, diagnoserByPasient.single().text)
+            assertEquals(forventetTekst, diagnoserByKonsultasjon.single().text)
         }
 }

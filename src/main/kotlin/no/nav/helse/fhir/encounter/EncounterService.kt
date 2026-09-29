@@ -9,10 +9,12 @@ import com.google.fhir.model.r4.Enumeration
 import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.Uri
 import no.nav.helse.core.utils.KonsultasjonStatus
+import no.nav.helse.core.utils.oid
 import no.nav.helse.epj.konsultasjon.Konsultasjon
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
 import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.fhir.condition.conditionFhirId
 import no.nav.helse.fhir.patient.PatientInputId
 
 class EncounterService(val konsultasjonService: KonsultasjonService) {
@@ -76,24 +78,21 @@ class EncounterService(val konsultasjonService: KonsultasjonService) {
                         coding =
                             listOf(
                                 Coding(
-                                    system = Uri(value = "urn:oid:2.16.578.1.12.4.1.1.7170"),
-                                    code = Code(value = diagnose.kode),
-                                    display =
-                                        com.google.fhir.model.r4.String(
-                                            value = diagnose.beskrivelse
-                                        ),
+                                    system = Uri(value = "urn:oid:" + diagnose.system.oid()),
+                                    code = Code(value = diagnose.code),
+                                    display = com.google.fhir.model.r4.String(value = diagnose.text),
                                 )
                             )
                     )
                 },
             diagnosis =
-                this.diagnoser.map {
+                this.diagnoser.map { diagnose ->
                     Encounter.Diagnosis(
                         condition =
                             Reference(
                                 reference =
                                     com.google.fhir.model.r4.String(
-                                        value = "Condition/${it.id.value}"
+                                        value = "Condition/${conditionFhirId(this.id, diagnose)}"
                                     )
                             )
                     )

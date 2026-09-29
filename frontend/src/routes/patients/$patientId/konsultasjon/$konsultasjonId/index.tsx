@@ -18,7 +18,7 @@ export const Route = createFileRoute(
 
 type PostKonsultasjonBody = {
     konsultasjonId: string
-    diagnoser: { kode: string, system: string, beskrivelse: string }[];
+    diagnoser: { kode: string, system: string }[];
     journalNotat: string | null;
     ferdigstill: boolean;
 }
@@ -30,7 +30,7 @@ function RouteComponent() {
     const konsultasjon = KonsultasjonSchema.safeParse(
         data.konsultasjon,
       );
-    const [diagnoser, setDiagnoser] = useState<{ kode: string, system: string, beskrivelse: string }[]>([])
+    const [diagnoser, setDiagnoser] = useState<{ kode: string, system: string }[]>([])
     const [journalnotat, setJournalnotat] = useState<string>('')
     const [saveError, setSaveError] = useState<string | null>(null)
 
@@ -53,7 +53,7 @@ function RouteComponent() {
             if (!newOption) {
                 return
             }
-            setDiagnoser([...diagnoser, { kode: newOption.value, system: newOption.system, beskrivelse: newOption.label }])
+            setDiagnoser([...diagnoser, { kode: newOption.value, system: newOption.system }])
         } else {
             const newDiagnoser = diagnoser.filter((diagnose) => diagnose.kode != option)
             setDiagnoser(newDiagnoser)
@@ -109,7 +109,7 @@ function RouteComponent() {
                 <div>
                     <p>Starttidspunkt: {konsultasjon.data.startetTidspunkt}</p>
                     <p>Sluttidspunkt: {konsultasjon.data.avsluttetTidspunkt}</p>
-                    <p>Diagnoser: {konsultasjon.data.diagnoser.map(d => d.beskrivelse).join(', ')}</p>
+                    <p>Diagnoser: {konsultasjon.data.diagnoser.map(d => d.text).join(', ')}</p>
                 </div>
             )}
             <Heading size="medium" level="2">Journalnotater</Heading>
