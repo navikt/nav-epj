@@ -11,12 +11,8 @@ data class SmartDiscoveryDocument(
     @get:JsonProperty("token_endpoint_auth_methods_supported")
     val tokenEndpointAuthMethodsSupported: List<String>,
     @get:JsonProperty("grant_types_supported") val grantTypesSupported: List<String>,
-    @get:JsonProperty("registration_endpoint") val registrationEndpoint: String,
     @get:JsonProperty("scopes_supported") val scopesSupported: List<String>,
     @get:JsonProperty("response_types_supported") val responseTypesSupported: List<String>,
-    @get:JsonProperty("management_endpoint") val managementEndpoint: String,
-    @get:JsonProperty("introspection_endpoint") val introspectionEndpoint: String,
-    @get:JsonProperty("revocation_endpoint") val revocationEndpoint: String,
     @get:JsonProperty("code_challenge_methods_supported")
     val codeChallengeMethodsSupported: List<String>,
     @get:JsonProperty("capabilities") val capabilities: List<String>,

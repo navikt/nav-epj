@@ -20,6 +20,7 @@ import no.nav.helse.helseId.loggedInUser
 import no.nav.helse.smart.SmartDiscoveryDocument
 import no.nav.helse.smart.TokenResponse
 import no.nav.helse.smart.security.ClientAssertionVerifier
+import no.nav.helse.smart.security.SUPPORTED_CLIENT_ASSERTION_ALGORITHMS
 import no.nav.helse.smart.security.SmartKeys
 import no.nav.helse.smart.security.SmartScope
 import no.nav.helse.smart.security.TokenEndpointAuthMethod
@@ -400,9 +401,8 @@ fun Application.configureSmartRouting() {
                         jwksUri = "$issuerUrl/jwks",
                         authorizationEndpoint = "$issuerUrl/authorize",
                         tokenEndpoint = "$issuerUrl/token",
-                        grantTypesSupported =
-                            listOf("authorization_code"), // TODO implement client_credentials
-                        registrationEndpoint = "$issuerUrl/register",
+                        // client_credentials is not implemented yet (SMART Backend Services).
+                        grantTypesSupported = listOf("authorization_code"),
                         scopesSupported =
                             listOf(
                                 "openid",
@@ -414,9 +414,6 @@ fun Application.configureSmartRouting() {
                                 "offline_access",
                             ),
                         responseTypesSupported = listOf("code"),
-                        managementEndpoint = "$issuerUrl/user/manage",
-                        introspectionEndpoint = "$issuerUrl/user/introspect",
-                        revocationEndpoint = "$issuerUrl/user/revoke",
                         codeChallengeMethodsSupported = listOf("S256"),
                         capabilities =
                             listOf(
@@ -434,12 +431,11 @@ fun Application.configureSmartRouting() {
                                 "context-banner",
                                 "sso-openid-connect",
                             ),
+                        // client_secret_post is not implemented.
                         tokenEndpointAuthMethodsSupported =
-                            listOf(
-                                "client_secret_basic",
-                                "private_key_jwt",
-                            ), // TODO implement client_secret_post
-                        tokenEndpointAuthSigningAlgValuesSupported = listOf("RS384", "ES384"),
+                            listOf("none", "client_secret_basic", "private_key_jwt"),
+                        tokenEndpointAuthSigningAlgValuesSupported =
+                            SUPPORTED_CLIENT_ASSERTION_ALGORITHMS.map { it.name },
                     ),
                 )
             }
