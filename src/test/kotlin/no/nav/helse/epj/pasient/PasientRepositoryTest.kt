@@ -2,10 +2,12 @@ package no.nav.helse.epj.pasient
 
 import java.time.LocalDate
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
+import no.nav.helse.core.utils.DuplikatPasientException
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.legekontor.Legekontor
 import no.nav.helse.utils.WithPostgresql
@@ -104,13 +106,47 @@ class PasientRepositoryTest : WithPostgresql() {
     }
 
     @Test
-    fun `insert with the same id twice does not create a duplicate`() = runTest {
-        val pasient = nyPasient()
-        pasientRepository.insert(pasient)
-        pasientRepository.insert(pasient.copy(fornavn = "annet navn"))
+    fun `insert with the same id twice throws DuplikatPasientException and leaves data unchanged`() =
+        runTest {
+            val pasient = nyPasient()
+            pasientRepository.insert(pasient)
 
-        val funnet = pasientRepository.findById(pasient.id.value)
+            assertFailsWith<DuplikatPasientException> {
+                pasientRepository.insert(
+                    pasient.copy(
+                        fornavn = "annet navn",
+                        hprNumbers = listOf(HelsepersonellHpr("999")),
+                    )
+                )
+            }
 
-        assertEquals("fornavn", funnet?.fornavn)
-    }
+            val funnet = pasientRepository.findById(pasient.id.value)
+            assertEquals("fornavn", funnet?.fornavn)
+            assertEquals(listOf(HelsepersonellHpr("123")), funnet?.hprNumbers)
+        }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `insert with the same personident but a different id throws DuplikatPasientException and leaves data unchanged`() =
+        runTest {
+            val original = nyPasient(personident = "15068500017")
+            pasientRepository.insert(original)
+
+            val duplikat =
+                nyPasient(
+                    id = PasientId(Uuid.generateV4()),
+                    hpr = HelsepersonellHpr("999"),
+                    personident = "15068500017",
+                )
+
+            assertFailsWith<DuplikatPasientException> { pasientRepository.insert(duplikat) }
+
+            val funnetOriginal = pasientRepository.findById(original.id.value)
+            assertEquals(original.fornavn, funnetOriginal?.fornavn)
+            assertEquals(listOf(HelsepersonellHpr("123")), funnetOriginal?.hprNumbers)
+
+            // the never-persisted duplicate id must not exist as a patient or association, and no
+            // foreign-key error should have occurred while attempting to link it.
+            assertNull(pasientRepository.findById(duplikat.id.value))
+        }
 }

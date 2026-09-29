@@ -6,6 +6,7 @@ import io.ktor.server.plugins.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import no.nav.helse.core.utils.AktivKonsultasjonNotFoundException
+import no.nav.helse.core.utils.DuplikatPasientException
 import no.nav.helse.core.utils.HelsepersonellForPatientNotFoundException
 import no.nav.helse.core.utils.HelsepersonellNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
@@ -58,10 +59,10 @@ fun Application.configureStatusPages() {
             )
         }
         exception<UgyldigPersonidentException> { call, cause ->
-            call.respondText(
-                text = "Ugyldig personident: ${cause.message}",
-                status = HttpStatusCode.BadRequest,
-            )
+            call.respondText(text = "Ugyldig personident", status = HttpStatusCode.BadRequest)
+        }
+        exception<DuplikatPasientException> { call, cause ->
+            call.respondText(text = "Pasienten finnes allerede", status = HttpStatusCode.Conflict)
         }
         exception<InsufficientScopeException> { call, cause ->
             call.response.header(

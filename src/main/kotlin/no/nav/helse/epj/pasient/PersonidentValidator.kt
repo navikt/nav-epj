@@ -57,7 +57,9 @@ object PersonidentValidator {
             try {
                 LocalDate.of(century + twoDigitYear, month, day)
             } catch (cause: DateTimeException) {
-                throw UgyldigPersonidentException("Personident koder ikke en gyldig kalenderdato")
+                throw UgyldigPersonidentException(
+                    "Personidenten inneholder ikke en gyldig kalenderdato"
+                )
             }
 
         if (encodedBirthDate != birthDate) {

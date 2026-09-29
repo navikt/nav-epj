@@ -27,3 +27,5 @@ class UgyldigDiagnoseException(kode: String, system: String) :
     RuntimeException("Fant ikke diagnosekode=$kode i kodeverk=$system")
 
 class UgyldigPersonidentException(message: String) : RuntimeException(message)
+
+class DuplikatPasientException : RuntimeException("Pasienten finnes allerede")

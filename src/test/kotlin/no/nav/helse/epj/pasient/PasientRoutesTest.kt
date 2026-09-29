@@ -13,6 +13,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import no.nav.helse.core.utils.DuplikatPasientException
 import no.nav.helse.core.utils.UgyldigPersonidentException
 import no.nav.helse.epj.legekontor.Legekontor
 import no.nav.helse.helseId.DebugInfo
@@ -100,5 +101,18 @@ class PasientRoutesTest {
             }
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
+    }
+
+    @Test
+    fun `POST patient with a duplicate personident returns 409`() = testApp {
+        coEvery { pasientService.createPasient(any(), any()) } throws DuplikatPasientException()
+
+        val response =
+            post("/api/patient") {
+                contentType(ContentType.Application.Json)
+                setBody(opprettPasientJson("15068500017", "1985-06-15"))
+            }
+
+        assertEquals(HttpStatusCode.Conflict, response.status)
     }
 }

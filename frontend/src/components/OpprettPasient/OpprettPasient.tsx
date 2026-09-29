@@ -53,7 +53,7 @@ export const OpprettPasient = ({lastPasienter}: { lastPasienter: () => void}) =>
             setGender("");
             lastPasienter();
         } catch {
-            setFeilmelding("Kunne ikke opprette pasient. Sjekk at fødselsnummeret eller d-nummeret ikke allerede finnes.");
+            setFeilmelding("Kunne ikke opprette pasient. Sjekk at fødselsnummeret eller D-nummeret ikke allerede finnes.");
         } finally {
             setLagrer(false);
         }

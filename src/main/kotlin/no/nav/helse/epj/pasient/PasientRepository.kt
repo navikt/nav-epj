@@ -4,6 +4,7 @@ import kotlin.uuid.Uuid
 import no.nav.helse.core.db.PasientHelsepersonell
 import no.nav.helse.core.db.PasientTable
 import no.nav.helse.core.db.dbQuery
+import no.nav.helse.core.utils.DuplikatPasientException
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.legekontor.Legekontor
@@ -79,7 +80,7 @@ class PasientRepository {
     suspend fun insert(pasient: Pasient) = dbQuery {
         logger.info("Inserting pasient with id: ${pasient.id.value}")
 
-        PasientTable.insertIgnore {
+        val insertStatement = PasientTable.insertIgnore {
             it[id] = pasient.id.value
             it[legekontorId] = pasient.legekontorId.value
             it[fornavn] = pasient.fornavn
@@ -88,6 +89,10 @@ class PasientRepository {
             it[personidentType] = pasient.personidentType
             it[birthDate] = pasient.birthDate
             it[gender] = pasient.gender
+        }
+
+        if (insertStatement.insertedCount == 0) {
+            throw DuplikatPasientException()
         }
 
         pasient.hprNumbers.forEach { it ->
