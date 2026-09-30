@@ -38,16 +38,20 @@ export function DevPanel({ run, hidden, onClose }: Props) {
   ];
   const events = run.events.map((event) => {
     const at = format(event.at, "HH:mm:ss");
-    return event.kind === "launch"
-      ? copy["dev.event.launch"](at, event.status)
-      : copy["dev.event.load"](at, event.url);
+    return {
+      id: event.id,
+      text:
+        event.kind === "launch"
+          ? copy["dev.event.launch"](at, event.status)
+          : copy["dev.event.load"](at, event.url),
+    };
   });
 
   function copyAll() {
     const text = [
       `${run.navn} (${fullName(run.patient)}, ${format(parseISO(run.konsultasjon.startetTidspunkt), "HH:mm")})`,
       ...rows.map(([key, value]) => `${key}: ${value}`),
-      ...events,
+      ...events.map((event) => event.text),
     ].join("\n");
     void copyText(text, copy["dev.copied"]);
   }
@@ -84,8 +88,8 @@ export function DevPanel({ run, hidden, onClose }: Props) {
         <div>
           <h3 className="xp-h2">{copy["dev.events"]}</h3>
           <ul className="xp-events">
-            {events.map((text, index) => (
-              <li key={index}>{text}</li>
+            {events.map((event) => (
+              <li key={event.id}>{event.text}</li>
             ))}
           </ul>
         </div>

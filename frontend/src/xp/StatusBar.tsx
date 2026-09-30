@@ -1,11 +1,11 @@
-import { differenceInMinutes, format, parseISO } from "date-fns";
 import { useAppDialogStore } from "./appDialogStore";
 import { isStaleFor, useAppRunStore } from "./appRunStore";
 import { copy } from "./copy";
 import { ongoingOf, useJournalStore } from "./journalStore";
 import { fullName } from "./patientInfo";
+import { StatusClock } from "./StatusClock";
+import { StatusKons } from "./StatusKons";
 import { TestMarker } from "./TestMarker";
-import { useNow } from "./useNow";
 
 type Props = {
   onOpenPatients: () => void;
@@ -13,8 +13,6 @@ type Props = {
 };
 
 export function StatusBar({ onOpenPatients, onOpenJournal }: Props) {
-  const now = useNow();
-  const time = format(now, "HH:mm");
   const patient = useJournalStore((s) => s.patient);
   const konsultasjoner = useJournalStore((s) => s.konsultasjoner);
   const ongoing = patient ? ongoingOf(konsultasjoner) : null;
@@ -55,16 +53,7 @@ export function StatusBar({ onOpenPatients, onOpenJournal }: Props) {
           {copy["status.noPatient"]}
         </button>
       )}
-      {ongoing && (
-        <span className="seg">
-          {copy["status.kons"](
-            Math.max(
-              0,
-              differenceInMinutes(now, parseISO(ongoing.startetTidspunkt)),
-            ),
-          )}
-        </span>
-      )}
+      {ongoing && <StatusKons startetTidspunkt={ongoing.startetTidspunkt} />}
       {liveApps.length > 0 && (
         <button
           type="button"
@@ -87,8 +76,7 @@ export function StatusBar({ onOpenPatients, onOpenJournal }: Props) {
         <TestMarker />
       </span>
       <span className="seg">
-        <span aria-hidden="true">{time}</span>
-        <span className="sr-only">{copy["status.clock.sr"](time)}</span>
+        <StatusClock />
       </span>
     </footer>
   );

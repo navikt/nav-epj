@@ -1,4 +1,4 @@
-import { createContext, useContext } from "react";
+import { createContext, use } from "react";
 
 export const MENU_BUTTON_ID = "xp-menu-button";
 export const TASK_PANE_ID = "xp-task-pane";
@@ -22,5 +22,5 @@ export const ShellContext = createContext<ShellContextValue>({
 });
 
 export function useShell() {
-  return useContext(ShellContext);
+  return use(ShellContext);
 }

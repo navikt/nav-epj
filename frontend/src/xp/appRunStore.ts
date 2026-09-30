@@ -7,7 +7,9 @@ export type RunEventInput =
   | { kind: "launch"; status: number }
   | { kind: "load"; url: string };
 
-export type RunEvent = RunEventInput & { at: Date };
+export type RunEvent = RunEventInput & { id: number; at: Date };
+
+let eventSeq = 0;
 
 export type AppRun = {
   clientId: string;
@@ -84,7 +86,7 @@ export const useAppRunStore = create<AppRunState>((set) => ({
     set((s) => ({
       runs: patchRun(s.runs, clientId, (run) => ({
         ...run,
-        events: [...run.events, { ...event, at: new Date() }],
+        events: [...run.events, { ...event, id: (eventSeq += 1), at: new Date() }],
       })),
     })),
   removeRun: (clientId) =>

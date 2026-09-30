@@ -58,8 +58,14 @@ export function DocumentTabs({ onActivate, onBeforeClose }: Props) {
     }
   }
 
+  const latest = useRef({ tabs, current, close, activate });
+  useEffect(() => {
+    latest.current = { tabs, current, close, activate };
+  });
+
   useEffect(() => {
     function onKeyDown(event: globalThis.KeyboardEvent) {
+      const { tabs, current, close, activate } = latest.current;
       if (isModalOpen()) return;
       const isW = event.code === "KeyW" || event.key?.toLowerCase() === "w";
       if (event.ctrlKey && !event.shiftKey && isW) {
@@ -79,7 +85,7 @@ export function DocumentTabs({ onActivate, onBeforeClose }: Props) {
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  });
+  }, []);
 
   function onTabKeyDown(event: KeyboardEvent, index: number) {
     let target: number | null = null;

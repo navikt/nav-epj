@@ -1,4 +1,4 @@
-import { createContext, useContext } from "react";
+import { createContext, use } from "react";
 
 export type CurrentUser = {
   navn: string;
@@ -10,5 +10,5 @@ export type CurrentUser = {
 export const CurrentUserContext = createContext<CurrentUser | null>(null);
 
 export function useCurrentUser() {
-  return useContext(CurrentUserContext);
+  return use(CurrentUserContext);
 }

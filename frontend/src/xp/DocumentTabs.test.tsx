@@ -115,6 +115,18 @@ describe("DocumentTabs", () => {
     expect(tab(copy["tabs.start"])).toBeInTheDocument();
   });
 
+  it("registers the global keydown listener once across re-renders", () => {
+    const add = vi.spyOn(document, "addEventListener");
+    render(<DocumentTabs />);
+    openSecondAndThird();
+    act(() => store().setCurrent("patients"));
+    const keydowns = add.mock.calls.filter(([type]) => type === "keydown");
+    expect(keydowns).toHaveLength(1);
+    fireEvent.keyDown(document, { key: "w", code: "KeyW", ctrlKey: true });
+    expect(store().tabs.map((t) => t.id)).not.toContain("patients");
+    add.mockRestore();
+  });
+
   it("closes the current closable tab with Ctrl+W", async () => {
     const user = userEvent.setup();
     render(<DocumentTabs />);
