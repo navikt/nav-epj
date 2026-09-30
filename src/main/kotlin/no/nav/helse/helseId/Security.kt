@@ -54,6 +54,7 @@ fun Application.configureHelseId() {
                                 request.headers["Authorization"]?.replace("Bearer ", "")
                                     ?: "missing",
                         ),
+                    idToken = decodedIdToken.toIdTokenClaims(),
                 )
             }
         }

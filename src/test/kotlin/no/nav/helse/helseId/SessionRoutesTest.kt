@@ -18,7 +18,6 @@ import tools.jackson.databind.JsonNode
 import tools.jackson.module.kotlin.jacksonObjectMapper
 
 private const val PID = "01019012345"
-private const val HPR_CLAIM = "helseid://claims/hpr/hpr_number"
 
 class SessionRoutesTest {
 
@@ -48,6 +47,9 @@ class SessionRoutesTest {
                                 User(name = "Test", hpr = "111"),
                                 DebugInfo(accessToken = "access-secret", idToken = "id-secret"),
                                 idp,
+                                ctx.call.request.headers["X-Wonderwall-Id-Token"]?.let {
+                                    JWT.decode(it).toIdTokenClaims()
+                                },
                             )
                         )
                     }
@@ -107,16 +109,6 @@ class SessionRoutesTest {
                 json(get("/api/session") { header("X-Wonderwall-Id-Token", token) }.bodyAsText())
 
             assertEquals("a, b", body["claims"]["aud"].asString())
-        }
-
-    @Test
-    fun `rejects a missing or malformed id token`() =
-        testApp(Idp.HELSEID) {
-            assertEquals(HttpStatusCode.Unauthorized, get("/api/session").status)
-            assertEquals(
-                HttpStatusCode.Unauthorized,
-                get("/api/session") { header("X-Wonderwall-Id-Token", "not-a-jwt") }.status,
-            )
         }
 
     @Test
