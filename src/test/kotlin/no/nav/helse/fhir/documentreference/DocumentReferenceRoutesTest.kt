@@ -600,4 +600,55 @@ class DocumentReferenceRoutesTest {
             documentReferenceService.createDocumentReference(any<DocumentReference>())
         }
     }
+
+    @Test
+    fun `PUT DocumentReference rejects a body id that differs from the URL id and writes nothing`() {
+        val patientId = Uuid.generateV4().toString()
+
+        testApp(scopes = crsScope(), boundPatient = patientId) {
+            val response =
+                put("/fhir/DocumentReference/${Uuid.generateV4()}") {
+                    contentType(fhirContentType)
+                    setBody(
+                        fhirJson.encodeToString(
+                            sampleDocumentReference(Uuid.generateV4().toString(), patientId)
+                        )
+                    )
+                }
+
+            assertEquals(HttpStatusCode.BadRequest, response.status)
+            assertEquals(true, response.bodyAsText().contains("\"OperationOutcome\""))
+        }
+        coVerify(exactly = 0) {
+            documentReferenceService.createDocumentReference(any<DocumentReference>())
+        }
+    }
+
+    @Test
+    fun `PUT DocumentReference with an encounter of another patient returns an OperationOutcome`() {
+        val patientId = Uuid.generateV4().toString()
+        val documentReferenceId = Uuid.generateV4().toString()
+        coEvery {
+            documentReferenceService.createDocumentReference(any<DocumentReference>())
+        } throws
+            KonsultasjonTilhorerAnnenPasientException(
+                KonsultasjonId(Uuid.generateV4()),
+                PasientId(Uuid.parse(patientId)),
+            )
+
+        testApp(scopes = crsScope(), boundPatient = patientId) {
+            val response =
+                put("/fhir/DocumentReference/$documentReferenceId") {
+                    contentType(fhirContentType)
+                    setBody(
+                        fhirJson.encodeToString(
+                            sampleDocumentReference(documentReferenceId, patientId)
+                        )
+                    )
+                }
+
+            assertEquals(HttpStatusCode.BadRequest, response.status)
+            assertEquals(true, response.bodyAsText().contains("\"OperationOutcome\""))
+        }
+    }
 }

@@ -231,6 +231,31 @@ class KonsultasjonRepository {
     }
 
     suspend fun insertJournalnotat(journalnotat: Journalnotat): Int = dbQuery {
+        val konsultasjonPasientId =
+            KonsultasjonTable.select(KonsultasjonTable.pasientId)
+                .where { KonsultasjonTable.id eq journalnotat.konsultasjonId.value }
+                .singleOrNull()
+                ?.get(KonsultasjonTable.pasientId)
+                ?: throw KonsultasjonNotFoundException(journalnotat.konsultasjonId)
+        if (konsultasjonPasientId != journalnotat.pasientId.value) {
+            throw KonsultasjonTilhorerAnnenPasientException(
+                journalnotat.konsultasjonId,
+                journalnotat.pasientId,
+            )
+        }
+
+        val eksisterendeKonsultasjonId =
+            JournalnotatTable.select(JournalnotatTable.konsultasjonId)
+                .where { JournalnotatTable.id eq journalnotat.id.value }
+                .singleOrNull()
+                ?.get(JournalnotatTable.konsultasjonId)
+        if (
+            eksisterendeKonsultasjonId != null &&
+                eksisterendeKonsultasjonId != journalnotat.konsultasjonId.value
+        ) {
+            return@dbQuery 0
+        }
+
         JournalnotatTable.upsert(onUpdateExclude = listOf(JournalnotatTable.id)) {
                 it[JournalnotatTable.id] = journalnotat.id.value
                 it[JournalnotatTable.konsultasjonId] = journalnotat.konsultasjonId.value

@@ -821,4 +821,75 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
 
             assertTrue(notater.isEmpty())
         }
+
+    private suspend fun opprettKonsultasjon(pasientId: PasientId): KonsultasjonId =
+        konsultasjonRepository.insert(
+            OpprettKonsultasjon(
+                pasientId,
+                listOf(HelsepersonellHpr("123")),
+                LocalDateTime.now(),
+                KonsultasjonStatus.PÅGÅENDE,
+            )
+        )
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `insertJournalnotat rejects an encounter that belongs to another patient`() = runTest {
+        val eier = opprettPasient()
+        val konsultasjonId = opprettKonsultasjon(eier)
+        val annenPasient = opprettPasient()
+        val id = JournalnotatId(Uuid.generateV4())
+
+        assertFailsWith<no.nav.helse.core.utils.KonsultasjonTilhorerAnnenPasientException> {
+            konsultasjonRepository.insertJournalnotat(
+                Journalnotat(id, konsultasjonId, annenPasient, "notat")
+            )
+        }
+        assertNull(konsultasjonRepository.findJournalnotat(id))
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `insertJournalnotat does not move an existing journalnotat to another konsultasjon`() =
+        runTest {
+            val eier = opprettPasient()
+            val eierKonsultasjon = opprettKonsultasjon(eier)
+            val id = JournalnotatId(Uuid.generateV4())
+            konsultasjonRepository.insertJournalnotat(
+                Journalnotat(id, eierKonsultasjon, eier, "original")
+            )
+            val angriper = opprettPasient()
+            val angriperKonsultasjon = opprettKonsultasjon(angriper)
+
+            val rows =
+                konsultasjonRepository.insertJournalnotat(
+                    Journalnotat(id, angriperKonsultasjon, angriper, "overskrevet")
+                )
+
+            assertEquals(0, rows)
+            val lagret = konsultasjonRepository.findJournalnotat(id)
+            assertEquals("original", lagret?.journalnotat)
+            assertEquals(eier, lagret?.pasientId)
+            assertEquals(eierKonsultasjon, lagret?.konsultasjonId)
+        }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `insertJournalnotat updates the text of an existing journalnotat in the same konsultasjon`() =
+        runTest {
+            val pasientId = opprettPasient()
+            val konsultasjonId = opprettKonsultasjon(pasientId)
+            val id = JournalnotatId(Uuid.generateV4())
+            konsultasjonRepository.insertJournalnotat(
+                Journalnotat(id, konsultasjonId, pasientId, "første")
+            )
+
+            val rows =
+                konsultasjonRepository.insertJournalnotat(
+                    Journalnotat(id, konsultasjonId, pasientId, "andre")
+                )
+
+            assertEquals(1, rows)
+            assertEquals("andre", konsultasjonRepository.findJournalnotat(id)?.journalnotat)
+        }
 }

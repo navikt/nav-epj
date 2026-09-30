@@ -171,7 +171,36 @@ fun Route.documentReferenceRoutes(
                 documentReference.subject?.reference?.value?.substringAfter("Patient/"),
             )
 
-            val created = documentReferenceService.createDocumentReference(documentReference)
+            if (documentReference.id != id.value.toString()) {
+                return@put call.respondOperationOutcome(
+                    fhirjson,
+                    fhirContentType,
+                    HttpStatusCode.BadRequest,
+                    OperationOutcome.IssueType.Invalid,
+                    "DocumentReference.id må være lik id-en i URL-en",
+                )
+            }
+
+            val created =
+                try {
+                    documentReferenceService.createDocumentReference(documentReference)
+                } catch (exception: KonsultasjonNotFoundException) {
+                    return@put call.respondOperationOutcome(
+                        fhirjson,
+                        fhirContentType,
+                        HttpStatusCode.BadRequest,
+                        OperationOutcome.IssueType.Not_Found,
+                        exception.message ?: "Fant ikke encounter",
+                    )
+                } catch (exception: KonsultasjonTilhorerAnnenPasientException) {
+                    return@put call.respondOperationOutcome(
+                        fhirjson,
+                        fhirContentType,
+                        HttpStatusCode.BadRequest,
+                        OperationOutcome.IssueType.Invalid,
+                        exception.message ?: "Encounter tilhører en annen pasient",
+                    )
+                }
             if (created) {
                 val json =
                     fhirjson.encodeToString(documentReference).replace("\"no-NO\"", "\"NO-nb\"")
