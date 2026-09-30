@@ -28,3 +28,7 @@ dist-ssr
 /.pnp
 .pnp.js
 .yarn/install-state.gz
+
+# playwright
+test-results
+playwright-report

@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
-    "typecheck": "tsc -p tsconfig.app.json"
+    "typecheck": "tsc -p tsconfig.app.json",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@navikt/ds-css": "^8.16.2",
@@ -26,6 +27,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
+    "@playwright/test": "^1.63.0",
     "@tanstack/router-plugin": "^1.168.40",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
