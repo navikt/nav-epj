@@ -95,6 +95,8 @@ fun Application.configureSmartRouting() {
                 }
             }
 
+            appRoutes(clients, env.smart.fhirServerUrl, launchPreparer)
+
             route("/oidc") {
                 get("/authorize") {
                     val query = call.request.queryParameters
