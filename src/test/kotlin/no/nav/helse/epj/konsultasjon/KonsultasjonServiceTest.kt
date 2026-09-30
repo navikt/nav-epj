@@ -70,12 +70,12 @@ class KonsultasjonServiceTest {
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `getOrCreateKonsultasjon returns the active konsultasjon without creating a new one`() =
+    fun `getOrCreateKonsultasjon returns the same doctor's active konsultasjon without creating a new one`() =
         runTest {
             val pasientId = PasientId(Uuid.generateV4())
             val hpr = HelsepersonellHpr("123")
             val aktivKonsultasjon = konsultasjon(pasientId = pasientId)
-            coEvery { konsultasjonRepository.findActiveByPasientId(pasientId) } returns
+            coEvery { konsultasjonRepository.findActiveByPasientIdAndHpr(pasientId, hpr) } returns
                 aktivKonsultasjon
 
             val resultat = konsultasjonService.getOrCreateKonsultasjon(pasientId, hpr)
@@ -92,7 +92,7 @@ class KonsultasjonServiceTest {
         val opprettetId = KonsultasjonId(Uuid.generateV4())
         val opprettetKonsultasjon = konsultasjon(id = opprettetId, pasientId = pasientId)
 
-        coEvery { konsultasjonRepository.findActiveByPasientId(pasientId) } returns null
+        coEvery { konsultasjonRepository.findActiveByPasientIdAndHpr(pasientId, hpr) } returns null
         coEvery { konsultasjonRepository.insert(any()) } returns opprettetId
         coEvery { konsultasjonRepository.findByKonsultasjonId(opprettetId) } returns
             opprettetKonsultasjon
@@ -102,6 +102,28 @@ class KonsultasjonServiceTest {
         assertSame(opprettetKonsultasjon, resultat)
         coVerify(exactly = 1) { konsultasjonRepository.insert(any()) }
     }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `getOrCreateKonsultasjon creates a new konsultasjon for a different doctor even when one is active`() =
+        runTest {
+            val pasientId = PasientId(Uuid.generateV4())
+            val annenLegeHpr = HelsepersonellHpr("456")
+            val opprettetId = KonsultasjonId(Uuid.generateV4())
+            val opprettetKonsultasjon = konsultasjon(id = opprettetId, pasientId = pasientId)
+
+            coEvery {
+                konsultasjonRepository.findActiveByPasientIdAndHpr(pasientId, annenLegeHpr)
+            } returns null
+            coEvery { konsultasjonRepository.insert(any()) } returns opprettetId
+            coEvery { konsultasjonRepository.findByKonsultasjonId(opprettetId) } returns
+                opprettetKonsultasjon
+
+            val resultat = konsultasjonService.getOrCreateKonsultasjon(pasientId, annenLegeHpr)
+
+            assertSame(opprettetKonsultasjon, resultat)
+            coVerify(exactly = 1) { konsultasjonRepository.insert(any()) }
+        }
 
     @OptIn(ExperimentalUuidApi::class)
     @Test

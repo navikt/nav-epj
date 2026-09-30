@@ -229,6 +229,58 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
         assertEquals(nyesteId, aktiv.id)
     }
 
+    @Test
+    fun `findActiveByPasientIdAndHpr returns null when the doctor has no active konsultasjon`() =
+        runTest {
+            val hpr = HelsepersonellHpr("123")
+            val annenHpr = HelsepersonellHpr("456")
+            val pasientId = opprettPasient(hpr = hpr)
+            konsultasjonRepository.insert(
+                OpprettKonsultasjon(
+                    pasientId,
+                    listOf(hpr),
+                    LocalDateTime.now(),
+                    KonsultasjonStatus.PÅGÅENDE,
+                )
+            )
+
+            assertNull(konsultasjonRepository.findActiveByPasientIdAndHpr(pasientId, annenHpr))
+        }
+
+    @Test
+    fun `findActiveByPasientIdAndHpr lets two different doctors have simultaneous active konsultasjoner for the same patient`() =
+        runTest {
+            val legeA = HelsepersonellHpr("123")
+            val legeB = HelsepersonellHpr("456")
+            val pasientId = opprettPasient(hpr = legeA)
+            val konsultasjonA =
+                konsultasjonRepository.insert(
+                    OpprettKonsultasjon(
+                        pasientId,
+                        listOf(legeA),
+                        LocalDateTime.now(),
+                        KonsultasjonStatus.PÅGÅENDE,
+                    )
+                )
+            val konsultasjonB =
+                konsultasjonRepository.insert(
+                    OpprettKonsultasjon(
+                        pasientId,
+                        listOf(legeB),
+                        LocalDateTime.now(),
+                        KonsultasjonStatus.PÅGÅENDE,
+                    )
+                )
+
+            val aktivForA = konsultasjonRepository.findActiveByPasientIdAndHpr(pasientId, legeA)
+            val aktivForB = konsultasjonRepository.findActiveByPasientIdAndHpr(pasientId, legeB)
+
+            assertNotNull(aktivForA)
+            assertNotNull(aktivForB)
+            assertEquals(konsultasjonA, aktivForA.id)
+            assertEquals(konsultasjonB, aktivForB.id)
+        }
+
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `findByKonsultasjonId returns null for an unknown id`() = runTest {

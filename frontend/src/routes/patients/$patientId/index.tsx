@@ -1,5 +1,5 @@
 import { Button, Heading, Table } from "@navikt/ds-react";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import {
   KonsultasjonSchema,
   PasientSchema,
@@ -24,6 +24,7 @@ async function opprettKonsultasjon(patientId: string) {
 
 function RouteComponent() {
   const router = useRouter()
+  const navigate = useNavigate()
   const { patientId } = Route.useParams();
   const data = Route.useLoaderData();
   const patient = PasientSchema.safeParse(data.pasient);
@@ -33,8 +34,13 @@ function RouteComponent() {
 
   async function handleOnClickOpprettKonsultasjon() {
     const res = await opprettKonsultasjon(patientId)
-    console.log(res);
-    router.invalidate()
+    const konsultasjon = KonsultasjonSchema.safeParse(res)
+    if (!konsultasjon.success) {
+      console.error(konsultasjon.error.message);
+      return
+    }
+    await router.invalidate()
+    navigate({ to: `/patients/$patientId/konsultasjon/$konsultasjonId`, params: { patientId, konsultasjonId: konsultasjon.data.id } })
   }
 
   if (konsultasjoner.error) {

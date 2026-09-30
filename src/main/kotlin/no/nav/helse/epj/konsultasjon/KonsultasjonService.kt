@@ -22,6 +22,10 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
         return konsultasjonRepository.findActiveByPasientId(pasientId)
     }
 
+    suspend fun getAktivKonsultasjon(pasientId: PasientId, hpr: HelsepersonellHpr): Konsultasjon? {
+        return konsultasjonRepository.findActiveByPasientIdAndHpr(pasientId, hpr)
+    }
+
     suspend fun getKonsultasjon(konsultasjonId: KonsultasjonId): Konsultasjon {
         return konsultasjonRepository.findByKonsultasjonId(konsultasjonId)
             ?: throw KonsultasjonNotFoundException(konsultasjonId)
@@ -76,7 +80,7 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
         pasientId: PasientId,
         hpr: HelsepersonellHpr,
     ): Konsultasjon {
-        val aktivKonsultasjon = getAktivKonsultasjon(pasientId)
+        val aktivKonsultasjon = getAktivKonsultasjon(pasientId, hpr)
         if (aktivKonsultasjon != null) return aktivKonsultasjon
         val opprettKonsultasjon =
             OpprettKonsultasjon(

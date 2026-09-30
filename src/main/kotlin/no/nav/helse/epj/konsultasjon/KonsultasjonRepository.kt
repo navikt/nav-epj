@@ -14,6 +14,7 @@ import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.KonsultasjonTilhorerAnnenPasientException
 import no.nav.helse.core.utils.UgyldigDiagnoseException
 import no.nav.helse.core.utils.logger
+import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.tsm.diagnoser.Diagnose
@@ -128,6 +129,27 @@ class KonsultasjonRepository {
                     .where {
                         (KonsultasjonTable.pasientId eq pasientUuid) and
                             KonsultasjonTable.avsluttetTidspunkt.isNull()
+                    }
+                    .orderBy(KonsultasjonTable.startetTidspunkt, SortOrder.DESC)
+                    .limit(1)
+                    .singleOrNull() ?: return@dbQuery null
+            toEpjKonsultasjon(konsultasjon)
+        }
+    }
+
+    suspend fun findActiveByPasientIdAndHpr(
+        pasientId: PasientId,
+        hpr: HelsepersonellHpr,
+    ): Konsultasjon? {
+        val pasientUuid = pasientId.value
+        return dbQuery {
+            val konsultasjon =
+                (KonsultasjonTable innerJoin KonsultasjonHelsepersonell)
+                    .selectAll()
+                    .where {
+                        (KonsultasjonTable.pasientId eq pasientUuid) and
+                            KonsultasjonTable.avsluttetTidspunkt.isNull() and
+                            (KonsultasjonHelsepersonell.hpr eq hpr.value)
                     }
                     .orderBy(KonsultasjonTable.startetTidspunkt, SortOrder.DESC)
                     .limit(1)
