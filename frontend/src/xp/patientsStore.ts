@@ -10,7 +10,7 @@ const RECENT_LIMIT = 10;
 export type PatientsView = "mine" | "recent";
 
 export type LastKonsultasjon = {
-  status: "PÅGÅENDE" | "FULLFØRT";
+  status: string;
   tidspunkt: string;
 };
 
