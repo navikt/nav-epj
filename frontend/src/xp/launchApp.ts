@@ -72,10 +72,21 @@ function reportLaunchFailure(
     call: LAUNCH_CALL,
   };
   if (error instanceof LaunchError) {
+    if (error.code === "PATIENT_MISMATCH") {
+      void useActivePatientStore.getState().refresh();
+    }
     showError(error.code, app, patient, extra);
   } else {
     showError("NETWORK", app, patient, { ...extra, retry });
   }
+}
+
+async function requestLaunch(clientId: string, patientId: string) {
+  const url = await launchApp(clientId, patientId);
+  if (!patientChanged({ id: patientId })) {
+    useActivePatientStore.getState().setActive(patientId);
+  }
+  return url;
 }
 
 function readContext(app: App): LaunchContext | null {
@@ -95,7 +106,7 @@ function readContext(app: App): LaunchContext | null {
   };
 }
 
-const patientChanged = (patient: Pasient) =>
+const patientChanged = (patient: Pick<Pasient, "id">) =>
   useJournalStore.getState().patientId !== patient.id;
 
 export function findApp(clientId: string) {
@@ -130,7 +141,7 @@ async function launchInFrame(app: App, context: LaunchContext) {
   });
   let url: string;
   try {
-    url = await launchApp(app.clientId, context.patient.id);
+    url = await requestLaunch(app.clientId, context.patient.id);
   } catch (error) {
     if (!isCurrent()) return null;
     closeApp(app.clientId);
@@ -164,7 +175,7 @@ async function launchInTab(
   const isCurrent = beginLaunch(app.clientId);
   let url: string;
   try {
-    url = await launchApp(app.clientId, context.patient.id);
+    url = await requestLaunch(app.clientId, context.patient.id);
   } catch (error) {
     if (!isCurrent()) return null;
     reportLaunchFailure(error, app, fullName(context.patient), () =>
@@ -229,7 +240,7 @@ export async function reloadApp(clientId: string) {
   const isCurrent = beginLaunch(clientId);
   runs.restartRun(clientId, new Date());
   try {
-    const url = await launchApp(clientId, run.patient.id);
+    const url = await requestLaunch(clientId, run.patient.id);
     if (!isCurrent()) return;
     runs.setLaunchUrl(clientId, url);
     runs.addEvent(clientId, { kind: "launch", status: 200 });

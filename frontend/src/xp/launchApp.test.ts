@@ -11,6 +11,7 @@ import {
   sykInn,
   validator,
 } from "./appFixtures";
+import { useActivePatientStore } from "./activePatientStore";
 import { useAppDialogStore } from "./appDialogStore";
 import { useAppRunStore } from "./appRunStore";
 import { useBalloonStore } from "./balloonStore";
@@ -166,6 +167,35 @@ describe("startApp", () => {
     expect(errorDialog()).toMatchObject({ code, status, call: "POST /api/launch" });
     expect(useAppRunStore.getState().runs).toEqual([]);
     expect(useWorkspaceStore.getState().tabs.map((t) => t.id)).toEqual(["start"]);
+  });
+
+  it("re-checks the active patient after PATIENT_MISMATCH so running apps turn utdatert", async () => {
+    const fetch = stubLaunch([
+      { status: 409, body: { code: "PATIENT_MISMATCH", message: "x", appId: "syk-inn" } },
+      { body: { patientId: "p2", expiresAt: "2026-09-30T17:14:00Z" } },
+    ]);
+    await startApp(sykInn);
+    await vi.waitFor(() =>
+      expect(fetch).toHaveBeenCalledWith("/api/active-patient", undefined),
+    );
+    await vi.waitFor(() =>
+      expect(useActivePatientStore.getState().activeId).toBe("p2"),
+    );
+  });
+
+  it("records the launched patient as active after a successful launch", async () => {
+    stubLaunch([launchOk()]);
+    await startApp(sykInn);
+    expect(useActivePatientStore.getState().activeId).toBe("p1");
+  });
+
+  it("does not record the launched patient when the journal moved on meanwhile", async () => {
+    stubLaunch([launchOk()]);
+    const started = startApp(sykInn);
+    seedJournal(kari);
+    useActivePatientStore.setState({ activeId: "p2" });
+    await started;
+    expect(useActivePatientStore.getState().activeId).toBe("p2");
   });
 
   it("reports a network failure with a retry", async () => {

@@ -2,7 +2,6 @@ import { create } from "zustand";
 import {
   fetchKonsultasjoner,
   fetchPatient,
-  putActivePatient,
   saveKonsultasjon,
   startKonsultasjon,
 } from "./api";
@@ -204,12 +203,9 @@ export const useJournalStore = create<JournalState>((set, get) => {
       const [patient, konsultasjoner, active] = await Promise.allSettled([
         fetchPatient(patientId),
         fetchKonsultasjoner(patientId),
-        putActivePatient(patientId),
+        useActivePatientStore.getState().claim(patientId),
       ]);
       if (!isCurrent()) return;
-      if (active.status === "fulfilled") {
-        useActivePatientStore.getState().setActive(active.value.patientId);
-      }
       if (patient.status === "rejected" || active.status === "rejected") {
         commit({ status: "error", loadError: "patient" });
         return;
@@ -262,6 +258,7 @@ export const useJournalStore = create<JournalState>((set, get) => {
         if (!isCurrent()) return;
         const rest = get().konsultasjoner.filter((k) => k.id !== started.id);
         const konsultasjoner = [started, ...rest];
+        useActivePatientStore.getState().setActive(patientId);
         publishLatest(patientId, konsultasjoner);
         commit({
           starting: false,

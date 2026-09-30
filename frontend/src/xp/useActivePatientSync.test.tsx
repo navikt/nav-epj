@@ -1,7 +1,8 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { seedRun } from "./appFixtures";
 import { useActivePatientStore } from "./activePatientStore";
-import { useActivePatientSync } from "./useActivePatientSync";
+import { ACTIVE_PATIENT_POLL_MS, useActivePatientSync } from "./useActivePatientSync";
 
 function stubActive(patientId: string) {
   const fn = vi.fn(async () => ({
@@ -66,5 +67,42 @@ describe("useActivePatientSync", () => {
       window.dispatchEvent(new Event("focus"));
     });
     expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("re-checks when another window announces a change", async () => {
+    const fetch = stubActive("p2");
+    renderHook(() => useActivePatientSync(true));
+    const other = new BroadcastChannel("nav-epj:active-patient");
+    other.postMessage("p2");
+    await vi.waitFor(() =>
+      expect(useActivePatientStore.getState().activeId).toBe("p2"),
+    );
+    expect(fetch).toHaveBeenCalledOnce();
+    other.close();
+  });
+
+  describe("polling while apps run", () => {
+    afterEach(() => vi.useRealTimers());
+
+    it("checks on an interval while an embedded app runs and the page is visible", () => {
+      vi.useFakeTimers();
+      const fetch = stubActive("p1");
+      seedRun();
+      renderHook(() => useActivePatientSync(true));
+      expect(fetch).not.toHaveBeenCalled();
+      act(() => vi.advanceTimersByTime(ACTIVE_PATIENT_POLL_MS));
+      expect(fetch).toHaveBeenCalledOnce();
+      setVisibility("hidden");
+      act(() => vi.advanceTimersByTime(ACTIVE_PATIENT_POLL_MS));
+      expect(fetch).toHaveBeenCalledOnce();
+    });
+
+    it("does not poll when no embedded app runs", () => {
+      vi.useFakeTimers();
+      const fetch = stubActive("p1");
+      renderHook(() => useActivePatientSync(true));
+      act(() => vi.advanceTimersByTime(ACTIVE_PATIENT_POLL_MS * 3));
+      expect(fetch).not.toHaveBeenCalled();
+    });
   });
 });

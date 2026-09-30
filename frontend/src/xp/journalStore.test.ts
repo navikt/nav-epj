@@ -1,5 +1,6 @@
 import { act } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { useActivePatientStore } from "./activePatientStore";
 import { useBalloonStore } from "./balloonStore";
 import { isDirty, ongoingOf, useJournalStore } from "./journalStore";
 import { usePatientsStore } from "./patientsStore";
@@ -400,6 +401,30 @@ describe("journalStore", () => {
     expect(journal().draftKonsultasjonId).toBe("k9");
     expect(journal().subTab).toBe("konsultasjon");
     expect(journal().starting).toBe(false);
+  });
+
+  it("makes the patient active locally once a konsultasjon has started", async () => {
+    stub({
+      "GET /api/patient/p1": () => ({ body: pasient }),
+      "GET /api/patients/p1/konsultasjoner": () => ({ body: [] }),
+      "POST /api/patients/p1/konsultasjoner": () => ({ body: kons({ id: "k9" }) }),
+    });
+    await journal().open("p1");
+    useActivePatientStore.setState({ activeId: "p9" });
+    await journal().start();
+    expect(useActivePatientStore.getState().activeId).toBe("p1");
+  });
+
+  it("leaves the active patient alone when starting fails", async () => {
+    stub({
+      "GET /api/patient/p1": () => ({ body: pasient }),
+      "GET /api/patients/p1/konsultasjoner": () => ({ body: [] }),
+      "POST /api/patients/p1/konsultasjoner": () => ({ ok: false }),
+    });
+    await journal().open("p1");
+    useActivePatientStore.setState({ activeId: "p9" });
+    await journal().start();
+    expect(useActivePatientStore.getState().activeId).toBe("p9");
   });
 
   it("flags a failed start", async () => {
