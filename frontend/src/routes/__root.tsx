@@ -1,59 +1,52 @@
-import * as React from "react";
-import { Outlet, createRootRoute } from "@tanstack/react-router";
-import { HStack, InternalHeader, Search, Spacer } from "@navikt/ds-react";
-import { useEffect, useState } from "react";
-import type { Helsepersonell } from "@utils/mapping/epj";
+import { Outlet, createRootRoute, useNavigate, useRouterState } from "@tanstack/react-router";
+import { AppHeader } from "../xp/AppHeader";
+import { AppShell } from "../xp/AppShell";
+import { StatusBar } from "../xp/StatusBar";
+import { TaskPane } from "../xp/TaskPane";
+import { UserGate } from "../xp/UserGate";
+import { Workspace } from "../xp/Workspace";
+import { logout } from "../xp/logout";
+import { useHelsepersonell } from "../xp/useHelsepersonell";
+import { useRouteTabSync } from "../xp/useRouteTabSync";
 
 export const Route = createRootRoute({
   component: RootComponent,
 });
 
-
-
-
 function RootComponent() {
-   const [isLoading, setIsLoading] = useState(true);
-   const [userInfo, setUserInfo] = useState<Helsepersonell | null>(null)
-  
-    useEffect(() => {
-      async function fetchHelsepersonell() {
-        const info = await fetch('/api/helsepersonell/me').then((res) => res.json())
-        setUserInfo(info);
-        setIsLoading(false)
-      }
-      // TODO: Opprette helsepersonell
-      fetchHelsepersonell()
-      
-    
-    }, [])
-  return (
-    <React.Fragment>
-      <InternalHeader>
-        <InternalHeader.Title>Nav EPJ</InternalHeader.Title>
-        <Spacer />
-        <HStack
-          as="form"
-          paddingInline="space-20"
-          align="center"
-          onSubmit={(e) => {
-            e.preventDefault();
-            console.info("Search!");
-          }}
-        >
-          <Search
-            label="InternalHeader søk"
-            size="small"
-            variant="simple"
-            placeholder="Søk"
-          />
-        </HStack>
-        <InternalHeader.User name={userInfo?.navn} />
-      </InternalHeader>
-      <main className="mt-4 mx-6">
-        {isLoading ? <div>Laster...</div> : 
-        <Outlet />
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { state, retry } = useHelsepersonell();
+  const user =
+    state.status === "ready"
+      ? {
+          navn: state.helsepersonell.navn,
+          autorisasjon: state.helsepersonell.autorisasjon,
+          legekontor: state.legekontor.navn,
         }
-      </main>
-    </React.Fragment>
+      : null;
+  const openPatients = () => void navigate({ to: "/patients" });
+  useRouteTabSync(pathname, (to) => void navigate({ to }));
+
+  return (
+    <AppShell>
+      <AppHeader
+        user={user}
+        onLogout={logout}
+        onSearchSubmit={openPatients}
+      />
+      <TaskPane
+        userName={user?.navn}
+        patientsCurrent={pathname.startsWith("/patients")}
+        onOpenPatients={openPatients}
+        onLogout={logout}
+      />
+      <Workspace>
+        <UserGate state={state} onRetry={retry}>
+          <Outlet />
+        </UserGate>
+      </Workspace>
+      <StatusBar onOpenPatients={openPatients} />
+    </AppShell>
   );
 }
