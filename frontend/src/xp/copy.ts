@@ -264,7 +264,7 @@ export const copy = {
   "s5.forward.tooltip": "Frem",
   "s5.reload": (app: string) => `Start ${app} på nytt (ny SMART-oppstart)`,
   "s5.reload.tooltip": "Last på nytt – starter SMART-oppstarten på nytt",
-  "s5.title": (app: string, navn: string, tid: string) => `${app}, ${navn}, Konsultasjon ${tid}`,
+  "s5.title": (app: string, navn: string, tid: string) => `${app} — ${navn} — Konsultasjon ${tid}`,
   "s5.dev": "Utviklerverktøy",
   "s5.popout": "Åpne i ny fane",
   "s5.close": "Lukk",

@@ -1,5 +1,6 @@
 import { Outlet, createRootRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { AppDialogs } from "../xp/AppDialogs";
 import { AppHeader } from "../xp/AppHeader";
 import { AppShell } from "../xp/AppShell";
 import { BalloonHost } from "../xp/BalloonHost";
@@ -9,14 +10,22 @@ import { TaskPane } from "../xp/TaskPane";
 import { CurrentUserContext, type CurrentUser } from "../xp/currentUser";
 import { UserGate } from "../xp/UserGate";
 import { Workspace } from "../xp/Workspace";
+import { useAppsStore } from "../xp/appsStore";
 import { guardTabClose } from "../xp/journalGuardStore";
+import { useLaunchModeStore } from "../xp/launchModeStore";
 import { usePatientsStore } from "../xp/patientsStore";
 import { currentJournalRoute } from "../xp/tabRoutes";
+import { useAppSync } from "../xp/useAppSync";
 import { useCurrentRoute } from "../xp/useCurrentRoute";
 import { logout } from "../xp/logout";
 import { useHelsepersonell } from "../xp/useHelsepersonell";
 import { useRouteTabSync } from "../xp/useRouteTabSync";
 import { useSearchSubmit } from "../xp/useSearchSubmit";
+import {
+  JOURNAL_TAB_ID,
+  PATIENTS_TAB_ID,
+  useWorkspaceStore,
+} from "../xp/workspaceStore";
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -35,13 +44,26 @@ function RootComponent() {
           orgnummer: state.legekontor.orgnummer ?? undefined,
         }
       : null;
-  const openPatients = () => void navigate({ to: "/patients" });
+  const openPatients = () => {
+    const workspace = useWorkspaceStore.getState();
+    if (workspace.tabs.some((t) => t.id === PATIENTS_TAB_ID)) {
+      workspace.setCurrent(PATIENTS_TAB_ID);
+    }
+    void navigate({ to: "/patients" });
+  };
   const openJournal = () => {
     const target = currentJournalRoute();
-    if (target) void navigate(target);
+    if (!target) return;
+    useWorkspaceStore.getState().setCurrent(JOURNAL_TAB_ID);
+    void navigate(target);
   };
   const hpr = state.status === "ready" ? state.helsepersonell.hpr : null;
   useEffect(() => usePatientsStore.getState().setOwner(hpr), [hpr]);
+  useEffect(() => useLaunchModeStore.getState().setOwner(hpr), [hpr]);
+  useEffect(() => {
+    if (hpr) void useAppsStore.getState().load();
+  }, [hpr]);
+  useAppSync();
   const submitSearch = useSearchSubmit();
   useRouteTabSync(route, (target) => void navigate(target));
 
@@ -68,6 +90,7 @@ function RootComponent() {
         <StatusBar onOpenPatients={openPatients} onOpenJournal={openJournal} />
         <BalloonHost />
         <JournalGuards />
+        <AppDialogs />
       </AppShell>
     </CurrentUserContext.Provider>
   );

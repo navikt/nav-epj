@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Button } from "./Button";
+import { AppsTab } from "./AppsTab";
 import { KonsultasjonTab } from "./KonsultasjonTab";
 import { Note } from "./Note";
 import { PatientContext } from "./PatientContext";
@@ -8,6 +9,7 @@ import { TidligereKonsultasjoner } from "./TidligereKonsultasjoner";
 import { copy } from "./copy";
 import { fullName } from "./patientInfo";
 import { useShell } from "./shellContext";
+import { useAppsStore } from "./appsStore";
 import { isDirty, useJournalStore, type JournalSubTab } from "./journalStore";
 
 const ID_PREFIX = "journal";
@@ -20,6 +22,7 @@ export function JournalView() {
   const konsultasjoner = useJournalStore((s) => s.konsultasjoner);
   const subTab = useJournalStore((s) => s.subTab);
   const dirty = useJournalStore((s) => isDirty(s));
+  const appCount = useAppsStore((s) => s.apps.length);
   const { setSubTab, open } = useJournalStore.getState();
   const { announce } = useShell();
   const announcedFor = useRef<string | null>(null);
@@ -73,13 +76,14 @@ export function JournalView() {
             id: "tidligere",
             label: copy["s4.tab.tidl"](konsultasjoner.length),
           },
+          { id: "apper", label: copy["s4.tab.apper"](appCount) },
         ]}
       >
-        {subTab === "konsultasjon" ? (
-          <KonsultasjonTab patient={patient} />
-        ) : (
+        {subTab === "konsultasjon" && <KonsultasjonTab patient={patient} />}
+        {subTab === "tidligere" && (
           <TidligereKonsultasjoner konsultasjoner={konsultasjoner} />
         )}
+        {subTab === "apper" && <AppsTab />}
       </SubTabs>
     </>
   );

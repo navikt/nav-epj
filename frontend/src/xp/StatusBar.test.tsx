@@ -5,6 +5,9 @@ import { StatusBar } from "./StatusBar";
 import { expectNoSeriousViolations } from "./axeHelper";
 import { copy } from "./copy";
 import { useJournalStore } from "./journalStore";
+import { kari, ola, seedJournal } from "./appFixtures";
+import { useAppDialogStore } from "./appDialogStore";
+import { useAppRunStore } from "./appRunStore";
 
 describe("StatusBar", () => {
   beforeEach(() => {
@@ -60,7 +63,7 @@ describe("StatusBar", () => {
     expect(screen.getByText(copy["status.clock.sr"]("09:15"))).toBeInTheDocument();
   });
 
-  it("does not render consultation or tab app segments yet", () => {
+  it("does not render consultation or tab app segments without state", () => {
     render(<StatusBar onOpenPatients={vi.fn()} />);
     expect(screen.queryByText(/Konsultasjon/)).not.toBeInTheDocument();
     expect(screen.queryByText(/egen fane/)).not.toBeInTheDocument();
@@ -108,5 +111,46 @@ describe("StatusBar", () => {
     expect(onOpenJournal).toHaveBeenCalledOnce();
     expect(screen.queryByText(copy["status.noPatient"])).not.toBeInTheDocument();
     useJournalStore.getState().clear();
+  });
+
+  describe("tab apps", () => {
+    beforeEach(() => {
+      vi.useRealTimers();
+      seedJournal();
+      useAppRunStore.getState().addTabApp({
+        clientId: "ny-fane",
+        navn: "Fanen",
+        patient: ola,
+        startedAt: new Date(2026, 8, 30, 9, 14),
+      });
+    });
+
+    it("shows how many apps run in their own tab and opens their dialog", async () => {
+      render(<StatusBar onOpenPatients={vi.fn()} />);
+      const segment = screen.getByRole("button", { name: copy["status.tabApps"](1) });
+      await userEvent.click(segment);
+      expect(useAppDialogStore.getState().dialog).toEqual({
+        kind: "tabApp",
+        clientId: "ny-fane",
+      });
+    });
+
+    it("flags apps that belong to the previous patient instead", async () => {
+      seedJournal(kari);
+      render(<StatusBar onOpenPatients={vi.fn()} />);
+      expect(screen.queryByRole("button", { name: copy["status.tabApps"](1) })).toBeNull();
+      await userEvent.click(
+        screen.getByRole("button", { name: copy["status.staleApps"](1) }),
+      );
+      expect(useAppDialogStore.getState().dialog).toEqual({
+        kind: "tabApp",
+        clientId: "ny-fane",
+      });
+    });
+
+    it("has no serious accessibility violations", async () => {
+      const { container } = render(<StatusBar onOpenPatients={vi.fn()} />);
+      await expectNoSeriousViolations(container);
+    });
   });
 });

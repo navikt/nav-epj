@@ -2,6 +2,7 @@ import { useBlocker } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { SwitchPatientDialog } from "./SwitchPatientDialog";
 import { UnsavedCloseDialog } from "./UnsavedCloseDialog";
+import { useAppRunStore } from "./appRunStore";
 import { useBalloonStore } from "./balloonStore";
 import { copy } from "./copy";
 import { focusTab } from "./focusTab";
@@ -64,11 +65,16 @@ export function JournalGuards() {
   function confirmSwitch(toName: string) {
     if (blocker.status !== "blocked" || !patient) return;
     const from = fullName(patient);
+    const leavesTabApps = useAppRunStore
+      .getState()
+      .tabApps.some((a) => a.patient.id === patient.id);
     setInAppTarget(null);
     blocker.proceed();
     useBalloonStore.getState().show({
       title: copy["s7.balloon.title"](toName),
-      body: copy["s7.balloon.clean"](from),
+      body: leavesTabApps
+        ? copy["s7.balloon.stale"](from)
+        : copy["s7.balloon.clean"](from),
     });
     announce(copy["live.switched"](from, toName));
     focusTab(JOURNAL_TAB_ID);

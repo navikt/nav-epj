@@ -1,4 +1,6 @@
 import { differenceInMinutes, format, parseISO } from "date-fns";
+import { useAppDialogStore } from "./appDialogStore";
+import { isStaleFor, useAppRunStore } from "./appRunStore";
 import { copy } from "./copy";
 import { ongoingOf, useJournalStore } from "./journalStore";
 import { fullName } from "./patientInfo";
@@ -16,6 +18,14 @@ export function StatusBar({ onOpenPatients, onOpenJournal }: Props) {
   const patient = useJournalStore((s) => s.patient);
   const konsultasjoner = useJournalStore((s) => s.konsultasjoner);
   const ongoing = patient ? ongoingOf(konsultasjoner) : null;
+  const journalPatientId = useJournalStore((s) => s.patientId);
+  const tabApps = useAppRunStore((s) => s.tabApps);
+  const staleApps = tabApps.filter((a) =>
+    isStaleFor(a.patient.id, journalPatientId),
+  );
+  const liveApps = tabApps.filter((a) => !staleApps.includes(a));
+  const showTabApp = (clientId: string) =>
+    useAppDialogStore.getState().show({ kind: "tabApp", clientId });
   return (
     <footer
       className="xp-appstatus"
@@ -54,6 +64,24 @@ export function StatusBar({ onOpenPatients, onOpenJournal }: Props) {
             ),
           )}
         </span>
+      )}
+      {liveApps.length > 0 && (
+        <button
+          type="button"
+          className="seg"
+          onClick={() => showTabApp(liveApps[0].clientId)}
+        >
+          {copy["status.tabApps"](liveApps.length)}
+        </button>
+      )}
+      {staleApps.length > 0 && (
+        <button
+          type="button"
+          className="seg"
+          onClick={() => showTabApp(staleApps[0].clientId)}
+        >
+          {copy["status.staleApps"](staleApps.length)}
+        </button>
       )}
       <span className="seg">
         <TestMarker />

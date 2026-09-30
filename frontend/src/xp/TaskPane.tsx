@@ -11,6 +11,7 @@ import {
 import { useNow } from "./useNow";
 import { JOURNAL_TAB_ID, useWorkspaceStore } from "./workspaceStore";
 import { AppearancePanel } from "./AppearancePanel";
+import { SmartAppsPanel } from "./SmartAppsPanel";
 import { TaskLink } from "./TaskLink";
 import { TaskPanel } from "./TaskPanel";
 import { TASK_PANE_ID } from "./shellContext";
@@ -81,9 +82,7 @@ export function TaskPane({
           </>
         )}
       </TaskPanel>
-      <TaskPanel title={copy["pane.apps.title"]}>
-        <span className="xp-tp-note">{copy["pane.apps.disabledReason"]}</span>
-      </TaskPanel>
+      <SmartAppsPanel />
       <TaskPanel title={copy["pane.system.title"]}>
         <TaskLink
           icon="pasienter"

@@ -8,6 +8,7 @@ type Props = {
   sub?: string;
   badge?: string;
   reason?: string;
+  describedBy?: string;
   current?: boolean;
   disabled?: boolean;
   stale?: boolean;
@@ -21,6 +22,7 @@ export function TaskLink({
   sub,
   badge,
   reason,
+  describedBy: externalDescribedBy,
   current,
   disabled,
   stale,
@@ -30,7 +32,8 @@ export function TaskLink({
   const { setDrawerOpen } = useShell();
   const badgeId = useId();
   const reasonId = useId();
-  const describedBy = reason ? reasonId : badge ? badgeId : undefined;
+  const describedBy =
+    externalDescribedBy ?? (reason ? reasonId : badge ? badgeId : undefined);
   const className = [
     "xp-tp-link",
     current && "is-current",
