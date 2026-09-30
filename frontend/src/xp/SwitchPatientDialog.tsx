@@ -35,8 +35,12 @@ export function SwitchPatientDialog({
       variant="advarsel"
       onClose={onCancel}
       buttons={[
-        { label: copy["s7.confirm"], onClick: () => onConfirm(to), isDefault: true },
-        { label: copy["common.cancel"], onClick: onCancel },
+        {
+          label: copy["s7.confirm"],
+          onClick: () => onConfirm(to),
+          isDefault: !unsaved,
+        },
+        { label: copy["common.cancel"], onClick: onCancel, isDefault: unsaved },
       ]}
     >
       {deepLink && <p>{copy["s7.deeplink"](to)}</p>}

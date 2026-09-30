@@ -78,6 +78,21 @@ describe("SwitchPatientDialog with apps", () => {
     expect(screen.queryByText(/Fanen/)).toBeNull();
   });
 
+  it("makes the switch the Enter default when nothing is unsaved", async () => {
+    const { onConfirm } = setup();
+    expect(screen.getByRole("button", { name: copy["s7.confirm"] })).toHaveFocus();
+    await userEvent.keyboard("{Enter}");
+    expect(onConfirm).toHaveBeenCalledOnce();
+  });
+
+  it("defaults to Avbryt so Enter never discards unsaved changes", async () => {
+    const { onConfirm, onCancel } = setup({ unsaved: true });
+    expect(screen.getByRole("button", { name: copy["common.cancel"] })).toHaveFocus();
+    await userEvent.keyboard("{Enter}");
+    expect(onConfirm).not.toHaveBeenCalled();
+    expect(onCancel).toHaveBeenCalledOnce();
+  });
+
   it("confirms with the resolved name and cancels", async () => {
     const { onConfirm, onCancel } = setup();
     await userEvent.click(screen.getByRole("button", { name: copy["s7.confirm"] }));
