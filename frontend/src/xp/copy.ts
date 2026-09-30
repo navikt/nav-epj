@@ -137,6 +137,7 @@ export const copy = {
   "s3.empty.search.body": "Sjekk stavemåten, eller søk på de siste sifrene i fødselsnummeret.",
   "s3.empty.none.title": "Du har ingen pasienter ennå.",
   "s3.empty.none.body": "Pasienter som er knyttet til deg i nav-epj vises her.",
+  "s3.empty.recent": "Du har ikke åpnet noen journaler ennå.",
   "s3b.title": "Ny pasient",
   "s3b.intro": (navn: string) => `Pasienten knyttes til deg (${navn}). Bruk bare syntetiske fødselsnumre.`,
   "s3b.fornavn": "Fornavn",

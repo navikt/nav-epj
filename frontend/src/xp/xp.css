@@ -289,6 +289,7 @@
 .xp-iconbtn:active, .xp-iconbtn.is-active { background: linear-gradient(180deg, var(--xp-button-bg-end), var(--xp-button-bg-start)); }
 .xp-iconbtn:disabled { opacity: .5; }
 .xp-root[data-narrow="true"] .xp-iconbtn { width: 44px; height: 44px; }
+.xp-pager .grow { flex: 1; }
 .xp-pager { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 12px; border-top: 1px solid var(--xp-card-border); background: var(--xp-window-bg); }
 .xp-root[data-narrow="true"] .xp-list td:last-child { text-align: left !important; }
 
@@ -307,4 +308,7 @@
 .xp-tp-note { display: block; padding: 2px 6px; color: var(--xp-text-muted); }
 .xp-work:focus, .xp-taskpane:focus, .xp-header:focus, .xp-appstatus:focus { outline-offset: -3px; }
 .xp-notice { padding: 16px 0; }
+.xp-pagehead { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.xp-pagehead .grow { flex: 1; }
+.xp-tablewrap { padding: 0; overflow: hidden; gap: 0; }
 }

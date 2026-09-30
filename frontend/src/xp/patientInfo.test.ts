@@ -9,6 +9,7 @@ import {
   genderLabel,
   genderOf,
   maskPersonident,
+  personidentTail,
 } from "./patientInfo";
 import type { Pasient } from "../utils/mapping/epj";
 
@@ -25,6 +26,7 @@ const pasient: Pasient = {
 describe("patientInfo", () => {
   it("masks all but the last five digits", () => {
     expect(maskPersonident("01019012345")).toBe("******12345");
+    expect(personidentTail("01019012345")).toBe("12345");
   });
 
   it("derives a fødselsnummer", () => {

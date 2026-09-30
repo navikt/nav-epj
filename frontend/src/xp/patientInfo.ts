@@ -13,6 +13,10 @@ export function maskPersonident(personident: string) {
   return `${MASK}${personident.slice(-5)}`;
 }
 
+export function personidentTail(personident: string) {
+  return personident.slice(-5);
+}
+
 function resolveCentury(individnummer: number, twoDigitYear: number) {
   if (individnummer < 500) return 1900;
   if (individnummer < 750 && twoDigitYear >= 54) return 1800;

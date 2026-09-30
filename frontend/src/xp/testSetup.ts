@@ -4,6 +4,7 @@ import { cleanup } from "@testing-library/react";
 import * as axeMatchers from "vitest-axe/matchers";
 import { useBalloonStore } from "./balloonStore";
 import { useModalStore } from "./modalStore";
+import { usePatientsStore } from "./patientsStore";
 import { readPreferences, usePreferencesStore } from "./preferencesStore";
 import { useWorkspaceStore } from "./workspaceStore";
 
@@ -16,6 +17,7 @@ afterEach(() => {
   usePreferencesStore.setState(readPreferences());
   useModalStore.setState({ openCount: 0 });
   useBalloonStore.setState({ balloon: null });
+  usePatientsStore.getState().reset();
 });
 
 HTMLCanvasElement.prototype.getContext = () => null;
