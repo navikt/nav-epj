@@ -2,6 +2,7 @@ package no.nav.helse.smart.valkey
 
 import glide.api.GlideClient
 import glide.api.models.commands.SetOptions
+import java.time.Instant
 import kotlinx.coroutines.future.await
 import tools.jackson.module.kotlin.jacksonObjectMapper
 import tools.jackson.module.kotlin.readValue
@@ -9,6 +10,8 @@ import tools.jackson.module.kotlin.readValue
 private const val AUTH_CODE_TTL_SECONDS = 60L
 private const val LAUNCH_CONTEXT_TTL_SECONDS = 300L
 private const val ACTIVE_PATIENT_TTL_SECONDS = 8 * 60 * 60L
+
+data class ActivePatient(val patientId: String, val expiresAt: Instant)
 
 class ValkeyService(private val glideClient: GlideClient) {
     private val mapper = jacksonObjectMapper()
@@ -42,6 +45,13 @@ class ValkeyService(private val glideClient: GlideClient) {
 
     suspend fun getActivePatient(hpr: String): String? =
         glideClient.get(activePatientKey(hpr)).await()
+
+    suspend fun getActivePatientWithExpiry(hpr: String): ActivePatient? {
+        val patientId = getActivePatient(hpr) ?: return null
+        val remainingSeconds = glideClient.ttl(activePatientKey(hpr)).await()
+        if (remainingSeconds <= 0) return null
+        return ActivePatient(patientId, Instant.now().plusSeconds(remainingSeconds))
+    }
 
     suspend fun saveAuthCode(code: String, authCode: AuthCodeContext) {
         glideClient
