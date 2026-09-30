@@ -107,7 +107,7 @@ describe("startApp", () => {
     ]);
     expect(useAppRunStore.getState().runs).toEqual([]);
     expect(useBalloonStore.getState().balloon?.body).toBe(
-      copy["pane.apps.runningTab"],
+      copy["s5.tab.balloon.body"]("Ola Nordmann"),
     );
   });
 

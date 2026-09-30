@@ -204,7 +204,11 @@ export async function startApp(
   }
   return mode === "iframe"
     ? launchInFrame(app, context)
-    : launchInTab(app, context, copy["pane.apps.runningTab"]);
+    : launchInTab(
+        app,
+        context,
+        copy["s5.tab.balloon.body"](fullName(context.patient)),
+      );
 }
 
 export async function reloadApp(clientId: string) {
