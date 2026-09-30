@@ -9,6 +9,7 @@ import com.google.fhir.model.r4.CodeableConcept
 import com.google.fhir.model.r4.Coding
 import com.google.fhir.model.r4.DocumentReference
 import com.google.fhir.model.r4.Enumeration
+import com.google.fhir.model.r4.Extension
 import com.google.fhir.model.r4.Identifier
 import com.google.fhir.model.r4.OperationOutcome
 import com.google.fhir.model.r4.Reference
@@ -343,6 +344,65 @@ class DocumentReferenceCreateValidationTest {
                 documentReference.toOpprettJournalnotatRequest()
             }
         assertEquals(OperationOutcome.IssueType.Not_Supported, exception.issueType)
+    }
+
+    private fun extension() =
+        Extension(
+            url = "http://example.org/ext",
+            value = Extension.Value.String(FhirString(value = "x")),
+        )
+
+    private fun assertNotSupported(documentReference: DocumentReference) {
+        val exception =
+            assertFailsWith<InvalidDocumentReferenceException> {
+                documentReference.toOpprettJournalnotatRequest()
+            }
+        assertEquals(OperationOutcome.IssueType.Not_Supported, exception.issueType)
+    }
+
+    @Test
+    fun `toOpprettJournalnotatRequest rejects a content extension`() {
+        assertNotSupported(
+            validDocumentReference(
+                content =
+                    listOf(
+                        DocumentReference.Content(
+                            attachment = Attachment(contentType = Code(value = "application/pdf")),
+                            extension = listOf(extension()),
+                        )
+                    )
+            )
+        )
+    }
+
+    @Test
+    fun `toOpprettJournalnotatRequest rejects a content modifierExtension`() {
+        assertNotSupported(
+            validDocumentReference(
+                content =
+                    listOf(
+                        DocumentReference.Content(
+                            attachment = Attachment(contentType = Code(value = "application/pdf")),
+                            modifierExtension = listOf(extension()),
+                        )
+                    )
+            )
+        )
+    }
+
+    @Test
+    fun `toOpprettJournalnotatRequest rejects an attachment extension`() {
+        assertNotSupported(
+            validDocumentReference(
+                content =
+                    validContent(
+                        Attachment(
+                            contentType = Code(value = "application/pdf"),
+                            extension = listOf(extension()),
+                        )
+                    )
+            )
+        )
     }
 
     @Test

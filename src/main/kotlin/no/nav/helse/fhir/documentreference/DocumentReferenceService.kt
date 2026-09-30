@@ -225,10 +225,15 @@ fun DocumentReference.toOpprettJournalnotatRequest(): OpprettJournalnotatRequest
         )
     }
     val content = this.content.single()
-    if (content.format != null) {
+    val unsupportedContentFields = buildList {
+        if (content.format != null) add("format")
+        if (content.extension.isNotEmpty()) add("extension")
+        if (content.modifierExtension.isNotEmpty()) add("modifierExtension")
+    }
+    if (unsupportedContentFields.isNotEmpty()) {
         invalid(
             OperationOutcome.IssueType.Not_Supported,
-            "DocumentReference.content.format støttes ikke",
+            "DocumentReference.content.${unsupportedContentFields.joinToString(", ")} støttes ikke",
         )
     }
     val attachment = content.attachment
@@ -247,6 +252,7 @@ fun DocumentReference.toOpprettJournalnotatRequest(): OpprettJournalnotatRequest
         if (attachment.hash != null) add("hash")
         if (attachment.title != null) add("title")
         if (attachment.creation != null) add("creation")
+        if (attachment.extension.isNotEmpty()) add("extension")
     }
     if (unsupportedAttachmentFields.isNotEmpty()) {
         invalid(
