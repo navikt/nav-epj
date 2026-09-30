@@ -1,7 +1,8 @@
+import { useActivePatientStore } from "./activePatientStore";
 import { ApiError, LaunchError, launchApp } from "./api";
 import { appTabId, initialsOf, statusText } from "./appInfo";
 import { useAppDialogStore, type AppErrorCode } from "./appDialogStore";
-import { useAppRunStore } from "./appRunStore";
+import { isOutdatedFor, useAppRunStore } from "./appRunStore";
 import { useAppsStore } from "./appsStore";
 import { useBalloonStore } from "./balloonStore";
 import { copy } from "./copy";
@@ -284,12 +285,12 @@ export function syncRunTabs() {
   const { tabs, updateTab } = useWorkspaceStore.getState();
   const { runs } = useAppRunStore.getState();
   const journalPatientId = useJournalStore.getState().patientId;
+  const activePatientId = useActivePatientStore.getState().activeId;
   for (const run of runs) {
     const id = appTabId(run.clientId);
     const tab = tabs.find((t) => t.id === id);
     if (!tab) continue;
-    const stale =
-      journalPatientId !== null && journalPatientId !== run.patient.id;
+    const stale = isOutdatedFor(run.patient.id, journalPatientId, activePatientId);
     const ariaLabel = copy["tabs.app.aria"](
       run.navn,
       fullName(run.patient),

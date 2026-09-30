@@ -3,7 +3,8 @@ import { TaskLink } from "./TaskLink";
 import { TaskPanel } from "./TaskPanel";
 import { appIconName, appTabId } from "./appInfo";
 import { useAppDialogStore } from "./appDialogStore";
-import { isStaleFor, useAppRunStore } from "./appRunStore";
+import { useActivePatientStore } from "./activePatientStore";
+import { isOutdatedFor, isStaleFor, useAppRunStore } from "./appRunStore";
 import { useAppsStore } from "./appsStore";
 import { copy } from "./copy";
 import { useJournalStore } from "./journalStore";
@@ -23,6 +24,7 @@ export function SmartAppsPanel() {
   const tabApps = useAppRunStore((s) => s.tabApps);
   const current = useWorkspaceStore((s) => s.current);
   const journalPatientId = useJournalStore((s) => s.patientId);
+  const activePatientId = useActivePatientStore((s) => s.activeId);
   const enabled = useAppsEnabled();
   const reasonId = useId();
   const { start } = useStartApp();
@@ -35,14 +37,25 @@ export function SmartAppsPanel() {
         </span>
       )}
       {apps.map((app) => {
-        const running = runs.some((r) => r.clientId === app.clientId);
+        const run = runs.find((r) => r.clientId === app.clientId);
+        const running = run !== undefined;
+        const outdated =
+          run !== undefined &&
+          isOutdatedFor(run.patient.id, journalPatientId, activePatientId);
         return (
           <TaskLink
             key={app.clientId}
             icon={appIconName(app.ikon)}
             label={app.navn}
             sub={modeLabels[app.launchMode]}
-            badge={running ? copy["pane.apps.runningHost"] : undefined}
+            badge={
+              outdated
+                ? copy["context.stale"]
+                : running
+                  ? copy["pane.apps.runningHost"]
+                  : undefined
+            }
+            stale={outdated}
             current={current === appTabId(app.clientId)}
             disabled={!enabled && !running}
             describedBy={enabled || running ? undefined : reasonId}

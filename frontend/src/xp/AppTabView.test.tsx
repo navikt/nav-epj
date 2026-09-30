@@ -1,11 +1,14 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppTabView } from "./AppTabView";
-import { kari, launchOk, seedApps, seedJournal, seedRun } from "./appFixtures";
+import { kari, launchOk, ola, seedApps, seedJournal, seedRun } from "./appFixtures";
+import { useActivePatientStore } from "./activePatientStore";
 import { useAppRunStore } from "./appRunStore";
 import { expectNoSeriousViolations } from "./axeHelper";
 import { copy } from "./copy";
+import { useJournalGuardStore } from "./journalGuardStore";
+import { usePatientsStore } from "./patientsStore";
 import { ShellContext } from "./shellContext";
 import { useWorkspaceStore } from "./workspaceStore";
 
@@ -122,6 +125,7 @@ describe("AppTabView", () => {
 
   it("hides the app and flags the context when the journal shows another patient", async () => {
     seedJournal(kari);
+    usePatientsStore.setState({ patients: [kari], status: "ready" });
     useWorkspaceStore.getState().openTab({ kind: "journal", label: "Journal" });
     setup();
     expect(document.querySelector("iframe")).toBeNull();
@@ -134,10 +138,67 @@ describe("AppTabView", () => {
     await userEvent.click(
       screen.getByRole("button", { name: copy["s5.stale.open"]("Kari Hansen") }),
     );
-    expect(useWorkspaceStore.getState().current).toBe("journal");
     expect(navigate).toHaveBeenCalledWith({
       to: "/patients/$patientId",
       params: { patientId: "p2" },
+    });
+  });
+
+  describe("when another window changed the active patient", () => {
+    beforeEach(() => {
+      usePatientsStore.setState({ patients: [ola, kari], status: "ready" });
+    });
+
+    it("hides the running app, keeps it open and announces it", () => {
+      const { announce } = setup();
+      expect(document.querySelector("iframe")).not.toBeNull();
+      act(() => useActivePatientStore.getState().setActive("p2"));
+      expect(document.querySelector("iframe")).toBeNull();
+      expect(useAppRunStore.getState().runs).toHaveLength(1);
+      expect(
+        screen.getByText(copy["s5.stale.title"]("Ola Nordmann", "Kari Hansen")),
+      ).toBeInTheDocument();
+      expect(screen.getByText(copy["s5.stale.body"])).toBeInTheDocument();
+      expect(
+        screen.getByRole("region", { name: copy["context.label"] }),
+      ).toHaveTextContent(copy["context.stale"]);
+      expect(announce).toHaveBeenCalledWith(
+        copy["s5.stale.title"]("Ola Nordmann", "Kari Hansen"),
+      );
+      expect(
+        screen.getByRole("button", { name: copy["s5.reload"]("Sykmelding") }),
+      ).toBeDisabled();
+    });
+
+    it("shows the app again when the active patient is the run's patient", () => {
+      setup();
+      act(() => useActivePatientStore.getState().setActive("p2"));
+      act(() => useActivePatientStore.getState().setActive("p1"));
+      expect(document.querySelector("iframe")).not.toBeNull();
+    });
+
+    it("keeps the app visible when no patient is active", () => {
+      setup();
+      act(() => useActivePatientStore.getState().setActive(null));
+      expect(document.querySelector("iframe")).not.toBeNull();
+    });
+
+    it("opens the other patient's journal from the overlay and closes the app on Lukk", async () => {
+      setup();
+      act(() => useActivePatientStore.getState().setActive("p2"));
+      await userEvent.click(
+        screen.getByRole("button", { name: copy["s5.stale.open"]("Kari Hansen") }),
+      );
+      expect(navigate).toHaveBeenCalledWith({
+        to: "/patients/$patientId",
+        params: { patientId: "p2" },
+      });
+      expect(useJournalGuardStore.getState().inAppTarget).toBe("p2");
+      const card = screen.getByText(copy["s5.stale.body"]).closest("section");
+      await userEvent.click(
+        within(card as HTMLElement).getByRole("button", { name: copy["s5.close"] }),
+      );
+      expect(useAppRunStore.getState().runs).toEqual([]);
     });
   });
 
@@ -151,6 +212,13 @@ describe("AppTabView", () => {
   });
 
   it("has no serious accessibility violations", async () => {
+    const { container } = setup();
+    await expectNoSeriousViolations(container, { iframes: false });
+  });
+
+  it("has no serious accessibility violations in the utdatert state", async () => {
+    usePatientsStore.setState({ patients: [ola, kari], status: "ready" });
+    useActivePatientStore.setState({ activeId: "p2" });
     const { container } = setup();
     await expectNoSeriousViolations(container, { iframes: false });
   });

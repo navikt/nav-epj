@@ -1,6 +1,8 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { kari, ola, seedApps, seedJournal, seedRun } from "./appFixtures";
+import { useActivePatientStore } from "./activePatientStore";
+import { copy } from "./copy";
 import { appTabId } from "./appInfo";
 import { useJournalStore } from "./journalStore";
 import { useAppRunStore } from "./appRunStore";
@@ -33,6 +35,16 @@ describe("useAppSync", () => {
     const tab = useWorkspaceStore.getState().tabs.find((t) => t.id === appTabId("syk-inn"));
     expect(tab?.error).toBe(true);
     expect(tab?.ariaLabel).toContain("Ola Nordmann");
+  });
+
+  it("labels the app tab as utdatert when the active patient differs", () => {
+    renderHook(() => useAppSync());
+    act(() => useActivePatientStore.getState().setActive("p2"));
+    const tab = useWorkspaceStore.getState().tabs.find((t) => t.id === appTabId("syk-inn"));
+    expect(tab?.ariaLabel).toContain(copy["s5.status.stale"]("Ola Nordmann"));
+    act(() => useActivePatientStore.getState().setActive("p1"));
+    const after = useWorkspaceStore.getState().tabs.find((t) => t.id === appTabId("syk-inn"));
+    expect(after?.ariaLabel).not.toContain(copy["s5.status.stale"]("Ola Nordmann"));
   });
 
   it("closes embedded apps of the previous patient when the journal switches", () => {

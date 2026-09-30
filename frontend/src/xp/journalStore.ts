@@ -6,6 +6,7 @@ import {
   saveKonsultasjon,
   startKonsultasjon,
 } from "./api";
+import { useActivePatientStore } from "./activePatientStore";
 import { useBalloonStore } from "./balloonStore";
 import { copy } from "./copy";
 import { fullName } from "./patientInfo";
@@ -206,6 +207,9 @@ export const useJournalStore = create<JournalState>((set, get) => {
         putActivePatient(patientId),
       ]);
       if (!isCurrent()) return;
+      if (active.status === "fulfilled") {
+        useActivePatientStore.getState().setActive(active.value.patientId);
+      }
       if (patient.status === "rejected" || active.status === "rejected") {
         commit({ status: "error", loadError: "patient" });
         return;

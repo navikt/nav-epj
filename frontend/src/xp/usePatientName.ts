@@ -4,7 +4,7 @@ import { copy } from "./copy";
 import { fullName } from "./patientInfo";
 import { usePatientsStore } from "./patientsStore";
 
-export function usePatientName(patientId: string) {
+export function usePatientName(patientId: string | null) {
   const listed = usePatientsStore((s) =>
     s.patients.find((p) => p.id === patientId),
   );
@@ -13,7 +13,7 @@ export function usePatientName(patientId: string) {
   );
 
   useEffect(() => {
-    if (listed) return;
+    if (listed || patientId === null) return;
     let active = true;
     fetchPatient(patientId)
       .then((p) => active && setFetched({ id: patientId, name: fullName(p) }))
@@ -23,6 +23,7 @@ export function usePatientName(patientId: string) {
     };
   }, [patientId, listed]);
 
+  if (patientId === null) return "";
   if (listed) return fullName(listed);
   return fetched?.id === patientId ? fetched.name : copy["common.loading"];
 }

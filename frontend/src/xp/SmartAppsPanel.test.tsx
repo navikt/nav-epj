@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SmartAppsPanel } from "./SmartAppsPanel";
 import { kari, nyFane, ola, seedApps, seedJournal, seedRun, sykInn, validator } from "./appFixtures";
+import { useActivePatientStore } from "./activePatientStore";
 import { useAppDialogStore } from "./appDialogStore";
 import { useAppRunStore } from "./appRunStore";
 import { expectNoSeriousViolations } from "./axeHelper";
@@ -54,6 +55,14 @@ describe("SmartAppsPanel", () => {
     const link = screen.getByRole("button", { name: /Sykmelding/ });
     expect(link).not.toHaveAttribute("aria-disabled", "true");
     expect(screen.getByText(copy["pane.apps.runningHost"])).toBeInTheDocument();
+  });
+
+  it("flags a running app as utdatert when another window changed the active patient", () => {
+    seedRun();
+    useActivePatientStore.setState({ activeId: "p2" });
+    render(<SmartAppsPanel />);
+    expect(screen.getByText(copy["context.stale"])).toBeInTheDocument();
+    expect(screen.queryByText(copy["pane.apps.runningHost"])).toBeNull();
   });
 
   it("marks the app tab that is current", () => {

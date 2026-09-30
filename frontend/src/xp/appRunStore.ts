@@ -113,3 +113,14 @@ export function isStaleFor(
 ) {
   return journalPatientId !== null && journalPatientId !== ownerPatientId;
 }
+
+export function isOutdatedFor(
+  ownerPatientId: string,
+  journalPatientId: string | null,
+  activePatientId: string | null,
+) {
+  return (
+    isStaleFor(ownerPatientId, journalPatientId) ||
+    isStaleFor(ownerPatientId, activePatientId)
+  );
+}

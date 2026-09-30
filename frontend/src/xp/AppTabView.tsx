@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
 import { format, parseISO } from "date-fns";
 import { AppFrame } from "./AppFrame";
 import { AppToolbar } from "./AppToolbar";
 import { DevPanel } from "./DevPanel";
 import { PatientContext } from "./PatientContext";
 import { appIconName } from "./appInfo";
+import { useActivePatientStore } from "./activePatientStore";
 import { accessExpiry, isStaleFor, useAppRunStore } from "./appRunStore";
 import { useAppsStore } from "./appsStore";
 import { copy } from "./copy";
@@ -13,40 +13,44 @@ import { useJournalStore } from "./journalStore";
 import { closeApp, reloadApp } from "./launchApp";
 import { fullName } from "./patientInfo";
 import { useShell } from "./shellContext";
-import { currentJournalRoute } from "./tabRoutes";
+import { useOpenJournal } from "./useOpenJournal";
+import { usePatientName } from "./usePatientName";
 import { useStartApp } from "./useStartApp";
-import { JOURNAL_TAB_ID, useWorkspaceStore } from "./workspaceStore";
 
 type Props = { clientId: string };
 
 export function AppTabView({ clientId }: Props) {
   const run = useAppRunStore((s) => s.runs.find((r) => r.clientId === clientId));
   const app = useAppsStore((s) => s.apps.find((a) => a.clientId === clientId));
-  const journalPatient = useJournalStore((s) => s.patient);
   const journalPatientId = useJournalStore((s) => s.patientId);
+  const activePatientId = useActivePatientStore((s) => s.activeId);
   const { announce } = useShell();
   const { popOut } = useStartApp();
-  const navigate = useNavigate();
+  const openJournal = useOpenJournal();
   const [devOpen, setDevOpen] = useState(false);
   const status = run?.status;
   const navn = run?.navn;
+  const ownerId = run?.patient.id;
+  let otherId: string | null = null;
+  if (ownerId && isStaleFor(ownerId, journalPatientId)) otherId = journalPatientId;
+  else if (ownerId && isStaleFor(ownerId, activePatientId)) otherId = activePatientId;
+  const otherName = usePatientName(otherId);
+  const stale = otherId !== null;
+  const ownerName = run ? fullName(run.patient) : "";
 
   useEffect(() => {
     if (status === "running" && navn) announce(copy["live.appRunning"](navn));
   }, [status, navn, announce]);
 
+  useEffect(() => {
+    if (stale) announce(copy["s5.stale.title"](ownerName, otherName));
+  }, [stale, ownerName, otherName, announce]);
+
   if (!run) return null;
-  const stale = isStaleFor(run.patient.id, journalPatientId);
   const patientName = fullName(run.patient);
   const started = format(run.startedAt, "HH:mm");
   const canNavigate = run.status === "running" && !stale;
   const canReload = run.status !== "starting" && run.status !== "session" && !stale;
-
-  function openJournal() {
-    const target = currentJournalRoute();
-    useWorkspaceStore.getState().setCurrent(JOURNAL_TAB_ID);
-    if (target) void navigate(target);
-  }
 
   let footer: string = copy["s5.status.starting"];
   if (stale) footer = copy["s5.status.stale"](patientName);
@@ -90,11 +94,11 @@ export function AppTabView({ clientId }: Props) {
       <AppFrame
         run={run}
         stale={stale}
-        journalPatientName={journalPatient ? fullName(journalPatient) : null}
+        otherPatientName={otherName}
         onRestart={() => void reloadApp(clientId)}
         onPopOut={() => void popOut(clientId)}
         onClose={() => closeApp(clientId)}
-        onOpenJournal={openJournal}
+        onOpenJournal={() => otherId && openJournal({ id: otherId })}
       />
       <div className="xp-frame-foot">
         <span className="xp-status-text">{footer}</span>

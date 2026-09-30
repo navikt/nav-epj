@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useActivePatientStore } from "./activePatientStore";
 import { useAppRunStore } from "./appRunStore";
 import { useJournalStore } from "./journalStore";
 import { closeStaleRuns, dropClosedTabRuns, syncRunTabs } from "./launchApp";
@@ -13,7 +14,11 @@ export function useAppSync() {
       closeStaleRuns(state.patientId);
       syncRunTabs();
     });
+    const stopActive = useActivePatientStore.subscribe((state, previous) => {
+      if (state.activeId !== previous.activeId) syncRunTabs();
+    });
     return () => {
+      stopActive();
       stopWorkspace();
       stopRuns();
       stopJournal();

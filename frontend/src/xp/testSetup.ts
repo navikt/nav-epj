@@ -2,6 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { afterEach, expect } from "vitest";
 import { cleanup } from "@testing-library/react";
 import * as axeMatchers from "vitest-axe/matchers";
+import { useActivePatientStore } from "./activePatientStore";
 import { useAppDialogStore } from "./appDialogStore";
 import { useAppRunStore } from "./appRunStore";
 import { useAppsStore } from "./appsStore";
@@ -28,6 +29,7 @@ afterEach(() => {
   usePatientsStore.getState().reset();
   useJournalStore.getState().clear();
   useJournalGuardStore.setState({ closeRequested: false, inAppTarget: null });
+  useActivePatientStore.setState({ activeId: null });
   useAppsStore.getState().reset();
   useAppRunStore.getState().reset();
   useAppDialogStore.setState({ dialog: null });

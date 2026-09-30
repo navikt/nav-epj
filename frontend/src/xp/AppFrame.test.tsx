@@ -28,7 +28,7 @@ function setup(
       <AppFrame
         run={run}
         stale={options.stale ?? false}
-        journalPatientName="Kari Hansen"
+        otherPatientName="Kari Hansen"
         {...handlers}
       />
     );

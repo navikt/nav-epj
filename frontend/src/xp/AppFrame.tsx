@@ -17,7 +17,7 @@ export const IFRAME_REFERRER_POLICY = "no-referrer";
 type Props = {
   run: AppRun;
   stale: boolean;
-  journalPatientName: string | null;
+  otherPatientName: string;
   onRestart: () => void;
   onPopOut: () => void;
   onClose: () => void;
@@ -59,7 +59,7 @@ function Overlay({
 export function AppFrame({
   run,
   stale,
-  journalPatientName,
+  otherPatientName,
   onRestart,
   onPopOut,
   onClose,
@@ -98,12 +98,12 @@ export function AppFrame({
   if (stale) {
     overlay = (
       <Overlay
-        title={copy["s5.stale.title"](patientName, journalPatientName ?? "")}
+        title={copy["s5.stale.title"](patientName, otherPatientName)}
         body={copy["s5.stale.body"]}
         buttons={[
           { label: copy["s5.close"], onClick: onClose },
           {
-            label: copy["s5.stale.open"](journalPatientName ?? ""),
+            label: copy["s5.stale.open"](otherPatientName),
             onClick: onOpenJournal,
             isDefault: true,
           },

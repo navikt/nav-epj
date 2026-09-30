@@ -1,5 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
+import { useActivePatientStore } from "./activePatientStore";
 import { putActivePatient } from "./api";
 import { MessageBox, type MessageBoxVariant } from "./MessageBox";
 import type { AppDialog, AppErrorCode } from "./appDialogStore";
@@ -94,7 +95,13 @@ export function LaunchErrorDialog({ dialog, onClose }: Props) {
         break;
       case "PATIENT_MISMATCH": {
         const { patientId } = useJournalStore.getState();
-        if (patientId) void putActivePatient(patientId).catch(() => undefined);
+        if (patientId) {
+          void putActivePatient(patientId)
+            .then((active) =>
+              useActivePatientStore.getState().setActive(active.patientId),
+            )
+            .catch(() => undefined);
+        }
         break;
       }
       case "UNKNOWN_APP":
