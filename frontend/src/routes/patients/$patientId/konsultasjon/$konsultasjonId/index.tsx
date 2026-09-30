@@ -31,7 +31,9 @@ function RouteComponent() {
     const konsultasjon = KonsultasjonSchema.safeParse(
         data.konsultasjon,
       );
-    const [diagnoser, setDiagnoser] = useState<{ kode: string, system: string }[]>([])
+    const [diagnoser, setDiagnoser] = useState<{ kode: string, system: string }[]>(
+        () => konsultasjon.data?.diagnoser.map((diagnose) => ({ kode: diagnose.code, system: diagnose.system })) ?? []
+    )
     const [journalnotat, setJournalnotat] = useState<string>(
         () => konsultasjon.data?.journalnotat.at(-1)?.journalnotat ?? ''
     )
@@ -92,6 +94,7 @@ function RouteComponent() {
                         <UNSAFE_Combobox
                             label="Hvilke diagnoser har pasienten"
                             options={diagnoseOptions}
+                            selectedOptions={diagnoser.map((diagnose) => diagnose.kode)}
                             isMultiSelect
                             onToggleSelected={(option, isSelected) => handleToggleSelect(option, isSelected)}
 

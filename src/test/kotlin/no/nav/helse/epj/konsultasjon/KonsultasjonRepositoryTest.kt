@@ -372,6 +372,139 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
     }
 
     @Test
+    fun `update removes a diagnose that is left out of a later diagnoser list`() = runTest {
+        val hpr = HelsepersonellHpr("123")
+        val pasientId = opprettPasient(hpr = hpr)
+        val konsultasjonId =
+            konsultasjonRepository.insert(
+                OpprettKonsultasjon(
+                    pasientId,
+                    listOf(hpr),
+                    LocalDateTime.now(),
+                    KonsultasjonStatus.PÅGÅENDE,
+                )
+            )
+
+        konsultasjonRepository.update(
+            OppdaterKonsultasjonRequest(
+                konsultasjonId = konsultasjonId,
+                diagnoser =
+                    listOf(
+                        OpprettDiagnoseRequest(kode = "A01", system = DiagnoseType.ICPC2),
+                        OpprettDiagnoseRequest(kode = "A02", system = DiagnoseType.ICPC2),
+                    ),
+                journalNotat = null,
+                ferdigstill = false,
+            ),
+            pasientId,
+        )
+
+        konsultasjonRepository.update(
+            OppdaterKonsultasjonRequest(
+                konsultasjonId = konsultasjonId,
+                diagnoser =
+                    listOf(OpprettDiagnoseRequest(kode = "A02", system = DiagnoseType.ICPC2)),
+                journalNotat = null,
+                ferdigstill = false,
+            ),
+            pasientId,
+        )
+
+        val konsultasjon = konsultasjonRepository.findByKonsultasjonId(konsultasjonId)
+        assertNotNull(konsultasjon)
+        val gjenvarendeDiagnose = konsultasjon.diagnoser.single()
+        assertEquals("A02", gjenvarendeDiagnose.code)
+    }
+
+    @Test
+    fun `update removes all diagnoser when the diagnoser list is submitted empty`() = runTest {
+        val hpr = HelsepersonellHpr("123")
+        val pasientId = opprettPasient(hpr = hpr)
+        val konsultasjonId =
+            konsultasjonRepository.insert(
+                OpprettKonsultasjon(
+                    pasientId,
+                    listOf(hpr),
+                    LocalDateTime.now(),
+                    KonsultasjonStatus.PÅGÅENDE,
+                )
+            )
+
+        konsultasjonRepository.update(
+            OppdaterKonsultasjonRequest(
+                konsultasjonId = konsultasjonId,
+                diagnoser =
+                    listOf(OpprettDiagnoseRequest(kode = "A01", system = DiagnoseType.ICPC2)),
+                journalNotat = null,
+                ferdigstill = false,
+            ),
+            pasientId,
+        )
+
+        konsultasjonRepository.update(
+            OppdaterKonsultasjonRequest(
+                konsultasjonId = konsultasjonId,
+                diagnoser = emptyList(),
+                journalNotat = null,
+                ferdigstill = false,
+            ),
+            pasientId,
+        )
+
+        val konsultasjon = konsultasjonRepository.findByKonsultasjonId(konsultasjonId)
+        assertNotNull(konsultasjon)
+        assertEquals(emptyList(), konsultasjon.diagnoser)
+    }
+
+    @Test
+    fun `update leaves diagnoser unchanged when an unknown diagnosekode is rejected`() = runTest {
+        val hpr = HelsepersonellHpr("123")
+        val pasientId = opprettPasient(hpr = hpr)
+        val konsultasjonId =
+            konsultasjonRepository.insert(
+                OpprettKonsultasjon(
+                    pasientId,
+                    listOf(hpr),
+                    LocalDateTime.now(),
+                    KonsultasjonStatus.PÅGÅENDE,
+                )
+            )
+
+        konsultasjonRepository.update(
+            OppdaterKonsultasjonRequest(
+                konsultasjonId = konsultasjonId,
+                diagnoser =
+                    listOf(OpprettDiagnoseRequest(kode = "A01", system = DiagnoseType.ICPC2)),
+                journalNotat = null,
+                ferdigstill = false,
+            ),
+            pasientId,
+        )
+
+        assertFailsWith<UgyldigDiagnoseException> {
+            konsultasjonRepository.update(
+                OppdaterKonsultasjonRequest(
+                    konsultasjonId = konsultasjonId,
+                    diagnoser =
+                        listOf(
+                            OpprettDiagnoseRequest(
+                                kode = "IKKE-EN-GYLDIG-KODE",
+                                system = DiagnoseType.ICPC2,
+                            )
+                        ),
+                    journalNotat = null,
+                    ferdigstill = false,
+                ),
+                pasientId,
+            )
+        }
+
+        val konsultasjon = konsultasjonRepository.findByKonsultasjonId(konsultasjonId)
+        assertNotNull(konsultasjon)
+        assertEquals("A01", konsultasjon.diagnoser.single().code)
+    }
+
+    @Test
     fun `update leaves the konsultasjon open when ferdigstill is false`() = runTest {
         val hpr = HelsepersonellHpr("123")
         val pasientId = opprettPasient(hpr = hpr)

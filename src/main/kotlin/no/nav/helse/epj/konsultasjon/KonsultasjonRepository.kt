@@ -23,6 +23,7 @@ import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.isNull
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.insertReturning
@@ -171,6 +172,12 @@ class KonsultasjonRepository {
 
         var updatedRows = 0
 
+        updatedRows +=
+            removeDiagnoserNotIn(
+                diagnoser = oppdaterKonsultasjon.diagnoser,
+                konsultasjonId = oppdaterKonsultasjon.konsultasjonId.value,
+            )
+
         oppdaterKonsultasjon.diagnoser.forEach { diagnose ->
             updatedRows +=
                 updateDiagnose(
@@ -282,6 +289,41 @@ class KonsultasjonRepository {
                 }
                 .insertedCount
         }
+
+    private fun removeDiagnoserNotIn(
+        diagnoser: List<OpprettDiagnoseRequest>,
+        konsultasjonId: Uuid,
+    ): Int {
+        val onskedeNokler =
+            diagnoser
+                .map { diagnose ->
+                    Diagnose.from(diagnose.system, diagnose.kode)
+                        ?: throw UgyldigDiagnoseException(diagnose.kode, diagnose.system.toString())
+                }
+                .map { it.system.toString() to it.code }
+                .toSet()
+
+        val eksisterendeNokler =
+            KonsultasjonDiagnosekodeTable.select(
+                    KonsultasjonDiagnosekodeTable.diagnosesystem,
+                    KonsultasjonDiagnosekodeTable.diagnosekode,
+                )
+                .where { KonsultasjonDiagnosekodeTable.konsultasjonId eq konsultasjonId }
+                .map {
+                    it[KonsultasjonDiagnosekodeTable.diagnosesystem] to
+                        it[KonsultasjonDiagnosekodeTable.diagnosekode]
+                }
+
+        return eksisterendeNokler
+            .filterNot { it in onskedeNokler }
+            .sumOf { (system, kode) ->
+                KonsultasjonDiagnosekodeTable.deleteWhere {
+                    (KonsultasjonDiagnosekodeTable.konsultasjonId eq konsultasjonId) and
+                        (KonsultasjonDiagnosekodeTable.diagnosesystem eq system) and
+                        (KonsultasjonDiagnosekodeTable.diagnosekode eq kode)
+                }
+            }
+    }
 
     private fun toEpjKonsultasjon(konsultasjon: ResultRow): Konsultasjon {
         val hprListe =
