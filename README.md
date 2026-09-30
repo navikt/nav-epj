@@ -53,6 +53,26 @@ HelseID id_token that Wonderwall forwards (`iss`, `aud`, `name`, `hpr_number`) a
 issue and expiry times. It never returns raw tokens or the `pid` claim. With local development
 security it returns `{ "idp": "local-stub", "claims": { "sub": "local-dev" } }`.
 
+### Security headers
+
+Every response carries these headers (`SecurityHeaders.kt`):
+
+| Header | Value |
+| --- | --- |
+| `Content-Security-Policy` | `frame-src 'self' <app origins>; frame-ancestors 'self'` |
+| `X-Content-Type-Options` | `nosniff` |
+| `Referrer-Policy` | `no-referrer` |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=(), serial=(), display-capture=()` |
+
+`<app origins>` is built at startup from the launch and redirect URIs of the registered SMART clients
+(`smart.clients` or `smart.clientRegistryJson`), so a new app can be embedded by registering it.
+Clients with `launchMode: tab` are left out because they are never framed. `frame-ancestors` is
+`'self'` and not `'none'` because `/fhir/launch` and `/oidc/authorize` run inside nav-epj's own
+iframe.
+
+The policy only sets framing directives. It has no `default-src`, so scripts, styles and
+connections are not restricted.
+
 ### Testing the SMART launch flow with SMART on FHIR Validator
 
 To test the SMART launch flow locally,
