@@ -1,4 +1,4 @@
-import { Button, Heading, Table } from "@navikt/ds-react";
+import { Alert, Button, Heading, Table } from "@navikt/ds-react";
 import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import {
   KonsultasjonSchema,
@@ -49,11 +49,23 @@ function RouteComponent() {
   }
 
 
+  const paagaaendeKonsultasjon = konsultasjoner.success
+    ? konsultasjoner.data.find((konsultasjon) => konsultasjon.status === "PÅGÅENDE")
+    : undefined;
+
   return (
     <div className="flex flex-col items-start gap-4">
       {(patient.success && konsultasjoner.success) &&
         <div>
-          <Button variant={'primary'} onClick={() => handleOnClickOpprettKonsultasjon()}>Opprett ny konsultasjon</Button>
+          {paagaaendeKonsultasjon &&
+            <Alert variant="warning" className="mb-4">
+              Det finnes allerede en pågående konsultasjon. Fullfør den før du kan opprette en ny.{" "}
+              <Link className="aksel-link" to="/patients/$patientId/konsultasjon/$konsultasjonId" params={{ patientId, konsultasjonId: paagaaendeKonsultasjon.id }}>
+                Se pågående konsultasjon
+              </Link>
+            </Alert>
+          }
+          <Button variant={'primary'} disabled={!!paagaaendeKonsultasjon} onClick={() => handleOnClickOpprettKonsultasjon()}>Opprett ny konsultasjon</Button>
           <Heading size="medium" level="2">
             Konsultasjoner
           </Heading>
