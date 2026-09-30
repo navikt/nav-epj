@@ -70,7 +70,7 @@ class MaalingRepositoryTest : WithPostgresql() {
         verdi: BigDecimal = BigDecimal("37.2000"),
         enhetKode: String = "Cel",
         enhetVisningsnavn: String = "degree Celsius",
-        effektivTidspunkt: LocalDateTime = LocalDateTime.now(),
+        effektivTidspunkt: LocalDateTime = LocalDateTime.of(2026, 9, 1, 10, 15, 30, 500_000),
         status: MaalingStatus = MaalingStatus.FINAL,
     ) =
         Maaling(
