@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, type KeyboardEvent } from "react";
 import { copy } from "./copy";
 import { XpIcon } from "./XpIcon";
 import { TestMarker } from "./TestMarker";
 import { isModalOpen } from "./modalStore";
+import { usePatientsStore } from "./patientsStore";
 import {
   MENU_BUTTON_ID,
   SEARCH_INPUT_ID,
@@ -24,7 +25,8 @@ type Props = {
 
 export function AppHeader({ user, onLogout, onSearchSubmit }: Props) {
   const { narrow, drawerOpen, setDrawerOpen } = useShell();
-  const [query, setQuery] = useState("");
+  const query = usePatientsStore((s) => s.query);
+  const setQuery = usePatientsStore((s) => s.setQuery);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {

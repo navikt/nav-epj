@@ -60,6 +60,16 @@ describe("Dialog", () => {
     expect(screen.getByRole("button", { name: "OK" })).toHaveFocus();
   });
 
+  it("prefers an element marked for autofocus over the default button", () => {
+    render(
+      <Dialog title="Skjema" onClose={() => {}}>
+        <input aria-label="Felt" data-autofocus="" />
+        <Button isDefault>OK</Button>
+      </Dialog>,
+    );
+    expect(screen.getByLabelText("Felt")).toHaveFocus();
+  });
+
   it("falls back to the first control in the body without a default button", () => {
     render(
       <Dialog title="Skjema" onClose={() => {}}>

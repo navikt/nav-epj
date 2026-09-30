@@ -1,8 +1,9 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppHeader } from "./AppHeader";
 import { AppShell } from "./AppShell";
+import { usePatientsStore } from "./patientsStore";
 import { mockMatchMedia } from "./matchMediaMock";
 import { expectNoSeriousViolations } from "./axeHelper";
 import { copy } from "./copy";
@@ -102,6 +103,15 @@ describe("AppHeader", () => {
     await u.type(input, "Kari{Enter}");
     expect(onSearchSubmit).toHaveBeenCalledOnce();
     expect(input).toHaveValue("Kari");
+  });
+
+  it("shares the typed query with the patient list", async () => {
+    const u = userEvent.setup();
+    renderHeader();
+    await u.type(screen.getByLabelText(copy["header.search.label"]), "Kari");
+    expect(usePatientsStore.getState().query).toBe("Kari");
+    act(() => usePatientsStore.getState().setQuery(""));
+    expect(screen.getByLabelText(copy["header.search.label"])).toHaveValue("");
   });
 
   it("calls onLogout from the logout button", async () => {

@@ -51,6 +51,7 @@ export function Dialog({
     const focusables = () =>
       Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE));
     const initial =
+      dialog.querySelector<HTMLElement>("[data-autofocus]") ??
       dialog.querySelector<HTMLElement>(".xp-btn.is-default") ??
       dialog
         .querySelector<HTMLElement>(".xp-body")

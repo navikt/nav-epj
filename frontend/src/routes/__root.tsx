@@ -4,6 +4,7 @@ import { AppShell } from "../xp/AppShell";
 import { BalloonHost } from "../xp/BalloonHost";
 import { StatusBar } from "../xp/StatusBar";
 import { TaskPane } from "../xp/TaskPane";
+import { CurrentUserContext, type CurrentUser } from "../xp/currentUser";
 import { UserGate } from "../xp/UserGate";
 import { Workspace } from "../xp/Workspace";
 import { logout } from "../xp/logout";
@@ -18,37 +19,40 @@ function RootComponent() {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { state, retry } = useHelsepersonell();
-  const user =
+  const currentUser: CurrentUser | null =
     state.status === "ready"
       ? {
           navn: state.helsepersonell.navn,
           autorisasjon: state.helsepersonell.autorisasjon,
           legekontor: state.legekontor.navn,
+          orgnummer: state.legekontor.orgnummer ?? undefined,
         }
       : null;
   const openPatients = () => void navigate({ to: "/patients" });
   useRouteTabSync(pathname, (to) => void navigate({ to }));
 
   return (
-    <AppShell>
-      <AppHeader
-        user={user}
-        onLogout={logout}
-        onSearchSubmit={openPatients}
-      />
-      <TaskPane
-        userName={user?.navn}
-        patientsCurrent={pathname.startsWith("/patients")}
-        onOpenPatients={openPatients}
-        onLogout={logout}
-      />
-      <Workspace>
-        <UserGate state={state} onRetry={retry}>
-          <Outlet />
-        </UserGate>
-      </Workspace>
-      <StatusBar onOpenPatients={openPatients} />
-      <BalloonHost />
-    </AppShell>
+    <CurrentUserContext.Provider value={currentUser}>
+      <AppShell>
+        <AppHeader
+          user={currentUser}
+          onLogout={logout}
+          onSearchSubmit={openPatients}
+        />
+        <TaskPane
+          userName={currentUser?.navn}
+          patientsCurrent={pathname.startsWith("/patients")}
+          onOpenPatients={openPatients}
+          onLogout={logout}
+        />
+        <Workspace>
+          <UserGate state={state} onRetry={retry}>
+            <Outlet />
+          </UserGate>
+        </Workspace>
+        <StatusBar onOpenPatients={openPatients} />
+        <BalloonHost />
+      </AppShell>
+    </CurrentUserContext.Provider>
   );
 }
