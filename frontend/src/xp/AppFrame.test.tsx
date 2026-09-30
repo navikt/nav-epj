@@ -150,9 +150,12 @@ describe("AppFrame", () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
-  it("hides the app behind the stale overlay", async () => {
+  it("hides the app behind the stale overlay without unmounting it", async () => {
     const { onOpenJournal, onClose } = setup({ stale: true });
-    expect(document.querySelector("iframe")).toBeNull();
+    const frame = document.querySelector("iframe");
+    expect(frame).not.toBeNull();
+    expect(frame).toHaveAttribute("aria-hidden", "true");
+    expect(frame).toHaveAttribute("inert");
     expect(
       screen.getByText(copy["s5.stale.title"]("Ola Nordmann", "Kari Hansen")),
     ).toBeInTheDocument();

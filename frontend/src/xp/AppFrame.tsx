@@ -92,7 +92,7 @@ export function AppFrame({
 
   const patientName = fullName(run.patient);
   const showFrame =
-    launchUrl !== null && !stale && status !== "session" && status !== "error";
+    launchUrl !== null && status !== "session" && status !== "error";
 
   let overlay = null;
   if (stale) {
@@ -190,6 +190,8 @@ export function AppFrame({
           sandbox={IFRAME_SANDBOX}
           referrerPolicy={IFRAME_REFERRER_POLICY}
           allow=""
+          inert={stale}
+          aria-hidden={stale || undefined}
           onLoad={onLoad}
         />
       )}

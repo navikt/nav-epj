@@ -128,7 +128,7 @@ describe("AppTabView", () => {
     usePatientsStore.setState({ patients: [kari], status: "ready" });
     useWorkspaceStore.getState().openTab({ kind: "journal", label: "Journal" });
     setup();
-    expect(document.querySelector("iframe")).toBeNull();
+    expect(document.querySelector("iframe")).toHaveAttribute("inert");
     expect(
       screen.getByRole("region", { name: copy["context.label"] }),
     ).toHaveTextContent(copy["context.stale"]);
@@ -153,7 +153,7 @@ describe("AppTabView", () => {
       const { announce } = setup();
       expect(document.querySelector("iframe")).not.toBeNull();
       act(() => useActivePatientStore.getState().setActive("p2"));
-      expect(document.querySelector("iframe")).toBeNull();
+      expect(document.querySelector("iframe")).toHaveAttribute("inert");
       expect(useAppRunStore.getState().runs).toHaveLength(1);
       expect(
         screen.getByText(copy["s5.stale.title"]("Ola Nordmann", "Kari Hansen")),
@@ -170,11 +170,17 @@ describe("AppTabView", () => {
       ).toBeDisabled();
     });
 
-    it("shows the app again when the active patient is the run's patient", () => {
+    it("resumes the same frame when the active patient is the run's patient again", () => {
       setup();
+      const frame = document.querySelector("iframe");
+      const src = frame?.getAttribute("src");
       act(() => useActivePatientStore.getState().setActive("p2"));
       act(() => useActivePatientStore.getState().setActive("p1"));
-      expect(document.querySelector("iframe")).not.toBeNull();
+      const after = document.querySelector("iframe");
+      expect(after).toBe(frame);
+      expect(after?.getAttribute("src")).toBe(src);
+      expect(after).not.toHaveAttribute("inert");
+      expect(after).not.toHaveAttribute("aria-hidden");
     });
 
     it("keeps the app visible when no patient is active", () => {
