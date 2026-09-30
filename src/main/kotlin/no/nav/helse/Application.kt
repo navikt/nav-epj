@@ -9,6 +9,7 @@ import no.nav.helse.helseId.configureHelseId
 import no.nav.helse.plugins.configureCallLogging
 import no.nav.helse.plugins.configureCors
 import no.nav.helse.plugins.configureHealthCheck
+import no.nav.helse.plugins.configureSecurityHeaders
 import no.nav.helse.plugins.configureSerialization
 import no.nav.helse.plugins.configureStatusPages
 import no.nav.helse.smart.api.configureSmartRouting
@@ -24,6 +25,7 @@ fun Application.module() {
     configureDatabases()
     configureHealthCheck()
     configureCors()
+    configureSecurityHeaders()
     configureCallLogging()
 
     configureHelseId()
