@@ -46,6 +46,13 @@ From the backend directory, start the application using Gradle:
 ./gradlew runLocal
 ```
 
+### Session information
+
+`GET /api/session` backs the Systeminformasjon page. It returns a fixed selection of claims from the
+HelseID id_token that Wonderwall forwards (`iss`, `aud`, `name`, `hpr_number`) and the token's
+issue and expiry times. It never returns raw tokens or the `pid` claim. With local development
+security it returns `{ "idp": "local-stub", "claims": { "sub": "local-dev" } }`.
+
 ### Testing the SMART launch flow with SMART on FHIR Validator
 
 To test the SMART launch flow locally,

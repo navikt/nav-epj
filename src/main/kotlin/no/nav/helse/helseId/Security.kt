@@ -71,6 +71,7 @@ private fun Application.configureLocalDevelopmentSecurity() {
                     accessToken = "eyJhbGciOiJub25lIn0.eyJzdWIiOiJsb2NhbC1kZXYifQ.",
                     idToken = "eyJhbGciOiJub25lIn0.eyJzdWIiOiJsb2NhbC1kZXYifQ.",
                 ),
+            idp = Idp.LOCAL_STUB,
         )
 
     authentication {

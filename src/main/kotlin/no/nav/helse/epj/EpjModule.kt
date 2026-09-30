@@ -24,6 +24,7 @@ import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.epj.pasient.PasientService
 import no.nav.helse.epj.pasient.activePatientRoutes
 import no.nav.helse.epj.pasient.pasientRoutes
+import no.nav.helse.helseId.sessionRoutes
 import no.nav.helse.smart.valkey.ValkeyService
 
 fun Application.configureEpjModule() {
@@ -43,6 +44,7 @@ fun Application.configureEpjModule() {
                 defaultPage = "index.html"
                 filesPath = "static"
             }
+            sessionRoutes()
             pasientRoutes(pasientService)
             activePatientRoutes(activePatientService, valkeyService)
             helsepersonellRoutes(helsepersonellService, legekontorService)

@@ -5,7 +5,12 @@ import io.ktor.server.routing.*
 
 data class User(val name: String, val hpr: String)
 
-data class HelseIdPrincipal(val user: User, val debug: DebugInfo)
+enum class Idp(val id: String) {
+    HELSEID("helseid"),
+    LOCAL_STUB("local-stub"),
+}
+
+data class HelseIdPrincipal(val user: User, val debug: DebugInfo, val idp: Idp = Idp.HELSEID)
 
 data class DebugInfo(val accessToken: String, val idToken: String)
 
