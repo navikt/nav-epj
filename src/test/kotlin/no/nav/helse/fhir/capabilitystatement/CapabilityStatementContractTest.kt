@@ -72,6 +72,7 @@ class CapabilityStatementContractTest {
             "encounter" to "Encounter/${Uuid.generateV4()}",
             "practitioner" to "Practitioner/123456",
             "code" to "8310-5",
+            "identifier" to "urn:oid:2.16.578.1.12.4.1.4.1|15068500017",
         )
 
     private val patientCompartmentParams = setOf("patient", "subject")
@@ -81,7 +82,7 @@ class CapabilityStatementContractTest {
 
     private val expectedMetadata =
         mapOf(
-            "Patient" to (listOf("read") to emptyList()),
+            "Patient" to (listOf("read", "search-type") to listOf("identifier:token")),
             "Encounter" to
                 (listOf("read", "search-type") to listOf("patient:reference", "subject:reference")),
             "Condition" to
@@ -189,6 +190,8 @@ class CapabilityStatementContractTest {
 
     @Test
     fun `every advertised search parameter is accepted by its route`() {
+        coEvery { patientService.findByIdentifier(any()) } returns null
+        coEvery { patientService.searchset(any()) } returns emptySearchset
         coEvery { encounterService.getEncountersByPatient(any()) } returns emptySearchset
         coEvery { conditionService.getConditionsByPatientId(any()) } returns emptySearchset
         coEvery { conditionService.getConditionsByEncounterId(any()) } returns emptySearchset

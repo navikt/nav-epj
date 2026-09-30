@@ -2,10 +2,12 @@ package no.nav.helse.fhir.patient
 
 import com.google.fhir.model.r4.FhirR4Json
 import io.ktor.http.*
+import io.ktor.server.plugins.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.helse.core.utils.logger
 import no.nav.helse.fhir.patientInputId
+import no.nav.helse.fhir.security.permitsPatient
 import no.nav.helse.fhir.security.requireFhirScope
 import no.nav.helse.fhir.security.requirePatientMatch
 import no.nav.helse.smart.security.Interaction
@@ -27,6 +29,22 @@ fun Route.patientRoutes(
             val patient =
                 patientService.getPatient(id) ?: return@get call.respond(HttpStatusCode.NotFound)
             call.respondText(fhirR4Json.encodeToString(patient), fhirContentType)
+        }
+        get("/Patient") {
+            val identifier =
+                call.parameters["identifier"]
+                    ?: throw BadRequestException("Mangler parameteren 'identifier'")
+            val search = parsePatientIdentifierSearch(identifier)
+            val principal = call.requireFhirScope("Patient", Interaction.SEARCH)
+
+            val patients =
+                listOfNotNull(patientService.findByIdentifier(search)).filter {
+                    principal.permitsPatient("Patient", Interaction.SEARCH, it.id)
+                }
+            call.respondText(
+                fhirR4Json.encodeToString(patientService.searchset(patients)),
+                fhirContentType,
+            )
         }
     }
 }

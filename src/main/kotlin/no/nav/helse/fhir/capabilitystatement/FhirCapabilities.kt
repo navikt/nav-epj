@@ -18,7 +18,11 @@ private fun token(name: String) = DeclaredSearchParam(name, SearchParamType.Toke
 
 val declaredFhirCapabilities: List<DeclaredResource> =
     listOf(
-        DeclaredResource(ResourceType.Patient, listOf(TypeRestfulInteraction.Read)),
+        DeclaredResource(
+            ResourceType.Patient,
+            listOf(TypeRestfulInteraction.Read, TypeRestfulInteraction.Search_Type),
+            listOf(token("identifier")),
+        ),
         DeclaredResource(
             ResourceType.Encounter,
             listOf(TypeRestfulInteraction.Read, TypeRestfulInteraction.Search_Type),
