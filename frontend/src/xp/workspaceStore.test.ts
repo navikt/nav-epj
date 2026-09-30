@@ -102,4 +102,47 @@ describe("workspaceStore", () => {
     state().closeTab(id);
     expect(state().tabs.map((t) => t.id)).toContain(id);
   });
+
+  it("updates display state on an existing tab without touching identity", () => {
+    state().openTab({
+      kind: "app",
+      clientId: "syk-inn",
+      label: "Sykmelding · MA",
+    });
+    state().updateTab("app:syk-inn", { mark: "●", unsaved: true, error: true });
+    expect(state().tabs.at(-1)).toMatchObject({
+      id: "app:syk-inn",
+      kind: "app",
+      clientId: "syk-inn",
+      label: "Sykmelding · MA",
+      mark: "●",
+      unsaved: true,
+      error: true,
+    });
+    state().updateTab("app:syk-inn", { unsaved: false });
+    expect(state().tabs.at(-1)).toMatchObject({ mark: "●", unsaved: false });
+  });
+
+  it("ignores updateTab for unknown tabs", () => {
+    const before = state().tabs;
+    state().updateTab("nope", { mark: "●" });
+    expect(state().tabs).toEqual(before);
+  });
+
+  it("keeps display state passed to openTab", () => {
+    state().openTab({
+      kind: "app",
+      clientId: "syk-inn",
+      label: "Sykmelding · MA",
+      mark: "●",
+      ariaLabel: "Sykmelding for MATEMATISK APE, kjører",
+      unsaved: true,
+    });
+    expect(state().tabs.at(-1)).toMatchObject({
+      id: "app:syk-inn",
+      mark: "●",
+      unsaved: true,
+      closable: true,
+    });
+  });
 });

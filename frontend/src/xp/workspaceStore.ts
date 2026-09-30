@@ -11,15 +11,32 @@ export type TabKind =
   | "hjelp"
   | "hendelseslogg";
 
-export type Tab = {
+type TabBase = {
   id: string;
-  kind: TabKind;
   label: string;
   closable: boolean;
-  clientId?: string;
+  mark?: string;
+  ariaLabel?: string;
+  unsaved?: boolean;
+  error?: boolean;
 };
 
-type OpenTabBase = { label: string; closable?: boolean };
+export type Tab =
+  | (TabBase & { kind: "app"; clientId: string })
+  | (TabBase & { kind: Exclude<TabKind, "app">; clientId?: undefined });
+
+export type TabPatch = Partial<
+  Pick<Tab, "label" | "mark" | "ariaLabel" | "unsaved" | "error">
+>;
+
+type OpenTabBase = {
+  label: string;
+  closable?: boolean;
+  mark?: string;
+  ariaLabel?: string;
+  unsaved?: boolean;
+  error?: boolean;
+};
 
 export type OpenTabInput =
   | (OpenTabBase & { kind: "app"; clientId: string })
@@ -31,6 +48,7 @@ type WorkspaceState = {
   openTab: (input: OpenTabInput) => string;
   closeTab: (id: string) => void;
   setCurrent: (id: string) => void;
+  updateTab: (id: string, patch: TabPatch) => void;
   reset: () => void;
 };
 
@@ -60,13 +78,8 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   openTab: (input) => {
     const { tabs } = get();
     const id = tabId(input);
-    const tab: Tab = {
-      id,
-      kind: input.kind,
-      label: input.label,
-      closable: input.closable ?? true,
-      clientId: input.clientId,
-    };
+    const { closable = true, ...rest } = input;
+    const tab: Tab = { ...rest, id, closable };
     if (!tabs.some((t) => t.id === id)) {
       set({ tabs: [...tabs, tab], current: id });
     } else if (input.kind === "journal") {
@@ -91,6 +104,11 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   setCurrent: (id) => {
     if (get().tabs.some((t) => t.id === id)) set({ current: id });
   },
+
+  updateTab: (id, patch) =>
+    set({
+      tabs: get().tabs.map((t) => (t.id === id ? { ...t, ...patch } : t)),
+    }),
 
   reset: () => set(initialState()),
 }));
