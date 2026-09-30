@@ -27,7 +27,7 @@ export function SysinfoPage() {
   const claimsId = useId();
   const smartId = useId();
   const fhirId = useId();
-  const fhirBase = fhirBaseOf(window.location.origin);
+  const fhirBase = smart.status === "ready" ? fhirBaseOf(smart.data) : null;
   const sessionUser = user ? { navn: user.navn, hpr: user.hpr } : null;
 
   function copySummary() {
@@ -42,14 +42,11 @@ export function SysinfoPage() {
       },
       smart.status === "ready" && {
         title: copy["s11.smart.title"],
-        rows: smartRows(smart.data, fhirBase),
+        rows: smartRows(smart.data),
       },
       fhir.status === "ready" && {
         title: copy["s11.fhir.title"],
-        rows: [
-          ...fhirRows(fhir.data, fhirBase),
-          ...resourceRows(fhir.data),
-        ],
+        rows: [...fhirRows(fhir.data, fhirBase), ...resourceRows(fhir.data)],
       },
     ].filter((section) => section !== false);
     void copyText(buildSummary(sections), copy["s11.copied"]);
@@ -114,7 +111,7 @@ export function SysinfoPage() {
       >
         {(data) => (
           <>
-            <SysinfoRows rows={smartRows(data, fhirBase)} />
+            <SysinfoRows rows={smartRows(data)} />
             <p className="xp-hint">{copy["s11.smart.validator"]}</p>
           </>
         )}

@@ -87,7 +87,10 @@ async function ready() {
 
 describe("SysinfoPage", () => {
   beforeEach(() => stubFetch());
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
 
   it("has the page heading and a copy button", async () => {
     renderPage();
@@ -95,7 +98,9 @@ describe("SysinfoPage", () => {
     expect(
       screen.getByRole("heading", { level: 1, name: copy["s11.title"] }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: copy["s11.copy"] })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: copy["s11.copy"] }),
+    ).toBeInTheDocument();
   });
 
   it("fetches everything from the server instead of hard-coding it", async () => {
@@ -110,24 +115,43 @@ describe("SysinfoPage", () => {
   });
 
   it("shows an active HelseID session from GET /api/session", async () => {
+    vi.useFakeTimers({
+      toFake: ["Date"],
+      now: new Date("2026-09-28T07:00:00Z"),
+    });
     renderPage();
     await ready();
     const section = within(
       screen.getByRole("region", { name: copy["s11.helseid.title"] }),
     );
     expect(section.getByText(copy["s11.helseid.active"])).toBeInTheDocument();
-    expect(section.getByText(copy["s11.helseid.user"]).nextElementSibling).toHaveTextContent(
-      "GRØNN VITS",
+    expect(
+      section.getByText(copy["s11.helseid.user"]).nextElementSibling,
+    ).toHaveTextContent("GRØNN VITS");
+    expect(
+      section.getByText(copy["s11.helseid.hpr"]).nextElementSibling,
+    ).toHaveTextContent("565501872");
+    expect(
+      section.getByText(copy["s11.helseid.idp"]).nextElementSibling,
+    ).toHaveTextContent(copy["s11.helseid.idp.value"]);
+    expect(
+      section.getByText(copy["s11.helseid.exp"]).nextElementSibling,
+    ).toHaveTextContent(/\(om 58 min\)$/);
+  });
+
+  it("marks an expired id token as expired", async () => {
+    vi.useFakeTimers({
+      toFake: ["Date"],
+      now: new Date("2026-09-28T09:00:00Z"),
+    });
+    renderPage();
+    await ready();
+    const section = within(
+      screen.getByRole("region", { name: copy["s11.helseid.title"] }),
     );
-    expect(section.getByText(copy["s11.helseid.hpr"]).nextElementSibling).toHaveTextContent(
-      "565501872",
-    );
-    expect(section.getByText(copy["s11.helseid.idp"]).nextElementSibling).toHaveTextContent(
-      copy["s11.helseid.idp.value"],
-    );
-    expect(section.getByText(copy["s11.helseid.exp"]).nextElementSibling).toHaveTextContent(
-      /\(om \d+ min\)$/,
-    );
+    const value = section.getByText(copy["s11.helseid.exp"]).nextElementSibling;
+    expect(value).toHaveTextContent(copy["s5.status.session"]);
+    expect(value).not.toHaveTextContent("om ");
   });
 
   it("lists the claims with pid hidden and never shows a token", async () => {
@@ -135,15 +159,9 @@ describe("SysinfoPage", () => {
     await ready();
     const table = screen.getByRole("table", { name: copy["s11.claims.title"] });
     const rows = within(table).getAllByRole("row").slice(1);
-    expect(rows.map((r) => within(r).getAllByRole("cell")[0].textContent)).toEqual([
-      "iss",
-      "aud",
-      "name",
-      "hpr_number",
-      "pid",
-      "iat",
-      "exp",
-    ]);
+    expect(
+      rows.map((r) => within(r).getAllByRole("cell")[0].textContent),
+    ).toEqual(["iss", "aud", "name", "hpr_number", "pid", "iat", "exp"]);
     expect(
       within(rows[4]).getByText(copy["s11.claims.hidden"]),
     ).toBeInTheDocument();
@@ -160,7 +178,9 @@ describe("SysinfoPage", () => {
       screen.getByRole("region", { name: copy["s11.helseid.title"] }),
     );
     expect(section.getByText(copy["s11.helseid.local"])).toBeInTheDocument();
-    expect(section.getByText(copy["s11.helseid.idp.local"])).toBeInTheDocument();
+    expect(
+      section.getByText(copy["s11.helseid.idp.local"]),
+    ).toBeInTheDocument();
     expect(section.getByText("Bjarte Legesen")).toBeInTheDocument();
     expect(section.getByText("local-dev")).toBeInTheDocument();
   });
@@ -171,26 +191,28 @@ describe("SysinfoPage", () => {
     const section = within(
       screen.getByRole("region", { name: copy["s11.smart.title"] }),
     );
-    const base = `${window.location.origin}/fhir`;
-    expect(section.getByText(copy["s11.smart.iss"]).nextElementSibling).toHaveTextContent(base);
-    expect(section.getByText(copy["s11.smart.discovery"]).nextElementSibling).toHaveTextContent(
-      `${base}/.well-known/smart-configuration`,
-    );
-    expect(section.getByText(copy["s11.smart.authorize"]).nextElementSibling).toHaveTextContent(
-      "http://localhost:8080/oidc/authorize",
-    );
-    expect(section.getByText(copy["s11.smart.token"]).nextElementSibling).toHaveTextContent(
-      "http://localhost:8080/oidc/token",
-    );
-    expect(section.getByText(copy["s11.smart.jwks"]).nextElementSibling).toHaveTextContent(
-      "http://localhost:8080/oidc/jwks",
-    );
-    expect(section.getByText(copy["s11.smart.clientAuth"]).nextElementSibling).toHaveTextContent(
-      "none, client_secret_basic",
-    );
-    expect(section.getByText(copy["s11.smart.context"]).nextElementSibling).toHaveTextContent(
-      "context-ehr-patient, context-ehr-encounter",
-    );
+    const base = "http://localhost:8080/fhir";
+    expect(
+      section.getByText(copy["s11.smart.iss"]).nextElementSibling,
+    ).toHaveTextContent(base);
+    expect(
+      section.getByText(copy["s11.smart.discovery"]).nextElementSibling,
+    ).toHaveTextContent(`${base}/.well-known/smart-configuration`);
+    expect(
+      section.getByText(copy["s11.smart.authorize"]).nextElementSibling,
+    ).toHaveTextContent("http://localhost:8080/oidc/authorize");
+    expect(
+      section.getByText(copy["s11.smart.token"]).nextElementSibling,
+    ).toHaveTextContent("http://localhost:8080/oidc/token");
+    expect(
+      section.getByText(copy["s11.smart.jwks"]).nextElementSibling,
+    ).toHaveTextContent("http://localhost:8080/oidc/jwks");
+    expect(
+      section.getByText(copy["s11.smart.clientAuth"]).nextElementSibling,
+    ).toHaveTextContent("none, client_secret_basic");
+    expect(
+      section.getByText(copy["s11.smart.context"]).nextElementSibling,
+    ).toHaveTextContent("context-ehr-patient, context-ehr-encounter");
     expect(section.getByText(copy["s11.smart.validator"])).toBeInTheDocument();
   });
 
@@ -200,9 +222,9 @@ describe("SysinfoPage", () => {
     const section = within(
       screen.getByRole("region", { name: copy["s11.fhir.title"] }),
     );
-    expect(section.getByText(copy["s11.fhir.capability"]).nextElementSibling).toHaveTextContent(
-      `${window.location.origin}/fhir/metadata`,
-    );
+    expect(
+      section.getByText(copy["s11.fhir.capability"]).nextElementSibling,
+    ).toHaveTextContent("http://localhost:8080/fhir/metadata");
     const table = section.getByRole("table");
     const rows = within(table).getAllByRole("row").slice(1);
     expect(rows.map((r) => r.textContent)).toEqual([
@@ -218,18 +240,24 @@ describe("SysinfoPage", () => {
   });
 
   it("shows one failing section with a retry while the others still load", async () => {
-    const fetchMock = stubFetch({ "/fhir/metadata": { status: 500, body: {} } });
+    const fetchMock = stubFetch({
+      "/fhir/metadata": { status: 500, body: {} },
+    });
     renderPage();
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent(copy["s8.NETWORK.head"]);
     expect(
-      within(screen.getByRole("region", { name: copy["s11.fhir.title"] })).getByRole("alert"),
+      within(
+        screen.getByRole("region", { name: copy["s11.fhir.title"] }),
+      ).getByRole("alert"),
     ).toBe(alert);
     expect(screen.getByText(copy["s11.helseid.active"])).toBeInTheDocument();
     expect(screen.getByText(copy["s11.smart.authorize"])).toBeInTheDocument();
     fetchMock.mockClear();
     stubFetch();
-    await userEvent.click(screen.getByRole("button", { name: copy["s8.NETWORK.action"] }));
+    await userEvent.click(
+      screen.getByRole("button", { name: copy["s8.NETWORK.action"] }),
+    );
     await ready();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
@@ -239,7 +267,9 @@ describe("SysinfoPage", () => {
     vi.stubGlobal("navigator", { clipboard: { writeText } });
     renderPage();
     await ready();
-    await userEvent.click(screen.getByRole("button", { name: copy["s11.copy"] }));
+    await userEvent.click(
+      screen.getByRole("button", { name: copy["s11.copy"] }),
+    );
     await vi.waitFor(() => expect(writeText).toHaveBeenCalledOnce());
     const text = String(writeText.mock.calls[0][0]);
     expect(text).toContain(copy["s11.title"]);
@@ -248,7 +278,9 @@ describe("SysinfoPage", () => {
     expect(text).toContain("Patient: read, search-type");
     expect(text).not.toContain(PID);
     await vi.waitFor(() =>
-      expect(useBalloonStore.getState().balloon?.title).toBe(copy["s11.copied"]),
+      expect(useBalloonStore.getState().balloon?.title).toBe(
+        copy["s11.copied"],
+      ),
     );
   });
 

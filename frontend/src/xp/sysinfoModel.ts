@@ -15,8 +15,8 @@ const PID_CLAIM = "helseid://claims/identity/pid";
 const EMPTY = copy["s4.empty.value"];
 const FIXED_CLAIMS = new Set(["iss", "aud", "name", HPR_CLAIM]);
 
-export function fhirBaseOf(origin: string) {
-  return `${origin}/fhir`;
+export function fhirBaseOf(smart: SmartConfiguration) {
+  return `${new URL(smart.authorization_endpoint).origin}/fhir`;
 }
 
 function dateTime(iso: string | null | undefined) {
@@ -26,11 +26,13 @@ function dateTime(iso: string | null | undefined) {
 function expiryText(iso: string | null | undefined, now: Date) {
   if (!iso) return EMPTY;
   const [dato, tid] = formatDateTime(iso).split(" ");
-  const minutter = Math.max(
-    0,
-    Math.round((new Date(iso).getTime() - now.getTime()) / 60_000),
+  const remaining = new Date(iso).getTime() - now.getTime();
+  if (remaining <= 0) return `${dato} ${tid} (${copy["s5.status.session"]})`;
+  return copy["s11.helseid.expValue"](
+    dato,
+    tid,
+    Math.round(remaining / 60_000),
   );
-  return copy["s11.helseid.expValue"](dato, tid, minutter);
 }
 
 export function helseIdRows(
@@ -68,7 +70,8 @@ export function claimRows(session: Session): Row[] {
   ];
 }
 
-export function smartRows(smart: SmartConfiguration, fhirBase: string): Row[] {
+export function smartRows(smart: SmartConfiguration): Row[] {
+  const fhirBase = fhirBaseOf(smart);
   const contexts = smart.capabilities.filter((c) => c.startsWith("context-"));
   return [
     [copy["s11.smart.iss"], fhirBase],
@@ -91,14 +94,14 @@ export function smartRows(smart: SmartConfiguration, fhirBase: string): Row[] {
 
 export function fhirRows(
   statement: CapabilityStatement,
-  fhirBase: string,
+  fhirBase: string | null,
 ): Row[] {
   const version = statement.fhirVersion.startsWith("4.0")
     ? `${statement.fhirVersion} (R4)`
     : statement.fhirVersion;
   return [
     [copy["s11.fhir.version"], version],
-    [copy["s11.fhir.capability"], `${fhirBase}/metadata`],
+    [copy["s11.fhir.capability"], fhirBase ? `${fhirBase}/metadata` : EMPTY],
   ];
 }
 

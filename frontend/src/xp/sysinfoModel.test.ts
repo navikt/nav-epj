@@ -50,8 +50,25 @@ describe("sysinfoModel", () => {
     );
   });
 
-  it("never reports a negative remaining time", () => {
+  it("marks an expired id token instead of counting down", () => {
     const now = new Date("2026-09-28T09:00:00Z");
+    const rows = Object.fromEntries(helseIdRows(real, user, now));
+    expect(rows[copy["s11.helseid.exp"]]).toMatch(
+      new RegExp(
+        `^28\\.09\\.2026 \\d\\d:\\d\\d \\(${copy["s5.status.session"]}\\)$`,
+      ),
+    );
+    expect(rows[copy["s11.helseid.exp"]]).not.toContain("om ");
+  });
+
+  it("treats the exact expiry instant as expired", () => {
+    const now = new Date("2026-09-28T07:58:00Z");
+    const rows = Object.fromEntries(helseIdRows(real, user, now));
+    expect(rows[copy["s11.helseid.exp"]]).toContain(copy["s5.status.session"]);
+  });
+
+  it("still counts down when less than a minute is left", () => {
+    const now = new Date("2026-09-28T07:57:40Z");
     const rows = Object.fromEntries(helseIdRows(real, user, now));
     expect(rows[copy["s11.helseid.exp"]]).toMatch(/\(om 0 min\)$/);
   });
@@ -85,7 +102,10 @@ describe("sysinfoModel", () => {
   it("hides pid even if the server were to send it", () => {
     const leaked: Session = {
       ...real,
-      claims: { ...real.claims, "helseid://claims/identity/pid": "01019012345" },
+      claims: {
+        ...real.claims,
+        "helseid://claims/identity/pid": "01019012345",
+      },
     };
     const rows = claimRows(leaked);
     expect(rows.filter(([claim]) => claim === "pid")).toEqual([
@@ -94,12 +114,21 @@ describe("sysinfoModel", () => {
     expect(JSON.stringify(rows)).not.toContain("01019012345");
   });
 
+  it("takes the FHIR base from the server's own authorize endpoint, not the browser", () => {
+    expect(fhirBaseOf(smart)).toBe("http://localhost:8080/fhir");
+    expect(
+      fhirBaseOf({
+        ...smart,
+        authorization_endpoint: "https://epj.test.nav.no/oidc/authorize",
+      }),
+    ).toBe("https://epj.test.nav.no/fhir");
+  });
+
   it("computes SMART endpoints from the discovery document", () => {
-    const base = fhirBaseOf("https://epj.example");
-    expect(Object.fromEntries(smartRows(smart, base))).toEqual({
-      [copy["s11.smart.iss"]]: "https://epj.example/fhir",
+    expect(Object.fromEntries(smartRows(smart))).toEqual({
+      [copy["s11.smart.iss"]]: "http://localhost:8080/fhir",
       [copy["s11.smart.discovery"]]:
-        "https://epj.example/fhir/.well-known/smart-configuration",
+        "http://localhost:8080/fhir/.well-known/smart-configuration",
       [copy["s11.smart.authorize"]]: "http://localhost:8080/oidc/authorize",
       [copy["s11.smart.token"]]: "http://localhost:8080/oidc/token",
       [copy["s11.smart.jwks"]]: "http://localhost:8080/oidc/jwks",
@@ -112,7 +141,7 @@ describe("sysinfoModel", () => {
 
   it("shows a dash when no token context is advertised", () => {
     const rows = Object.fromEntries(
-      smartRows({ ...smart, capabilities: ["launch-ehr"] }, "https://x/fhir"),
+      smartRows({ ...smart, capabilities: ["launch-ehr"] }),
     );
     expect(rows[copy["s11.smart.context"]]).toBe(copy["s4.empty.value"]);
   });
@@ -142,15 +171,30 @@ describe("sysinfoModel", () => {
     ]);
   });
 
+  it("shows a dash for the CapabilityStatement URL while the base is unknown", () => {
+    expect(fhirRows({ fhirVersion: "4.0.1" }, null)[1]).toEqual([
+      copy["s11.fhir.capability"],
+      copy["s4.empty.value"],
+    ]);
+  });
+
   it("shows other FHIR versions as reported", () => {
-    expect(fhirRows({ fhirVersion: "5.0.0" }, "https://x/fhir")[0][1]).toBe("5.0.0");
+    expect(fhirRows({ fhirVersion: "5.0.0" }, "https://x/fhir")[0][1]).toBe(
+      "5.0.0",
+    );
     expect(resourceRows({ fhirVersion: "5.0.0" })).toEqual([]);
   });
 
   it("builds a plain text summary", () => {
     expect(
       buildSummary([
-        { title: "A", rows: [["x", "1"], ["y", "2"]] },
+        {
+          title: "A",
+          rows: [
+            ["x", "1"],
+            ["y", "2"],
+          ],
+        },
         { title: "B", rows: [["z", "3"]] },
       ]),
     ).toBe(`${copy["s11.title"]}\n\nA\nx: 1\ny: 2\n\nB\nz: 3`);
