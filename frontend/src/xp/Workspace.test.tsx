@@ -1,6 +1,13 @@
 import { act, render, screen } from "@testing-library/react";
 import { useAppRunStore } from "./appRunStore";
-import { ola, seedApps, seedJournal, seedRun, sykInn, validator } from "./appFixtures";
+import {
+  ola,
+  seedApps,
+  seedJournal,
+  seedRun,
+  sykInn,
+  validator,
+} from "./appFixtures";
 import { beforeEach, describe, expect, it } from "vitest";
 import { Workspace } from "./Workspace";
 import { useWorkspaceStore } from "./workspaceStore";
@@ -30,9 +37,73 @@ describe("Workspace", () => {
       </Workspace>,
     );
     act(() => {
-      useWorkspaceStore.getState().openTab({ kind: "patients", label: "Pasienter" });
+      useWorkspaceStore
+        .getState()
+        .openTab({ kind: "patients", label: "Pasienter" });
     });
-    expect(screen.getByRole("tabpanel", { name: "Pasienter" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("tabpanel", { name: "Pasienter" }),
+    ).toBeInTheDocument();
+  });
+
+  describe("system tabs", () => {
+    it.each([
+      ["kontrollpanel", copy["s9.title"]],
+      ["hjelp", copy["s13.title"]],
+    ] as const)(
+      "shows the %s page instead of the routed page",
+      (kind, heading) => {
+        render(
+          <Workspace>
+            <p>Sideinnhold</p>
+          </Workspace>,
+        );
+        act(() => {
+          useWorkspaceStore.getState().openTab({ kind, label: heading });
+        });
+        expect(
+          screen.getByRole("heading", { level: 1, name: heading }),
+        ).toBeVisible();
+        expect(screen.getByText("Sideinnhold")).not.toBeVisible();
+        expect(
+          screen.getByRole("tabpanel", { name: heading }),
+        ).toBeInTheDocument();
+      },
+    );
+
+    it("shows the routed page again when switching back", () => {
+      render(
+        <Workspace>
+          <p>Sideinnhold</p>
+        </Workspace>,
+      );
+      act(() => {
+        useWorkspaceStore
+          .getState()
+          .openTab({ kind: "hjelp", label: copy["s13.title"] });
+      });
+      act(() => useWorkspaceStore.getState().setCurrent("start"));
+      expect(screen.getByText("Sideinnhold")).toBeVisible();
+      expect(
+        screen.queryByRole("heading", { level: 1, name: copy["s13.title"] }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("drops the page when its tab is closed", () => {
+      render(
+        <Workspace>
+          <p>Sideinnhold</p>
+        </Workspace>,
+      );
+      act(() => {
+        useWorkspaceStore
+          .getState()
+          .openTab({ kind: "hjelp", label: copy["s13.title"] });
+      });
+      act(() => useWorkspaceStore.getState().closeTab("hjelp"));
+      expect(screen.getByText("Sideinnhold")).toBeVisible();
+      expect(screen.queryByText(copy["s13.test.body"])).not.toBeInTheDocument();
+    });
   });
 
   describe("app tabs", () => {
@@ -40,11 +111,17 @@ describe("Workspace", () => {
       seedApps();
       seedJournal();
       seedRun();
-      useAppRunStore.getState().setLaunchUrl("syk-inn", "https://syk.example/?launch=1");
+      useAppRunStore
+        .getState()
+        .setLaunchUrl("syk-inn", "https://syk.example/?launch=1");
       act(() => {
         useWorkspaceStore
           .getState()
-          .openTab({ kind: "app", clientId: "syk-inn", label: "Sykmelding · ON" });
+          .openTab({
+            kind: "app",
+            clientId: "syk-inn",
+            label: "Sykmelding · ON",
+          });
       });
     });
 
@@ -56,24 +133,34 @@ describe("Workspace", () => {
       );
       expect(screen.getByText("Sideinnhold")).not.toBeVisible();
       expect(screen.getByRole("tabpanel")).toHaveClass("xp-page-app");
-      expect(screen.getByTitle("Sykmelding (syk-inn) for Ola Nordmann")).toBeVisible();
+      expect(
+        screen.getByTitle("Sykmelding (syk-inn) for Ola Nordmann"),
+      ).toBeVisible();
     });
 
     it("gives concurrent app tabs distinct ids and passes axe", async () => {
       seedApps([sykInn, validator]);
       seedRun(ola, validator);
-      useAppRunStore.getState().setLaunchUrl("validator", "https://v.example/?launch=1");
+      useAppRunStore
+        .getState()
+        .setLaunchUrl("validator", "https://v.example/?launch=1");
       act(() => {
         useWorkspaceStore
           .getState()
-          .openTab({ kind: "app", clientId: "validator", label: "Validator · ON" });
+          .openTab({
+            kind: "app",
+            clientId: "validator",
+            label: "Validator · ON",
+          });
       });
       const { container } = render(
         <Workspace>
           <p>Sideinnhold</p>
         </Workspace>,
       );
-      const ids = Array.from(container.querySelectorAll("[id]")).map((e) => e.id);
+      const ids = Array.from(container.querySelectorAll("[id]")).map(
+        (e) => e.id,
+      );
       expect(new Set(ids).size).toBe(ids.length);
       expect(container.querySelector("#app-frame-syk-inn")).not.toBeNull();
       expect(container.querySelector("#app-frame-validator")).not.toBeNull();
@@ -89,7 +176,9 @@ describe("Workspace", () => {
       const frame = screen.getByTitle("Sykmelding (syk-inn) for Ola Nordmann");
       act(() => useWorkspaceStore.getState().setCurrent("start"));
       expect(screen.getByText("Sideinnhold")).toBeVisible();
-      expect(screen.getByTitle("Sykmelding (syk-inn) for Ola Nordmann")).toBe(frame);
+      expect(screen.getByTitle("Sykmelding (syk-inn) for Ola Nordmann")).toBe(
+        frame,
+      );
       expect(frame).not.toBeVisible();
       expect(screen.getByRole("tabpanel")).not.toHaveClass("xp-page-app");
     });

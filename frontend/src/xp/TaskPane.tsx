@@ -9,12 +9,21 @@ import {
   genderOf,
 } from "./patientInfo";
 import { useNow } from "./useNow";
-import { JOURNAL_TAB_ID, useWorkspaceStore } from "./workspaceStore";
-import { AppearancePanel } from "./AppearancePanel";
+import {
+  JOURNAL_TAB_ID,
+  useWorkspaceStore,
+  type TabKind,
+} from "./workspaceStore";
 import { SmartAppsPanel } from "./SmartAppsPanel";
 import { TaskLink } from "./TaskLink";
 import { TaskPanel } from "./TaskPanel";
 import { TASK_PANE_ID } from "./shellContext";
+
+type SystemKind = Extract<TabKind, "kontrollpanel" | "sysinfo" | "hjelp">;
+
+function openSystemTab(kind: SystemKind, label: string) {
+  useWorkspaceStore.getState().openTab({ kind, label });
+}
 
 type Props = {
   userName?: string;
@@ -33,6 +42,7 @@ export function TaskPane({
 }: Props) {
   const patient = useJournalStore((s) => s.patient);
   const journalCurrent = useWorkspaceStore((s) => s.current === JOURNAL_TAB_ID);
+  const current = useWorkspaceStore((s) => s.current);
   const now = useNow(60_000);
   const birthDate = patient ? birthDateOf(patient) : null;
   return (
@@ -93,14 +103,18 @@ export function TaskPane({
         <TaskLink
           icon="kontrollpanel"
           label={copy["pane.system.kontroll"]}
-          badge={copy["pane.soon.label"]}
-          disabled
+          current={current === "kontrollpanel"}
+          onActivate={() =>
+            openSystemTab("kontrollpanel", copy["pane.system.kontroll"])
+          }
         />
         <TaskLink
           icon="systeminfo"
           label={copy["pane.system.sysinfo"]}
-          badge={copy["pane.soon.label"]}
-          disabled
+          current={current === "sysinfo"}
+          onActivate={() =>
+            openSystemTab("sysinfo", copy["pane.system.sysinfo"])
+          }
         />
         <TaskLink
           icon="hendelseslogg"
@@ -111,8 +125,8 @@ export function TaskPane({
         <TaskLink
           icon="hjelp"
           label={copy["pane.system.hjelp"]}
-          badge={copy["pane.soon.label"]}
-          disabled
+          current={current === "hjelp"}
+          onActivate={() => openSystemTab("hjelp", copy["pane.system.hjelp"])}
         />
         {userName && (
           <TaskLink
@@ -143,7 +157,6 @@ export function TaskPane({
           disabled
         />
       </TaskPanel>
-      <AppearancePanel />
     </nav>
   );
 }
