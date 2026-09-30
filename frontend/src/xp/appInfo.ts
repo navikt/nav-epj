@@ -13,6 +13,12 @@ const APP_ICONS: readonly IconName[] = [
   "vindu",
 ];
 
+export const APP_MODE_LABELS = {
+  iframe: copy["pane.apps.mode.iframe"],
+  tab: copy["pane.apps.mode.tab"],
+  ask: copy["pane.apps.mode.ask"],
+} as const;
+
 export function appIconName(ikon: string): IconName {
   return APP_ICONS.find((name) => name === ikon) ?? "vindu";
 }
