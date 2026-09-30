@@ -77,7 +77,7 @@ describe("startApp", () => {
       "/api/launch",
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({ appId: "syk-inn" }),
+        body: JSON.stringify({ appId: "syk-inn", patientId: "p1" }),
       }),
     );
     const [after] = useAppRunStore.getState().runs;
@@ -158,6 +158,7 @@ describe("startApp", () => {
   it.each([
     [409, "NO_ACTIVE_PATIENT"],
     [409, "NO_ACTIVE_ENCOUNTER"],
+    [409, "PATIENT_MISMATCH"],
     [404, "UNKNOWN_APP"],
   ] as const)("maps %s %s from the backend and closes the app tab", async (status, code) => {
     stubLaunch([{ status, body: { code, message: "x", appId: "syk-inn" } }]);

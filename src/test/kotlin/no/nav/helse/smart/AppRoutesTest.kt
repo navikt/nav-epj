@@ -126,10 +126,12 @@ class AppRoutesTest : WithValkey() {
 
     private fun noRedirects() = redirectClient
 
-    private suspend fun HttpClient.launch(appId: String) =
+    private var currentPatient = UUID.randomUUID().toString()
+
+    private suspend fun HttpClient.launch(appId: String, patientId: String = currentPatient) =
         post("/api/launch") {
             contentType(ContentType.Application.Json)
-            setBody("""{"appId":"$appId"}""")
+            setBody("""{"appId":"$appId","patientId":"$patientId"}""")
         }
 
     private fun patientWithId(patientId: String) = mockk<Patient> { every { id } returns patientId }
@@ -141,7 +143,13 @@ class AppRoutesTest : WithValkey() {
 
     private fun activePatient(id: String = UUID.randomUUID().toString()): String {
         runBlocking { valkeyService.setActivePatient(HPR, id) }
+        currentPatient = id
         return id
+    }
+
+    private fun launchKeys(): Set<String> = runBlocking {
+        val keys = glideClient.customCommand(arrayOf("KEYS", "smart:launch:*")).get()
+        (keys as Array<*>).map { it.toString() }.toSet()
     }
 
     private fun clearActivePatient() {
@@ -245,6 +253,63 @@ class AppRoutesTest : WithValkey() {
         assertEquals("NO_ACTIVE_PATIENT", body["code"])
         assertEquals("syk-inn", body["appId"])
         assertTrue(body.getValue("message").isNotBlank())
+    }
+
+    @Test
+    fun `POST api launch for another patient than the active one returns 409 PATIENT_MISMATCH`() =
+        testApp {
+            activePatient()
+            coEvery { patientService.getPatient(any<PatientInputId>()) } returns
+                patientWithId("patient-1")
+            coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>()) } returns
+                encounterWithId("encounter-1")
+
+            val response = launch("syk-inn", UUID.randomUUID().toString())
+
+            assertEquals(HttpStatusCode.Conflict, response.status)
+            val body = tree(response.bodyAsText())
+            assertEquals("PATIENT_MISMATCH", body["code"])
+            assertEquals("syk-inn", body["appId"])
+        }
+
+    @Test
+    fun `POST api launch follows a switch of the active patient`() = testApp {
+        val first = activePatient()
+        coEvery { patientService.getPatient(any<PatientInputId>()) } returns
+            patientWithId("patient-1")
+        coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>()) } returns
+            encounterWithId("encounter-1")
+        assertEquals(HttpStatusCode.OK, launch("syk-inn", first).status)
+
+        val second = activePatient()
+
+        assertEquals(HttpStatusCode.Conflict, launch("syk-inn", first).status)
+        assertEquals(HttpStatusCode.OK, launch("syk-inn", second).status)
+    }
+
+    @Test
+    fun `POST api launch with a malformed patient id returns 409 PATIENT_MISMATCH`() = testApp {
+        activePatient()
+
+        val response = launch("syk-inn", "not-a-uuid")
+
+        assertEquals(HttpStatusCode.Conflict, response.status)
+        assertEquals("PATIENT_MISMATCH", tree(response.bodyAsText())["code"])
+    }
+
+    @Test
+    fun `POST api launch does not store a launch context on a mismatch`() = testApp {
+        val active = activePatient()
+        coEvery { patientService.getPatient(any<PatientInputId>()) } returns
+            patientWithId("patient-1")
+        coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>()) } returns
+            encounterWithId("encounter-1")
+        val before = launchKeys()
+
+        launch("syk-inn", UUID.randomUUID().toString())
+
+        assertEquals(before, launchKeys())
+        assertEquals(active, valkeyService.getActivePatient(HPR))
     }
 
     @Test

@@ -37,7 +37,7 @@ fun SmartClient.toAppDto() =
         scopes = allowedScopes.map { it.toString() },
     )
 
-data class LaunchRequest(val appId: String)
+data class LaunchRequest(val appId: String, val patientId: String)
 
 data class LaunchResponse(val launchUrl: String)
 
@@ -45,6 +45,7 @@ data class LaunchError(val code: String, val message: String, val appId: String)
 
 enum class LaunchErrorCode(val status: HttpStatusCode) {
     NO_ACTIVE_PATIENT(HttpStatusCode.Conflict),
+    PATIENT_MISMATCH(HttpStatusCode.Conflict),
     NO_ACTIVE_ENCOUNTER(HttpStatusCode.Conflict),
     UNKNOWN_APP(HttpStatusCode.NotFound),
 }
@@ -58,7 +59,8 @@ fun Route.appRoutes(
         get("/apps") { call.respond(clients.map { it.toAppDto() }) }
 
         post("/launch") {
-            val appId = call.receive<LaunchRequest>().appId
+            val request = call.receive<LaunchRequest>()
+            val appId = request.appId
 
             suspend fun fail(code: LaunchErrorCode, message: String) =
                 call.respond(code.status, LaunchError(code.name, message, appId))
@@ -69,7 +71,7 @@ fun Route.appRoutes(
                 return@post fail(LaunchErrorCode.UNKNOWN_APP, "The app is not registered")
             }
 
-            when (val preparation = launchPreparer.prepare(loggedInUser().hpr)) {
+            when (val preparation = launchPreparer.prepare(loggedInUser().hpr, request.patientId)) {
                 is LaunchPreparation.Ready ->
                     call.respond(
                         LaunchResponse(
@@ -80,6 +82,11 @@ fun Route.appRoutes(
                     fail(
                         LaunchErrorCode.NO_ACTIVE_PATIENT,
                         "No active patient context for clinician",
+                    )
+                LaunchPreparation.PatientMismatch ->
+                    fail(
+                        LaunchErrorCode.PATIENT_MISMATCH,
+                        "The active patient is not the requested patient",
                     )
                 LaunchPreparation.UnknownPatient ->
                     fail(LaunchErrorCode.NO_ACTIVE_PATIENT, "Unknown patient")

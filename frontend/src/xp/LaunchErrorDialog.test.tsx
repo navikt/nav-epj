@@ -52,6 +52,7 @@ describe("LaunchErrorDialog", () => {
   it.each([
     ["NO_ACTIVE_PATIENT", copy["s8.title.cannotStart"]("Sykmelding")],
     ["NO_ACTIVE_ENCOUNTER", copy["s8.title.cannotStart"]("Sykmelding")],
+    ["PATIENT_MISMATCH", copy["s8.title.cannotStart"]("Sykmelding")],
     ["UNKNOWN_APP", copy["s8.title.cannotStart"]("Sykmelding")],
     ["FRAMING_REFUSED", copy["s8.FRAMING_REFUSED.title"]],
     ["SESSION_EXPIRED", copy["s8.SESSION_EXPIRED.title"]],
@@ -141,6 +142,23 @@ describe("LaunchErrorDialog", () => {
       to: "/patients/$patientId",
       params: { patientId: "p1" },
     });
+  });
+
+  it("PATIENT_MISMATCH makes the open journal the active patient again", async () => {
+    const fetch = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ patientId: "p1", expiresAt: "2026-09-30T17:14:00Z" }),
+    }));
+    vi.stubGlobal("fetch", fetch);
+    const { onClose } = setup(dialogOf("PATIENT_MISMATCH"));
+    await userEvent.click(screen.getByRole("button", { name: primaryLabel("PATIENT_MISMATCH") }));
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/active-patient",
+      expect.objectContaining({ method: "PUT", body: JSON.stringify({ patientId: "p1" }) }),
+    );
+    vi.unstubAllGlobals();
   });
 
   it("UNKNOWN_APP reloads the apps and shows the Apper sub-tab", async () => {

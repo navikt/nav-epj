@@ -68,6 +68,8 @@ fun Application.configureSmartRouting() {
                                     HttpStatusCode.Conflict,
                                     "No active patient context for clinician",
                                 )
+                            LaunchPreparation.PatientMismatch ->
+                                return@get call.respond(HttpStatusCode.InternalServerError)
                             LaunchPreparation.UnknownPatient ->
                                 return@get call.respond(
                                     HttpStatusCode.BadRequest,

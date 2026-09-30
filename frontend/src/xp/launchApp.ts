@@ -129,7 +129,7 @@ async function launchInFrame(app: App, context: LaunchContext) {
   });
   let url: string;
   try {
-    url = await launchApp(app.clientId);
+    url = await launchApp(app.clientId, context.patient.id);
   } catch (error) {
     if (!isCurrent()) return null;
     closeApp(app.clientId);
@@ -163,7 +163,7 @@ async function launchInTab(
   const isCurrent = beginLaunch(app.clientId);
   let url: string;
   try {
-    url = await launchApp(app.clientId);
+    url = await launchApp(app.clientId, context.patient.id);
   } catch (error) {
     if (!isCurrent()) return null;
     reportLaunchFailure(error, app, fullName(context.patient), () =>
@@ -228,7 +228,7 @@ export async function reloadApp(clientId: string) {
   const isCurrent = beginLaunch(clientId);
   runs.restartRun(clientId, new Date());
   try {
-    const url = await launchApp(clientId);
+    const url = await launchApp(clientId, run.patient.id);
     if (!isCurrent()) return;
     runs.setLaunchUrl(clientId, url);
     runs.addEvent(clientId, { kind: "launch", status: 200 });

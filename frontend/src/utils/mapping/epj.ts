@@ -99,10 +99,18 @@ export const LaunchResponseSchema = z.object({
     launchUrl: z.string(),
 });
 
+export const ActivePatientSchema = z.object({
+    patientId: z.string(),
+    expiresAt: z.string(),
+});
+
+export type ActivePatient = z.infer<typeof ActivePatientSchema>;
+
 export const LaunchErrorCodeSchema = z.enum([
     "NO_ACTIVE_PATIENT",
     "NO_ACTIVE_ENCOUNTER",
     "UNKNOWN_APP",
+    "PATIENT_MISMATCH",
 ]);
 
 export const LaunchErrorSchema = z.object({

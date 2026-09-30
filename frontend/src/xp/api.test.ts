@@ -4,12 +4,14 @@ import { useSessionStore } from "./sessionExpiry";
 import {
   ApiError,
   createPatient,
+  fetchActivePatient,
   fetchKonsultasjoner,
   fetchPatient,
   fetchApps,
   fetchPatients,
   LaunchError,
   launchApp,
+  putActivePatient,
   saveKonsultasjon,
   startKonsultasjon,
 } from "./api";
@@ -144,31 +146,65 @@ describe("api", () => {
     await expect(fetchApps()).rejects.toThrow();
   });
 
-  it("launches an app and returns the launch url", async () => {
-    const fn = stub({ launchUrl: "https://syk.example/?launch=1" });
-    expect(await launchApp("syk-inn")).toBe("https://syk.example/?launch=1");
-    expect(fn).toHaveBeenCalledWith("/api/launch", {
-      method: "POST",
+  it("reads the active patient", async () => {
+    const fn = stub({ patientId: "p1", expiresAt: "2026-09-30T17:00:00Z" });
+    expect(await fetchActivePatient()).toEqual({
+      patientId: "p1",
+      expiresAt: "2026-09-30T17:00:00Z",
+    });
+    expect(fn).toHaveBeenCalledWith("/api/active-patient", undefined);
+  });
+
+  it("reads no active patient from a 204", async () => {
+    stub(null, true, 204);
+    expect(await fetchActivePatient()).toBeNull();
+  });
+
+  it("sets the active patient", async () => {
+    const fn = stub({ patientId: "p2", expiresAt: "2026-09-30T17:00:00Z" });
+    expect((await putActivePatient("p2")).patientId).toBe("p2");
+    expect(fn).toHaveBeenCalledWith("/api/active-patient", {
+      method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ appId: "syk-inn" }),
+      body: JSON.stringify({ patientId: "p2" }),
     });
   });
 
-  it.each(["NO_ACTIVE_PATIENT", "NO_ACTIVE_ENCOUNTER", "UNKNOWN_APP"] as const)(
+  it("rejects setting an unknown active patient", async () => {
+    stub({}, false, 404);
+    await expect(putActivePatient("nope")).rejects.toMatchObject({ status: 404 });
+  });
+
+  it("launches an app and returns the launch url", async () => {
+    const fn = stub({ launchUrl: "https://syk.example/?launch=1" });
+    expect(await launchApp("syk-inn", "p1")).toBe("https://syk.example/?launch=1");
+    expect(fn).toHaveBeenCalledWith("/api/launch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ appId: "syk-inn", patientId: "p1" }),
+    });
+  });
+
+  it.each([
+    "NO_ACTIVE_PATIENT",
+    "NO_ACTIVE_ENCOUNTER",
+    "UNKNOWN_APP",
+    "PATIENT_MISMATCH",
+  ] as const)(
     "throws a typed error for %s",
     async (code) => {
       stub({ code, message: "m", appId: "syk-inn" }, false, 409);
-      await expect(launchApp("syk-inn")).rejects.toMatchObject({
+      await expect(launchApp("syk-inn", "p1")).rejects.toMatchObject({
         code,
         status: 409,
       });
-      await expect(launchApp("syk-inn")).rejects.toBeInstanceOf(LaunchError);
+      await expect(launchApp("syk-inn", "p1")).rejects.toBeInstanceOf(LaunchError);
     },
   );
 
   it("throws a plain ApiError when the error body is unrecognised", async () => {
     stub({ nope: true }, false, 502);
-    const error = await launchApp("syk-inn").catch((e: unknown) => e);
+    const error = await launchApp("syk-inn", "p1").catch((e: unknown) => e);
     expect(error).toBeInstanceOf(ApiError);
     expect(error).not.toBeInstanceOf(LaunchError);
     expect((error as ApiError).status).toBe(502);
@@ -187,7 +223,7 @@ describe("api", () => {
 
   it("expires the session when the launch call returns 401", async () => {
     stub({}, false, 401);
-    await expect(launchApp("syk-inn")).rejects.toMatchObject({ status: 401 });
+    await expect(launchApp("syk-inn", "p1")).rejects.toMatchObject({ status: 401 });
     expect(useSessionStore.getState().expired).toBe(true);
   });
 });

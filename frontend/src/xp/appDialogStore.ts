@@ -4,6 +4,7 @@ import type { App } from "../utils/mapping/epj";
 export type AppErrorCode =
   | "NO_ACTIVE_PATIENT"
   | "NO_ACTIVE_ENCOUNTER"
+  | "PATIENT_MISMATCH"
   | "UNKNOWN_APP"
   | "FRAMING_REFUSED"
   | "SESSION_EXPIRED"

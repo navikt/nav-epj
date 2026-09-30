@@ -1,5 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
+import { putActivePatient } from "./api";
 import { MessageBox, type MessageBoxVariant } from "./MessageBox";
 import type { AppDialog, AppErrorCode } from "./appDialogStore";
 import { useAppsStore } from "./appsStore";
@@ -21,6 +22,7 @@ type Props = {
 const variants: Record<AppErrorCode, MessageBoxVariant> = {
   NO_ACTIVE_PATIENT: "advarsel",
   NO_ACTIVE_ENCOUNTER: "advarsel",
+  PATIENT_MISMATCH: "advarsel",
   UNKNOWN_APP: "feil",
   FRAMING_REFUSED: "advarsel",
   SESSION_EXPIRED: "feil",
@@ -46,6 +48,8 @@ function bodyOf(dialog: ErrorDialog) {
       return copy["s8.NO_ACTIVE_PATIENT.body"];
     case "NO_ACTIVE_ENCOUNTER":
       return copy["s8.NO_ACTIVE_ENCOUNTER.body"](dialog.app, dialog.patientName);
+    case "PATIENT_MISMATCH":
+      return copy["s8.PATIENT_MISMATCH.body"](dialog.app, dialog.patientName);
     case "UNKNOWN_APP":
       return copy["s8.UNKNOWN_APP.body"](dialog.app);
     case "FRAMING_REFUSED":
@@ -88,6 +92,11 @@ export function LaunchErrorDialog({ dialog, onClose }: Props) {
         }
         openJournalTab();
         break;
+      case "PATIENT_MISMATCH": {
+        const { patientId } = useJournalStore.getState();
+        if (patientId) void putActivePatient(patientId).catch(() => undefined);
+        break;
+      }
       case "UNKNOWN_APP":
         void useAppsStore.getState().load();
         if (useJournalStore.getState().patientId) {

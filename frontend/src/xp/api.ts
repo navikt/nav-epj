@@ -1,10 +1,12 @@
 import { expireSession } from "./sessionExpiry";
 import {
+  ActivePatientSchema,
   AppSchema,
   KonsultasjonSchema,
   LaunchErrorSchema,
   LaunchResponseSchema,
   PasientSchema,
+  type ActivePatient,
   type App,
   type Konsultasjon,
   type OpprettPasientRequest,
@@ -21,7 +23,11 @@ export class ApiError extends Error {
 }
 
 export class LaunchError extends ApiError {
-  readonly code: "NO_ACTIVE_PATIENT" | "NO_ACTIVE_ENCOUNTER" | "UNKNOWN_APP";
+  readonly code:
+    | "NO_ACTIVE_PATIENT"
+    | "NO_ACTIVE_ENCOUNTER"
+    | "UNKNOWN_APP"
+    | "PATIENT_MISMATCH";
 
   constructor(status: number, code: LaunchError["code"]) {
     super(status);
@@ -107,8 +113,27 @@ export async function fetchApps(): Promise<App[]> {
   return AppSchema.array().parse(await response.json());
 }
 
-export async function launchApp(appId: string): Promise<string> {
-  const init = jsonInit("POST", { appId });
+export async function fetchActivePatient(): Promise<ActivePatient | null> {
+  const response = await request("/api/active-patient");
+  if (response.status === 204) return null;
+  return ActivePatientSchema.parse(await response.json());
+}
+
+export async function putActivePatient(
+  patientId: string,
+): Promise<ActivePatient> {
+  const response = await request(
+    "/api/active-patient",
+    jsonInit("PUT", { patientId }),
+  );
+  return ActivePatientSchema.parse(await response.json());
+}
+
+export async function launchApp(
+  appId: string,
+  patientId: string,
+): Promise<string> {
+  const init = jsonInit("POST", { appId, patientId });
   const response = await fetch("/api/launch", init);
   if (response.status === 401) expireSession(callOf("/api/launch", init));
   if (!response.ok) {

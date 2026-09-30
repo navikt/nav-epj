@@ -15,6 +15,8 @@ sealed interface LaunchPreparation {
 
     data object NoActivePatient : LaunchPreparation
 
+    data object PatientMismatch : LaunchPreparation
+
     data object UnknownPatient : LaunchPreparation
 
     data object NoActiveEncounter : LaunchPreparation
@@ -43,10 +45,19 @@ class LaunchPreparer(
     private val patientService: PatientService,
     private val encounterService: EncounterService,
 ) {
-    suspend fun prepare(hpr: String): LaunchPreparation {
+    /**
+     * If [expectedPatientId] is set, launch only proceeds when it matches the clinician's active
+     * patient. This prevents one window from launching against a patient selected in another
+     * window.
+     */
+    suspend fun prepare(hpr: String, expectedPatientId: String? = null): LaunchPreparation {
         val activePatientId =
             valkeyService.getActivePatient(hpr) ?: return LaunchPreparation.NoActivePatient
-        return prepareFor(PatientInputId(Uuid.parse(activePatientId)), hpr)
+        val active = Uuid.parse(activePatientId)
+        if (expectedPatientId != null && Uuid.parseOrNull(expectedPatientId) != active) {
+            return LaunchPreparation.PatientMismatch
+        }
+        return prepareFor(PatientInputId(active), hpr)
     }
 
     private suspend fun prepareFor(patientInputId: PatientInputId, hpr: String): LaunchPreparation {
