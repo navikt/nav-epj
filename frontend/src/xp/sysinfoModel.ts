@@ -16,7 +16,11 @@ const EMPTY = copy["s4.empty.value"];
 const FIXED_CLAIMS = new Set(["iss", "aud", "name", HPR_CLAIM]);
 
 export function fhirBaseOf(smart: SmartConfiguration) {
-  return `${new URL(smart.authorization_endpoint).origin}/fhir`;
+  try {
+    return `${new URL(smart.authorization_endpoint).origin}/fhir`;
+  } catch {
+    return null;
+  }
 }
 
 function dateTime(iso: string | null | undefined) {
@@ -27,7 +31,7 @@ function expiryText(iso: string | null | undefined, now: Date) {
   if (!iso) return EMPTY;
   const [dato, tid] = formatDateTime(iso).split(" ");
   const remaining = new Date(iso).getTime() - now.getTime();
-  if (remaining <= 0) return `${dato} ${tid} (${copy["s5.status.session"]})`;
+  if (remaining <= 0) return copy["s11.helseid.expiredValue"](dato, tid);
   return copy["s11.helseid.expValue"](
     dato,
     tid,
@@ -72,13 +76,11 @@ export function claimRows(session: Session): Row[] {
 
 export function smartRows(smart: SmartConfiguration): Row[] {
   const fhirBase = fhirBaseOf(smart);
+  const at = (path: string) => (fhirBase ? `${fhirBase}${path}` : EMPTY);
   const contexts = smart.capabilities.filter((c) => c.startsWith("context-"));
   return [
-    [copy["s11.smart.iss"], fhirBase],
-    [
-      copy["s11.smart.discovery"],
-      `${fhirBase}/.well-known/smart-configuration`,
-    ],
+    [copy["s11.smart.iss"], fhirBase ?? EMPTY],
+    [copy["s11.smart.discovery"], at("/.well-known/smart-configuration")],
     [copy["s11.smart.authorize"], smart.authorization_endpoint],
     [copy["s11.smart.token"], smart.token_endpoint],
     [copy["s11.smart.jwks"], smart.jwks_uri],

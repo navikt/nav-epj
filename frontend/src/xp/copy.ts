@@ -470,6 +470,7 @@ export const copy = {
   "s11.helseid.iat": "Innlogget",
   "s11.helseid.exp": "ID-token utløper",
   "s11.helseid.expValue": (dato: string, tid: string, minutter: number) => `${dato} ${tid} (om ${minutter} min)`,
+  "s11.helseid.expiredValue": (dato: string, tid: string) => `${dato} ${tid} (utløpt)`,
   "s11.claims.title": "Claims i ID-tokenet",
   "s11.claims.col.claim": "Claim",
   "s11.claims.col.value": "Verdi",

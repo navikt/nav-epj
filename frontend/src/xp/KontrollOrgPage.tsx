@@ -7,7 +7,7 @@ export function KontrollOrgPage() {
   const user = useCurrentUser();
   const officeId = useId();
   const userId = useId();
-  if (!user) return null;
+  if (!user) return <p role="status">{copy["common.loading"]}</p>;
   const empty = copy["s4.empty.value"];
   return (
     <>

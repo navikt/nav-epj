@@ -54,9 +54,7 @@ describe("sysinfoModel", () => {
     const now = new Date("2026-09-28T09:00:00Z");
     const rows = Object.fromEntries(helseIdRows(real, user, now));
     expect(rows[copy["s11.helseid.exp"]]).toMatch(
-      new RegExp(
-        `^28\\.09\\.2026 \\d\\d:\\d\\d \\(${copy["s5.status.session"]}\\)$`,
-      ),
+      /^28\.09\.2026 \d\d:\d\d \(utløpt\)$/,
     );
     expect(rows[copy["s11.helseid.exp"]]).not.toContain("om ");
   });
@@ -64,7 +62,7 @@ describe("sysinfoModel", () => {
   it("treats the exact expiry instant as expired", () => {
     const now = new Date("2026-09-28T07:58:00Z");
     const rows = Object.fromEntries(helseIdRows(real, user, now));
-    expect(rows[copy["s11.helseid.exp"]]).toContain(copy["s5.status.session"]);
+    expect(rows[copy["s11.helseid.exp"]]).toContain("utløpt");
   });
 
   it("still counts down when less than a minute is left", () => {
@@ -122,6 +120,15 @@ describe("sysinfoModel", () => {
         authorization_endpoint: "https://epj.test.nav.no/oidc/authorize",
       }),
     ).toBe("https://epj.test.nav.no/fhir");
+  });
+
+  it("degrades to dashes when the authorize endpoint is not an absolute URL", () => {
+    const broken = { ...smart, authorization_endpoint: "/oidc/authorize" };
+    expect(fhirBaseOf(broken)).toBeNull();
+    const rows = Object.fromEntries(smartRows(broken));
+    expect(rows[copy["s11.smart.iss"]]).toBe(copy["s4.empty.value"]);
+    expect(rows[copy["s11.smart.discovery"]]).toBe(copy["s4.empty.value"]);
+    expect(rows[copy["s11.smart.token"]]).toBe(smart.token_endpoint);
   });
 
   it("computes SMART endpoints from the discovery document", () => {

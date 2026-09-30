@@ -20,33 +20,37 @@ import { useNow } from "./useNow";
 import { useSystemInfo } from "./useSystemInfo";
 
 export function SysinfoPage() {
-  const { session, smart, fhir, retry } = useSystemInfo();
+  const { session, smart, fhir } = useSystemInfo();
   const user = useCurrentUser();
   const now = useNow(60_000);
   const helseIdId = useId();
   const claimsId = useId();
   const smartId = useId();
   const fhirId = useId();
-  const fhirBase = smart.status === "ready" ? fhirBaseOf(smart.data) : null;
+  const fhirBase =
+    smart.state.status === "ready" ? fhirBaseOf(smart.state.data) : null;
   const sessionUser = user ? { navn: user.navn, hpr: user.hpr } : null;
 
   function copySummary() {
     const sections = [
-      session.status === "ready" && {
+      session.state.status === "ready" && {
         title: copy["s11.helseid.title"],
-        rows: helseIdRows(session.data, sessionUser, now),
+        rows: helseIdRows(session.state.data, sessionUser, now),
       },
-      session.status === "ready" && {
+      session.state.status === "ready" && {
         title: copy["s11.claims.title"],
-        rows: claimRows(session.data),
+        rows: claimRows(session.state.data),
       },
-      smart.status === "ready" && {
+      smart.state.status === "ready" && {
         title: copy["s11.smart.title"],
-        rows: smartRows(smart.data),
+        rows: smartRows(smart.state.data),
       },
-      fhir.status === "ready" && {
+      fhir.state.status === "ready" && {
         title: copy["s11.fhir.title"],
-        rows: [...fhirRows(fhir.data, fhirBase), ...resourceRows(fhir.data)],
+        rows: [
+          ...fhirRows(fhir.state.data, fhirBase),
+          ...resourceRows(fhir.state.data),
+        ],
       },
     ].filter((section) => section !== false);
     void copyText(buildSummary(sections), copy["s11.copied"]);
@@ -63,8 +67,8 @@ export function SysinfoPage() {
       <SysinfoSection
         heading={copy["s11.helseid.title"]}
         headingId={helseIdId}
-        state={session}
-        onRetry={retry}
+        state={session.state}
+        onRetry={session.retry}
       >
         {(data) => (
           <>
@@ -106,8 +110,8 @@ export function SysinfoPage() {
       <SysinfoSection
         heading={copy["s11.smart.title"]}
         headingId={smartId}
-        state={smart}
-        onRetry={retry}
+        state={smart.state}
+        onRetry={smart.retry}
       >
         {(data) => (
           <>
@@ -119,8 +123,8 @@ export function SysinfoPage() {
       <SysinfoSection
         heading={copy["s11.fhir.title"]}
         headingId={fhirId}
-        state={fhir}
-        onRetry={retry}
+        state={fhir.state}
+        onRetry={fhir.retry}
       >
         {(data) => (
           <>

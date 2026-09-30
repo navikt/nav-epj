@@ -48,11 +48,12 @@ function CategoryPage({ id }: { id: Category }) {
 export function KontrollpanelPage() {
   const [category, setCategory] = useState<Category | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const navigated = useRef(false);
+  const shown = useRef(category);
 
   useEffect(() => {
-    if (navigated.current) headingRef.current?.focus();
-    navigated.current = true;
+    if (shown.current === category) return;
+    shown.current = category;
+    headingRef.current?.focus();
   }, [category]);
 
   const selected = CATEGORIES.find((c) => c.id === category);

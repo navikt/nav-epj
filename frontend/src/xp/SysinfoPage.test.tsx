@@ -150,7 +150,7 @@ describe("SysinfoPage", () => {
       screen.getByRole("region", { name: copy["s11.helseid.title"] }),
     );
     const value = section.getByText(copy["s11.helseid.exp"]).nextElementSibling;
-    expect(value).toHaveTextContent(copy["s5.status.session"]);
+    expect(value).toHaveTextContent("utløpt");
     expect(value).not.toHaveTextContent("om ");
   });
 
@@ -240,7 +240,7 @@ describe("SysinfoPage", () => {
   });
 
   it("shows one failing section with a retry while the others still load", async () => {
-    const fetchMock = stubFetch({
+    stubFetch({
       "/fhir/metadata": { status: 500, body: {} },
     });
     renderPage();
@@ -253,13 +253,13 @@ describe("SysinfoPage", () => {
     ).toBe(alert);
     expect(screen.getByText(copy["s11.helseid.active"])).toBeInTheDocument();
     expect(screen.getByText(copy["s11.smart.authorize"])).toBeInTheDocument();
-    fetchMock.mockClear();
-    stubFetch();
+    const retried = stubFetch();
     await userEvent.click(
       screen.getByRole("button", { name: copy["s8.NETWORK.action"] }),
     );
     await ready();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(retried.mock.calls.map(([url]) => url)).toEqual(["/fhir/metadata"]);
   });
 
   it("copies a plain text summary without the pid and confirms it", async () => {

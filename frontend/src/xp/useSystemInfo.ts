@@ -4,18 +4,12 @@ import {
   fetchSession,
   fetchSmartConfiguration,
 } from "./api";
-import type {
-  CapabilityStatement,
-  Session,
-  SmartConfiguration,
-} from "../utils/mapping/epj";
 
 export type Loadable<T> =
-  | { status: "loading" }
-  | { status: "error" }
-  | { status: "ready"; data: T };
+  { status: "loading" } | { status: "error" } | { status: "ready"; data: T };
 
-function useLoadable<T>(load: () => Promise<T>, attempt: number) {
+function useLoadable<T>(load: () => Promise<T>) {
+  const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<Loadable<T>>({ status: "loading" });
   useEffect(() => {
     let current = true;
@@ -32,20 +26,13 @@ function useLoadable<T>(load: () => Promise<T>, attempt: number) {
       current = false;
     };
   }, [load, attempt]);
-  return state;
+  const retry = useCallback(() => setAttempt((n) => n + 1), []);
+  return { state, retry };
 }
 
 export function useSystemInfo() {
-  const [attempt, setAttempt] = useState(0);
-  const session: Loadable<Session> = useLoadable(fetchSession, attempt);
-  const smart: Loadable<SmartConfiguration> = useLoadable(
-    fetchSmartConfiguration,
-    attempt,
-  );
-  const fhir: Loadable<CapabilityStatement> = useLoadable(
-    fetchCapabilityStatement,
-    attempt,
-  );
-  const retry = useCallback(() => setAttempt((n) => n + 1), []);
-  return { session, smart, fhir, retry };
+  const session = useLoadable(fetchSession);
+  const smart = useLoadable(fetchSmartConfiguration);
+  const fhir = useLoadable(fetchCapabilityStatement);
+  return { session, smart, fhir };
 }
