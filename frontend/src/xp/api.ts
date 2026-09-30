@@ -2,15 +2,21 @@ import { expireSession } from "./sessionExpiry";
 import {
   ActivePatientSchema,
   AppSchema,
+  CapabilityStatementSchema,
   KonsultasjonSchema,
   LaunchErrorSchema,
   LaunchResponseSchema,
   PasientSchema,
+  SessionSchema,
+  SmartConfigurationSchema,
   type ActivePatient,
   type App,
+  type CapabilityStatement,
   type Konsultasjon,
   type OpprettPasientRequest,
   type Pasient,
+  type Session,
+  type SmartConfiguration,
 } from "../utils/mapping/epj";
 
 export class ApiError extends Error {
@@ -111,6 +117,21 @@ export async function saveKonsultasjon(
 export async function fetchApps(): Promise<App[]> {
   const response = await request("/api/apps");
   return AppSchema.array().parse(await response.json());
+}
+
+export async function fetchSession(): Promise<Session> {
+  const response = await request("/api/session");
+  return SessionSchema.parse(await response.json());
+}
+
+export async function fetchSmartConfiguration(): Promise<SmartConfiguration> {
+  const response = await request("/fhir/.well-known/smart-configuration");
+  return SmartConfigurationSchema.parse(await response.json());
+}
+
+export async function fetchCapabilityStatement(): Promise<CapabilityStatement> {
+  const response = await request("/fhir/metadata");
+  return CapabilityStatementSchema.parse(await response.json());
 }
 
 export async function fetchActivePatient(): Promise<ActivePatient | null> {

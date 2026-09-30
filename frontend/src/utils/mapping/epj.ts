@@ -118,3 +118,43 @@ export const LaunchErrorSchema = z.object({
     message: z.string(),
     appId: z.string().nullish(),
 });
+
+export const SessionSchema = z.object({
+    idp: z.enum(["helseid", "local-stub"]),
+    claims: z.record(z.string(), z.string()),
+    issuedAt: z.string().nullish(),
+    expiresAt: z.string().nullish(),
+});
+
+export type Session = z.infer<typeof SessionSchema>;
+
+export const SmartConfigurationSchema = z.object({
+    issuer: z.string(),
+    jwks_uri: z.string(),
+    authorization_endpoint: z.string(),
+    token_endpoint: z.string(),
+    token_endpoint_auth_methods_supported: z.array(z.string()),
+    capabilities: z.array(z.string()),
+});
+
+export type SmartConfiguration = z.infer<typeof SmartConfigurationSchema>;
+
+export const CapabilityStatementSchema = z.object({
+    fhirVersion: z.string(),
+    rest: z
+        .array(
+            z.object({
+                resource: z
+                    .array(
+                        z.object({
+                            type: z.string(),
+                            interaction: z.array(z.object({ code: z.string() })).nullish(),
+                        }),
+                    )
+                    .nullish(),
+            }),
+        )
+        .nullish(),
+});
+
+export type CapabilityStatement = z.infer<typeof CapabilityStatementSchema>;

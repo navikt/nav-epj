@@ -8,7 +8,10 @@ import {
   fetchKonsultasjoner,
   fetchPatient,
   fetchApps,
+  fetchCapabilityStatement,
   fetchPatients,
+  fetchSession,
+  fetchSmartConfiguration,
   LaunchError,
   launchApp,
   putActivePatient,
@@ -144,6 +147,75 @@ describe("api", () => {
   it("rejects an app with an unknown launch mode", async () => {
     stub([{ clientId: "x", navn: "X", ikon: "vindu", launchMode: "popup" }]);
     await expect(fetchApps()).rejects.toThrow();
+  });
+
+  it("reads the session with its claims and token lifetime", async () => {
+    const fn = stub({
+      idp: "helseid",
+      claims: { iss: "https://sts", name: "GRØNN VITS" },
+      issuedAt: "2026-09-28T06:58:00Z",
+      expiresAt: "2026-09-28T07:58:00Z",
+    });
+    const session = await fetchSession();
+    expect(session.idp).toBe("helseid");
+    expect(session.claims.name).toBe("GRØNN VITS");
+    expect(session.expiresAt).toBe("2026-09-28T07:58:00Z");
+    expect(fn).toHaveBeenCalledWith("/api/session", undefined);
+  });
+
+  it("reads the local stub session without token times", async () => {
+    stub({ idp: "local-stub", claims: { sub: "local-dev" } });
+    expect(await fetchSession()).toEqual({
+      idp: "local-stub",
+      claims: { sub: "local-dev" },
+    });
+  });
+
+  it("rejects a session from an unknown identity provider", async () => {
+    stub({ idp: "other", claims: {} });
+    await expect(fetchSession()).rejects.toThrow();
+  });
+
+  it("reads the SMART configuration", async () => {
+    const fn = stub({
+      issuer: "http://localhost:8080/oidc",
+      jwks_uri: "http://localhost:8080/oidc/jwks",
+      authorization_endpoint: "http://localhost:8080/oidc/authorize",
+      token_endpoint: "http://localhost:8080/oidc/token",
+      token_endpoint_auth_methods_supported: ["none"],
+      capabilities: ["launch-ehr"],
+      grant_types_supported: ["authorization_code"],
+    });
+    expect((await fetchSmartConfiguration()).token_endpoint).toBe(
+      "http://localhost:8080/oidc/token",
+    );
+    expect(fn).toHaveBeenCalledWith(
+      "/fhir/.well-known/smart-configuration",
+      undefined,
+    );
+  });
+
+  it("reads the CapabilityStatement", async () => {
+    const fn = stub({
+      resourceType: "CapabilityStatement",
+      fhirVersion: "4.0.1",
+      rest: [
+        {
+          mode: "server",
+          resource: [{ type: "Patient", interaction: [{ code: "read" }] }],
+        },
+      ],
+    });
+    const statement = await fetchCapabilityStatement();
+    expect(statement.fhirVersion).toBe("4.0.1");
+    expect(statement.rest?.[0].resource?.[0].type).toBe("Patient");
+    expect(fn).toHaveBeenCalledWith("/fhir/metadata", undefined);
+  });
+
+  it("expires the session when the session call is unauthorized", async () => {
+    stub({}, false, 401);
+    await expect(fetchSession()).rejects.toBeInstanceOf(ApiError);
+    expect(useSessionStore.getState().expired).toBe(true);
   });
 
   it("reads the active patient", async () => {
