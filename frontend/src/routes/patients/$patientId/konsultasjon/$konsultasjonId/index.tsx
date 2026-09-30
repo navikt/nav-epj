@@ -32,7 +32,9 @@ function RouteComponent() {
         data.konsultasjon,
       );
     const [diagnoser, setDiagnoser] = useState<{ kode: string, system: string }[]>([])
-    const [journalnotat, setJournalnotat] = useState<string>('')
+    const [journalnotat, setJournalnotat] = useState<string>(
+        () => konsultasjon.data?.journalnotat.at(-1)?.journalnotat ?? ''
+    )
     const [saveError, setSaveError] = useState<string | null>(null)
 
     const [diagnoseOptions, setDiagnoseOptions] = useState<{ label: string, system: string, value: string }[]>([])
