@@ -22,19 +22,24 @@ function setup(
     onClose: vi.fn(),
     onOpenJournal: vi.fn(),
   };
+  let stale = options.stale ?? false;
   function Harness() {
     const run = useAppRunStore((s) => s.runs[0]);
     return (
       <AppFrame
         run={run}
-        stale={options.stale ?? false}
+        stale={stale}
         otherPatientName="Kari Hansen"
         {...handlers}
       />
     );
   }
   const view = render(<Harness />);
-  return { ...view, ...handlers };
+  const setStale = (value: boolean) => {
+    stale = value;
+    view.rerender(<Harness />);
+  };
+  return { ...view, ...handlers, setStale };
 }
 
 describe("AppFrame", () => {
@@ -94,6 +99,54 @@ describe("AppFrame", () => {
       code: "FRAMING_REFUSED",
     });
     expect(screen.getByText(copy["s6.timeout.title"])).toBeInTheDocument();
+  });
+
+  it("does not arm the timeout while the app is hidden as utdatert, and arms it once shown", () => {
+    vi.useFakeTimers();
+    const { setStale } = setup({ stale: true });
+    act(() => {
+      vi.advanceTimersByTime(FRAME_TIMEOUT_MS * 2);
+    });
+    expect(useAppRunStore.getState().runs[0].status).toBe("starting");
+    expect(useAppDialogStore.getState().dialog).toBeNull();
+    setStale(false);
+    act(() => {
+      vi.advanceTimersByTime(FRAME_TIMEOUT_MS);
+    });
+    expect(useAppRunStore.getState().runs[0].status).toBe("timeout");
+  });
+
+  it("cancels a pending timeout when the app becomes utdatert", () => {
+    vi.useFakeTimers();
+    const { setStale } = setup();
+    act(() => {
+      vi.advanceTimersByTime(FRAME_TIMEOUT_MS - 1000);
+    });
+    setStale(true);
+    act(() => {
+      vi.advanceTimersByTime(FRAME_TIMEOUT_MS * 2);
+    });
+    expect(useAppRunStore.getState().runs[0].status).toBe("starting");
+    expect(useAppDialogStore.getState().dialog).toBeNull();
+  });
+
+  it("moves focus to the overlay's default button when the frame goes inert while focus is lost", () => {
+    const { setStale } = setup();
+    expect(document.body).toHaveFocus();
+    setStale(true);
+    expect(
+      screen.getByRole("button", { name: copy["s5.stale.open"]("Kari Hansen") }),
+    ).toHaveFocus();
+  });
+
+  it("leaves focus alone when it is somewhere else", () => {
+    const outside = document.createElement("button");
+    document.body.append(outside);
+    const { setStale } = setup();
+    outside.focus();
+    setStale(true);
+    expect(outside).toHaveFocus();
+    outside.remove();
   });
 
   it("does not time out once the frame has loaded", () => {

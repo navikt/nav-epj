@@ -4,7 +4,7 @@ import { copy } from "./copy";
 import { fullName } from "./patientInfo";
 import { usePatientsStore } from "./patientsStore";
 
-export function usePatientName(patientId: string | null) {
+export function usePatientLabel(patientId: string | null) {
   const listed = usePatientsStore((s) =>
     s.patients.find((p) => p.id === patientId),
   );
@@ -23,7 +23,12 @@ export function usePatientName(patientId: string | null) {
     };
   }, [patientId, listed]);
 
-  if (patientId === null) return "";
-  if (listed) return fullName(listed);
-  return fetched?.id === patientId ? fetched.name : copy["common.loading"];
+  if (patientId === null) return { name: "", loaded: false };
+  if (listed) return { name: fullName(listed), loaded: true };
+  if (fetched?.id === patientId) return { name: fetched.name, loaded: true };
+  return { name: copy["common.loading"], loaded: false };
+}
+
+export function usePatientName(patientId: string | null) {
+  return usePatientLabel(patientId).name;
 }

@@ -82,6 +82,15 @@ describe("AppTabView", () => {
     ).toBeInTheDocument();
   });
 
+  it("only announces the running state for the current tab", () => {
+    useWorkspaceStore.getState().setCurrent("start");
+    useAppRunStore.getState().setStatus("syk-inn", "running");
+    const { announce } = setup();
+    expect(announce).not.toHaveBeenCalledWith(copy["live.appRunning"]("Sykmelding"));
+    act(() => useWorkspaceStore.getState().setCurrent("app:syk-inn"));
+    expect(announce).toHaveBeenCalledWith(copy["live.appRunning"]("Sykmelding"));
+  });
+
   it("calls the browser history for back and forward and announces them", async () => {
     const back = vi.spyOn(window.history, "back").mockImplementation(() => {});
     const forward = vi.spyOn(window.history, "forward").mockImplementation(() => {});
@@ -170,6 +179,26 @@ describe("AppTabView", () => {
       ).toBeDisabled();
     });
 
+    it("announces utdatert once, and only after the other patient's name is known", async () => {
+      usePatientsStore.setState({ patients: [], status: "ready" });
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => ({ ok: true, status: 200, json: async () => kari })),
+      );
+      const { announce } = setup();
+      act(() => useActivePatientStore.getState().setActive("p2"));
+      await vi.waitFor(() =>
+        expect(announce).toHaveBeenCalledWith(
+          copy["s5.stale.title"]("Ola Nordmann", "Kari Hansen"),
+        ),
+      );
+      const staleCalls = announce.mock.calls.filter(([text]) =>
+        String(text).startsWith("Appen tilhørte"),
+      );
+      expect(staleCalls).toHaveLength(1);
+      vi.unstubAllGlobals();
+    });
+
     it("resumes the same frame when the active patient is the run's patient again", () => {
       setup();
       const frame = document.querySelector("iframe");
@@ -185,7 +214,7 @@ describe("AppTabView", () => {
 
     it("keeps the app visible when no patient is active", () => {
       setup();
-      act(() => useActivePatientStore.getState().setActive(null));
+      act(() => useActivePatientStore.setState({ activeId: null }));
       expect(document.querySelector("iframe")).not.toBeNull();
     });
 

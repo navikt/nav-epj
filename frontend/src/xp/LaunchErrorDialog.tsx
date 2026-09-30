@@ -1,9 +1,9 @@
 import { useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { useActivePatientStore } from "./activePatientStore";
-import { putActivePatient } from "./api";
+import { ApiError } from "./api";
 import { MessageBox, type MessageBoxVariant } from "./MessageBox";
-import type { AppDialog, AppErrorCode } from "./appDialogStore";
+import { useAppDialogStore, type AppDialog, type AppErrorCode } from "./appDialogStore";
 import { useAppsStore } from "./appsStore";
 import { useBalloonStore } from "./balloonStore";
 import { copyText } from "./clipboard";
@@ -77,6 +77,28 @@ export function LaunchErrorDialog({ dialog, onClose }: Props) {
     void navigate(journalRoute(patientId));
   }
 
+  function claimJournalPatient(source: ErrorDialog) {
+    const { patientId } = useJournalStore.getState();
+    if (!patientId) {
+      void navigate({ to: "/patients" });
+      return;
+    }
+    useActivePatientStore
+      .getState()
+      .claim(patientId)
+      .catch((error: unknown) => {
+        if (error instanceof ApiError && error.status === 401) return;
+        useAppDialogStore.getState().show({
+          ...source,
+          code: "NETWORK",
+          status: error instanceof ApiError ? error.status : null,
+          call: "PUT /api/active-patient",
+          at: new Date(),
+          retry: () => claimJournalPatient(source),
+        });
+      });
+  }
+
   function primary() {
     onClose();
     switch (code) {
@@ -93,17 +115,9 @@ export function LaunchErrorDialog({ dialog, onClose }: Props) {
         }
         openJournalTab();
         break;
-      case "PATIENT_MISMATCH": {
-        const { patientId } = useJournalStore.getState();
-        if (patientId) {
-          void putActivePatient(patientId)
-            .then((active) =>
-              useActivePatientStore.getState().setActive(active.patientId),
-            )
-            .catch(() => undefined);
-        }
+      case "PATIENT_MISMATCH":
+        claimJournalPatient(dialog);
         break;
-      }
       case "UNKNOWN_APP":
         void useAppsStore.getState().load();
         if (useJournalStore.getState().patientId) {

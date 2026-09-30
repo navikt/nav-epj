@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { format, parseISO } from "date-fns";
 import { Button } from "./Button";
 import { Progress } from "./Progress";
@@ -67,7 +67,8 @@ export function AppFrame({
 }: Props) {
   const { clientId, launchUrl, status, attempt } = run;
   const parts = launchUrl ? launchParts(launchUrl) : null;
-  const waiting = launchUrl !== null && status === "starting";
+  const waiting = launchUrl !== null && status === "starting" && !stale;
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!waiting || !launchUrl) return;
@@ -78,6 +79,19 @@ export function AppFrame({
     );
     return () => clearTimeout(timer);
   }, [waiting, clientId, launchUrl, attempt]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!stale || !container || container.closest("[hidden]")) return;
+    const focused = document.activeElement;
+    if (
+      focused === null ||
+      focused === document.body ||
+      focused === container.querySelector("iframe")
+    ) {
+      container.querySelector<HTMLElement>("button.is-default")?.focus();
+    }
+  }, [stale]);
 
   function onLoad() {
     const store = useAppRunStore.getState();
@@ -181,7 +195,7 @@ export function AppFrame({
   }
 
   return (
-    <div className="xp-frame" id={appFrameId(clientId)}>
+    <div className="xp-frame" id={appFrameId(clientId)} ref={containerRef}>
       {showFrame && launchUrl && (
         <iframe
           key={`${appTabId(clientId)}:${attempt}`}

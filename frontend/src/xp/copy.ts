@@ -349,7 +349,7 @@ export const copy = {
   "s8.NO_ACTIVE_ENCOUNTER.action": "Start konsultasjon",
   "s8.NO_ACTIVE_ENCOUNTER.balloon": (app: string) => `Start ${app} på nytt fra oppgavepanelet eller Apper-fanen.`,
   "s8.PATIENT_MISMATCH.head": "Aktiv pasient er en annen enn journalen.",
-  "s8.PATIENT_MISMATCH.body": (app: string, navn: string) => `${app} ble ikke startet. Aktiv pasient ble endret i en annen nettleserfane. Velg journalen til ${navn} som aktiv pasient før du starter appen på nytt.`,
+  "s8.PATIENT_MISMATCH.body": (app: string, navn: string) => `${app} ble ikke startet. Aktiv pasient ble endret i en annen nettleserfane. Velg «Bruk denne journalen» for å gjøre ${navn} til aktiv pasient igjen, og start appen på nytt.`,
   "s8.PATIENT_MISMATCH.action": "Bruk denne journalen",
   "s8.UNKNOWN_APP.head": "Appen er ikke registrert i nav-epj.",
   "s8.UNKNOWN_APP.body": (app: string) => `${app} finnes ikke i konfigurasjonen lenger. Apper registreres i application.yaml.`,

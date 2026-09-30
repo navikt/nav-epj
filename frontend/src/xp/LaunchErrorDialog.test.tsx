@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LaunchErrorDialog } from "./LaunchErrorDialog";
-import type { AppDialog, AppErrorCode } from "./appDialogStore";
+import { useAppDialogStore, type AppDialog, type AppErrorCode } from "./appDialogStore";
 import { seedApps, seedJournal, seedRun, sykInn } from "./appFixtures";
 import { useAppRunStore } from "./appRunStore";
 import { useBalloonStore } from "./balloonStore";
@@ -157,6 +157,33 @@ describe("LaunchErrorDialog", () => {
     expect(fetch).toHaveBeenCalledWith(
       "/api/active-patient",
       expect.objectContaining({ method: "PUT", body: JSON.stringify({ patientId: "p1" }) }),
+    );
+    vi.unstubAllGlobals();
+  });
+
+  it("PATIENT_MISMATCH opens the patient list when no journal is open", async () => {
+    useJournalStore.getState().clear();
+    const { onClose } = setup(dialogOf("PATIENT_MISMATCH"));
+    await userEvent.click(screen.getByRole("button", { name: primaryLabel("PATIENT_MISMATCH") }));
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(navigate).toHaveBeenCalledWith({ to: "/patients" });
+  });
+
+  it("PATIENT_MISMATCH tells the user when the patient could not be set and offers a retry", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({ ok: false, status: 503, json: async () => ({}) })),
+    );
+    const { onClose } = setup(dialogOf("PATIENT_MISMATCH"));
+    await userEvent.click(screen.getByRole("button", { name: primaryLabel("PATIENT_MISMATCH") }));
+    expect(onClose).toHaveBeenCalledOnce();
+    await vi.waitFor(() =>
+      expect(useAppDialogStore.getState().dialog).toMatchObject({
+        kind: "error",
+        code: "NETWORK",
+        status: 503,
+        call: "PUT /api/active-patient",
+      }),
     );
     vi.unstubAllGlobals();
   });

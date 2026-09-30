@@ -4,7 +4,7 @@ import { AppFrame } from "./AppFrame";
 import { AppToolbar } from "./AppToolbar";
 import { DevPanel } from "./DevPanel";
 import { PatientContext } from "./PatientContext";
-import { appIconName } from "./appInfo";
+import { appIconName, appTabId } from "./appInfo";
 import { useActivePatientStore } from "./activePatientStore";
 import { accessExpiry, isStaleFor, useAppRunStore } from "./appRunStore";
 import { useAppsStore } from "./appsStore";
@@ -14,8 +14,9 @@ import { closeApp, reloadApp } from "./launchApp";
 import { fullName } from "./patientInfo";
 import { useShell } from "./shellContext";
 import { useOpenJournal } from "./useOpenJournal";
-import { usePatientName } from "./usePatientName";
+import { usePatientLabel } from "./usePatientName";
 import { useStartApp } from "./useStartApp";
+import { useWorkspaceStore } from "./workspaceStore";
 
 type Props = { clientId: string };
 
@@ -34,17 +35,22 @@ export function AppTabView({ clientId }: Props) {
   let otherId: string | null = null;
   if (ownerId && isStaleFor(ownerId, journalPatientId)) otherId = journalPatientId;
   else if (ownerId && isStaleFor(ownerId, activePatientId)) otherId = activePatientId;
-  const otherName = usePatientName(otherId);
+  const { name: otherName, loaded: otherLoaded } = usePatientLabel(otherId);
+  const active = useWorkspaceStore((s) => s.current === appTabId(clientId));
   const stale = otherId !== null;
   const ownerName = run ? fullName(run.patient) : "";
 
   useEffect(() => {
-    if (status === "running" && navn) announce(copy["live.appRunning"](navn));
-  }, [status, navn, announce]);
+    if (active && status === "running" && navn) {
+      announce(copy["live.appRunning"](navn));
+    }
+  }, [active, status, navn, announce]);
 
   useEffect(() => {
-    if (stale) announce(copy["s5.stale.title"](ownerName, otherName));
-  }, [stale, ownerName, otherName, announce]);
+    if (active && stale && otherLoaded) {
+      announce(copy["s5.stale.title"](ownerName, otherName));
+    }
+  }, [active, stale, otherLoaded, ownerName, otherName, announce]);
 
   if (!run) return null;
   const patientName = fullName(run.patient);
