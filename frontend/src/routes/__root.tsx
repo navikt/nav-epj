@@ -1,4 +1,5 @@
-import { Outlet, createRootRoute, useNavigate, useRouterState } from "@tanstack/react-router";
+import { Outlet, createRootRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { AppHeader } from "../xp/AppHeader";
 import { AppShell } from "../xp/AppShell";
 import { BalloonHost } from "../xp/BalloonHost";
@@ -9,10 +10,13 @@ import { CurrentUserContext, type CurrentUser } from "../xp/currentUser";
 import { UserGate } from "../xp/UserGate";
 import { Workspace } from "../xp/Workspace";
 import { guardTabClose } from "../xp/journalGuardStore";
-import { useJournalStore } from "../xp/journalStore";
+import { usePatientsStore } from "../xp/patientsStore";
+import { currentJournalRoute } from "../xp/tabRoutes";
+import { useCurrentRoute } from "../xp/useCurrentRoute";
 import { logout } from "../xp/logout";
 import { useHelsepersonell } from "../xp/useHelsepersonell";
 import { useRouteTabSync } from "../xp/useRouteTabSync";
+import { useSearchSubmit } from "../xp/useSearchSubmit";
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -20,7 +24,7 @@ export const Route = createRootRoute({
 
 function RootComponent() {
   const navigate = useNavigate();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const route = useCurrentRoute();
   const { state, retry } = useHelsepersonell();
   const currentUser: CurrentUser | null =
     state.status === "ready"
@@ -33,12 +37,13 @@ function RootComponent() {
       : null;
   const openPatients = () => void navigate({ to: "/patients" });
   const openJournal = () => {
-    const { patientId } = useJournalStore.getState();
-    if (patientId) {
-      void navigate({ to: "/patients/$patientId", params: { patientId } });
-    }
+    const target = currentJournalRoute();
+    if (target) void navigate(target);
   };
-  useRouteTabSync(pathname, (target) => void navigate(target));
+  const hpr = state.status === "ready" ? state.helsepersonell.hpr : null;
+  useEffect(() => usePatientsStore.getState().setOwner(hpr), [hpr]);
+  const submitSearch = useSearchSubmit();
+  useRouteTabSync(route, (target) => void navigate(target));
 
   return (
     <CurrentUserContext.Provider value={currentUser}>
@@ -46,11 +51,11 @@ function RootComponent() {
         <AppHeader
           user={currentUser}
           onLogout={logout}
-          onSearchSubmit={openPatients}
+          onSearchSubmit={() => void submitSearch()}
         />
         <TaskPane
           userName={currentUser?.navn}
-          patientsCurrent={pathname.replace(/\/+$/, "") === "/patients"}
+          patientsCurrent={route.kind === "patients"}
           onOpenPatients={openPatients}
           onOpenJournal={openJournal}
           onLogout={logout}

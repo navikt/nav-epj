@@ -1,6 +1,7 @@
 import { render } from "@testing-library/react";
 import {
   RouterProvider,
+  createBrowserHistory,
   createMemoryHistory,
   createRouter,
 } from "@tanstack/react-router";
@@ -50,10 +51,13 @@ export function setupBrowserStubs() {
   vi.stubGlobal("scrollTo", vi.fn());
 }
 
-export function renderApp(path: string) {
+export function renderApp(path: string, options: { browserHistory?: boolean } = {}) {
+  if (options.browserHistory) window.history.replaceState(null, "", path);
   const router = createRouter({
     routeTree,
-    history: createMemoryHistory({ initialEntries: [path] }),
+    history: options.browserHistory
+      ? createBrowserHistory()
+      : createMemoryHistory({ initialEntries: [path] }),
   });
   return { router, ...render(<RouterProvider router={router} />) };
 }

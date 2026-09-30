@@ -3,6 +3,7 @@ import { afterEach, expect } from "vitest";
 import { cleanup } from "@testing-library/react";
 import * as axeMatchers from "vitest-axe/matchers";
 import { useBalloonStore } from "./balloonStore";
+import { useJournalGuardStore } from "./journalGuardStore";
 import { useJournalStore } from "./journalStore";
 import { useModalStore } from "./modalStore";
 import { usePatientsStore } from "./patientsStore";
@@ -20,6 +21,7 @@ afterEach(() => {
   useBalloonStore.setState({ balloon: null });
   usePatientsStore.getState().reset();
   useJournalStore.getState().clear();
+  useJournalGuardStore.setState({ closeRequested: false, inAppTarget: null });
 });
 
 HTMLCanvasElement.prototype.getContext = () => null;

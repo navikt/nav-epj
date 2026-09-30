@@ -53,9 +53,9 @@ describe("/patients route", () => {
     stubApi({ "GET /api/patient": () => ({ body: patients }) });
     const { router } = renderApp("/");
     const search = await screen.findByRole("searchbox");
-    await userEvent.type(search, "ola{Enter}");
+    await userEvent.type(search, "a{Enter}");
     expect(router.state.location.pathname).toBe("/patients");
-    expect(await screen.findByText("Filtrert på «ola»")).toBeInTheDocument();
+    expect(await screen.findByText("Filtrert på «a»")).toBeInTheDocument();
   });
 
   it("creates a patient locally and refreshes the list", async () => {

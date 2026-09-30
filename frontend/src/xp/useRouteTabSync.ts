@@ -1,63 +1,44 @@
 import { useEffect, useRef } from "react";
 import { copy } from "./copy";
 import { useJournalStore } from "./journalStore";
+import { routeForTab, type TabRoute } from "./tabRoutes";
+import type { CurrentRoute } from "./useCurrentRoute";
 import {
   JOURNAL_TAB_ID,
   START_TAB_ID,
   useWorkspaceStore,
 } from "./workspaceStore";
 
-export type TabRoute =
-  | { to: "/" }
-  | { to: "/patients" }
-  | { to: "/patients/$patientId"; params: { patientId: string } };
-
-const JOURNAL_PATH = /^\/patients\/([^/]+)(?:\/konsultasjon\/([^/]+)(?:\/.*)?)?$/;
-
-function normalize(pathname: string) {
-  return pathname.replace(/\/+$/, "") || "/";
-}
-
-export function parseJournalPath(pathname: string) {
-  const match = JOURNAL_PATH.exec(normalize(pathname));
-  if (!match) return null;
-  return {
-    patientId: decodeURIComponent(match[1]),
-    konsultasjonId: match[2] ? decodeURIComponent(match[2]) : undefined,
-  };
-}
-
 export function useRouteTabSync(
-  pathname: string,
+  route: CurrentRoute,
   navigate: (target: TabRoute) => void,
 ) {
-  const pathnameRef = useRef(pathname);
+  const routeRef = useRef(route);
   const navigateRef = useRef(navigate);
+  const patientId = route.kind === "journal" ? route.patientId : undefined;
+  const konsultasjonId =
+    route.kind === "journal" ? route.konsultasjonId : undefined;
 
   useEffect(() => {
-    pathnameRef.current = pathname;
+    routeRef.current = route;
     navigateRef.current = navigate;
   });
 
   useEffect(() => {
     const { openTab, setCurrent } = useWorkspaceStore.getState();
-    const path = normalize(pathname);
-    const journal = parseJournalPath(path);
-    if (path === "/") {
+    if (route.kind === "start") {
       setCurrent(START_TAB_ID);
-    } else if (path === "/patients") {
+    } else if (route.kind === "patients") {
       openTab({ kind: "patients", label: copy["pane.system.patients"] });
-    } else if (journal) {
+    } else if (patientId) {
       const exists = useWorkspaceStore
         .getState()
         .tabs.some((t) => t.id === JOURNAL_TAB_ID);
       if (exists) setCurrent(JOURNAL_TAB_ID);
       else openTab({ kind: "journal", label: copy["s4.tabs.label"] });
-      void useJournalStore
-        .getState()
-        .open(journal.patientId, journal.konsultasjonId);
+      void useJournalStore.getState().open(patientId, konsultasjonId);
     }
-  }, [pathname]);
+  }, [route.kind, patientId, konsultasjonId]);
 
   useEffect(
     () =>
@@ -67,20 +48,10 @@ export function useRouteTabSync(
           useJournalStore.getState().clear();
         }
         if (state.current === previous.current) return;
-        const path = normalize(pathnameRef.current);
-        if (state.current === START_TAB_ID && path !== "/") {
-          navigateRef.current({ to: "/" });
-        } else if (state.current === "patients" && path !== "/patients") {
-          navigateRef.current({ to: "/patients" });
-        } else if (state.current === JOURNAL_TAB_ID) {
-          const { patientId } = useJournalStore.getState();
-          if (patientId && !parseJournalPath(path)) {
-            navigateRef.current({
-              to: "/patients/$patientId",
-              params: { patientId },
-            });
-          }
-        }
+        const active = state.tabs.find((t) => t.id === state.current);
+        if (!active || routeRef.current.kind === active.kind) return;
+        const target = routeForTab(active);
+        if (target) navigateRef.current(target);
       }),
     [],
   );
