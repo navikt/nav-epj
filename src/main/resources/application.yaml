@@ -25,6 +25,10 @@ smart:
   fhirServerUrl: ${FHIR_SERVER_URL}
   clients:
     - clientId: "syk-inn"
+      navn: "Sykmelding"
+      beskrivelse: "Skriv sykmelding og send den til Nav."
+      ikon: "sykmelding"
+      launchMode: "iframe"
       redirectUris: [ "https://www.ekstern.dev.nav.no/samarbeidspartner/sykmelding", "https://www.ekstern.dev.nav.no/samarbeidspartner/sykmelding/fhir/callback" ]
       launchUris: [ "https://www.ekstern.dev.nav.no/samarbeidspartner/sykmelding/fhir/launch" ]
       tokenEndpointAuthMethod: "client_secret_basic"
@@ -42,6 +46,10 @@ smart:
         - patient/Observation.write
         - patient/DocumentReference.crs
     - clientId: "NAV_SMART_on_FHIR_validator"
+      navn: "Validator"
+      beskrivelse: "Tester SMART on FHIR-oppstart og FHIR-API-et mot nav-epj."
+      ikon: "validator"
+      launchMode: "iframe"
       redirectUris: [ "https://nav-on-fhir.ekstern.dev.nav.no" ]
       launchUris: [ "https://nav-on-fhir.ekstern.dev.nav.no/launch" ]
       tokenEndpointAuthMethod: "private_key_jwt"

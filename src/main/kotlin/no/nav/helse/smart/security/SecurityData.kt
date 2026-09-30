@@ -1,8 +1,9 @@
 package no.nav.helse.smart.security
 
+import com.fasterxml.jackson.annotation.JsonValue
 import com.nimbusds.jose.jwk.JWKSet
 
-enum class TokenEndpointAuthMethod(val value: String) {
+enum class TokenEndpointAuthMethod(@get:JsonValue val value: String) {
     NONE("none"),
     CLIENT_SECRET_BASIC("client_secret_basic"),
     PRIVATE_KEY_JWT("private_key_jwt");
@@ -11,6 +12,18 @@ enum class TokenEndpointAuthMethod(val value: String) {
         fun from(value: String): TokenEndpointAuthMethod =
             entries.find { it.value == value }
                 ?: throw IllegalArgumentException("Invalid token endpoint: $value")
+    }
+}
+
+enum class LaunchMode(@get:JsonValue val value: String) {
+    IFRAME("iframe"),
+    TAB("tab"),
+    ASK("ask");
+
+    companion object {
+        fun from(value: String): LaunchMode =
+            entries.find { it.value == value }
+                ?: throw IllegalArgumentException("Invalid launchMode: $value")
     }
 }
 
@@ -35,6 +48,9 @@ data class SmartClient(
     val allowedScopes: Set<SmartScope>,
     val displayName: String = clientId,
     val teamSlot: String? = null,
+    val beskrivelse: String = "",
+    val ikon: String = DEFAULT_APP_ICON,
+    val launchMode: LaunchMode = LaunchMode.IFRAME,
 ) {
     /**
      * The safe subset of this registration a future EPJ launch picker can show a clinician: no
@@ -49,6 +65,8 @@ data class SmartClient(
             teamSlot = teamSlot,
         )
 }
+
+const val DEFAULT_APP_ICON = "vindu"
 
 data class SmartClientDisplay(
     val clientId: String,

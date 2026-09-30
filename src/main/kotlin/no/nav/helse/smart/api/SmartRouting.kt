@@ -10,11 +10,9 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import java.util.*
-import kotlin.uuid.Uuid
 import no.nav.helse.core.Environment
 import no.nav.helse.core.utils.logger
 import no.nav.helse.fhir.encounter.EncounterService
-import no.nav.helse.fhir.patient.PatientInputId
 import no.nav.helse.fhir.patient.PatientService
 import no.nav.helse.helseId.loggedInUser
 import no.nav.helse.smart.IntrospectionResponse
@@ -32,7 +30,6 @@ import no.nav.helse.smart.security.parseScopes
 import no.nav.helse.smart.security.resolveAssertedClientId
 import no.nav.helse.smart.security.serialize
 import no.nav.helse.smart.valkey.AuthCodeContext
-import no.nav.helse.smart.valkey.LaunchContext
 import no.nav.helse.smart.valkey.ValkeyService
 
 fun Application.configureSmartRouting() {
@@ -46,6 +43,7 @@ fun Application.configureSmartRouting() {
     val issuerUrl = env.smart.issuerBaseUrl
     val clients = env.smart.clients
     val logger = logger()
+    val launchPreparer = LaunchPreparer(valkeyService, patientService, encounterService)
 
     routing {
         authenticate("wonderwall-helseid") {
@@ -62,52 +60,42 @@ fun Application.configureSmartRouting() {
                     val user = loggedInUser()
                     logger.debug("Logged in user: {}", user)
 
-                    val cachedPatientId =
-                        valkeyService.getActivePatient(user.hpr)
-                            ?: return@get call.respond(
-                                HttpStatusCode.Conflict,
-                                "No active patient context for clinician",
-                            )
-
-                    logger.debug("Patient id from valkey: {}", cachedPatientId)
-                    // FHIR launch requires an active patient
-                    val patientInputId = PatientInputId(Uuid.parse(cachedPatientId))
-                    logger.debug("PatientInputId: {}", patientInputId)
-                    val patient =
-                        patientService.getPatient(patientInputId)
-                            ?: return@get call.respond(HttpStatusCode.BadRequest, "Unknown patient")
-
-                    // FHIR launch requires an active encounter
-                    val encounter =
-                        encounterService.getActiveEncounterByPatient(patientInputId)
-                            ?: return@get call.respond(
-                                HttpStatusCode.BadRequest,
-                                "Found no active encounter for patient",
-                            )
-
-                    val launchId = UUID.randomUUID().toString()
-                    val patientId =
-                        patient.id
-                            ?: return@get call.respond(
-                                HttpStatusCode.InternalServerError,
-                                "FHIR Patient returned without an id",
-                            )
-                    val encounterId =
-                        encounter.id
-                            ?: return@get call.respond(
-                                HttpStatusCode.InternalServerError,
-                                "FHIR Encounter returned without an id",
-                            )
-
-                    valkeyService.saveLaunchContext(
-                        launchId,
-                        LaunchContext(patientId, encounterId, user.hpr),
-                    )
+                    val launchId =
+                        when (val preparation = launchPreparer.prepare(user.hpr)) {
+                            is LaunchPreparation.Ready -> preparation.launchId
+                            LaunchPreparation.NoActivePatient ->
+                                return@get call.respond(
+                                    HttpStatusCode.Conflict,
+                                    "No active patient context for clinician",
+                                )
+                            LaunchPreparation.UnknownPatient ->
+                                return@get call.respond(
+                                    HttpStatusCode.BadRequest,
+                                    "Unknown patient",
+                                )
+                            LaunchPreparation.NoActiveEncounter ->
+                                return@get call.respond(
+                                    HttpStatusCode.BadRequest,
+                                    "Found no active encounter for patient",
+                                )
+                            LaunchPreparation.PatientWithoutId ->
+                                return@get call.respond(
+                                    HttpStatusCode.InternalServerError,
+                                    "FHIR Patient returned without an id",
+                                )
+                            LaunchPreparation.EncounterWithoutId ->
+                                return@get call.respond(
+                                    HttpStatusCode.InternalServerError,
+                                    "FHIR Encounter returned without an id",
+                                )
+                        }
 
                     val iss = env.smart.fhirServerUrl
                     call.respondRedirect("$appUrl/?iss=$iss&launch=$launchId")
                 }
             }
+
+            appRoutes(clients, env.smart.fhirServerUrl, launchPreparer)
 
             route("/oidc") {
                 get("/authorize") {
