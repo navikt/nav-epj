@@ -353,6 +353,54 @@ class ObservationCreateValidationTest {
         assertFailsWith<InvalidObservationException> { observation.toOpprettMaalingRequest() }
     }
 
+    private fun observationWithValue(value: String) =
+        validObservation(
+            value =
+                Observation.Value.Quantity(
+                    Quantity(
+                        value =
+                            Decimal(
+                                value =
+                                    com.ionspin.kotlin.bignum.decimal.BigDecimal.parseString(value)
+                            ),
+                        unit = FhirString(value = "degree Celsius"),
+                        system = Uri(value = "http://unitsofmeasure.org"),
+                        code = Code(value = "Cel"),
+                    )
+                )
+        )
+
+    @Test
+    fun `toOpprettMaalingRequest rejects more than four decimals instead of rounding them`() {
+        assertFailsWith<InvalidObservationException> {
+            observationWithValue("37.12345").toOpprettMaalingRequest()
+        }
+    }
+
+    @Test
+    fun `toOpprettMaalingRequest rejects more than eight integer digits`() {
+        assertFailsWith<InvalidObservationException> {
+            observationWithValue("123456789").toOpprettMaalingRequest()
+        }
+    }
+
+    @Test
+    fun `toOpprettMaalingRequest accepts the largest value the column stores exactly`() {
+        assertEquals(
+            BigDecimal("99999999.9999"),
+            observationWithValue("99999999.9999").toOpprettMaalingRequest().verdi,
+        )
+    }
+
+    @Test
+    fun `toOpprettMaalingRequest accepts trailing zeros beyond four decimals`() {
+        assertEquals(
+            0,
+            BigDecimal("37.2")
+                .compareTo(observationWithValue("37.200000").toOpprettMaalingRequest().verdi),
+        )
+    }
+
     @Test
     fun `toOpprettMaalingRequest rejects components`() {
         val observation =

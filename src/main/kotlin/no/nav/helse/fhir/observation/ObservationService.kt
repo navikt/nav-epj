@@ -31,6 +31,10 @@ import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
 
 private const val LOINC_SYSTEM = "http://loinc.org"
+private const val MAALING_MAKS_DESIMALER = 4
+
+private const val MAALING_MAKS_HELTALLSSIFFER = 8
+
 private const val UCUM_SYSTEM = "http://unitsofmeasure.org"
 
 /**
@@ -227,6 +231,17 @@ fun Observation.toOpprettMaalingRequest(): OpprettMaalingRequest {
                 OperationOutcome.IssueType.Required,
                 "Observation.valueQuantity.value er påkrevd",
             )
+    val normalisertVerdi = verdi.stripTrailingZeros()
+    if (
+        normalisertVerdi.scale() > MAALING_MAKS_DESIMALER ||
+            normalisertVerdi.precision() - normalisertVerdi.scale() > MAALING_MAKS_HELTALLSSIFFER
+    ) {
+        invalid(
+            OperationOutcome.IssueType.Value,
+            "Observation.valueQuantity.value støtter maks $MAALING_MAKS_HELTALLSSIFFER " +
+                "heltallssiffer og $MAALING_MAKS_DESIMALER desimaler",
+        )
+    }
     if (quantity.system?.value != UCUM_SYSTEM) {
         invalid(
             OperationOutcome.IssueType.Value,
