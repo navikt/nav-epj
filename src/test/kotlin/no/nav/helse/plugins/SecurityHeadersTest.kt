@@ -4,10 +4,14 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.config.ApplicationConfig
+import io.ktor.server.config.yaml.YamlConfig
 import io.ktor.server.plugins.di.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
+import java.io.File
+import java.net.URI
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -16,6 +20,7 @@ import no.nav.helse.core.SmartConfig
 import no.nav.helse.smart.security.LaunchMode
 import no.nav.helse.smart.security.SmartClient
 import no.nav.helse.smart.security.TokenEndpointAuthMethod
+import no.nav.helse.smart.security.loadSmartClients
 import no.nav.helse.smart.security.parseRegisteredScopes
 import no.nav.helse.utils.simpleTestEnvironment
 import org.junit.Test
@@ -55,6 +60,21 @@ private val clients =
             mode = LaunchMode.TAB,
         ),
     )
+
+private val ENV_PLACEHOLDER = Regex("""\$\{[A-Z0-9_]+}""")
+
+private fun shippedConfig(resource: String): ApplicationConfig {
+    val text =
+        requireNotNull(SecurityHeadersTest::class.java.classLoader.getResource(resource)) {
+                "missing $resource"
+            }
+            .readText()
+            .replace(ENV_PLACEHOLDER, "placeholder")
+    val dir = File("build/test-shipped-config").apply { mkdirs() }
+    val file = File.createTempFile("shipped-", ".yaml", dir).apply { deleteOnExit() }
+    file.writeText(text)
+    return YamlConfig(file.absolutePath)!!
+}
 
 class SecurityHeadersTest {
 
@@ -130,6 +150,23 @@ class SecurityHeadersTest {
                 "Permissions-Policy",
             )
             .forEach { assertEquals(1, response.headers.getAll(it)?.size, it) }
+    }
+
+    @Test
+    fun `frames registered apps that can run in a frame`() {
+        listOf("application.yaml", "application-local.yaml").forEach { file ->
+            val registered = loadSmartClients(shippedConfig(file))
+            val expected =
+                registered
+                    .filter { it.launchMode != LaunchMode.TAB }
+                    .flatMap { it.launchUris + it.redirectUris }
+                    .map { URI(it).let { u -> "${u.scheme}://${u.authority}" } }
+                    .toSet()
+
+            assertTrue(registered.isNotEmpty(), file)
+            assertTrue(expected.isNotEmpty(), file)
+            assertEquals(expected, frameSources(registered).toSet(), file)
+        }
     }
 
     @Test
