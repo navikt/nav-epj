@@ -326,4 +326,14 @@
 .xp-diag .aksel-combobox__list-item--focus { background: var(--xp-selection-bg); color: var(--xp-selection-fg); }
 .xp-diag .aksel-combobox__list-item--selected { font-weight: 700; }
 .xp-diag .aksel-combobox__list_non-selectables { padding: 6px 8px; color: var(--xp-text); }
+.xp-dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 16px; margin: 0; }
+.xp-dl dt { font-weight: 700; }
+.xp-dl dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.xp-dl ul { margin: 0; padding: 0; list-style: none; }
+.xp-prewrap { white-space: pre-wrap; margin: 0; }
+.xp-cols > .xp-grow { flex: 1 1 0; min-width: 0; }
+.xp-cols > .xp-side { flex: 0 0 280px; }
+.xp-form-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.xp-status-text { font-weight: 700; }
+.xp-root[data-narrow="true"] .xp-cols > .xp-side { flex: none; }
 }

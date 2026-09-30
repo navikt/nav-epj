@@ -189,6 +189,8 @@ export const copy = {
   "s4.info.started": "Startet",
   "s4.info.duration": "Varighet",
   "s4.info.doctor": "Lege",
+  "s4.info.minutes": (min: number) => `${min} min`,
+  "s4.empty.value": "–",
   "s4.done.note": "Konsultasjonen er fullført og skrivebeskyttet. Start en ny konsultasjon for å sette diagnoser eller starte apper.",
   "s4.done.title": "Fullført konsultasjon",
   "s4.done.ended": "Avsluttet",

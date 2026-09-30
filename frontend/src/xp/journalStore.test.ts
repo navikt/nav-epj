@@ -322,6 +322,7 @@ describe("journalStore", () => {
       });
       expect(ongoingOf(journal().konsultasjoner)).toBeNull();
       expect(journal().draftKonsultasjonId).toBeNull();
+      expect(journal().selectedKonsultasjonId).toBe("k1");
       expect(useBalloonStore.getState().balloon?.title).toBe("Konsultasjon fullført");
       expect(usePatientsStore.getState().lastKonsultasjon["p1"]?.status).toBe("FULLFØRT");
     });

@@ -4,18 +4,15 @@ import {
   useEffect,
   useId,
   useMemo,
+  useRef,
   useState,
   type FocusEvent,
   type KeyboardEvent,
 } from "react";
 import { epjDiagnoser } from "@data/diagnoses";
 import { copy } from "./copy";
+import { systemLabel } from "./diagnoseSystem";
 import { diagnoseKey, type DiagnoseItem } from "./journalStore";
-
-const SYSTEM_LABELS: Record<string, string> = {
-  ICPC2: "ICPC-2",
-  ICD10: "ICD-10",
-};
 
 type Props = {
   selected: DiagnoseItem[];
@@ -28,7 +25,7 @@ type Props = {
 const catalogue = epjDiagnoser.map((d) => ({
   key: diagnoseKey({ code: d.kode, system: d.diagnosesystem }),
   item: { code: d.kode, system: d.diagnosesystem, text: d.beskrivelse },
-  label: `${d.kode} ${d.beskrivelse} · ${SYSTEM_LABELS[d.diagnosesystem]}`,
+  label: `${d.kode} ${d.beskrivelse} · ${systemLabel(d.diagnosesystem)}`,
 }));
 
 export function DiagnoseCombobox({
@@ -41,6 +38,7 @@ export function DiagnoseCombobox({
   const [open, setOpen] = useState(false);
   const inputId = useId();
   const chipsId = useId();
+  const comboRef = useRef<HTMLDivElement>(null);
 
   const options = useMemo(
     () => catalogue.map(({ key, label }) => ({ value: key, label })),
@@ -73,12 +71,23 @@ export function DiagnoseCombobox({
   }
 
   useEffect(() => {
-    const list = document.querySelector(
-      `#${CSS.escape(`${inputId}-filtered-options`)} [role="listbox"]`,
-    );
-    list?.setAttribute("aria-label", copy["s4.diag.label"]);
-    list?.setAttribute("aria-multiselectable", "true");
-  });
+    const container = comboRef.current;
+    if (!container) return;
+    const patch = () => {
+      const list = container.querySelector(
+        `#${CSS.escape(`${inputId}-filtered-options`)} [role="listbox"]`,
+      );
+      list?.setAttribute("aria-label", copy["s4.diag.label"]);
+      list?.setAttribute("aria-multiselectable", "true");
+      list
+        ?.querySelectorAll("svg:not([aria-hidden])")
+        .forEach((svg) => svg.setAttribute("aria-hidden", "true"));
+    };
+    patch();
+    const observer = new MutationObserver(patch);
+    observer.observe(container, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [inputId]);
 
   function onBlur(event: FocusEvent<HTMLDivElement>) {
     if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
@@ -94,6 +103,7 @@ export function DiagnoseCombobox({
       </span>
       <div className="xp-combo-in" onBlur={onBlur}>
         <div
+          ref={comboRef}
           className="xp-combo"
           onKeyDownCapture={onKeyDownCapture}
           onInput={() => setOpen(true)}

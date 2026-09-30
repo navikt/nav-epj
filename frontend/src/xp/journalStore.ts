@@ -307,7 +307,11 @@ export const useJournalStore = create<JournalState>((set, get) => {
       }
       if (!isCurrent()) return true;
       publishLatest(patientId, refreshed);
-      commit({ saveStatus: "saved", savedAt: new Date() });
+      commit({
+        saveStatus: "saved",
+        savedAt: new Date(),
+        ...(ferdigstill ? { selectedKonsultasjonId: draftKonsultasjonId } : {}),
+      });
       applyKonsultasjoner(refreshed);
       const name = fullName(patient);
       useBalloonStore.getState().show(
