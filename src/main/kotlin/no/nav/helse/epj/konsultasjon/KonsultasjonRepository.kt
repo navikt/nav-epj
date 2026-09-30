@@ -222,12 +222,25 @@ class KonsultasjonRepository {
         pasientId: PasientId,
         journalnotat: String,
     ): Int = dbQuery {
-        JournalnotatTable.insert {
-                it[JournalnotatTable.konsultasjonId] = konsultasjonId.value
-                it[JournalnotatTable.pasientId] = pasientId.value
+        val eksisterendeId =
+            JournalnotatTable.select(JournalnotatTable.id)
+                .where { JournalnotatTable.konsultasjonId eq konsultasjonId.value }
+                .limit(1)
+                .singleOrNull()
+                ?.get(JournalnotatTable.id)
+
+        if (eksisterendeId != null) {
+            JournalnotatTable.update({ JournalnotatTable.id eq eksisterendeId }) {
                 it[JournalnotatTable.journalnotat] = journalnotat
             }
-            .insertedCount
+        } else {
+            JournalnotatTable.insert {
+                    it[JournalnotatTable.konsultasjonId] = konsultasjonId.value
+                    it[JournalnotatTable.pasientId] = pasientId.value
+                    it[JournalnotatTable.journalnotat] = journalnotat
+                }
+                .insertedCount
+        }
     }
 
     suspend fun insertJournalnotat(journalnotat: Journalnotat): Int = dbQuery {

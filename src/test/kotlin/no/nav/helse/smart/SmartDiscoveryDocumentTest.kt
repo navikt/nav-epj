@@ -54,7 +54,15 @@ class SmartDiscoveryDocumentTest {
             val body = response.bodyAsText()
             assertTrue("registration_endpoint" !in body)
             assertTrue("management_endpoint" !in body)
-            assertTrue("introspection_endpoint" !in body)
             assertTrue("revocation_endpoint" !in body)
         }
+
+    @Test
+    fun `discovery advertises the implemented introspection endpoint`() = testApplication {
+        application { configureTestSmartDependencies() }
+        val response = client.get("/fhir/.well-known/smart-configuration")
+
+        val doc = jacksonObjectMapper().readValue<SmartDiscoveryDocument>(response.bodyAsText())
+        assertEquals("${doc.issuer}/introspect", doc.introspectionEndpoint)
+    }
 }

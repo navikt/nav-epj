@@ -397,6 +397,77 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
     }
 
     @Test
+    fun `update saving the same journalnotat text twice does not create a duplicate row`() =
+        runTest {
+            val hpr = HelsepersonellHpr("123")
+            val pasientId = opprettPasient(hpr = hpr)
+            val konsultasjonId =
+                konsultasjonRepository.insert(
+                    OpprettKonsultasjon(
+                        pasientId,
+                        listOf(hpr),
+                        LocalDateTime.now(),
+                        KonsultasjonStatus.PÅGÅENDE,
+                    )
+                )
+            val request =
+                OppdaterKonsultasjonRequest(
+                    konsultasjonId,
+                    emptyList(),
+                    "notat",
+                    ferdigstill = false,
+                )
+
+            konsultasjonRepository.update(request, pasientId)
+            konsultasjonRepository.update(request, pasientId)
+
+            val konsultasjon = konsultasjonRepository.findByKonsultasjonId(konsultasjonId)
+            assertNotNull(konsultasjon)
+            assertEquals(1, konsultasjon.journalnotat.size)
+            assertEquals("notat", konsultasjon.journalnotat.single().journalnotat)
+        }
+
+    @Test
+    fun `update saving a changed journalnotat text updates the existing row instead of adding one`() =
+        runTest {
+            val hpr = HelsepersonellHpr("123")
+            val pasientId = opprettPasient(hpr = hpr)
+            val konsultasjonId =
+                konsultasjonRepository.insert(
+                    OpprettKonsultasjon(
+                        pasientId,
+                        listOf(hpr),
+                        LocalDateTime.now(),
+                        KonsultasjonStatus.PÅGÅENDE,
+                    )
+                )
+
+            konsultasjonRepository.update(
+                OppdaterKonsultasjonRequest(
+                    konsultasjonId,
+                    emptyList(),
+                    "første notat",
+                    ferdigstill = false,
+                ),
+                pasientId,
+            )
+            konsultasjonRepository.update(
+                OppdaterKonsultasjonRequest(
+                    konsultasjonId,
+                    emptyList(),
+                    "oppdatert notat",
+                    ferdigstill = false,
+                ),
+                pasientId,
+            )
+
+            val konsultasjon = konsultasjonRepository.findByKonsultasjonId(konsultasjonId)
+            assertNotNull(konsultasjon)
+            assertEquals(1, konsultasjon.journalnotat.size)
+            assertEquals("oppdatert notat", konsultasjon.journalnotat.single().journalnotat)
+        }
+
+    @Test
     fun `konsultasjon retrieves an empty list of diagnoses when there are none`() = runTest {
         val hpr = HelsepersonellHpr("123")
         val pasientId = opprettPasient(hpr = hpr)

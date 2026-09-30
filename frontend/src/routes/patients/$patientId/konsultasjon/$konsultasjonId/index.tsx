@@ -1,5 +1,5 @@
 import { Button, Heading, Link, Table, Textarea, UNSAFE_Combobox } from '@navikt/ds-react'
-import {createFileRoute, useNavigate} from '@tanstack/react-router'
+import {createFileRoute, useNavigate, useRouter} from '@tanstack/react-router'
 import { useEffect, useState, type MouseEvent } from 'react'
 import { epjDiagnoser } from '@data/diagnoses'
 import {getSykInnUrl} from "@utils/env.ts";
@@ -25,6 +25,7 @@ type PostKonsultasjonBody = {
 
 function RouteComponent() {
     const navigate = useNavigate()
+    const router = useRouter()
     const { patientId, konsultasjonId } = Route.useParams();
     const data = Route.useLoaderData();
     const konsultasjon = KonsultasjonSchema.safeParse(
@@ -75,6 +76,8 @@ function RouteComponent() {
         }
         if (ferdigstill && res) {
             navigate({ to: `/patients/$patientId`, params: { patientId } })
+        } else if (res) {
+            router.invalidate()
         }
     }
 

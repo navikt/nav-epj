@@ -8,6 +8,7 @@ data class SmartDiscoveryDocument(
     @get:JsonProperty("jwks_uri") val jwksUri: String,
     @get:JsonProperty("authorization_endpoint") val authorizationEndpoint: String,
     @get:JsonProperty("token_endpoint") val tokenEndpoint: String,
+    @get:JsonProperty("introspection_endpoint") val introspectionEndpoint: String,
     @get:JsonProperty("token_endpoint_auth_methods_supported")
     val tokenEndpointAuthMethodsSupported: List<String>,
     @get:JsonProperty("grant_types_supported") val grantTypesSupported: List<String>,
@@ -31,4 +32,16 @@ data class TokenResponse(
     @get:JsonProperty("expires_in") val expiresIn: Int = 3600,
     @get:JsonProperty("scope") val scope: String,
     @get:JsonProperty("need_patient_banner") val needPatientBanner: Boolean,
+)
+
+/** RFC 7662 token introspection response. */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class IntrospectionResponse(
+    val active: Boolean,
+    val scope: String? = null,
+    val sub: String? = null,
+    val exp: Long? = null,
+    val iat: Long? = null,
+    val patient: String? = null,
+    val encounter: String? = null,
 )

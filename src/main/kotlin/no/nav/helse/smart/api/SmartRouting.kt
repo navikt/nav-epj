@@ -17,6 +17,7 @@ import no.nav.helse.fhir.encounter.EncounterService
 import no.nav.helse.fhir.patient.PatientInputId
 import no.nav.helse.fhir.patient.PatientService
 import no.nav.helse.helseId.loggedInUser
+import no.nav.helse.smart.IntrospectionResponse
 import no.nav.helse.smart.SmartDiscoveryDocument
 import no.nav.helse.smart.TokenResponse
 import no.nav.helse.smart.security.ClientAssertionVerifier
@@ -390,6 +391,39 @@ fun Application.configureSmartRouting() {
                     ContentType.Application.Json,
                 )
             }
+            // RFC 7662: lets a resource server check whether an access token it was handed is
+            // still valid, without needing to understand the token format itself.
+            post("/introspect") {
+                val params = call.receiveParameters()
+                val token = params["token"] ?: return@post rejectMissingToken("token")
+
+                val assertedClientId =
+                    resolveAssertedClientId(call.request, params)
+                        ?: return@post rejectMissingToken("client_id")
+                val acceptedClient =
+                    clients.find { it.clientId == assertedClientId }
+                        ?: return@post rejectToken(
+                            HttpStatusCode.BadRequest,
+                            OAuth2Error.INVALID_CLIENT.appendDescription("unknown client"),
+                        )
+                authenticateClient(call.request, acceptedClient, params, clientAssertionVerifier)
+                    ?.let {
+                        val challenge =
+                            if (
+                                acceptedClient.tokenEndpointAuthMethod ==
+                                    TokenEndpointAuthMethod.CLIENT_SECRET_BASIC
+                            ) {
+                                "Basic"
+                            } else {
+                                null
+                            }
+                        return@post rejectToken(HttpStatusCode.Unauthorized, it, challenge)
+                    }
+
+                call.respond(
+                    introspectAccessToken(token, issuerUrl, env.smart.fhirServerUrl, smartKeys)
+                )
+            }
         }
 
         route("/fhir") {
@@ -401,6 +435,7 @@ fun Application.configureSmartRouting() {
                         jwksUri = "$issuerUrl/jwks",
                         authorizationEndpoint = "$issuerUrl/authorize",
                         tokenEndpoint = "$issuerUrl/token",
+                        introspectionEndpoint = "$issuerUrl/introspect",
                         // client_credentials is not implemented yet (SMART Backend Services).
                         grantTypesSupported = listOf("authorization_code"),
                         scopesSupported =
@@ -488,3 +523,27 @@ private fun buildIdToken(
         .withIssuedAt(now)
         .withExpiresAt(expiresAt)
         .sign(smartKeys.algorithm)
+
+private fun introspectAccessToken(
+    token: String,
+    issuerUrl: String,
+    fhirServerUrl: String,
+    smartKeys: SmartKeys,
+): IntrospectionResponse {
+    val verifier =
+        JWT.require(smartKeys.algorithm).withIssuer(issuerUrl).withAudience(fhirServerUrl).build()
+    val decoded = runCatching { verifier.verify(token) }.getOrNull() ?: return INACTIVE_TOKEN
+    if (decoded.type != "at+jwt") return INACTIVE_TOKEN
+
+    return IntrospectionResponse(
+        active = true,
+        scope = decoded.getClaim("scope").asString(),
+        sub = decoded.subject,
+        exp = decoded.expiresAtAsInstant?.epochSecond,
+        iat = decoded.issuedAtAsInstant?.epochSecond,
+        patient = decoded.getClaim("patient").asString(),
+        encounter = decoded.getClaim("encounter").asString(),
+    )
+}
+
+private val INACTIVE_TOKEN = IntrospectionResponse(active = false)
