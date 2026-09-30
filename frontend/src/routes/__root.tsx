@@ -16,6 +16,7 @@ import { useLaunchModeStore } from "../xp/launchModeStore";
 import { usePatientsStore } from "../xp/patientsStore";
 import { currentJournalRoute } from "../xp/tabRoutes";
 import { useActivePatientSync } from "../xp/useActivePatientSync";
+import { useAccessExpiry } from "../xp/useAccessExpiry";
 import { useAppSync } from "../xp/useAppSync";
 import { useCurrentRoute } from "../xp/useCurrentRoute";
 import { logout } from "../xp/logout";
@@ -66,6 +67,7 @@ function RootComponent() {
   }, [hpr]);
   useAppSync();
   useActivePatientSync(hpr !== null);
+  useAccessExpiry();
   const submitSearch = useSearchSubmit();
   useRouteTabSync(route, (target) => void navigate(target));
 

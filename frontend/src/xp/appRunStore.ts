@@ -107,6 +107,9 @@ export const APP_ACCESS_MS = 60 * 60 * 1000;
 export const accessExpiry = (startedAt: Date) =>
   new Date(startedAt.getTime() + APP_ACCESS_MS);
 
+export const isAccessExpired = (startedAt: Date, now: Date) =>
+  accessExpiry(startedAt).getTime() <= now.getTime();
+
 export function isStaleFor(
   ownerPatientId: string,
   journalPatientId: string | null,

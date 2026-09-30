@@ -2,7 +2,7 @@ import { useActivePatientStore } from "./activePatientStore";
 import { ApiError, LaunchError, launchApp } from "./api";
 import { appTabId, initialsOf, statusText } from "./appInfo";
 import { useAppDialogStore, type AppErrorCode } from "./appDialogStore";
-import { isOutdatedFor, useAppRunStore } from "./appRunStore";
+import { isAccessExpired, isOutdatedFor, useAppRunStore } from "./appRunStore";
 import { useAppsStore } from "./appsStore";
 import { useBalloonStore } from "./balloonStore";
 import { copy } from "./copy";
@@ -310,5 +310,15 @@ export function dropClosedTabRuns() {
       cancelLaunch(run.clientId);
       useAppRunStore.getState().removeRun(run.clientId);
     }
+  }
+}
+
+export function expireTabApps(now = new Date()) {
+  const { tabApps, removeTabApp } = useAppRunStore.getState();
+  for (const tabApp of tabApps) {
+    if (!isAccessExpired(tabApp.startedAt, now)) continue;
+    removeTabApp(tabApp.id);
+    const { dialog, close } = useAppDialogStore.getState();
+    if (dialog?.kind === "tabApp" && dialog.tabId === tabApp.id) close();
   }
 }
