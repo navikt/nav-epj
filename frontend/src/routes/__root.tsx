@@ -41,9 +41,11 @@ function RootComponent() {
     state.status === "ready"
       ? {
           navn: state.helsepersonell.navn,
+          hpr: state.helsepersonell.hpr,
           autorisasjon: state.helsepersonell.autorisasjon,
           legekontor: state.legekontor.navn,
           orgnummer: state.legekontor.orgnummer ?? undefined,
+          telefon: state.legekontor.tlf ?? undefined,
         }
       : null;
   const openPatients = () => {

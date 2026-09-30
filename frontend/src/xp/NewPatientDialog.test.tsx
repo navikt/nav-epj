@@ -29,7 +29,12 @@ function setup() {
   const onClose = vi.fn();
   const view = render(
     <CurrentUserContext.Provider
-      value={{ navn: "Lege Legesen", autorisasjon: "Lege", legekontor: "Kontor" }}
+      value={{
+        navn: "Lege Legesen",
+        hpr: "9144889",
+        autorisasjon: "Lege",
+        legekontor: "Kontor",
+      }}
     >
       <NewPatientDialog onClose={onClose} />
     </CurrentUserContext.Provider>,
