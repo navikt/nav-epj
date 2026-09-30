@@ -8,6 +8,7 @@ import io.ktor.server.plugins.*
 import io.ktor.server.plugins.di.*
 import io.ktor.server.routing.*
 import kotlin.uuid.Uuid
+import no.nav.helse.core.Environment
 import no.nav.helse.fhir.capabilitystatement.capabilityStatementRoutes
 import no.nav.helse.fhir.condition.ConditionService
 import no.nav.helse.fhir.condition.conditionRoutes
@@ -17,6 +18,9 @@ import no.nav.helse.fhir.documentreference.documentReferenceRoutes
 import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.encounter.EncounterService
 import no.nav.helse.fhir.encounter.encounterRoutes
+import no.nav.helse.fhir.observation.ObservationId
+import no.nav.helse.fhir.observation.ObservationService
+import no.nav.helse.fhir.observation.observationRoutes
 import no.nav.helse.fhir.organization.OrganizationId
 import no.nav.helse.fhir.organization.OrganizationService
 import no.nav.helse.fhir.organization.organizationRoutes
@@ -30,27 +34,42 @@ import no.nav.helse.fhir.practitionerrole.PractitionerRoleService
 import no.nav.helse.fhir.practitionerrole.practitionerRoleRoutes
 
 fun Application.configureFhirModule() {
-    val conditionService: ConditionService by dependencies
-    val encounterService: EncounterService by dependencies
-    val organizationService: OrganizationService by dependencies
-    val patientService: PatientService by dependencies
-    val practitionerService: PractitionerService by dependencies
-    val practitionerRoleService: PractitionerRoleService by dependencies
-    val documentReferenceService: DocumentReferenceService by dependencies
+    routing { fhirRoutes() }
+}
+
+fun Route.fhirRoutes() {
+    val conditionService: ConditionService by application.dependencies
+    val encounterService: EncounterService by application.dependencies
+    val observationService: ObservationService by application.dependencies
+    val organizationService: OrganizationService by application.dependencies
+    val patientService: PatientService by application.dependencies
+    val practitionerService: PractitionerService by application.dependencies
+    val practitionerRoleService: PractitionerRoleService by application.dependencies
+    val documentReferenceService: DocumentReferenceService by application.dependencies
+    val environment: Environment by application.dependencies
     val fhirJson = FhirR4Json()
     val fhirContentType = ContentType("application", "fhir+json")
 
-    routing {
-        capabilityStatementRoutes(fhirJson, fhirContentType)
-        authenticate("smart-access-token") {
-            conditionRoutes(conditionService, fhirJson, fhirContentType)
-            encounterRoutes(encounterService, fhirJson, fhirContentType)
-            organizationRoutes(organizationService, fhirJson, fhirContentType)
-            patientRoutes(patientService, fhirJson, fhirContentType)
-            pracitionerRoutes(practitionerService, fhirJson, fhirContentType)
-            practitionerRoleRoutes(practitionerRoleService, fhirJson, fhirContentType)
-            documentReferenceRoutes(documentReferenceService, fhirJson, fhirContentType)
-        }
+    capabilityStatementRoutes(fhirJson, fhirContentType)
+    authenticate("smart-access-token") {
+        conditionRoutes(conditionService, fhirJson, fhirContentType)
+        encounterRoutes(encounterService, fhirJson, fhirContentType)
+        observationRoutes(
+            observationService,
+            fhirJson,
+            fhirContentType,
+            environment.smart.fhirServerUrl,
+        )
+        organizationRoutes(organizationService, fhirJson, fhirContentType)
+        patientRoutes(patientService, fhirJson, fhirContentType)
+        pracitionerRoutes(practitionerService, fhirJson, fhirContentType)
+        practitionerRoleRoutes(practitionerRoleService, fhirJson, fhirContentType)
+        documentReferenceRoutes(
+            documentReferenceService,
+            fhirJson,
+            fhirContentType,
+            environment.smart.fhirServerUrl,
+        )
     }
 }
 
@@ -58,6 +77,8 @@ fun ApplicationCall.encounterId(): EncounterId = EncounterId(uuidParameter("enco
 
 fun ApplicationCall.documentReferenceId(): DocumentReferenceId =
     DocumentReferenceId(uuidParameter("documentreferenceId"))
+
+fun ApplicationCall.observationId(): ObservationId = ObservationId(uuidParameter("observation"))
 
 fun ApplicationCall.organizationId(): OrganizationId =
     OrganizationId(uuidParameter("organizationId"))
@@ -96,6 +117,10 @@ private fun ApplicationCall.stringParameter(name: String): String {
  */
 private fun ApplicationCall.uuidReferenceParameter(name: String): Uuid {
     val value = parameters[name] ?: throw BadRequestException("Mangler parameteren '$name'")
+    return parseUuidReference(value, name)
+}
+
+private fun parseUuidReference(value: String, name: String): Uuid {
     val id = value.substringAfterLast('/')
 
     return try {
@@ -103,4 +128,22 @@ private fun ApplicationCall.uuidReferenceParameter(name: String): Uuid {
     } catch (exception: IllegalArgumentException) {
         throw BadRequestException("Parameteren '$name' er ikke en gyldig UUID", exception)
     }
+}
+
+/**
+ * Resolves the patient compartment for a search accepting either `subject` or `patient` as the FHIR
+ * R4 reference parameter, since both are used interchangeably across SMART clients. Both may be
+ * given together only if they agree on the same patient; disagreement is rejected explicitly rather
+ * than silently preferring one of them.
+ */
+fun ApplicationCall.patientOrSubjectReferenceInputId(): PatientInputId {
+    val subjectId = parameters["subject"]?.let { parseUuidReference(it, "subject") }
+    val patientId = parameters["patient"]?.let { parseUuidReference(it, "patient") }
+    if (subjectId == null && patientId == null) {
+        throw BadRequestException("Mangler parameteren 'subject' eller 'patient'")
+    }
+    if (subjectId != null && patientId != null && subjectId != patientId) {
+        throw BadRequestException("Parameterne 'subject' og 'patient' peker på ulike pasienter")
+    }
+    return PatientInputId(subjectId ?: patientId!!)
 }

@@ -45,12 +45,29 @@ class ClientAssertionVerifierTest {
             allowedScopes =
                 parseRegisteredScopes(listOf("openid", "fhirUser", "launch", "patient/*.cruds")),
         )
+    private val inlineClient = client.copy(jwksUri = null, inlineJwkSet = JWKSet(key.toPublicJWK()))
     private val jtiStore = mockk<ValkeyService>()
     private val verifier =
         ClientAssertionVerifier(
             env = simpleTestEnvironment,
             jtiStore = jtiStore,
             jwkSetProvider = { ImmutableJWKSet(JWKSet(key.toPublicJWK())) },
+        )
+
+    /**
+     * Proves an inline-registered client is verified purely from its registered [JWKSet], never via
+     * [ClientJwksSetProvider.sourceFor]: a deployed `nav-epj` must never reach a participant's
+     * localhost `jwksUri`.
+     */
+    private val inlineVerifier =
+        ClientAssertionVerifier(
+            env = simpleTestEnvironment,
+            jtiStore = jtiStore,
+            jwkSetProvider = {
+                throw AssertionError(
+                    "must not fetch a remote jwks_uri for an inline-registered client"
+                )
+            },
         )
 
     private fun assertion(
@@ -190,6 +207,23 @@ class ClientAssertionVerifierTest {
     fun `reused jti is rejected`() = runTest {
         coEvery { jtiStore.setIfAbsent(any(), any(), any()) } returns false
         val result = verifier.verify(client, paramsWith(assertion(jti = "reused_jti")))
+        assertEquals("invalid_client", result?.code)
+    }
+
+    @Test
+    fun `inline jwkSet client is verified without any network jwks fetch`() = runTest {
+        coEvery { jtiStore.setIfAbsent(any(), any(), any()) } returns true
+        val result = inlineVerifier.verify(inlineClient, paramsWith(assertion()))
+        assertNull(result)
+    }
+
+    @Test
+    fun `inline jwkSet client rejects any jku header`() = runTest {
+        val result =
+            inlineVerifier.verify(
+                inlineClient,
+                paramsWith(assertion(jku = "https://client.example.com/jwks")),
+            )
         assertEquals("invalid_client", result?.code)
     }
 }

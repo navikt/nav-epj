@@ -4,6 +4,7 @@ import kotlin.uuid.Uuid
 import no.nav.helse.core.db.PasientHelsepersonell
 import no.nav.helse.core.db.PasientTable
 import no.nav.helse.core.db.dbQuery
+import no.nav.helse.core.utils.DuplikatPasientException
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.legekontor.Legekontor
@@ -30,9 +31,12 @@ class PasientRepository {
         patient?.toPasient(hpr)
     }
 
-    suspend fun findByFnr(fnr: String) = dbQuery {
-        logger.info("Looking up pasient by fnr")
-        val patient = PasientTable.selectAll().where { PasientTable.fnr eq fnr }.singleOrNull()
+    suspend fun findByPersonident(personident: String) = dbQuery {
+        logger.info("Looking up pasient by personident")
+        val patient =
+            PasientTable.selectAll()
+                .where { PasientTable.personident eq personident }
+                .singleOrNull()
         val patientId = patient?.get(PasientTable.id) ?: return@dbQuery null
 
         val hpr =
@@ -74,14 +78,21 @@ class PasientRepository {
     }
 
     suspend fun insert(pasient: Pasient) = dbQuery {
-        logger.info("Inserting pasient: ${pasient}")
+        logger.info("Inserting pasient with id: ${pasient.id.value}")
 
-        PasientTable.insertIgnore {
+        val insertStatement = PasientTable.insertIgnore {
             it[id] = pasient.id.value
             it[legekontorId] = pasient.legekontorId.value
             it[fornavn] = pasient.fornavn
             it[etternavn] = pasient.etternavn
-            it[fnr] = pasient.fnr
+            it[personident] = pasient.personident
+            it[personidentType] = pasient.personidentType
+            it[birthDate] = pasient.birthDate
+            it[gender] = pasient.gender
+        }
+
+        if (insertStatement.insertedCount == 0) {
+            throw DuplikatPasientException()
         }
 
         pasient.hprNumbers.forEach { it ->
@@ -100,6 +111,9 @@ class PasientRepository {
             hprNumbers = hpr,
             fornavn = this[PasientTable.fornavn],
             etternavn = this[PasientTable.etternavn],
-            fnr = this[PasientTable.fnr],
+            personident = this[PasientTable.personident],
+            personidentType = this[PasientTable.personidentType],
+            birthDate = this[PasientTable.birthDate],
+            gender = this[PasientTable.gender],
         )
 }

@@ -39,12 +39,7 @@ class OrganizationService(val legekontorService: LegekontorService) {
                     Identifier(
                         system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.101"),
                         value = com.google.fhir.model.r4.String(value = this.orgnummer),
-                    ),
-                    // TODO: delete?
-                    Identifier(
-                        system = Uri(value = "urn:oid:2.16.578.1.12.4.1.2"),
-                        value = com.google.fhir.model.r4.String(value = this.orgnummer),
-                    ),
+                    )
                 ),
             telecom =
                 listOf(

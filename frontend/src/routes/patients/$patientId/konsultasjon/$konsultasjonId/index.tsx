@@ -1,5 +1,5 @@
 import { Button, Heading, Link, Table, Textarea, UNSAFE_Combobox } from '@navikt/ds-react'
-import {createFileRoute, useNavigate} from '@tanstack/react-router'
+import {createFileRoute, useNavigate, useRouter} from '@tanstack/react-router'
 import { useEffect, useState, type MouseEvent } from 'react'
 import { epjDiagnoser } from '@data/diagnoses'
 import {getSykInnUrl} from "@utils/env.ts";
@@ -18,20 +18,25 @@ export const Route = createFileRoute(
 
 type PostKonsultasjonBody = {
     konsultasjonId: string
-    diagnoser: { kode: string, system: string, beskrivelse: string }[];
+    diagnoser: { kode: string, system: string }[];
     journalNotat: string | null;
     ferdigstill: boolean;
 }
 
 function RouteComponent() {
     const navigate = useNavigate()
+    const router = useRouter()
     const { patientId, konsultasjonId } = Route.useParams();
     const data = Route.useLoaderData();
     const konsultasjon = KonsultasjonSchema.safeParse(
         data.konsultasjon,
       );
-    const [diagnoser, setDiagnoser] = useState<{ kode: string, system: string, beskrivelse: string }[]>([])
-    const [journalnotat, setJournalnotat] = useState<string>('')
+    const [diagnoser, setDiagnoser] = useState<{ kode: string, system: string }[]>(
+        () => konsultasjon.data?.diagnoser.map((diagnose) => ({ kode: diagnose.code, system: diagnose.system })) ?? []
+    )
+    const [journalnotat, setJournalnotat] = useState<string>(
+        () => konsultasjon.data?.journalnotat.at(-1)?.journalnotat ?? ''
+    )
     const [saveError, setSaveError] = useState<string | null>(null)
 
     const [diagnoseOptions, setDiagnoseOptions] = useState<{ label: string, system: string, value: string }[]>([])
@@ -53,7 +58,7 @@ function RouteComponent() {
             if (!newOption) {
                 return
             }
-            setDiagnoser([...diagnoser, { kode: newOption.value, system: newOption.system, beskrivelse: newOption.label }])
+            setDiagnoser([...diagnoser, { kode: newOption.value, system: newOption.system }])
         } else {
             const newDiagnoser = diagnoser.filter((diagnose) => diagnose.kode != option)
             setDiagnoser(newDiagnoser)
@@ -75,6 +80,8 @@ function RouteComponent() {
         }
         if (ferdigstill && res) {
             navigate({ to: `/patients/$patientId`, params: { patientId } })
+        } else if (res) {
+            router.invalidate()
         }
     }
 
@@ -87,6 +94,7 @@ function RouteComponent() {
                         <UNSAFE_Combobox
                             label="Hvilke diagnoser har pasienten"
                             options={diagnoseOptions}
+                            selectedOptions={diagnoser.map((diagnose) => diagnose.kode)}
                             isMultiSelect
                             onToggleSelected={(option, isSelected) => handleToggleSelect(option, isSelected)}
 
@@ -109,7 +117,7 @@ function RouteComponent() {
                 <div>
                     <p>Starttidspunkt: {konsultasjon.data.startetTidspunkt}</p>
                     <p>Sluttidspunkt: {konsultasjon.data.avsluttetTidspunkt}</p>
-                    <p>Diagnoser: {konsultasjon.data.diagnoser.map(d => d.beskrivelse).join(', ')}</p>
+                    <p>Diagnoser: {konsultasjon.data.diagnoser.map(d => d.text).join(', ')}</p>
                 </div>
             )}
             <Heading size="medium" level="2">Journalnotater</Heading>

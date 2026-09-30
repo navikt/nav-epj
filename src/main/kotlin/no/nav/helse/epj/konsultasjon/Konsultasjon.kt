@@ -4,7 +4,10 @@ import java.time.LocalDateTime
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
+import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.pasient.PasientId
+import no.nav.tsm.diagnoser.Diagnose
+import no.nav.tsm.diagnoser.DiagnoseType
 
 @JvmInline value class KonsultasjonId(val value: Uuid)
 
@@ -13,6 +16,7 @@ import no.nav.helse.epj.pasient.PasientId
 data class Konsultasjon(
     val id: KonsultasjonId,
     val pasientId: PasientId,
+    val legekontorId: LegekontorId,
     val hpr: List<String>,
     val journalnotat: List<Journalnotat>,
     val diagnoser: List<Diagnose>,
@@ -29,6 +33,12 @@ data class Journalnotat(
     val journalnotat: String?,
 )
 
+data class OpprettJournalnotatRequest(
+    val pasientId: PasientId,
+    val konsultasjonId: KonsultasjonId,
+    val journalnotat: String,
+)
+
 data class OpprettKonsultasjon(
     val pasientId: PasientId,
     val hpr: List<HelsepersonellHpr>,
@@ -43,23 +53,4 @@ data class OppdaterKonsultasjonRequest(
     val ferdigstill: Boolean,
 )
 
-data class OpprettDiagnoseRequest(
-    val kode: String,
-    val system: DiagnoseSystem,
-    val beskrivelse: String,
-)
-
-@JvmInline value class DiagnoseId(val value: Uuid)
-
-data class Diagnose(
-    val id: DiagnoseId,
-    val pasientId: PasientId,
-    val kode: String,
-    val system: DiagnoseSystem,
-    val beskrivelse: String,
-)
-
-enum class DiagnoseSystem {
-    ICPC2,
-    ICD10,
-}
+data class OpprettDiagnoseRequest(val kode: String, val system: DiagnoseType)

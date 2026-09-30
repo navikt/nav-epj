@@ -19,7 +19,10 @@ export const PasientSchema = z.object({
     id: z.string(),
     fornavn: z.string(),
     etternavn: z.string(),
-    fnr: z.string(),
+    personident: z.string(),
+    personidentType: z.enum(["FNR", "DNR"]).nullable(),
+    birthDate: z.string().nullable(),
+    gender: z.enum(["FEMALE", "MALE", "OTHER", "UNKNOWN"]).nullable(),
 });
 
 export type Pasient = z.infer<typeof PasientSchema>;
@@ -27,9 +30,14 @@ export type Pasient = z.infer<typeof PasientSchema>;
 export const OpprettPasientSchema = z.object({
     fornavn: z.string().min(1, "Fornavn er påkrevd"),
     etternavn: z.string().min(1, "Etternavn er påkrevd"),
-    fnr: z
+    personident: z
         .string()
-        .regex(/^\d{11}$/, "Fødselsnummer må bestå av 11 siffer"),
+        .regex(/^\d{11}$/, "Fødselsnummer eller D-nummer må bestå av 11 siffer"),
+    personidentType: z.enum(["FNR", "DNR"], "Velg om det er fødselsnummer eller D-nummer"),
+    birthDate: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, "Fødselsdato må være en gyldig dato"),
+    gender: z.enum(["FEMALE", "MALE", "OTHER", "UNKNOWN"], "Velg kjønn"),
 });
 
 export type OpprettPasientRequest = z.infer<typeof OpprettPasientSchema>;
@@ -44,11 +52,9 @@ export const JournalnotatEntrySchema = z.object({
 export type JournalnotatEntry = z.infer<typeof JournalnotatEntrySchema>;
 
 export const DiagnoseSchema = z.object({
-    id: z.string(),
-    pasientId: z.string(),
-    kode: z.string(),
+    code: z.string(),
     system: z.string(),
-    beskrivelse: z.string(),
+    text: z.string(),
 });
 
 export const KonsultasjonSchema = z.object({

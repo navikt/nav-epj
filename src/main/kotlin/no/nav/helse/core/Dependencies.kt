@@ -10,11 +10,14 @@ import no.nav.helse.epj.konsultasjon.KonsultasjonRepository
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
 import no.nav.helse.epj.legekontor.LegekontorRepository
 import no.nav.helse.epj.legekontor.LegekontorService
+import no.nav.helse.epj.maaling.MaalingRepository
+import no.nav.helse.epj.maaling.MaalingService
 import no.nav.helse.epj.pasient.PasientRepository
 import no.nav.helse.epj.pasient.PasientService
 import no.nav.helse.fhir.condition.ConditionService
 import no.nav.helse.fhir.documentreference.DocumentReferenceService
 import no.nav.helse.fhir.encounter.EncounterService
+import no.nav.helse.fhir.observation.ObservationService
 import no.nav.helse.fhir.organization.OrganizationService
 import no.nav.helse.fhir.patient.PatientService
 import no.nav.helse.fhir.practitioner.PractitionerService
@@ -43,15 +46,18 @@ fun Application.configureDependencies() {
         provide(HelsepersonellRepository::class)
         provide(KonsultasjonRepository::class)
         provide(LegekontorRepository::class)
+        provide(MaalingRepository::class)
 
         provide(HelsepersonellService::class)
         provide(KonsultasjonService::class)
         provide(PasientService::class)
         provide(LegekontorService::class)
+        provide(MaalingService::class)
 
         provide(ConditionService::class)
         provide(DocumentReferenceService::class)
         provide(EncounterService::class)
+        provide(ObservationService::class)
         provide(OrganizationService::class)
         provide(PatientService::class)
         provide(PractitionerService::class)

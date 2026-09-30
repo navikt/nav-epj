@@ -1,12 +1,15 @@
 package no.nav.helse.epj.konsultasjon
 
 import java.time.LocalDateTime
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.pasient.PasientId
+import no.nav.tsm.diagnoser.Diagnose
 
 class KonsultasjonService(private val konsultasjonRepository: KonsultasjonRepository) {
     val log = logger()
@@ -17,6 +20,10 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
 
     suspend fun getAktivKonsultasjon(pasientId: PasientId): Konsultasjon? {
         return konsultasjonRepository.findActiveByPasientId(pasientId)
+    }
+
+    suspend fun getAktivKonsultasjon(pasientId: PasientId, hpr: HelsepersonellHpr): Konsultasjon? {
+        return konsultasjonRepository.findActiveByPasientIdAndHpr(pasientId, hpr)
     }
 
     suspend fun getKonsultasjon(konsultasjonId: KonsultasjonId): Konsultasjon {
@@ -42,6 +49,19 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
         return insertedRows == 1
     }
 
+    suspend fun getJournalnotater(
+        pasientId: PasientId,
+        konsultasjonId: KonsultasjonId?,
+    ): List<Journalnotat> {
+        return konsultasjonRepository.listJournalnotat(pasientId, konsultasjonId)
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    suspend fun opprettJournalnotat(request: OpprettJournalnotatRequest): Journalnotat {
+        val id = JournalnotatId(Uuid.generateV4())
+        return konsultasjonRepository.opprettJournalnotat(id, request)
+    }
+
     suspend fun createKonsultasjon(opprettKonsultasjon: OpprettKonsultasjon): Konsultasjon {
         val createdId = konsultasjonRepository.insert(opprettKonsultasjon)
         val createdKonsultasjon =
@@ -60,7 +80,7 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
         pasientId: PasientId,
         hpr: HelsepersonellHpr,
     ): Konsultasjon {
-        val aktivKonsultasjon = getAktivKonsultasjon(pasientId)
+        val aktivKonsultasjon = getAktivKonsultasjon(pasientId, hpr)
         if (aktivKonsultasjon != null) return aktivKonsultasjon
         val opprettKonsultasjon =
             OpprettKonsultasjon(

@@ -20,7 +20,7 @@ function PatientLayout() {
 
   return (
     <div>
-      <div className="flex justify-between pb-4"><span>Navn {`${patient.data?.fornavn} ${patient.data?.etternavn}`}, fnr: {patient.data?.fnr}</span><span><Link className="aksel-link" to="/patients" >Tilbake til pasientoversikt</Link></span></div>
+      <div className="flex justify-between pb-4"><span>Navn {`${patient.data?.fornavn} ${patient.data?.etternavn}`}, Fødselsnummer eller D-nummer: {patient.data?.personident}</span><span><Link className="aksel-link" to="/patients" >Tilbake til pasientoversikt</Link></span></div>
       <Outlet />
     </div>
   )

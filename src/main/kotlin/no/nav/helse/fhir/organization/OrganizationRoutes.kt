@@ -15,8 +15,8 @@ fun Route.organizationRoutes(
     val log = logger()
     route("/fhir") {
         get("/Organization/{organizationId}") {
-            // TODO: add scope check
-            // call.requireFhirScope("fhiruser", Interaction.READ)
+            // TODO: no scope check because syk-inn reads Organization without an Organization
+            // scope; require patient/Organization.r once it requests one.
             val organizationId = call.organizationId()
             val organization =
                 organizationService.getOrganization(organizationId)

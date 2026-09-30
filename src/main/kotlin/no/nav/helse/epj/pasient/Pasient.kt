@@ -1,5 +1,6 @@
 package no.nav.helse.epj.pasient
 
+import java.time.LocalDate
 import kotlin.uuid.Uuid
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.legekontor.LegekontorId
@@ -12,7 +13,29 @@ data class Pasient(
     val hprNumbers: List<HelsepersonellHpr>,
     val fornavn: String,
     val etternavn: String,
-    val fnr: String,
+    val personident: String,
+    val personidentType: PersonidentType? = null,
+    val birthDate: LocalDate? = null,
+    val gender: AdministrativeGender? = null,
 )
 
-data class OpprettPasientRequest(val fornavn: String, val etternavn: String, val fnr: String)
+enum class PersonidentType {
+    FNR,
+    DNR,
+}
+
+enum class AdministrativeGender {
+    FEMALE,
+    MALE,
+    OTHER,
+    UNKNOWN,
+}
+
+data class OpprettPasientRequest(
+    val fornavn: String,
+    val etternavn: String,
+    val personident: String,
+    val personidentType: PersonidentType,
+    val birthDate: LocalDate,
+    val gender: AdministrativeGender,
+)

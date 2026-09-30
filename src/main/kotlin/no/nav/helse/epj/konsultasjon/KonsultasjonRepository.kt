@@ -2,23 +2,29 @@ package no.nav.helse.epj.konsultasjon
 
 import java.time.LocalDateTime
 import kotlin.uuid.Uuid
-import no.nav.helse.core.db.DiagnoseTable
-import no.nav.helse.core.db.DiagnoseTable.konsultasjonId
-import no.nav.helse.core.db.DiagnoseTable.patientId
 import no.nav.helse.core.db.JournalnotatTable
+import no.nav.helse.core.db.KonsultasjonDiagnosekodeTable
 import no.nav.helse.core.db.KonsultasjonHelsepersonell
 import no.nav.helse.core.db.KonsultasjonTable
+import no.nav.helse.core.db.PasientTable
 import no.nav.helse.core.db.dbQuery
+import no.nav.helse.core.utils.DuplikatJournalnotatException
+import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonStatus
+import no.nav.helse.core.utils.KonsultasjonTilhorerAnnenPasientException
 import no.nav.helse.core.utils.UgyldigDiagnoseException
 import no.nav.helse.core.utils.logger
+import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
+import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.pasient.PasientId
+import no.nav.tsm.diagnoser.Diagnose
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.isNull
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.insertReturning
@@ -54,32 +60,53 @@ class KonsultasjonRepository {
                     valueTransform = { it.toJournalnotat() },
                 )
 
-        val diagnoser =
-            DiagnoseTable.selectAll()
-                .where { konsultasjonId inList konsultasjonIder }
-                .groupBy(keySelector = { it[konsultasjonId] }, valueTransform = { it.toDiagnose() })
+        val diagnoserByKonsultasjonId =
+            KonsultasjonDiagnosekodeTable.selectAll()
+                .where { KonsultasjonDiagnosekodeTable.konsultasjonId inList konsultasjonIder }
+                .groupBy(
+                    keySelector = { it[KonsultasjonDiagnosekodeTable.konsultasjonId] },
+                    valueTransform = { it.toDiagnose() },
+                )
 
         konsultasjoner.map { row ->
             val konsultasjonId = row[KonsultasjonTable.id]
             val hprListe = hprByKonsultasjonId[konsultasjonId].orEmpty()
             val journalnotatListe = journalnotatByKonsultasjonId[konsultasjonId].orEmpty()
-            val diagnoseListe = diagnoser[konsultasjonId].orEmpty()
+            val diagnoseListe = diagnoserByKonsultasjonId[konsultasjonId].orEmpty()
             row.toKonsultasjonWithHprAndJournalnotat(hprListe, journalnotatListe, diagnoseListe)
         }
     }
 
-    suspend fun listDiagnoser(id: PasientId) = dbQuery {
-        DiagnoseTable.selectAll().where { (patientId eq id.value) }.map { it.toDiagnose() }
+    suspend fun listDiagnoser(id: PasientId): List<Diagnose> = dbQuery {
+        val konsultasjonIder =
+            KonsultasjonTable.select(KonsultasjonTable.id)
+                .where { KonsultasjonTable.pasientId eq id.value }
+                .map { it[KonsultasjonTable.id] }
+
+        if (konsultasjonIder.isEmpty()) {
+            return@dbQuery emptyList()
+        }
+
+        KonsultasjonDiagnosekodeTable.selectAll()
+            .where { KonsultasjonDiagnosekodeTable.konsultasjonId inList konsultasjonIder }
+            .map { it.toDiagnose() }
     }
 
-    suspend fun listDiagnoser(id: KonsultasjonId) = dbQuery {
-        DiagnoseTable.selectAll().where { (konsultasjonId eq id.value) }.map { it.toDiagnose() }
+    suspend fun listDiagnoser(id: KonsultasjonId): List<Diagnose> = dbQuery {
+        KonsultasjonDiagnosekodeTable.selectAll()
+            .where { KonsultasjonDiagnosekodeTable.konsultasjonId eq id.value }
+            .map { it.toDiagnose() }
     }
 
     suspend fun insert(opprettKonsultasjon: OpprettKonsultasjon) = dbQuery {
+        val legekontorId =
+            PasientTable.select(PasientTable.legekontorId)
+                .where { PasientTable.id eq opprettKonsultasjon.pasientId.value }
+                .single()[PasientTable.legekontorId]
         val konsultasjon =
             KonsultasjonTable.insertReturning {
                     it[pasientId] = opprettKonsultasjon.pasientId.value
+                    it[KonsultasjonTable.legekontorId] = legekontorId
                     it[startetTidspunkt] = opprettKonsultasjon.startetTidspunkt
                     it[status] = opprettKonsultasjon.status
                 }
@@ -102,6 +129,27 @@ class KonsultasjonRepository {
                     .where {
                         (KonsultasjonTable.pasientId eq pasientUuid) and
                             KonsultasjonTable.avsluttetTidspunkt.isNull()
+                    }
+                    .orderBy(KonsultasjonTable.startetTidspunkt, SortOrder.DESC)
+                    .limit(1)
+                    .singleOrNull() ?: return@dbQuery null
+            toEpjKonsultasjon(konsultasjon)
+        }
+    }
+
+    suspend fun findActiveByPasientIdAndHpr(
+        pasientId: PasientId,
+        hpr: HelsepersonellHpr,
+    ): Konsultasjon? {
+        val pasientUuid = pasientId.value
+        return dbQuery {
+            val konsultasjon =
+                (KonsultasjonTable innerJoin KonsultasjonHelsepersonell)
+                    .selectAll()
+                    .where {
+                        (KonsultasjonTable.pasientId eq pasientUuid) and
+                            KonsultasjonTable.avsluttetTidspunkt.isNull() and
+                            (KonsultasjonHelsepersonell.hpr eq hpr.value)
                     }
                     .orderBy(KonsultasjonTable.startetTidspunkt, SortOrder.DESC)
                     .limit(1)
@@ -146,11 +194,16 @@ class KonsultasjonRepository {
 
         var updatedRows = 0
 
+        updatedRows +=
+            removeDiagnoserNotIn(
+                diagnoser = oppdaterKonsultasjon.diagnoser,
+                konsultasjonId = oppdaterKonsultasjon.konsultasjonId.value,
+            )
+
         oppdaterKonsultasjon.diagnoser.forEach { diagnose ->
             updatedRows +=
                 updateDiagnose(
                     diagnose = diagnose,
-                    patientId = pasientId.value,
                     konsultasjonId = oppdaterKonsultasjon.konsultasjonId.value,
                 )
         }
@@ -198,16 +251,45 @@ class KonsultasjonRepository {
         pasientId: PasientId,
         journalnotat: String,
     ): Int = dbQuery {
-        JournalnotatTable.insert {
-                it[JournalnotatTable.konsultasjonId] = konsultasjonId.value
-                it[JournalnotatTable.pasientId] = pasientId.value
+        val eksisterendeId =
+            JournalnotatTable.select(JournalnotatTable.id)
+                .where { JournalnotatTable.konsultasjonId eq konsultasjonId.value }
+                .limit(1)
+                .singleOrNull()
+                ?.get(JournalnotatTable.id)
+
+        if (eksisterendeId != null) {
+            JournalnotatTable.update({ JournalnotatTable.id eq eksisterendeId }) {
                 it[JournalnotatTable.journalnotat] = journalnotat
             }
-            .insertedCount
+        } else {
+            JournalnotatTable.insert {
+                    it[JournalnotatTable.konsultasjonId] = konsultasjonId.value
+                    it[JournalnotatTable.pasientId] = pasientId.value
+                    it[JournalnotatTable.journalnotat] = journalnotat
+                }
+                .insertedCount
+        }
     }
 
     suspend fun insertJournalnotat(journalnotat: Journalnotat): Int = dbQuery {
-        JournalnotatTable.upsert(onUpdateExclude = listOf(JournalnotatTable.id)) {
+        val konsultasjonPasientId =
+            KonsultasjonTable.select(KonsultasjonTable.pasientId)
+                .where { KonsultasjonTable.id eq journalnotat.konsultasjonId.value }
+                .singleOrNull()
+                ?.get(KonsultasjonTable.pasientId)
+                ?: throw KonsultasjonNotFoundException(journalnotat.konsultasjonId)
+        if (konsultasjonPasientId != journalnotat.pasientId.value) {
+            throw KonsultasjonTilhorerAnnenPasientException(
+                journalnotat.konsultasjonId,
+                journalnotat.pasientId,
+            )
+        }
+
+        JournalnotatTable.upsert(
+                onUpdateExclude = listOf(JournalnotatTable.id),
+                where = { JournalnotatTable.konsultasjonId eq journalnotat.konsultasjonId.value },
+            ) {
                 it[JournalnotatTable.id] = journalnotat.id.value
                 it[JournalnotatTable.konsultasjonId] = journalnotat.konsultasjonId.value
                 it[JournalnotatTable.pasientId] = journalnotat.pasientId.value
@@ -216,25 +298,53 @@ class KonsultasjonRepository {
             .insertedCount
     }
 
-    suspend fun updateDiagnose(
-        diagnose: OpprettDiagnoseRequest,
-        patientId: Uuid,
+    suspend fun updateDiagnose(diagnose: OpprettDiagnoseRequest, konsultasjonId: Uuid): Int =
+        dbQuery {
+            val kodeverkDiagnose =
+                Diagnose.from(diagnose.system, diagnose.kode)
+                    ?: throw UgyldigDiagnoseException(diagnose.kode, diagnose.system.toString())
+
+            KonsultasjonDiagnosekodeTable.insertIgnore {
+                    it[KonsultasjonDiagnosekodeTable.konsultasjonId] = konsultasjonId
+                    it[diagnosekode] = kodeverkDiagnose.code
+                    it[diagnosesystem] = kodeverkDiagnose.system.toString()
+                }
+                .insertedCount
+        }
+
+    private fun removeDiagnoserNotIn(
+        diagnoser: List<OpprettDiagnoseRequest>,
         konsultasjonId: Uuid,
-    ): Int = dbQuery {
-        val system = diagnose.system.toString()
+    ): Int {
+        val onskedeNokler =
+            diagnoser
+                .map { diagnose ->
+                    Diagnose.from(diagnose.system, diagnose.kode)
+                        ?: throw UgyldigDiagnoseException(diagnose.kode, diagnose.system.toString())
+                }
+                .map { it.system.toString() to it.code }
+                .toSet()
 
-        val kodeverkDiagnose =
-            no.nav.tsm.diagnoser.Diagnose.from(diagnose.system.toString(), diagnose.kode)
-                ?: throw UgyldigDiagnoseException(diagnose.kode, diagnose.system.toString())
+        val eksisterendeNokler =
+            KonsultasjonDiagnosekodeTable.select(
+                    KonsultasjonDiagnosekodeTable.diagnosesystem,
+                    KonsultasjonDiagnosekodeTable.diagnosekode,
+                )
+                .where { KonsultasjonDiagnosekodeTable.konsultasjonId eq konsultasjonId }
+                .map {
+                    it[KonsultasjonDiagnosekodeTable.diagnosesystem] to
+                        it[KonsultasjonDiagnosekodeTable.diagnosekode]
+                }
 
-        DiagnoseTable.insertIgnore {
-                it[DiagnoseTable.konsultasjonId] = konsultasjonId
-                it[DiagnoseTable.patientId] = patientId
-                it[diagnosekode] = diagnose.kode
-                it[diagnosesystem] = system
-                it[beskrivelse] = kodeverkDiagnose.text
+        return eksisterendeNokler
+            .filterNot { it in onskedeNokler }
+            .sumOf { (system, kode) ->
+                KonsultasjonDiagnosekodeTable.deleteWhere {
+                    (KonsultasjonDiagnosekodeTable.konsultasjonId eq konsultasjonId) and
+                        (KonsultasjonDiagnosekodeTable.diagnosesystem eq system) and
+                        (KonsultasjonDiagnosekodeTable.diagnosekode eq kode)
+                }
             }
-            .insertedCount
     }
 
     private fun toEpjKonsultasjon(konsultasjon: ResultRow): Konsultasjon {
@@ -251,8 +361,11 @@ class KonsultasjonRepository {
                 .map { it.toJournalnotat() }
 
         val diagnoseListe =
-            DiagnoseTable.selectAll()
-                .where { (konsultasjonId eq konsultasjon[KonsultasjonTable.id]) }
+            KonsultasjonDiagnosekodeTable.selectAll()
+                .where {
+                    (KonsultasjonDiagnosekodeTable.konsultasjonId eq
+                        konsultasjon[KonsultasjonTable.id])
+                }
                 .map { it.toDiagnose() }
 
         return konsultasjon.toKonsultasjonWithHprAndJournalnotat(
@@ -267,6 +380,61 @@ class KonsultasjonRepository {
             .where { (JournalnotatTable.id eq journalnotatId.value) }
             .singleOrNull()
             ?.toJournalnotat()
+    }
+
+    suspend fun listJournalnotat(
+        pasientId: PasientId,
+        konsultasjonId: KonsultasjonId?,
+    ): List<Journalnotat> = dbQuery {
+        JournalnotatTable.selectAll()
+            .where {
+                if (konsultasjonId != null) {
+                    (JournalnotatTable.pasientId eq pasientId.value) and
+                        (JournalnotatTable.konsultasjonId eq konsultasjonId.value)
+                } else {
+                    JournalnotatTable.pasientId eq pasientId.value
+                }
+            }
+            .map { it.toJournalnotat() }
+    }
+
+    suspend fun opprettJournalnotat(
+        id: JournalnotatId,
+        request: OpprettJournalnotatRequest,
+    ): Journalnotat = dbQuery {
+        val konsultasjonPasientId =
+            KonsultasjonTable.select(KonsultasjonTable.pasientId)
+                .where { KonsultasjonTable.id eq request.konsultasjonId.value }
+                .singleOrNull()
+                ?.get(KonsultasjonTable.pasientId)
+                ?: throw KonsultasjonNotFoundException(request.konsultasjonId)
+
+        if (konsultasjonPasientId != request.pasientId.value) {
+            throw KonsultasjonTilhorerAnnenPasientException(
+                request.konsultasjonId,
+                request.pasientId,
+            )
+        }
+
+        val insertedCount =
+            JournalnotatTable.insertIgnore {
+                    it[JournalnotatTable.id] = id.value
+                    it[JournalnotatTable.konsultasjonId] = request.konsultasjonId.value
+                    it[JournalnotatTable.pasientId] = request.pasientId.value
+                    it[JournalnotatTable.journalnotat] = request.journalnotat
+                }
+                .insertedCount
+
+        if (insertedCount == 0) {
+            throw DuplikatJournalnotatException()
+        }
+
+        Journalnotat(
+            id = id,
+            konsultasjonId = request.konsultasjonId,
+            pasientId = request.pasientId,
+            journalnotat = request.journalnotat,
+        )
     }
 
     fun ResultRow.toJournalnotat(): Journalnotat =
@@ -285,6 +453,7 @@ class KonsultasjonRepository {
         Konsultasjon(
             id = KonsultasjonId(this[KonsultasjonTable.id]),
             pasientId = PasientId(this[KonsultasjonTable.pasientId]),
+            legekontorId = LegekontorId(this[KonsultasjonTable.legekontorId]),
             hpr = hprListe,
             startetTidspunkt = this[KonsultasjonTable.startetTidspunkt],
             avsluttetTidspunkt = this[KonsultasjonTable.avsluttetTidspunkt],
@@ -294,12 +463,9 @@ class KonsultasjonRepository {
             diagnoser = diagnoseListe,
         )
 
-    fun ResultRow.toDiagnose() =
-        Diagnose(
-            id = DiagnoseId(this[DiagnoseTable.id]),
-            pasientId = PasientId(this[patientId]),
-            kode = this[DiagnoseTable.diagnosekode],
-            system = DiagnoseSystem.valueOf(this[DiagnoseTable.diagnosesystem]),
-            beskrivelse = this[DiagnoseTable.beskrivelse],
-        )
+    fun ResultRow.toDiagnose(): Diagnose {
+        val system = this[KonsultasjonDiagnosekodeTable.diagnosesystem]
+        val kode = this[KonsultasjonDiagnosekodeTable.diagnosekode]
+        return Diagnose.from(system, kode) ?: throw UgyldigDiagnoseException(kode, system)
+    }
 }

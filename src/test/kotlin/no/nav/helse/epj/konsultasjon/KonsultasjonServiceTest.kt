@@ -14,7 +14,10 @@ import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
+import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.pasient.PasientId
+import no.nav.tsm.diagnoser.Diagnose
+import no.nav.tsm.diagnoser.DiagnoseType
 import org.junit.Test
 
 class KonsultasjonServiceTest {
@@ -31,6 +34,7 @@ class KonsultasjonServiceTest {
         Konsultasjon(
             id = id,
             pasientId = pasientId,
+            legekontorId = LegekontorId(Uuid.generateV4()),
             hpr = emptyList(),
             journalnotat = emptyList(),
             diagnoser = emptyList(),
@@ -66,12 +70,12 @@ class KonsultasjonServiceTest {
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `getOrCreateKonsultasjon returns the active konsultasjon without creating a new one`() =
+    fun `getOrCreateKonsultasjon returns the same doctor's active konsultasjon without creating a new one`() =
         runTest {
             val pasientId = PasientId(Uuid.generateV4())
             val hpr = HelsepersonellHpr("123")
             val aktivKonsultasjon = konsultasjon(pasientId = pasientId)
-            coEvery { konsultasjonRepository.findActiveByPasientId(pasientId) } returns
+            coEvery { konsultasjonRepository.findActiveByPasientIdAndHpr(pasientId, hpr) } returns
                 aktivKonsultasjon
 
             val resultat = konsultasjonService.getOrCreateKonsultasjon(pasientId, hpr)
@@ -88,7 +92,7 @@ class KonsultasjonServiceTest {
         val opprettetId = KonsultasjonId(Uuid.generateV4())
         val opprettetKonsultasjon = konsultasjon(id = opprettetId, pasientId = pasientId)
 
-        coEvery { konsultasjonRepository.findActiveByPasientId(pasientId) } returns null
+        coEvery { konsultasjonRepository.findActiveByPasientIdAndHpr(pasientId, hpr) } returns null
         coEvery { konsultasjonRepository.insert(any()) } returns opprettetId
         coEvery { konsultasjonRepository.findByKonsultasjonId(opprettetId) } returns
             opprettetKonsultasjon
@@ -98,6 +102,28 @@ class KonsultasjonServiceTest {
         assertSame(opprettetKonsultasjon, resultat)
         coVerify(exactly = 1) { konsultasjonRepository.insert(any()) }
     }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `getOrCreateKonsultasjon creates a new konsultasjon for a different doctor even when one is active`() =
+        runTest {
+            val pasientId = PasientId(Uuid.generateV4())
+            val annenLegeHpr = HelsepersonellHpr("456")
+            val opprettetId = KonsultasjonId(Uuid.generateV4())
+            val opprettetKonsultasjon = konsultasjon(id = opprettetId, pasientId = pasientId)
+
+            coEvery {
+                konsultasjonRepository.findActiveByPasientIdAndHpr(pasientId, annenLegeHpr)
+            } returns null
+            coEvery { konsultasjonRepository.insert(any()) } returns opprettetId
+            coEvery { konsultasjonRepository.findByKonsultasjonId(opprettetId) } returns
+                opprettetKonsultasjon
+
+            val resultat = konsultasjonService.getOrCreateKonsultasjon(pasientId, annenLegeHpr)
+
+            assertSame(opprettetKonsultasjon, resultat)
+            coVerify(exactly = 1) { konsultasjonRepository.insert(any()) }
+        }
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
@@ -159,6 +185,18 @@ class KonsultasjonServiceTest {
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
+    fun `getDiagnoser by konsultasjonId returns diagnoser resolved from the katalog`() = runTest {
+        val konsultasjonId = KonsultasjonId(Uuid.generateV4())
+        val diagnose = Diagnose(system = DiagnoseType.ICPC2, code = "A01", text = "Diagnose")
+        coEvery { konsultasjonRepository.listDiagnoser(konsultasjonId) } returns listOf(diagnose)
+
+        val resultat = konsultasjonService.getDiagnoser(konsultasjonId)
+
+        assertEquals(listOf(diagnose), resultat)
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
     fun `createJournalnotat returns true when exactly one row is inserted`() = runTest {
         val journalnotat =
             Journalnotat(
@@ -186,4 +224,54 @@ class KonsultasjonServiceTest {
 
         assertEquals(false, konsultasjonService.createJournalnotat(journalnotat))
     }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `opprettJournalnotat assigns a server-generated id and delegates to the repository`() =
+        runTest {
+            val request =
+                OpprettJournalnotatRequest(
+                    pasientId = PasientId(Uuid.generateV4()),
+                    konsultasjonId = KonsultasjonId(Uuid.generateV4()),
+                    journalnotat = "notat",
+                )
+            val slot = mutableListOf<JournalnotatId>()
+            coEvery { konsultasjonRepository.opprettJournalnotat(capture(slot), request) } answers
+                {
+                    Journalnotat(
+                        id = slot.single(),
+                        konsultasjonId = request.konsultasjonId,
+                        pasientId = request.pasientId,
+                        journalnotat = request.journalnotat,
+                    )
+                }
+
+            val resultat = konsultasjonService.opprettJournalnotat(request)
+
+            assertEquals(slot.single(), resultat.id)
+            assertEquals(request.pasientId, resultat.pasientId)
+            assertEquals(request.konsultasjonId, resultat.konsultasjonId)
+            assertEquals(request.journalnotat, resultat.journalnotat)
+        }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `getJournalnotater delegates to the repository with the given patient and encounter filter`() =
+        runTest {
+            val pasientId = PasientId(Uuid.generateV4())
+            val konsultasjonId = KonsultasjonId(Uuid.generateV4())
+            val journalnotat =
+                Journalnotat(
+                    id = JournalnotatId(Uuid.generateV4()),
+                    konsultasjonId = konsultasjonId,
+                    pasientId = pasientId,
+                    journalnotat = "notat",
+                )
+            coEvery { konsultasjonRepository.listJournalnotat(pasientId, konsultasjonId) } returns
+                listOf(journalnotat)
+
+            val resultat = konsultasjonService.getJournalnotater(pasientId, konsultasjonId)
+
+            assertEquals(listOf(journalnotat), resultat)
+        }
 }

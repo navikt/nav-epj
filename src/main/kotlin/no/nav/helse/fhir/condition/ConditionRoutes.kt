@@ -32,7 +32,14 @@ fun Route.conditionRoutes(
                             Interaction.SEARCH,
                             id.value.toString(),
                         )
-                        conditionService.getConditionsByPatientId(id)
+                        if (encounterId != null) {
+                            conditionService.getConditionsByPatientIdAndEncounterId(
+                                id,
+                                call.encounterReferenceId(),
+                            )
+                        } else {
+                            conditionService.getConditionsByPatientId(id)
+                        }
                     }
                     encounterId != null -> {
                         val bundle =

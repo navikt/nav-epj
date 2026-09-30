@@ -21,12 +21,48 @@ class SmartDiscoveryDocumentTest {
 
         val doc = jacksonObjectMapper().readValue<SmartDiscoveryDocument>(response.bodyAsText())
 
-        assertTrue("private_key_jwt" in doc.tokenEndpointAuthMethodsSupported)
+        assertEquals(
+            listOf("none", "client_secret_basic", "private_key_jwt"),
+            doc.tokenEndpointAuthMethodsSupported,
+        )
+        assertEquals(listOf("authorization_code"), doc.grantTypesSupported)
         assertTrue("permission-v1" in doc.capabilities)
         assertTrue("permission-v2" in doc.capabilities)
         assertTrue("permission-user" in doc.capabilities)
         assertTrue("permission-offline" in doc.capabilities)
         assertTrue("context-ehr-encounter" in doc.capabilities)
         assertEquals(listOf("S256"), doc.codeChallengeMethodsSupported)
+    }
+
+    @Test
+    fun `discovery does not advertise system scopes before client_credentials exists`() =
+        testApplication {
+            application { configureTestSmartDependencies() }
+            val response = client.get("/fhir/.well-known/smart-configuration")
+
+            val doc = jacksonObjectMapper().readValue<SmartDiscoveryDocument>(response.bodyAsText())
+            assertTrue(doc.scopesSupported.none { it.startsWith("system/") })
+            assertTrue("client_credentials" !in doc.grantTypesSupported)
+        }
+
+    @Test
+    fun `discovery does not advertise unimplemented registration or management endpoints`() =
+        testApplication {
+            application { configureTestSmartDependencies() }
+            val response = client.get("/fhir/.well-known/smart-configuration")
+
+            val body = response.bodyAsText()
+            assertTrue("registration_endpoint" !in body)
+            assertTrue("management_endpoint" !in body)
+            assertTrue("revocation_endpoint" !in body)
+        }
+
+    @Test
+    fun `discovery advertises the implemented introspection endpoint`() = testApplication {
+        application { configureTestSmartDependencies() }
+        val response = client.get("/fhir/.well-known/smart-configuration")
+
+        val doc = jacksonObjectMapper().readValue<SmartDiscoveryDocument>(response.bodyAsText())
+        assertEquals("${doc.issuer}/introspect", doc.introspectionEndpoint)
     }
 }

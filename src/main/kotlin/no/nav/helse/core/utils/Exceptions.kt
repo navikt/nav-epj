@@ -25,3 +25,19 @@ class KonsultasjonNotFoundForPatientException(pasientId: PasientId) :
 
 class UgyldigDiagnoseException(kode: String, system: String) :
     RuntimeException("Fant ikke diagnosekode=$kode i kodeverk=$system")
+
+class UgyldigPersonidentException(message: String) : RuntimeException(message)
+
+class DuplikatPasientException : RuntimeException("Pasienten finnes allerede")
+
+class DuplikatMaalingException : RuntimeException("Målingen finnes allerede")
+
+class DuplikatJournalnotatException : RuntimeException("Journalnotatet finnes allerede")
+
+class KonsultasjonTilhorerAnnenPasientException(
+    konsultasjonId: KonsultasjonId,
+    pasientId: PasientId,
+) :
+    RuntimeException(
+        "Konsultasjon med id=${konsultasjonId.value} tilhører ikke pasient med id=${pasientId.value}"
+    )

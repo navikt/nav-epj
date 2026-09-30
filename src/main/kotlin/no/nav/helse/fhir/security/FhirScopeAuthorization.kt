@@ -51,14 +51,22 @@ fun ApplicationCall.requireFhirScopeOrFhirUserSelf(
     return principal
 }
 
+fun SmartPrincipal.permitsPatient(
+    resourceType: String,
+    interaction: Interaction,
+    patientId: String?,
+): Boolean {
+    val matches = matchingScopes(resourceType, interaction)
+    val patientBound = matches.isNotEmpty() && matches.all { it.context == ScopeContext.PATIENT }
+    return !patientBound || patientId == patient
+}
+
 fun SmartPrincipal.requirePatientMatch(
     resourceType: String,
     interaction: Interaction,
     patientId: String?,
 ) {
-    val matches = matchingScopes(resourceType, interaction)
-    val patientBound = matches.isNotEmpty() && matches.all { it.context == ScopeContext.PATIENT }
-    if (patientBound && patientId != patient) {
+    if (!permitsPatient(resourceType, interaction, patientId)) {
         throw PatientMismatchException(resourceType)
     }
 }
