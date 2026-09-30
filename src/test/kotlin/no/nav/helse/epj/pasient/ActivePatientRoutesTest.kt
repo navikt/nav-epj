@@ -58,7 +58,10 @@ class ActivePatientRoutesTest : WithValkey() {
             }
             routing {
                 authenticate("wonderwall-helseid") {
-                    activePatientRoutes(pasientService, valkeyService)
+                    activePatientRoutes(
+                        ActivePatientService(pasientService, valkeyService),
+                        valkeyService,
+                    )
                 }
             }
         }
@@ -178,6 +181,18 @@ class ActivePatientRoutesTest : WithValkey() {
         val response = put("not-a-uuid")
 
         assertEquals(HttpStatusCode.NotFound, response.status)
+        assertNull(valkeyService.getActivePatient(HPR))
+    }
+
+    @Test
+    fun `PUT with a malformed body returns 400`() = testApp {
+        val response =
+            put("/api/active-patient") {
+                contentType(ContentType.Application.Json)
+                setBody("{not json")
+            }
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
         assertNull(valkeyService.getActivePatient(HPR))
     }
 }
