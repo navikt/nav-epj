@@ -75,3 +75,38 @@ export const KonsultasjonSchema = z.object({
 export type Konsultasjon = z.infer<typeof KonsultasjonSchema>;
 
 export type Diagnose = z.infer<typeof DiagnoseSchema>;
+
+export const LaunchModeSchema = z.enum(["iframe", "tab", "ask"]);
+
+export type LaunchMode = z.infer<typeof LaunchModeSchema>;
+
+export const AppSchema = z.object({
+    clientId: z.string(),
+    navn: z.string(),
+    beskrivelse: z.string().nullish(),
+    ikon: z.string(),
+    launchMode: LaunchModeSchema,
+    launchUri: z.string().nullable(),
+    tokenEndpointAuthMethod: z.string().nullish(),
+    jwksUri: z.string().nullish(),
+    redirectUris: z.array(z.string()),
+    scopes: z.array(z.string()),
+});
+
+export type App = z.infer<typeof AppSchema>;
+
+export const LaunchResponseSchema = z.object({
+    launchUrl: z.string(),
+});
+
+export const LaunchErrorCodeSchema = z.enum([
+    "NO_ACTIVE_PATIENT",
+    "NO_ACTIVE_ENCOUNTER",
+    "UNKNOWN_APP",
+]);
+
+export const LaunchErrorSchema = z.object({
+    code: LaunchErrorCodeSchema,
+    message: z.string(),
+    appId: z.string().nullish(),
+});

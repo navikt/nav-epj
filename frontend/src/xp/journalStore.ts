@@ -14,7 +14,7 @@ import { useWorkspaceStore } from "./workspaceStore";
 import type { Konsultasjon, Pasient } from "../utils/mapping/epj";
 
 export type DiagnoseItem = Konsultasjon["diagnoser"][number];
-export type JournalSubTab = "konsultasjon" | "tidligere";
+export type JournalSubTab = "konsultasjon" | "tidligere" | "apper";
 export type LoadStatus = "idle" | "loading" | "ready" | "error";
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
 

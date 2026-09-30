@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { expireSession } from "./sessionExpiry";
 import {
   HelsepersonellSchema,
   LegekontorSchema,
@@ -17,6 +18,7 @@ export type HelsepersonellState =
 
 async function fetchJson(url: string, signal: AbortSignal) {
   const response = await fetch(url, { signal });
+  if (response.status === 401) expireSession(`GET ${url}`);
   if (!response.ok) throw new Error(String(response.status));
   return response.json();
 }

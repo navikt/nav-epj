@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { appTabId } from "./appInfo";
 import { copy } from "./copy";
 
 export type TabKind =
@@ -54,6 +55,7 @@ type WorkspaceState = {
 
 export const START_TAB_ID = "start";
 export const JOURNAL_TAB_ID = "journal";
+export const PATIENTS_TAB_ID = "patients";
 
 function initialState() {
   return {
@@ -70,7 +72,7 @@ function initialState() {
 }
 
 function tabId(input: OpenTabInput) {
-  return input.kind === "app" ? `app:${input.clientId}` : input.kind;
+  return input.kind === "app" ? appTabId(input.clientId) : input.kind;
 }
 
 export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({

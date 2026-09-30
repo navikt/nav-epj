@@ -1,10 +1,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { useAppDialogStore } from "./appDialogStore";
+import { useSessionStore } from "./sessionExpiry";
 import {
   ApiError,
   createPatient,
   fetchKonsultasjoner,
   fetchPatient,
+  fetchApps,
   fetchPatients,
+  LaunchError,
+  launchApp,
   saveKonsultasjon,
   startKonsultasjon,
 } from "./api";
@@ -112,5 +117,77 @@ describe("api", () => {
   it("rejects unexpected payloads", async () => {
     stub([{ unexpectedField: 1 }]);
     await expect(fetchPatients()).rejects.toThrow();
+  });
+
+  it("lists registered apps", async () => {
+    const fn = stub([
+      {
+        clientId: "syk-inn",
+        navn: "Sykmelding",
+        beskrivelse: null,
+        ikon: "sykmelding",
+        launchMode: "iframe",
+        launchUri: "https://syk.example",
+        tokenEndpointAuthMethod: "client_secret_basic",
+        jwksUri: null,
+        redirectUris: [],
+        scopes: ["launch"],
+      },
+    ]);
+    const apps = await fetchApps();
+    expect(apps[0].launchMode).toBe("iframe");
+    expect(fn).toHaveBeenCalledWith("/api/apps", undefined);
+  });
+
+  it("rejects an app with an unknown launch mode", async () => {
+    stub([{ clientId: "x", navn: "X", ikon: "vindu", launchMode: "popup" }]);
+    await expect(fetchApps()).rejects.toThrow();
+  });
+
+  it("launches an app and returns the launch url", async () => {
+    const fn = stub({ launchUrl: "https://syk.example/?launch=1" });
+    expect(await launchApp("syk-inn")).toBe("https://syk.example/?launch=1");
+    expect(fn).toHaveBeenCalledWith("/api/launch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ appId: "syk-inn" }),
+    });
+  });
+
+  it.each(["NO_ACTIVE_PATIENT", "NO_ACTIVE_ENCOUNTER", "UNKNOWN_APP"] as const)(
+    "throws a typed error for %s",
+    async (code) => {
+      stub({ code, message: "m", appId: "syk-inn" }, false, 409);
+      await expect(launchApp("syk-inn")).rejects.toMatchObject({
+        code,
+        status: 409,
+      });
+      await expect(launchApp("syk-inn")).rejects.toBeInstanceOf(LaunchError);
+    },
+  );
+
+  it("throws a plain ApiError when the error body is unrecognised", async () => {
+    stub({ nope: true }, false, 502);
+    const error = await launchApp("syk-inn").catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).not.toBeInstanceOf(LaunchError);
+    expect((error as ApiError).status).toBe(502);
+  });
+
+  it("expires the session when any call returns 401", async () => {
+    stub({}, false, 401);
+    await expect(fetchPatients()).rejects.toMatchObject({ status: 401 });
+    expect(useSessionStore.getState().expired).toBe(true);
+    expect(useAppDialogStore.getState().dialog).toMatchObject({
+      kind: "error",
+      code: "SESSION_EXPIRED",
+      call: "GET /api/patient",
+    });
+  });
+
+  it("expires the session when the launch call returns 401", async () => {
+    stub({}, false, 401);
+    await expect(launchApp("syk-inn")).rejects.toMatchObject({ status: 401 });
+    expect(useSessionStore.getState().expired).toBe(true);
   });
 });
