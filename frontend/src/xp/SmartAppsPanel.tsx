@@ -54,7 +54,7 @@ export function SmartAppsPanel() {
         const stale = isStaleFor(tabApp.patient.id, journalPatientId);
         return (
           <TaskLink
-            key={`tab:${tabApp.clientId}`}
+            key={tabApp.id}
             icon="ny-fane"
             label={tabApp.navn}
             sub={stale ? copy["pane.apps.stale"] : copy["pane.apps.runningTab"]}
@@ -62,7 +62,7 @@ export function SmartAppsPanel() {
             onActivate={() =>
               useAppDialogStore
                 .getState()
-                .show({ kind: "tabApp", clientId: tabApp.clientId })
+                .show({ kind: "tabApp", tabId: tabApp.id })
             }
           />
         );

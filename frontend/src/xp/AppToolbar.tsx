@@ -1,9 +1,11 @@
 import { useRef, type KeyboardEvent } from "react";
 import { Button } from "./Button";
+import { appFrameId, devPanelId } from "./appInfo";
 import { copy } from "./copy";
 import { XpIcon, type IconName } from "./XpIcon";
 
 type Props = {
+  clientId: string;
   app: string;
   icon: IconName;
   title: string;
@@ -17,9 +19,6 @@ type Props = {
   onPopOut: () => void;
   onClose: () => void;
 };
-
-export const APP_FRAME_ID = "app-frame";
-export const DEV_PANEL_ID = "dev-panel";
 
 type GlyphProps = {
   glyph: string;
@@ -45,6 +44,7 @@ function GlyphButton({ glyph, label, tooltip, disabled, onClick }: GlyphProps) {
 }
 
 export function AppToolbar({
+  clientId,
   app,
   icon,
   title,
@@ -79,7 +79,7 @@ export function AppToolbar({
       className="xp-toolbar"
       role="toolbar"
       aria-label={copy["s5.toolbar.label"]}
-      aria-controls={APP_FRAME_ID}
+      aria-controls={appFrameId(clientId)}
       onKeyDown={onKeyDown}
     >
       <GlyphButton
@@ -109,7 +109,7 @@ export function AppToolbar({
       <Button
         variant="small"
         aria-pressed={devOpen}
-        aria-controls={DEV_PANEL_ID}
+        aria-controls={devPanelId(clientId)}
         onClick={onToggleDev}
       >
         {copy["s5.dev"]}

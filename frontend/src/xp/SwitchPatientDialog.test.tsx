@@ -51,6 +51,7 @@ describe("SwitchPatientDialog with apps", () => {
 
   it("warns that tab apps cannot be closed by the host", () => {
     useAppRunStore.getState().addTabApp({
+      id: "smart-ny-fane-1",
       clientId: nyFane.clientId,
       navn: "Fanen",
       patient: ola,
@@ -67,6 +68,7 @@ describe("SwitchPatientDialog with apps", () => {
 
   it("ignores tab apps that belong to another patient", () => {
     useAppRunStore.getState().addTabApp({
+      id: "smart-ny-fane-1",
       clientId: nyFane.clientId,
       navn: "Fanen",
       patient: kari,
@@ -87,6 +89,7 @@ describe("SwitchPatientDialog with apps", () => {
   it("has no serious accessibility violations with apps and unsaved changes", async () => {
     seedRun();
     useAppRunStore.getState().addTabApp({
+      id: "smart-ny-fane-1",
       clientId: nyFane.clientId,
       navn: "Fanen",
       patient: ola,

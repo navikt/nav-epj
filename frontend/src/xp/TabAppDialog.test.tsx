@@ -9,12 +9,13 @@ import { copy } from "./copy";
 
 function setup() {
   const onClose = vi.fn();
-  const view = render(<TabAppDialog clientId="ny-fane" onClose={onClose} />);
+  const view = render(<TabAppDialog tabId="smart-ny-fane-1" onClose={onClose} />);
   return { ...view, onClose };
 }
 
 function seedTabApp() {
   useAppRunStore.getState().addTabApp({
+    id: "smart-ny-fane-1",
     clientId: "ny-fane",
     navn: "Fanen",
     patient: ola,
@@ -30,7 +31,7 @@ describe("TabAppDialog", () => {
   });
 
   it("renders nothing for an unknown app", () => {
-    useAppRunStore.getState().removeTabApp("ny-fane");
+    useAppRunStore.getState().removeTabApp("smart-ny-fane-1");
     const { container } = setup();
     expect(container).toBeEmptyDOMElement();
   });

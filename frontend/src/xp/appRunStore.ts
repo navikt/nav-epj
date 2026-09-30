@@ -22,6 +22,7 @@ export type AppRun = {
 };
 
 export type TabApp = {
+  id: string;
   clientId: string;
   navn: string;
   patient: Pasient;
@@ -39,7 +40,7 @@ type AppRunState = {
   removeRun: (clientId: string) => void;
   markAllSession: () => void;
   addTabApp: (app: TabApp) => void;
-  removeTabApp: (clientId: string) => void;
+  removeTabApp: (id: string) => void;
   reset: () => void;
 };
 
@@ -92,10 +93,10 @@ export const useAppRunStore = create<AppRunState>((set) => ({
     set((s) => ({ runs: s.runs.map((run) => ({ ...run, status: "session" })) })),
   addTabApp: (app) =>
     set((s) => ({
-      tabApps: [...s.tabApps.filter((a) => a.clientId !== app.clientId), app],
+      tabApps: [...s.tabApps.filter((a) => a.id !== app.id), app],
     })),
-  removeTabApp: (clientId) =>
-    set((s) => ({ tabApps: s.tabApps.filter((a) => a.clientId !== clientId) })),
+  removeTabApp: (id) =>
+    set((s) => ({ tabApps: s.tabApps.filter((a) => a.id !== id) })),
   reset: () => set({ runs: [], tabApps: [] }),
 }));
 

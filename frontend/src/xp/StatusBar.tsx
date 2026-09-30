@@ -24,8 +24,8 @@ export function StatusBar({ onOpenPatients, onOpenJournal }: Props) {
     isStaleFor(a.patient.id, journalPatientId),
   );
   const liveApps = tabApps.filter((a) => !staleApps.includes(a));
-  const showTabApp = (clientId: string) =>
-    useAppDialogStore.getState().show({ kind: "tabApp", clientId });
+  const showTabApp = (tabId: string) =>
+    useAppDialogStore.getState().show({ kind: "tabApp", tabId });
   return (
     <footer
       className="xp-appstatus"
@@ -69,7 +69,7 @@ export function StatusBar({ onOpenPatients, onOpenJournal }: Props) {
         <button
           type="button"
           className="seg"
-          onClick={() => showTabApp(liveApps[0].clientId)}
+          onClick={() => showTabApp(liveApps[0].id)}
         >
           {copy["status.tabApps"](liveApps.length)}
         </button>
@@ -78,7 +78,7 @@ export function StatusBar({ onOpenPatients, onOpenJournal }: Props) {
         <button
           type="button"
           className="seg"
-          onClick={() => showTabApp(staleApps[0].clientId)}
+          onClick={() => showTabApp(staleApps[0].id)}
         >
           {copy["status.staleApps"](staleApps.length)}
         </button>

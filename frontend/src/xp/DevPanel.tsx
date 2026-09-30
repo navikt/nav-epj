@@ -1,9 +1,8 @@
 import { Fragment, useId } from "react";
 import { format, parseISO } from "date-fns";
 import { Button } from "./Button";
-import { DEV_PANEL_ID } from "./AppToolbar";
 import { IFRAME_REFERRER_POLICY, IFRAME_SANDBOX } from "./AppFrame";
-import { launchParts } from "./appInfo";
+import { devPanelId, launchParts } from "./appInfo";
 import { accessExpiry, type AppRun } from "./appRunStore";
 import { copyText } from "./clipboard";
 import { copy } from "./copy";
@@ -55,7 +54,7 @@ export function DevPanel({ run, hidden, onClose }: Props) {
 
   return (
     <section
-      id={DEV_PANEL_ID}
+      id={devPanelId(run.clientId)}
       className="xp-devpanel"
       hidden={hidden}
       aria-labelledby={headingId}

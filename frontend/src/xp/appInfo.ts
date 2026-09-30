@@ -32,6 +32,10 @@ export function appTabId(clientId: string) {
   return `${APP_TAB_PREFIX}${clientId}`;
 }
 
+export const appFrameId = (clientId: string) => `app-frame-${clientId}`;
+
+export const devPanelId = (clientId: string) => `dev-panel-${clientId}`;
+
 export function launchParts(launchUrl: string) {
   try {
     const url = new URL(launchUrl);

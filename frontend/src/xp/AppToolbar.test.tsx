@@ -16,9 +16,10 @@ function setup(props: Partial<Parameters<typeof AppToolbar>[0]> = {}) {
   };
   const view = render(
     <>
-      <div id="app-frame" />
-      <div id="dev-panel" />
+      <div id="app-frame-syk-inn" />
+      <div id="dev-panel-syk-inn" />
       <AppToolbar
+        clientId="syk-inn"
         app="Sykmelding"
         icon="sykmelding"
         title="Sykmelding — Ola Nordmann — Konsultasjon 30.09 09:14"
@@ -37,7 +38,7 @@ describe("AppToolbar", () => {
   it("is a labelled toolbar controlling the frame", () => {
     setup();
     const bar = screen.getByRole("toolbar", { name: copy["s5.toolbar.label"] });
-    expect(bar).toHaveAttribute("aria-controls", "app-frame");
+    expect(bar).toHaveAttribute("aria-controls", "app-frame-syk-inn");
     expect(
       screen.getByRole("heading", { level: 1, name: /Ola Nordmann/ }),
     ).toBeInTheDocument();
@@ -69,7 +70,7 @@ describe("AppToolbar", () => {
     const { onToggleDev } = setup({ devOpen: true });
     const toggle = screen.getByRole("button", { name: copy["s5.dev"] });
     expect(toggle).toHaveAttribute("aria-pressed", "true");
-    expect(toggle).toHaveAttribute("aria-controls", "dev-panel");
+    expect(toggle).toHaveAttribute("aria-controls", "dev-panel-syk-inn");
     await userEvent.click(toggle);
     expect(onToggleDev).toHaveBeenCalledOnce();
   });

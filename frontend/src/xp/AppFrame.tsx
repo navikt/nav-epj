@@ -1,12 +1,11 @@
 import { useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import { Button } from "./Button";
-import { APP_FRAME_ID } from "./AppToolbar";
 import { Progress } from "./Progress";
-import { appTabId, launchParts } from "./appInfo";
+import { appFrameId, appTabId, launchParts } from "./appInfo";
 import { useAppRunStore, type AppRun } from "./appRunStore";
 import { copy } from "./copy";
-import { reportTimeout } from "./launchApp";
+import { dismissTimeoutDialog, reportTimeout } from "./launchApp";
 import { fullName } from "./patientInfo";
 
 export const FRAME_TIMEOUT_MS = 8000;
@@ -86,6 +85,7 @@ export function AppFrame({
     if (!current || !parts) return;
     if (current.status === "starting" || current.status === "timeout") {
       store.setStatus(clientId, "running");
+      dismissTimeoutDialog(clientId);
     }
     store.addEvent(clientId, { kind: "load", url: parts.origin });
   }
@@ -181,7 +181,7 @@ export function AppFrame({
   }
 
   return (
-    <div className="xp-frame" id={APP_FRAME_ID}>
+    <div className="xp-frame" id={appFrameId(clientId)}>
       {showFrame && launchUrl && (
         <iframe
           key={`${appTabId(clientId)}:${attempt}`}

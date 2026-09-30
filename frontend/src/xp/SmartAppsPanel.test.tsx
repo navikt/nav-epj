@@ -68,6 +68,7 @@ describe("SmartAppsPanel", () => {
 
   it("lists tab apps and opens their dialog, flagged when stale", async () => {
     useAppRunStore.getState().addTabApp({
+      id: "smart-ny-fane-1",
       clientId: "ny-fane",
       navn: "Fanen",
       patient: ola,
@@ -80,7 +81,7 @@ describe("SmartAppsPanel", () => {
     render(<SmartAppsPanel />);
     expect(screen.getByText(copy["pane.apps.stale"])).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: new RegExp(copy["pane.apps.stale"]) }));
-    expect(useAppDialogStore.getState().dialog).toEqual({ kind: "tabApp", clientId: "ny-fane" });
+    expect(useAppDialogStore.getState().dialog).toEqual({ kind: "tabApp", tabId: "smart-ny-fane-1" });
   });
 
   it("has no serious accessibility violations", async () => {

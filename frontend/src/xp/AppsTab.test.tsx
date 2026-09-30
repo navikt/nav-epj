@@ -70,6 +70,7 @@ describe("AppsTab", () => {
   it("shows running state per app", () => {
     seedRun();
     useAppRunStore.getState().addTabApp({
+      id: "smart-ny-fane-1",
       clientId: "ny-fane",
       navn: "Fanen",
       patient: ola,

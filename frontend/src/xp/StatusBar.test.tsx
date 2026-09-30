@@ -118,6 +118,7 @@ describe("StatusBar", () => {
       vi.useRealTimers();
       seedJournal();
       useAppRunStore.getState().addTabApp({
+        id: "smart-ny-fane-1",
         clientId: "ny-fane",
         navn: "Fanen",
         patient: ola,
@@ -131,7 +132,7 @@ describe("StatusBar", () => {
       await userEvent.click(segment);
       expect(useAppDialogStore.getState().dialog).toEqual({
         kind: "tabApp",
-        clientId: "ny-fane",
+        tabId: "smart-ny-fane-1",
       });
     });
 
@@ -144,7 +145,7 @@ describe("StatusBar", () => {
       );
       expect(useAppDialogStore.getState().dialog).toEqual({
         kind: "tabApp",
-        clientId: "ny-fane",
+        tabId: "smart-ny-fane-1",
       });
     });
 

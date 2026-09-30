@@ -63,6 +63,7 @@ export function AppTabView({ clientId }: Props) {
     <>
       <PatientContext pasient={run.patient} compact stale={stale} />
       <AppToolbar
+        clientId={clientId}
         app={run.navn}
         icon={appIconName(app?.ikon ?? "")}
         title={copy["s5.title"](

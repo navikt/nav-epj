@@ -101,7 +101,7 @@ describe("AppTabView", () => {
 
   it("toggles the developer panel", async () => {
     setup();
-    const panel = document.getElementById("dev-panel") as HTMLElement;
+    const panel = document.getElementById("dev-panel-syk-inn") as HTMLElement;
     expect(panel).not.toBeVisible();
     await userEvent.click(screen.getByRole("button", { name: copy["s5.dev"] }));
     expect(panel).toBeVisible();

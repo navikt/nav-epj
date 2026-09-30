@@ -22,7 +22,7 @@ export type AppDialog =
       retry?: () => void;
     }
   | { kind: "ask"; app: App }
-  | { kind: "tabApp"; clientId: string };
+  | { kind: "tabApp"; tabId: string };
 
 type AppDialogState = {
   dialog: AppDialog | null;

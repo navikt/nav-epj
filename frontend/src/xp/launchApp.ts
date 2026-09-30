@@ -148,6 +148,13 @@ async function launchInFrame(app: App, context: LaunchContext) {
   return "iframe" as const;
 }
 
+function windowName(clientId: string) {
+  const taken = new Set(useAppRunStore.getState().tabApps.map((a) => a.id));
+  let stamp = Date.now();
+  while (taken.has(`smart-${clientId}-${stamp}`)) stamp += 1;
+  return `smart-${clientId}-${stamp}`;
+}
+
 async function launchInTab(
   app: App,
   context: LaunchContext,
@@ -165,8 +172,10 @@ async function launchInTab(
     return null;
   }
   if (!isCurrent() || patientChanged(context.patient)) return null;
-  window.open(url, `smart-${app.clientId}-${Date.now()}`, "noopener,noreferrer");
+  const id = windowName(app.clientId);
+  const opened = window.open(url, id, "noopener,noreferrer");
   useAppRunStore.getState().addTabApp({
+    id,
     clientId: app.clientId,
     navn: app.navn,
     patient: context.patient,
@@ -174,7 +183,7 @@ async function launchInTab(
   });
   useBalloonStore.getState().show({
     title: copy["s5.popout.balloon.title"](app.navn),
-    body: balloonBody,
+    body: opened ? balloonBody : `${balloonBody} ${copy["s5.tab.balloon.blocked"]}`,
     icon: "ny-fane",
   });
   return "tab" as const;
@@ -236,7 +245,7 @@ export async function reloadApp(clientId: string) {
 export async function popOutApp(clientId: string): Promise<LaunchResult> {
   const run = useAppRunStore.getState().runs.find((r) => r.clientId === clientId);
   const app = findApp(clientId);
-  if (!run || !app) return null;
+  if (!run || !app || patientChanged(run.patient)) return null;
   closeApp(clientId);
   return launchInTab(
     app,
@@ -247,14 +256,25 @@ export async function popOutApp(clientId: string): Promise<LaunchResult> {
 
 export function reportTimeout(clientId: string, origin: string) {
   const run = useAppRunStore.getState().runs.find((r) => r.clientId === clientId);
-  if (!run) return;
+  if (!run || run.status !== "starting") return;
   useAppRunStore.getState().setStatus(clientId, "timeout");
   showError("FRAMING_REFUSED", { clientId, navn: run.navn }, fullName(run.patient), {
     call: origin,
   });
 }
 
-export function closeStaleRuns(journalPatientId: string) {
+export function dismissTimeoutDialog(clientId: string) {
+  const { dialog, close } = useAppDialogStore.getState();
+  if (
+    dialog?.kind === "error" &&
+    dialog.code === "FRAMING_REFUSED" &&
+    dialog.clientId === clientId
+  ) {
+    close();
+  }
+}
+
+export function closeStaleRuns(journalPatientId: string | null) {
   for (const run of useAppRunStore.getState().runs) {
     if (run.patient.id !== journalPatientId) closeApp(run.clientId);
   }

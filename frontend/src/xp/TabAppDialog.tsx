@@ -8,24 +8,25 @@ import { fullName } from "./patientInfo";
 import { useStartApp } from "./useStartApp";
 
 type Props = {
-  clientId: string;
+  tabId: string;
   onClose: () => void;
 };
 
-export function TabAppDialog({ clientId, onClose }: Props) {
+export function TabAppDialog({ tabId, onClose }: Props) {
   const tabApp = useAppRunStore((s) =>
-    s.tabApps.find((a) => a.clientId === clientId),
+    s.tabApps.find((a) => a.id === tabId),
   );
   const journalPatientId = useJournalStore((s) => s.patientId);
   const journalPatient = useJournalStore((s) => s.patient);
   const { start } = useStartApp();
 
   if (!tabApp) return null;
+  const { clientId } = tabApp;
   const expiry = format(accessExpiry(tabApp.startedAt), "HH:mm");
   const owner = fullName(tabApp.patient);
   const stale = isStaleFor(tabApp.patient.id, journalPatientId);
   const remove = () => {
-    useAppRunStore.getState().removeTabApp(clientId);
+    useAppRunStore.getState().removeTabApp(tabId);
     onClose();
   };
 

@@ -2,6 +2,7 @@ import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { kari, ola, seedApps, seedJournal, seedRun } from "./appFixtures";
 import { appTabId } from "./appInfo";
+import { useJournalStore } from "./journalStore";
 import { useAppRunStore } from "./appRunStore";
 import { useAppSync } from "./useAppSync";
 import { useWorkspaceStore } from "./workspaceStore";
@@ -41,6 +42,12 @@ describe("useAppSync", () => {
     expect(useWorkspaceStore.getState().tabs.map((t) => t.id)).not.toContain(
       appTabId("syk-inn"),
     );
+  });
+
+  it("closes embedded apps when the journal is closed", () => {
+    renderHook(() => useAppSync());
+    act(() => useJournalStore.getState().clear());
+    expect(useAppRunStore.getState().runs).toEqual([]);
   });
 
   it("keeps apps when the journal is closed or shows the same patient", () => {

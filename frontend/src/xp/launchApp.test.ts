@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   kari,
+  ongoingKonsultasjon,
   launchOk,
   nyFane,
   ola,
@@ -38,7 +39,7 @@ describe("startApp", () => {
   let open: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    open = vi.fn();
+    open = vi.fn().mockReturnValue({});
     vi.stubGlobal("open", open);
     seedApps([sykInn, validator, nyFane]);
     seedJournal();
@@ -109,6 +110,27 @@ describe("startApp", () => {
     expect(useBalloonStore.getState().balloon?.body).toBe(
       copy["s5.tab.balloon.body"]("Ola Nordmann"),
     );
+  });
+
+  it("adds the popup hint to the balloon when the browser gives no window", async () => {
+    open.mockReturnValue(null);
+    stubLaunch([launchOk()]);
+    await startApp(nyFane);
+    expect(useBalloonStore.getState().balloon?.body).toBe(
+      `${copy["s5.tab.balloon.body"]("Ola Nordmann")} ${copy["s5.tab.balloon.blocked"]}`,
+    );
+  });
+
+  it("keeps a tab app per launch so an older patient's tab is not overwritten", async () => {
+    stubLaunch([launchOk(1), launchOk(2)]);
+    await startApp(nyFane);
+    seedJournal(kari, [{ ...ongoingKonsultasjon, id: "k2", pasientId: "p2" }]);
+    await startApp(nyFane);
+    const { tabApps } = useAppRunStore.getState();
+    expect(tabApps.map((a) => a.patient.id)).toEqual(["p1", "p2"]);
+    expect(new Set(tabApps.map((a) => a.id)).size).toBe(2);
+    expect(open.mock.calls[0][1]).not.toBe(open.mock.calls[1][1]);
+    expect(open.mock.calls.map((c) => c[1])).toEqual(tabApps.map((a) => a.id));
   });
 
   it("asks which view to use for ask-mode apps", async () => {
@@ -230,7 +252,7 @@ describe("startApp", () => {
 
 describe("running apps", () => {
   beforeEach(async () => {
-    vi.stubGlobal("open", vi.fn());
+    vi.stubGlobal("open", vi.fn().mockReturnValue({}));
     seedApps([sykInn, nyFane]);
     seedJournal();
     stubLaunch([launchOk(1)]);
@@ -276,6 +298,26 @@ describe("running apps", () => {
     expect(useBalloonStore.getState().balloon?.body).toBe(
       copy["s5.popout.balloon.body"],
     );
+  });
+
+  it("does not close or relaunch when the journal was closed before the pop-out", async () => {
+    const fetch = stubLaunch([launchOk(3)]);
+    useJournalStore.getState().clear();
+    expect(await popOutApp("syk-inn")).toBeNull();
+    expect(fetch).not.toHaveBeenCalled();
+    expect(useAppRunStore.getState().runs).toHaveLength(1);
+  });
+
+  it("ignores a timeout that arrives after the app has loaded", () => {
+    useAppRunStore.getState().setStatus("syk-inn", "running");
+    reportTimeout("syk-inn", "https://syk.example");
+    expect(useAppRunStore.getState().runs[0].status).toBe("running");
+    expect(useAppDialogStore.getState().dialog).toBeNull();
+  });
+
+  it("closes every embedded run when no journal is open", () => {
+    closeStaleRuns(null);
+    expect(useAppRunStore.getState().runs).toEqual([]);
   });
 
   it("reports the 8 second timeout as a run status and an S8 dialog", () => {

@@ -1,6 +1,6 @@
 import { act, render, screen } from "@testing-library/react";
 import { useAppRunStore } from "./appRunStore";
-import { seedApps, seedJournal, seedRun } from "./appFixtures";
+import { ola, seedApps, seedJournal, seedRun, sykInn, validator } from "./appFixtures";
 import { beforeEach, describe, expect, it } from "vitest";
 import { Workspace } from "./Workspace";
 import { useWorkspaceStore } from "./workspaceStore";
@@ -57,6 +57,27 @@ describe("Workspace", () => {
       expect(screen.getByText("Sideinnhold")).not.toBeVisible();
       expect(screen.getByRole("tabpanel")).toHaveClass("xp-page-app");
       expect(screen.getByTitle("Sykmelding (syk-inn) for Ola Nordmann")).toBeVisible();
+    });
+
+    it("gives concurrent app tabs distinct ids and passes axe", async () => {
+      seedApps([sykInn, validator]);
+      seedRun(ola, validator);
+      useAppRunStore.getState().setLaunchUrl("validator", "https://v.example/?launch=1");
+      act(() => {
+        useWorkspaceStore
+          .getState()
+          .openTab({ kind: "app", clientId: "validator", label: "Validator · ON" });
+      });
+      const { container } = render(
+        <Workspace>
+          <p>Sideinnhold</p>
+        </Workspace>,
+      );
+      const ids = Array.from(container.querySelectorAll("[id]")).map((e) => e.id);
+      expect(new Set(ids).size).toBe(ids.length);
+      expect(container.querySelector("#app-frame-syk-inn")).not.toBeNull();
+      expect(container.querySelector("#app-frame-validator")).not.toBeNull();
+      await expectNoSeriousViolations(container, { iframes: false });
     });
 
     it("keeps the app mounted but hidden when another tab is current", () => {

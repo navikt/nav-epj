@@ -296,6 +296,7 @@ export const copy = {
   "s5.popout.balloon.title": (app: string) => `${app} åpnet i ny fane`,
   "s5.popout.balloon.body": "Fanen i nav-epj er lukket. Appen fikk en ny oppstart i nettleserfanen.",
   "s5.tab.balloon.body": (navn: string) => `Ny oppstart for ${navn}. nav-epj kan ikke lukke fanen.`,
+  "s5.tab.balloon.blocked": "Åpnet ikke fanen? Tillat popup-vinduer for nav-epj og start appen på nytt.",
   "dev.title": (app: string) => `Utviklerverktøy – ${app}`,
   "dev.copy": "Kopier",
   "dev.close": "Lukk utviklerverktøy",

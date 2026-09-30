@@ -30,7 +30,7 @@ describe("DevPanel", () => {
     const panel = screen.getByRole("region", {
       name: copy["dev.title"]("Sykmelding"),
     });
-    expect(panel).toHaveAttribute("id", "dev-panel");
+    expect(panel).toHaveAttribute("id", "dev-panel-syk-inn");
     const facts = within(panel);
     expect(facts.getByText("syk-inn")).toBeInTheDocument();
     expect(facts.getByText(launchOk().body.launchUrl)).toBeInTheDocument();

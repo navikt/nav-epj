@@ -117,6 +117,30 @@ describe("AppFrame", () => {
     expect(useAppRunStore.getState().runs[0].status).toBe("running");
   });
 
+  it("closes the framing dialog when the frame loads after the timeout", () => {
+    vi.useFakeTimers();
+    setup();
+    act(() => {
+      vi.advanceTimersByTime(FRAME_TIMEOUT_MS);
+    });
+    expect(useAppDialogStore.getState().dialog).toMatchObject({
+      code: "FRAMING_REFUSED",
+    });
+    fireEvent.load(document.querySelector("iframe") as HTMLIFrameElement);
+    expect(useAppDialogStore.getState().dialog).toBeNull();
+  });
+
+  it("keeps unrelated dialogs open when the frame loads late", () => {
+    vi.useFakeTimers();
+    setup();
+    act(() => {
+      vi.advanceTimersByTime(FRAME_TIMEOUT_MS);
+    });
+    useAppDialogStore.getState().show({ kind: "tabApp", tabId: "x" });
+    fireEvent.load(document.querySelector("iframe") as HTMLIFrameElement);
+    expect(useAppDialogStore.getState().dialog).toEqual({ kind: "tabApp", tabId: "x" });
+  });
+
   it("offers pop-out and close from the timeout state", async () => {
     const { onPopOut, onClose } = setup();
     act(() => useAppRunStore.getState().setStatus("syk-inn", "timeout"));

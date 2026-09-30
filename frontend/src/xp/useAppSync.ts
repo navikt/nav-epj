@@ -10,7 +10,7 @@ export function useAppSync() {
     const stopRuns = useAppRunStore.subscribe(syncRunTabs);
     const stopJournal = useJournalStore.subscribe((state, previous) => {
       if (state.patientId === previous.patientId) return;
-      if (state.patientId) closeStaleRuns(state.patientId);
+      closeStaleRuns(state.patientId);
       syncRunTabs();
     });
     return () => {

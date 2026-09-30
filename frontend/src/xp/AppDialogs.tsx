@@ -13,6 +13,6 @@ export function AppDialogs() {
     case "ask":
       return <ChooseViewDialog app={dialog.app} onClose={close} />;
     case "tabApp":
-      return <TabAppDialog clientId={dialog.clientId} onClose={close} />;
+      return <TabAppDialog tabId={dialog.tabId} onClose={close} />;
   }
 }
