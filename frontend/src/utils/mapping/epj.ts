@@ -3,14 +3,17 @@ import * as z from "zod";
 export const LegekontorSchema = z.object({
     id: z.string(),
     navn: z.string(),
+    orgnummer: z.string().nullish(),
+    tlf: z.string().nullish(),
 });
 
 export type Legekontor = z.infer<typeof LegekontorSchema>;
 
 export const HelsepersonellSchema = z.object({
-    id: z.string(),
     hpr: z.string(),
+    legekontorId: z.string(),
     navn: z.string(),
+    autorisasjon: z.string(),
 });
 
 export type Helsepersonell = z.infer<typeof HelsepersonellSchema>;
