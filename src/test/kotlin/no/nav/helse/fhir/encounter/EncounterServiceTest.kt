@@ -59,8 +59,8 @@ class EncounterServiceTest {
     fun `getEncounterById maps subject, participants, period and status`() = runTest {
         val pasientId = PasientId(Uuid.generateV4())
         val konsultasjonId = KonsultasjonId(Uuid.generateV4())
-        val start = LocalDateTime.now().minusHours(2)
-        val end = LocalDateTime.now().minusHours(1)
+        val start = LocalDateTime.of(2026, 9, 1, 9, 30, 15, 120_000_000)
+        val end = LocalDateTime.of(2026, 9, 1, 10, 5, 40)
         coEvery { konsultasjonService.getKonsultasjon(konsultasjonId) } returns
             konsultasjon(
                 id = konsultasjonId,
@@ -79,11 +79,8 @@ class EncounterServiceTest {
             encounter.participant.single().individual?.reference?.value,
         )
         assertEquals(Encounter.EncounterStatus.Finished, encounter.status.value)
-        assertEquals(
-            start.toString(),
-            encounter.period?.start?.value.toString().substringBefore("Z"),
-        )
-        assertEquals(end.toString(), encounter.period?.end?.value.toString().substringBefore("Z"))
+        assertEquals("2026-09-01T09:30:15.12Z", encounter.period?.start?.value.toString())
+        assertEquals("2026-09-01T10:05:40Z", encounter.period?.end?.value.toString())
     }
 
     @OptIn(ExperimentalUuidApi::class)
