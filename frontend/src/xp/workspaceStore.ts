@@ -53,6 +53,7 @@ type WorkspaceState = {
 };
 
 export const START_TAB_ID = "start";
+export const JOURNAL_TAB_ID = "journal";
 
 function initialState() {
   return {

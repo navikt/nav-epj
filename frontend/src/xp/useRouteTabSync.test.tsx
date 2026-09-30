@@ -1,6 +1,7 @@
-import { act, renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { copy } from "./copy";
+import { useJournalStore } from "./journalStore";
 import { useRouteTabSync } from "./useRouteTabSync";
 import { useWorkspaceStore } from "./workspaceStore";
 
@@ -36,20 +37,20 @@ describe("useRouteTabSync", () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
-  it("leaves patient sub-routes unmapped", () => {
+  it("leaves unknown patient sub-routes unmapped", () => {
     const navigate = vi.fn();
-    renderHook(() => useRouteTabSync("/patients/abc/konsultasjon/1", navigate));
+    renderHook(() => useRouteTabSync("/patients/abc/other", navigate));
     expect(store().tabs.map((t) => t.id)).toEqual(["start"]);
     expect(navigate).not.toHaveBeenCalled();
   });
 
-  it("goes to Pasienter from a sub-route when its tab is activated", () => {
+  it("goes to Pasienter from a journal route when its tab is activated", () => {
     const navigate = vi.fn();
     renderHook(() => useRouteTabSync("/patients/abc", navigate));
     act(() => {
       store().openTab({ kind: "patients", label: copy["pane.system.patients"] });
     });
-    expect(navigate).toHaveBeenCalledExactlyOnceWith("/patients");
+    expect(navigate).toHaveBeenCalledExactlyOnceWith({ to: "/patients" });
   });
 
   it("follows route changes without duplicating the tab", () => {
@@ -71,7 +72,7 @@ describe("useRouteTabSync", () => {
     const navigate = vi.fn();
     renderHook(() => useRouteTabSync("/patients", navigate));
     act(() => store().setCurrent("start"));
-    expect(navigate).toHaveBeenCalledExactlyOnceWith("/");
+    expect(navigate).toHaveBeenCalledExactlyOnceWith({ to: "/" });
   });
 
   it("navigates to Start when the Pasienter tab is closed", () => {
@@ -79,7 +80,7 @@ describe("useRouteTabSync", () => {
     renderHook(() => useRouteTabSync("/patients", navigate));
     act(() => store().closeTab("patients"));
     expect(store().current).toBe("start");
-    expect(navigate).toHaveBeenCalledExactlyOnceWith("/");
+    expect(navigate).toHaveBeenCalledExactlyOnceWith({ to: "/" });
   });
 
   it("navigates to Pasienter when its tab is reactivated", () => {
@@ -90,15 +91,122 @@ describe("useRouteTabSync", () => {
     );
     rerender({ path: "/" });
     act(() => store().setCurrent("patients"));
-    expect(navigate).toHaveBeenCalledExactlyOnceWith("/patients");
+    expect(navigate).toHaveBeenCalledExactlyOnceWith({ to: "/patients" });
   });
 
   it("does not navigate when a non-routed tab is selected", () => {
     const navigate = vi.fn();
     renderHook(() => useRouteTabSync("/patients", navigate));
     act(() => {
-      store().openTab({ kind: "journal", label: "Journal" });
+      store().openTab({ kind: "kontrollpanel", label: "Kontrollpanel" });
     });
+    expect(navigate).not.toHaveBeenCalled();
+  });
+});
+
+const pasient = {
+  id: "p1",
+  fornavn: "Matematisk",
+  etternavn: "Ape",
+  personident: "01019012345",
+  personidentType: "FNR",
+  birthDate: "1990-01-01",
+  gender: "MALE",
+};
+
+function stubJournalApi() {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string) => ({
+      ok: true,
+      status: 200,
+      json: async () =>
+        url.endsWith("/konsultasjoner") ? [] : { ...pasient, id: url.split("/").at(-1) },
+    })),
+  );
+}
+
+describe("useRouteTabSync journal routes", () => {
+  beforeEach(stubJournalApi);
+  afterEach(() => {
+    useJournalStore.getState().clear();
+    vi.unstubAllGlobals();
+  });
+
+  it("opens and selects the single Journal tab for a patient route and loads that patient", async () => {
+    const navigate = vi.fn();
+    renderHook(() => useRouteTabSync("/patients/p1", navigate));
+    expect(store().current).toBe("journal");
+    expect(store().tabs.map((t) => t.id)).toEqual(["start", "journal"]);
+    await waitFor(() => expect(useJournalStore.getState().status).toBe("ready"));
+    expect(useJournalStore.getState().patientId).toBe("p1");
+    expect(store().tabs[1].label).toBe("Journal · Matematisk Ape");
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it("selects the konsultasjon from the route", async () => {
+    renderHook(() => useRouteTabSync("/patients/p1/konsultasjon/k7", vi.fn()));
+    await waitFor(() => expect(useJournalStore.getState().status).toBe("ready"));
+    expect(useJournalStore.getState().selectedKonsultasjonId).toBe("k7");
+  });
+
+  it("keeps a single Journal tab across patient routes and leaves exact /patients to Pasienter", async () => {
+    const { rerender } = renderHook(
+      ({ path }) => useRouteTabSync(path, vi.fn()),
+      { initialProps: { path: "/patients/p1" } },
+    );
+    rerender({ path: "/patients" });
+    expect(store().current).toBe("patients");
+    rerender({ path: "/patients/p2" });
+    expect(store().current).toBe("journal");
+    expect(store().tabs.filter((t) => t.kind === "journal")).toHaveLength(1);
+    await waitFor(() => expect(useJournalStore.getState().patientId).toBe("p2"));
+  });
+
+  it("navigates to the open patient's journal when the Journal tab is activated", async () => {
+    const navigate = vi.fn();
+    const { rerender } = renderHook(
+      ({ path }) => useRouteTabSync(path, navigate),
+      { initialProps: { path: "/patients/p1" } },
+    );
+    await waitFor(() => expect(useJournalStore.getState().status).toBe("ready"));
+    rerender({ path: "/patients" });
+    navigate.mockClear();
+    act(() => store().setCurrent("journal"));
+    expect(navigate).toHaveBeenCalledExactlyOnceWith({
+      to: "/patients/$patientId",
+      params: { patientId: "p1" },
+    });
+  });
+
+  it("does not navigate when the Journal tab is activated while already on that patient", async () => {
+    const navigate = vi.fn();
+    renderHook(() => useRouteTabSync("/patients/p1/konsultasjon/k1", navigate));
+    await waitFor(() => expect(useJournalStore.getState().status).toBe("ready"));
+    act(() => store().setCurrent("start"));
+    navigate.mockClear();
+    act(() => store().setCurrent("journal"));
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it("clears the journal when its tab is closed", async () => {
+    renderHook(() => useRouteTabSync("/patients/p1", vi.fn()));
+    await waitFor(() => expect(useJournalStore.getState().status).toBe("ready"));
+    act(() => store().closeTab("journal"));
+    expect(useJournalStore.getState().patientId).toBeNull();
+  });
+
+  it("does not navigate back to the previous patient while switching to another one", async () => {
+    const navigate = vi.fn();
+    const { rerender } = renderHook(
+      ({ path }) => useRouteTabSync(path, navigate),
+      { initialProps: { path: "/patients/p1" } },
+    );
+    await waitFor(() => expect(useJournalStore.getState().status).toBe("ready"));
+    rerender({ path: "/patients" });
+    navigate.mockClear();
+    rerender({ path: "/patients/p2" });
+    await waitFor(() => expect(useJournalStore.getState().patientId).toBe("p2"));
     expect(navigate).not.toHaveBeenCalled();
   });
 });

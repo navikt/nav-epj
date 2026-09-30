@@ -16,9 +16,12 @@ const icons: Record<TabKind, IconName> = {
   hendelseslogg: "hendelseslogg",
 };
 
-type Props = { onActivate?: (tab: Tab) => void };
+type Props = {
+  onActivate?: (tab: Tab) => void;
+  onBeforeClose?: (tab: Tab) => boolean;
+};
 
-export function DocumentTabs({ onActivate }: Props) {
+export function DocumentTabs({ onActivate, onBeforeClose }: Props) {
   const tabs = useWorkspaceStore((s) => s.tabs);
   const current = useWorkspaceStore((s) => s.current);
   const setCurrent = useWorkspaceStore((s) => s.setCurrent);
@@ -45,6 +48,7 @@ export function DocumentTabs({ onActivate }: Props) {
 
   function close(tab: Tab, moveFocus: boolean) {
     if (!tab.closable) return;
+    if (onBeforeClose && !onBeforeClose(tab)) return;
     closeTab(tab.id);
     const state = useWorkspaceStore.getState();
     if (moveFocus) pendingFocus.current = state.current;

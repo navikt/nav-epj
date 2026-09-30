@@ -1,12 +1,21 @@
-import { format } from "date-fns";
+import { differenceInMinutes, format, parseISO } from "date-fns";
 import { copy } from "./copy";
+import { ongoingOf, useJournalStore } from "./journalStore";
+import { fullName } from "./patientInfo";
 import { TestMarker } from "./TestMarker";
 import { useNow } from "./useNow";
 
-type Props = { onOpenPatients: () => void };
+type Props = {
+  onOpenPatients: () => void;
+  onOpenJournal?: () => void;
+};
 
-export function StatusBar({ onOpenPatients }: Props) {
-  const time = format(useNow(), "HH:mm");
+export function StatusBar({ onOpenPatients, onOpenJournal }: Props) {
+  const now = useNow();
+  const time = format(now, "HH:mm");
+  const patient = useJournalStore((s) => s.patient);
+  const konsultasjoner = useJournalStore((s) => s.konsultasjoner);
+  const ongoing = patient ? ongoingOf(konsultasjoner) : null;
   return (
     <footer
       className="xp-appstatus"
@@ -17,14 +26,35 @@ export function StatusBar({ onOpenPatients }: Props) {
       <span className="seg grow" role="status">
         {copy["status.ready"]}
       </span>
-      <button
-        type="button"
-        className="seg"
-        aria-label={copy["status.noPatient.aria"]}
-        onClick={onOpenPatients}
-      >
-        {copy["status.noPatient"]}
-      </button>
+      {patient ? (
+        <button
+          type="button"
+          className="seg"
+          aria-label={copy["status.patient.aria"](fullName(patient))}
+          onClick={onOpenJournal}
+        >
+          {copy["status.patient"](fullName(patient))}
+        </button>
+      ) : (
+        <button
+          type="button"
+          className="seg"
+          aria-label={copy["status.noPatient.aria"]}
+          onClick={onOpenPatients}
+        >
+          {copy["status.noPatient"]}
+        </button>
+      )}
+      {ongoing && (
+        <span className="seg">
+          {copy["status.kons"](
+            Math.max(
+              0,
+              differenceInMinutes(now, parseISO(ongoing.startetTidspunkt)),
+            ),
+          )}
+        </span>
+      )}
       <span className="seg">
         <TestMarker />
       </span>

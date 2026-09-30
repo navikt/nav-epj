@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { TaskPane } from "./TaskPane";
 import { expectNoSeriousViolations } from "./axeHelper";
 import { copy } from "./copy";
+import { useJournalStore } from "./journalStore";
 
 function renderPane(props: Partial<Parameters<typeof TaskPane>[0]> = {}) {
   const handlers = { onOpenPatients: vi.fn(), onLogout: vi.fn() };
@@ -90,5 +91,31 @@ describe("TaskPane", () => {
   it("has no serious accessibility violations", async () => {
     const { container } = renderPane({ userName: "Ola Nordmann" });
     await expectNoSeriousViolations(container);
+  });
+
+  it("shows the active patient with journal and find-other links", async () => {
+    useJournalStore.setState({
+      patientId: "p1",
+      patient: {
+        id: "p1",
+        fornavn: "Matematisk",
+        etternavn: "Ape",
+        personident: "01019012345",
+        personidentType: "FNR" as const,
+        birthDate: "1990-01-01",
+        gender: "MALE" as const,
+      },
+      status: "ready",
+    });
+    const onOpenJournal = vi.fn();
+    const { onOpenPatients, container } = renderPane({ onOpenJournal });
+    expect(screen.getByText("Matematisk Ape")).toBeInTheDocument();
+    expect(screen.queryByText(copy["pane.patient.none"])).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: copy["pane.patient.openJournal"] }));
+    expect(onOpenJournal).toHaveBeenCalledOnce();
+    await userEvent.click(screen.getByRole("button", { name: copy["pane.patient.findOther"] }));
+    expect(onOpenPatients).toHaveBeenCalledOnce();
+    await expectNoSeriousViolations(container);
+    useJournalStore.getState().clear();
   });
 });

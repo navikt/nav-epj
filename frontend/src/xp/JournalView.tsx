@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Button } from "./Button";
 import { KonsultasjonTab } from "./KonsultasjonTab";
 import { Note } from "./Note";
@@ -5,6 +6,8 @@ import { PatientContext } from "./PatientContext";
 import { SubTabs } from "./SubTabs";
 import { TidligereKonsultasjoner } from "./TidligereKonsultasjoner";
 import { copy } from "./copy";
+import { fullName } from "./patientInfo";
+import { useShell } from "./shellContext";
 import { isDirty, useJournalStore, type JournalSubTab } from "./journalStore";
 
 const ID_PREFIX = "journal";
@@ -18,6 +21,15 @@ export function JournalView() {
   const subTab = useJournalStore((s) => s.subTab);
   const dirty = useJournalStore((s) => isDirty(s));
   const { setSubTab, open } = useJournalStore.getState();
+  const { announce } = useShell();
+  const announcedFor = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (status === "ready" && patient && announcedFor.current !== patient.id) {
+      announcedFor.current = patient.id;
+      announce(copy["live.journalOpened"](fullName(patient)));
+    }
+  }, [status, patient, announce]);
 
   if (status === "error") {
     return (

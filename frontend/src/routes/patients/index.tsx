@@ -1,27 +1,23 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { NewPatientDialog } from "../../xp/NewPatientDialog";
 import { PatientsPage } from "../../xp/PatientsPage";
 import { canCreatePatients } from "../../xp/canCreatePatients";
+import { useOpenJournal } from "../../xp/useOpenJournal";
 
 export const Route = createFileRoute("/patients/")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const navigate = useNavigate();
+  const openJournal = useOpenJournal();
   const [creating, setCreating] = useState(false);
   return (
     <>
       <PatientsPage
         canCreate={canCreatePatients()}
         onNewPatient={() => setCreating(true)}
-        onOpenJournal={(pasient) =>
-          void navigate({
-            to: "/patients/$patientId",
-            params: { patientId: pasient.id },
-          })
-        }
+        onOpenJournal={openJournal}
       />
       {creating && <NewPatientDialog onClose={() => setCreating(false)} />}
     </>

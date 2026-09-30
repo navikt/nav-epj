@@ -208,4 +208,27 @@ describe("DocumentTabs", () => {
     fireEvent.keyDown(document, { key: "q", ctrlKey: true });
     expect(store().tabs).toHaveLength(3);
   });
+
+  it("keeps a tab open when onBeforeClose vetoes every close path", async () => {
+    const onBeforeClose = vi.fn(() => false);
+    render(<DocumentTabs onBeforeClose={onBeforeClose} />);
+    openSecondAndThird();
+    fireEvent.keyDown(document, { key: "w", code: "KeyW", ctrlKey: true });
+    await userEvent.click(closeButton("Journal · Ola Nordmann"));
+    tab("Journal · Ola Nordmann").focus();
+    await userEvent.keyboard("{Delete}");
+    expect(onBeforeClose).toHaveBeenCalledTimes(3);
+    expect(store().tabs).toHaveLength(3);
+  });
+
+  it("closes the tab when onBeforeClose allows it", async () => {
+    const onBeforeClose = vi.fn(() => true);
+    render(<DocumentTabs onBeforeClose={onBeforeClose} />);
+    openSecondAndThird();
+    await userEvent.click(closeButton("Journal · Ola Nordmann"));
+    expect(onBeforeClose).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "journal" }),
+    );
+    expect(store().tabs.map((t) => t.id)).toEqual(["start", "patients"]);
+  });
 });

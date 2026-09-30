@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { StatusBar } from "./StatusBar";
 import { expectNoSeriousViolations } from "./axeHelper";
 import { copy } from "./copy";
+import { useJournalStore } from "./journalStore";
 
 describe("StatusBar", () => {
   beforeEach(() => {
@@ -69,5 +70,43 @@ describe("StatusBar", () => {
     vi.useRealTimers();
     const { container } = render(<StatusBar onOpenPatients={vi.fn()} />);
     await expectNoSeriousViolations(container);
+  });
+
+  it("shows the active patient and the ongoing konsultasjon time, and opens the journal", async () => {
+    vi.useRealTimers();
+    useJournalStore.setState({
+      patientId: "p1",
+      patient: {
+        id: "p1",
+        fornavn: "Matematisk",
+        etternavn: "Ape",
+        personident: "01019012345",
+        personidentType: "FNR" as const,
+        birthDate: "1990-01-01",
+        gender: "MALE" as const,
+      },
+      konsultasjoner: [
+        {
+          id: "k1",
+          pasientId: "p1",
+          hpr: [],
+          journalnotat: [],
+          diagnoser: [],
+          startetTidspunkt: new Date(Date.now() - 12 * 60_000).toISOString(),
+          avsluttetTidspunkt: null,
+          status: "PÅGÅENDE",
+          problemstilling: null,
+        },
+      ],
+    });
+    const onOpenJournal = vi.fn();
+    render(<StatusBar onOpenPatients={vi.fn()} onOpenJournal={onOpenJournal} />);
+    expect(screen.getByText("◐ Konsultasjon 12 min")).toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole("button", { name: "Aktiv pasient: Matematisk Ape. Åpne journal." }),
+    );
+    expect(onOpenJournal).toHaveBeenCalledOnce();
+    expect(screen.queryByText(copy["status.noPatient"])).not.toBeInTheDocument();
+    useJournalStore.getState().clear();
   });
 });

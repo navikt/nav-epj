@@ -2,11 +2,14 @@ import { Outlet, createRootRoute, useNavigate, useRouterState } from "@tanstack/
 import { AppHeader } from "../xp/AppHeader";
 import { AppShell } from "../xp/AppShell";
 import { BalloonHost } from "../xp/BalloonHost";
+import { JournalGuards } from "../xp/JournalGuards";
 import { StatusBar } from "../xp/StatusBar";
 import { TaskPane } from "../xp/TaskPane";
 import { CurrentUserContext, type CurrentUser } from "../xp/currentUser";
 import { UserGate } from "../xp/UserGate";
 import { Workspace } from "../xp/Workspace";
+import { guardTabClose } from "../xp/journalGuardStore";
+import { useJournalStore } from "../xp/journalStore";
 import { logout } from "../xp/logout";
 import { useHelsepersonell } from "../xp/useHelsepersonell";
 import { useRouteTabSync } from "../xp/useRouteTabSync";
@@ -29,7 +32,13 @@ function RootComponent() {
         }
       : null;
   const openPatients = () => void navigate({ to: "/patients" });
-  useRouteTabSync(pathname, (to) => void navigate({ to }));
+  const openJournal = () => {
+    const { patientId } = useJournalStore.getState();
+    if (patientId) {
+      void navigate({ to: "/patients/$patientId", params: { patientId } });
+    }
+  };
+  useRouteTabSync(pathname, (target) => void navigate(target));
 
   return (
     <CurrentUserContext.Provider value={currentUser}>
@@ -41,17 +50,19 @@ function RootComponent() {
         />
         <TaskPane
           userName={currentUser?.navn}
-          patientsCurrent={pathname.startsWith("/patients")}
+          patientsCurrent={pathname.replace(/\/+$/, "") === "/patients"}
           onOpenPatients={openPatients}
+          onOpenJournal={openJournal}
           onLogout={logout}
         />
-        <Workspace>
+        <Workspace onBeforeCloseTab={guardTabClose}>
           <UserGate state={state} onRetry={retry}>
             <Outlet />
           </UserGate>
         </Workspace>
-        <StatusBar onOpenPatients={openPatients} />
+        <StatusBar onOpenPatients={openPatients} onOpenJournal={openJournal} />
         <BalloonHost />
+        <JournalGuards />
       </AppShell>
     </CurrentUserContext.Provider>
   );

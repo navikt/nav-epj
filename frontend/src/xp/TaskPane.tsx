@@ -1,4 +1,15 @@
 import { copy } from "./copy";
+import { useJournalStore } from "./journalStore";
+import {
+  ageOn,
+  birthDateOf,
+  formatDate,
+  fullName,
+  genderLabel,
+  genderOf,
+} from "./patientInfo";
+import { useNow } from "./useNow";
+import { JOURNAL_TAB_ID, useWorkspaceStore } from "./workspaceStore";
 import { AppearancePanel } from "./AppearancePanel";
 import { TaskLink } from "./TaskLink";
 import { TaskPanel } from "./TaskPanel";
@@ -8,6 +19,7 @@ type Props = {
   userName?: string;
   patientsCurrent: boolean;
   onOpenPatients: () => void;
+  onOpenJournal?: () => void;
   onLogout: () => void;
 };
 
@@ -15,8 +27,13 @@ export function TaskPane({
   userName,
   patientsCurrent,
   onOpenPatients,
+  onOpenJournal,
   onLogout,
 }: Props) {
+  const patient = useJournalStore((s) => s.patient);
+  const journalCurrent = useWorkspaceStore((s) => s.current === JOURNAL_TAB_ID);
+  const now = useNow(60_000);
+  const birthDate = patient ? birthDateOf(patient) : null;
   return (
     <nav
       id={TASK_PANE_ID}
@@ -26,12 +43,43 @@ export function TaskPane({
       tabIndex={-1}
     >
       <TaskPanel title={copy["pane.patient.title"]} primary>
-        <span className="xp-tp-note">{copy["pane.patient.none"]}</span>
-        <TaskLink
-          icon="sok"
-          label={copy["pane.patient.find"]}
-          onActivate={onOpenPatients}
-        />
+        {patient ? (
+          <>
+            <span className="xp-tp-note">
+              <b>{fullName(patient)}</b>
+              {birthDate && (
+                <>
+                  <br />
+                  {copy["pane.patient.info"](
+                    formatDate(birthDate),
+                    ageOn(birthDate, now),
+                    genderLabel(genderOf(patient)),
+                  )}
+                </>
+              )}
+            </span>
+            <TaskLink
+              icon="journal"
+              label={copy["pane.patient.openJournal"]}
+              current={journalCurrent}
+              onActivate={onOpenJournal}
+            />
+            <TaskLink
+              icon="sok"
+              label={copy["pane.patient.findOther"]}
+              onActivate={onOpenPatients}
+            />
+          </>
+        ) : (
+          <>
+            <span className="xp-tp-note">{copy["pane.patient.none"]}</span>
+            <TaskLink
+              icon="sok"
+              label={copy["pane.patient.find"]}
+              onActivate={onOpenPatients}
+            />
+          </>
+        )}
       </TaskPanel>
       <TaskPanel title={copy["pane.apps.title"]}>
         <span className="xp-tp-note">{copy["pane.apps.disabledReason"]}</span>
