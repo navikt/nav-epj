@@ -35,6 +35,17 @@ class SmartDiscoveryDocumentTest {
     }
 
     @Test
+    fun `discovery does not advertise system scopes before client_credentials exists`() =
+        testApplication {
+            application { configureTestSmartDependencies() }
+            val response = client.get("/fhir/.well-known/smart-configuration")
+
+            val doc = jacksonObjectMapper().readValue<SmartDiscoveryDocument>(response.bodyAsText())
+            assertTrue(doc.scopesSupported.none { it.startsWith("system/") })
+            assertTrue("client_credentials" !in doc.grantTypesSupported)
+        }
+
+    @Test
     fun `discovery does not advertise unimplemented registration or management endpoints`() =
         testApplication {
             application { configureTestSmartDependencies() }

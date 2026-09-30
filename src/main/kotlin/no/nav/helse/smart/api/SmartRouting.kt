@@ -410,7 +410,6 @@ fun Application.configureSmartRouting() {
                                 "launch",
                                 "patient/*.cruds",
                                 "user/*.cruds",
-                                "system/*.cruds",
                                 "offline_access",
                             ),
                         responseTypesSupported = listOf("code"),
