@@ -1,6 +1,7 @@
 import { Outlet, createRootRoute, useNavigate, useRouterState } from "@tanstack/react-router";
 import { AppHeader } from "../xp/AppHeader";
 import { AppShell } from "../xp/AppShell";
+import { BalloonHost } from "../xp/BalloonHost";
 import { StatusBar } from "../xp/StatusBar";
 import { TaskPane } from "../xp/TaskPane";
 import { UserGate } from "../xp/UserGate";
@@ -47,6 +48,7 @@ function RootComponent() {
         </UserGate>
       </Workspace>
       <StatusBar onOpenPatients={openPatients} />
+      <BalloonHost />
     </AppShell>
   );
 }
