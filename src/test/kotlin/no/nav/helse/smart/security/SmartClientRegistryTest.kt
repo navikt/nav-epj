@@ -225,6 +225,25 @@ class SmartClientRegistryTest {
     }
 
     @Test
+    fun `redirect and launch uris without a host fail`() {
+        listOf("https:/host/callback", "https:///callback").forEach { uri ->
+            val ex =
+                assertFailsWith<IllegalArgumentException>(uri) {
+                    buildRegistry(
+                        listOf(
+                            RawClientRegistration(
+                                clientId = "c",
+                                launchUris = listOf(uri),
+                                scopes = listOf("openid"),
+                            )
+                        )
+                    )
+                }
+            assertTrue("without a host" in ex.message.orEmpty(), uri)
+        }
+    }
+
+    @Test
     fun `insecure non-localhost redirect uri fails`() {
         assertFailsWith<IllegalArgumentException> {
             buildRegistry(

@@ -13,6 +13,7 @@ import io.ktor.server.testing.*
 import java.io.File
 import java.net.URI
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import no.nav.helse.core.Environment
@@ -95,7 +96,11 @@ class SecurityHeadersTest {
         application {
             dependencies { provide<Environment> { environment } }
             configureSecurityHeaders()
-            routing { get("/ping") { call.respondText("pong") } }
+            configureStatusPages()
+            routing {
+                get("/ping") { call.respondText("pong") }
+                get("/boom") { error("boom") }
+            }
         }
         client.block()
     }
@@ -167,6 +172,29 @@ class SecurityHeadersTest {
             assertTrue(expected.isNotEmpty(), file)
             assertEquals(expected, frameSources(registered).toSet(), file)
         }
+    }
+
+    @Test
+    fun `sets all four headers on an error response handled by StatusPages`() = testApp {
+        val response = get("/boom")
+
+        assertEquals(HttpStatusCode.InternalServerError, response.status)
+        assertEquals(
+            "frame-src 'self' http://localhost:3000 https://other.test https://sykmelding.test; " +
+                "frame-ancestors 'self'",
+            response.headers["Content-Security-Policy"],
+        )
+        assertEquals("nosniff", response.headers["X-Content-Type-Options"])
+        assertEquals("no-referrer", response.headers["Referrer-Policy"])
+        assertTrue(response.headers["Permissions-Policy"].orEmpty().startsWith("camera=()"))
+    }
+
+    @Test
+    fun `fails for a uri without a host`() {
+        val broken =
+            listOf(client("a", launch = listOf("https:/a.test/launch"), redirect = emptyList()))
+
+        assertFailsWith<IllegalArgumentException> { frameSources(broken) }
     }
 
     @Test

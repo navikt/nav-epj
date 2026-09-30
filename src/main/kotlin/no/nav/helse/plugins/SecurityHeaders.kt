@@ -40,7 +40,10 @@ internal fun contentSecurityPolicy(frameSources: List<String>): String =
     "frame-src ${(listOf("'self'") + frameSources).joinToString(" ")}; frame-ancestors 'self'"
 
 private fun originOf(uri: String): String =
-    URI(uri).let { "${it.scheme}://${it.host}${if (it.port == -1) "" else ":${it.port}"}" }
+    URI(uri).let {
+        val host = requireNotNull(it.host) { "No host in SMART client uri $uri" }
+        "${it.scheme}://$host${if (it.port == -1) "" else ":${it.port}"}"
+    }
 
 fun Application.configureSecurityHeaders() {
     val env: Environment by dependencies

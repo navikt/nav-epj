@@ -178,6 +178,9 @@ private fun requireSecureUri(clientId: String, kind: String, uri: String) {
                     "smart.clients: client '$clientId' has an unparseable $kind ($uri)"
                 )
             }
+    require(!parsed.host.isNullOrBlank()) {
+        "smart.clients: client '$clientId' has a $kind without a host ($uri)"
+    }
     require(parsed.scheme == "https" || (parsed.scheme == "http" && parsed.host in LOCAL_HOSTS)) {
         "smart.clients: client '$clientId' has an insecure $kind ($uri); https is required, " +
             "since plain http can be intercepted (plain http is only permitted for localhost " +
