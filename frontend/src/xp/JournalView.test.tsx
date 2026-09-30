@@ -44,7 +44,11 @@ function stub(routes: Record<string, Handler>) {
         key,
         body: init?.body ? JSON.parse(init.body as string) : undefined,
       });
-      const result = routes[key]?.(init) ?? { ok: false };
+      const result =
+        routes[key]?.(init) ??
+        (key === "PUT /api/active-patient"
+          ? { body: { patientId: "p1", expiresAt: "2026-09-30T17:14:00Z" } }
+          : { ok: false });
       const ok = result.ok ?? true;
       return { ok, status: ok ? 200 : 500, json: async () => result.body };
     }),

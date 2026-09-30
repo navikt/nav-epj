@@ -25,11 +25,19 @@ export const testKontor = {
 
 type Handler = (init?: RequestInit) => { status?: number; body?: unknown };
 
+const activePatientHandler: Handler = (init) => ({
+  body: {
+    patientId: (JSON.parse(String(init?.body)) as { patientId: string }).patientId,
+    expiresAt: "2026-09-30T17:14:00Z",
+  },
+});
+
 export function stubApi(handlers: Record<string, Handler> = {}) {
   const calls: { key: string; init?: RequestInit }[] = [];
   const all: Record<string, Handler> = {
     "GET /api/helsepersonell/me": () => ({ body: testMe }),
     "GET /api/legekontor/k1": () => ({ body: testKontor }),
+    "PUT /api/active-patient": activePatientHandler,
     ...handlers,
   };
   vi.stubGlobal(

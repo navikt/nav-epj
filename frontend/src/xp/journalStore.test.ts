@@ -41,13 +41,19 @@ function stub(routes: Routes) {
     vi.fn(async (url: string, init?: RequestInit) => {
       const key = `${init?.method ?? "GET"} ${url}`;
       calls.push({ key, body: init?.body ? JSON.parse(init.body as string) : undefined });
-      const result = routes[key]?.(init) ?? { ok: false };
+      const result =
+        routes[key]?.(init) ??
+        (key === "PUT /api/active-patient"
+          ? { body: { patientId: "p1", expiresAt: "2026-09-30T17:14:00Z" } }
+          : { ok: false });
       const ok = result.ok ?? true;
       return { ok, status: ok ? 200 : 500, json: async () => result.body };
     }),
   );
   return calls;
 }
+
+const activePatient = { patientId: "p1", expiresAt: "2026-09-30T17:14:00Z" };
 
 const journal = () => useJournalStore.getState();
 
@@ -117,11 +123,35 @@ describe("journalStore", () => {
     await journal().open("p1");
     journal().setSubTab("tidligere");
     await journal().open("p1", "k0");
-    expect(calls).toHaveLength(2);
+    expect(calls).toHaveLength(3);
     expect(journal().selectedKonsultasjonId).toBe("k0");
     expect(journal().subTab).toBe("konsultasjon");
     await journal().open("p1");
     expect(journal().selectedKonsultasjonId).toBeNull();
+  });
+
+  it("makes the opened patient the active patient", async () => {
+    const calls = stub({
+      "GET /api/patient/p1": () => ({ body: pasient }),
+      "GET /api/patients/p1/konsultasjoner": () => ({ body: [] }),
+    });
+    await journal().open("p1");
+    expect(calls).toContainEqual({
+      key: "PUT /api/active-patient",
+      body: { patientId: "p1" },
+    });
+    expect(journal().status).toBe("ready");
+  });
+
+  it("does not open a journal when the active patient could not be set", async () => {
+    stub({
+      "GET /api/patient/p1": () => ({ body: pasient }),
+      "GET /api/patients/p1/konsultasjoner": () => ({ body: [] }),
+      "PUT /api/active-patient": () => ({ ok: false }),
+    });
+    await journal().open("p1");
+    expect(journal().status).toBe("error");
+    expect(journal().loadError).toBe("patient");
   });
 
   it("reloads and drops the draft when another patient is opened", async () => {
@@ -153,6 +183,9 @@ describe("journalStore", () => {
         if (url === "/api/patient/p2") {
           return { ok: true, status: 200, json: async () => ({ ...pasient, id: "p2", fornavn: "Ola" }) };
         }
+        if (url === "/api/active-patient") {
+          return { ok: true, status: 200, json: async () => activePatient };
+        }
         return { ok: true, status: 200, json: async () => [] };
       }),
     );
@@ -182,6 +215,9 @@ describe("journalStore", () => {
         }
         if (url === "/api/patient/p2") {
           return { ok: true, status: 200, json: async () => ({ ...pasient, id: "p2" }) };
+        }
+        if (url === "/api/active-patient") {
+          return { ok: true, status: 200, json: async () => activePatient };
         }
         return { ok: true, status: 200, json: async () => [kons()] };
       }),

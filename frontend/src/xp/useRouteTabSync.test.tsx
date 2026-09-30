@@ -125,7 +125,9 @@ function stubJournalApi() {
       json: async () =>
         url.endsWith("/konsultasjoner")
           ? []
-          : { ...pasient, id: url.split("/").at(-1), fornavn: `Fornavn ${url.split("/").at(-1)}` },
+          : url === "/api/active-patient"
+            ? { patientId: "p1", expiresAt: "2026-09-30T17:14:00Z" }
+            : { ...pasient, id: url.split("/").at(-1), fornavn: `Fornavn ${url.split("/").at(-1)}` },
     })),
   );
 }

@@ -9,6 +9,7 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import java.time.LocalDateTime
 import kotlin.test.assertEquals
@@ -106,5 +107,31 @@ class KonsultasjonRoutesTest {
         val response = get("/api/patients/${pasientId.value}/konsultasjoner")
 
         assertEquals(HttpStatusCode.NotFound, response.status)
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `GET konsultasjoner does not change the active patient`() = testApp {
+        val pasientId = PasientId(Uuid.generateV4())
+        coEvery { konsultasjonService.getKonsultasjoner(pasientId) } returns
+            listOf(konsultasjon(pasientId = pasientId))
+
+        val response = get("/api/patients/${pasientId.value}/konsultasjoner")
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        coVerify(exactly = 0) { valkeyService.setActivePatient(any(), any()) }
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `POST konsultasjoner still sets the active patient`() = testApp {
+        val pasientId = PasientId(Uuid.generateV4())
+        coEvery { konsultasjonService.getOrCreateKonsultasjon(pasientId, any()) } returns
+            konsultasjon(pasientId = pasientId)
+
+        val response = post("/api/patients/${pasientId.value}/konsultasjoner")
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        coVerify(exactly = 1) { valkeyService.setActivePatient("111", pasientId.value.toString()) }
     }
 }

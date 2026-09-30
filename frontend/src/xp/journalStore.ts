@@ -2,6 +2,7 @@ import { create } from "zustand";
 import {
   fetchKonsultasjoner,
   fetchPatient,
+  putActivePatient,
   saveKonsultasjon,
   startKonsultasjon,
 } from "./api";
@@ -199,12 +200,13 @@ export const useJournalStore = create<JournalState>((set, get) => {
         patientId,
         status: "loading",
       });
-      const [patient, konsultasjoner] = await Promise.allSettled([
+      const [patient, konsultasjoner, active] = await Promise.allSettled([
         fetchPatient(patientId),
         fetchKonsultasjoner(patientId),
+        putActivePatient(patientId),
       ]);
       if (!isCurrent()) return;
-      if (patient.status === "rejected") {
+      if (patient.status === "rejected" || active.status === "rejected") {
         commit({ status: "error", loadError: "patient" });
         return;
       }
