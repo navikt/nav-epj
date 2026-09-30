@@ -73,7 +73,7 @@ fun Route.appRoutes(
                 is LaunchPreparation.Ready ->
                     call.respond(
                         LaunchResponse(
-                            "$launchUri/?iss=$fhirServerUrl&launch=${preparation.launchId}"
+                            buildLaunchUrl(launchUri, fhirServerUrl, preparation.launchId)
                         )
                     )
                 LaunchPreparation.NoActivePatient ->

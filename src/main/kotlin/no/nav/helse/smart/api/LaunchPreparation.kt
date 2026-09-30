@@ -1,5 +1,7 @@
 package no.nav.helse.smart.api
 
+import io.ktor.http.URLBuilder
+import io.ktor.http.appendPathSegments
 import java.util.UUID
 import kotlin.uuid.Uuid
 import no.nav.helse.fhir.encounter.EncounterService
@@ -21,6 +23,15 @@ sealed interface LaunchPreparation {
 
     data object EncounterWithoutId : LaunchPreparation
 }
+
+fun buildLaunchUrl(launchUri: String, iss: String, launchId: String): String =
+    URLBuilder(launchUri)
+        .apply {
+            appendPathSegments("")
+            parameters.append("iss", iss)
+            parameters.append("launch", launchId)
+        }
+        .buildString()
 
 /**
  * The checks and side effect shared by `GET /fhir/launch` and `POST /api/launch`: the clinician

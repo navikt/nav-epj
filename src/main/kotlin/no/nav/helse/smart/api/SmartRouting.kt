@@ -91,7 +91,7 @@ fun Application.configureSmartRouting() {
                         }
 
                     val iss = env.smart.fhirServerUrl
-                    call.respondRedirect("$appUrl/?iss=$iss&launch=$launchId")
+                    call.respondRedirect(buildLaunchUrl(appUrl, iss, launchId))
                 }
             }
 

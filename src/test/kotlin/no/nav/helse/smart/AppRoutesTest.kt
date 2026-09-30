@@ -48,6 +48,7 @@ import tools.jackson.module.kotlin.readValue
 private const val HPR = "111"
 private const val SECRET = "super-secret-client-value"
 private const val ISS = "http://test/fhir"
+private const val ISS_ENCODED = "http%3A%2F%2Ftest%2Ffhir"
 
 private val clients =
     listOf(
@@ -209,7 +210,7 @@ class AppRoutesTest : WithValkey() {
 
             assertEquals(HttpStatusCode.OK, response.status)
             val launchUrl = tree(response.bodyAsText()).getValue("launchUrl")
-            val prefix = "https://sykmelding.test/fhir/launch/?iss=$ISS&launch="
+            val prefix = "https://sykmelding.test/fhir/launch/?iss=$ISS_ENCODED&launch="
             assertTrue(launchUrl.startsWith(prefix), launchUrl)
             val launchId = launchUrl.removePrefix(prefix)
             assertEquals(
@@ -303,7 +304,7 @@ class AppRoutesTest : WithValkey() {
         assertEquals(HttpStatusCode.Found, response.status)
         val location = response.headers[HttpHeaders.Location].orEmpty()
         assertTrue(
-            location.startsWith("https://sykmelding.test/fhir/launch/?iss=$ISS&launch="),
+            location.startsWith("https://sykmelding.test/fhir/launch/?iss=$ISS_ENCODED&launch="),
             location,
         )
     }
