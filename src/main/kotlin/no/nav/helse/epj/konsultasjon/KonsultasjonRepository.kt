@@ -244,19 +244,10 @@ class KonsultasjonRepository {
             )
         }
 
-        val eksisterendeKonsultasjonId =
-            JournalnotatTable.select(JournalnotatTable.konsultasjonId)
-                .where { JournalnotatTable.id eq journalnotat.id.value }
-                .singleOrNull()
-                ?.get(JournalnotatTable.konsultasjonId)
-        if (
-            eksisterendeKonsultasjonId != null &&
-                eksisterendeKonsultasjonId != journalnotat.konsultasjonId.value
-        ) {
-            return@dbQuery 0
-        }
-
-        JournalnotatTable.upsert(onUpdateExclude = listOf(JournalnotatTable.id)) {
+        JournalnotatTable.upsert(
+                onUpdateExclude = listOf(JournalnotatTable.id),
+                where = { JournalnotatTable.konsultasjonId eq journalnotat.konsultasjonId.value },
+            ) {
                 it[JournalnotatTable.id] = journalnotat.id.value
                 it[JournalnotatTable.konsultasjonId] = journalnotat.konsultasjonId.value
                 it[JournalnotatTable.pasientId] = journalnotat.pasientId.value
