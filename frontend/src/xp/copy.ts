@@ -237,6 +237,7 @@ export const copy = {
   "s4.loadError.patient": "Feil ved lasting av pasient",
   "s4.loadError.kons": "Feil ved lasting av konsultasjoner",
   "s4.tidl.ongoing": "◐ Pågående",
+  "context.gender": "Kjønn",
   "context.gender.other": "Annet",
   "context.gender.unknown": "Ukjent",
   "common.close": "Lukk",
