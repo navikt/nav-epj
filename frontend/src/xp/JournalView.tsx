@@ -20,6 +20,9 @@ export function JournalView() {
   const patientId = useJournalStore((s) => s.patientId);
   const patient = useJournalStore((s) => s.patient);
   const konsultasjoner = useJournalStore((s) => s.konsultasjoner);
+  const tidligereKonsultasjoner = konsultasjoner.filter(
+    (k) => k.status !== "PÅGÅENDE",
+  );
   const subTab = useJournalStore((s) => s.subTab);
   const dirty = useJournalStore((s) => isDirty(s));
   const appCount = useAppsStore((s) => s.apps.length);
@@ -74,14 +77,14 @@ export function JournalView() {
           },
           {
             id: "tidligere",
-            label: copy["s4.tab.tidl"](konsultasjoner.length),
+            label: copy["s4.tab.tidl"](tidligereKonsultasjoner.length),
           },
           { id: "apper", label: copy["s4.tab.apper"](appCount) },
         ]}
       >
         {subTab === "konsultasjon" && <KonsultasjonTab patient={patient} />}
         {subTab === "tidligere" && (
-          <TidligereKonsultasjoner konsultasjoner={konsultasjoner} />
+          <TidligereKonsultasjoner konsultasjoner={tidligereKonsultasjoner} />
         )}
         {subTab === "apper" && <AppsTab />}
       </SubTabs>

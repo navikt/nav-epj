@@ -53,11 +53,7 @@ export function TidligereKonsultasjoner({ konsultasjoner }: Props) {
                     {formatDateTime(k.startetTidspunkt)}
                   </button>
                 </td>
-                <td>
-                  {k.status === "PÅGÅENDE"
-                    ? copy["s4.tidl.ongoing"]
-                    : copy["s4.tidl.done"]}
-                </td>
+                <td>{copy["s4.tidl.done"]}</td>
                 <td>
                   {k.diagnoser.length === 0
                     ? copy["s4.empty.value"]

@@ -241,15 +241,21 @@ describe("JournalView", () => {
         journalnotat: [{ ...savedNote, id: "n0", konsultasjonId: "k0", journalnotat: "Gammelt notat" }],
       }),
     ]);
-    await userEvent.click(await screen.findByRole("tab", { name: "Tidligere konsultasjoner (2)" }));
-    const table = screen.getByRole("table", { name: "Tidligere konsultasjoner (2)" });
-    expect(within(table).getByText("◐ Pågående")).toBeInTheDocument();
+    await userEvent.click(await screen.findByRole("tab", { name: "Tidligere konsultasjoner (1)" }));
+    const table = screen.getByRole("table", { name: "Tidligere konsultasjoner (1)" });
+    expect(within(table).queryByText("◐ Pågående")).not.toBeInTheDocument();
     expect(within(table).getByText("✔ Fullført")).toBeInTheDocument();
     expect(screen.getByText("Velg en konsultasjon for å se diagnoser og journalnotater.")).toBeInTheDocument();
     await userEvent.click(within(table).getByRole("button", { name: "01.09.2026 09:00" }));
     expect(screen.getByRole("heading", { name: "Konsultasjon 01.09.2026 09:00 (skrivebeskyttet)" })).toBeInTheDocument();
     expect(screen.getByText("Gammelt notat")).toBeInTheDocument();
     expect(screen.getByText("01.09.2026 09:30")).toBeInTheDocument();
+  });
+
+  it("never lists the ongoing konsultasjon under Tidligere konsultasjoner", async () => {
+    await openJournal([kons()]);
+    await userEvent.click(await screen.findByRole("tab", { name: "Tidligere konsultasjoner (0)" }));
+    expect(screen.getByText("Ingen tidligere konsultasjoner.")).toBeInTheDocument();
   });
 
   it("shows an empty state when there are no previous konsultasjoner", async () => {
