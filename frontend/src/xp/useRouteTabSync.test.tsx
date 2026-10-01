@@ -222,6 +222,20 @@ describe("useRouteTabSync journal routes", () => {
     expect(useJournalStore.getState().subTab).toBe("tidligere");
   });
 
+  it("retries a failed journal load when the URL changes sub-tab", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false, status: 500 })));
+    const { rerender } = renderHook(
+      ({ route }) => useRouteTabSync(route, vi.fn()),
+      { initialProps: { route: journal("p1") as CurrentRoute } },
+    );
+    await waitFor(() => expect(useJournalStore.getState().status).toBe("error"));
+    stubJournalApi();
+    rerender({ route: journal("p1", undefined, "tidligere") });
+    await waitFor(() => expect(useJournalStore.getState().status).toBe("ready"));
+    expect(useJournalStore.getState().patient?.id).toBe("p1");
+    expect(useJournalStore.getState().subTab).toBe("tidligere");
+  });
+
   it("shows Konsultasjon when the route names no sub-tab or a konsultasjon", async () => {
     const { rerender } = renderHook(
       ({ route }) => useRouteTabSync(route, vi.fn()),

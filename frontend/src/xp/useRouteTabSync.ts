@@ -55,7 +55,7 @@ export function useRouteTabSync(
         applyingRoute.current = false;
       }
     }
-  }, [route.kind, patientId, konsultasjonId]);
+  }, [route.kind, patientId, konsultasjonId, subTab]);
 
   useEffect(() => {
     if (!subTab) return;
