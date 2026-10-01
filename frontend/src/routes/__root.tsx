@@ -14,7 +14,7 @@ import { useAppsStore } from "../xp/appsStore";
 import { guardTabClose } from "../xp/journalGuardStore";
 import { useLaunchModeStore } from "../xp/launchModeStore";
 import { usePatientsStore } from "../xp/patientsStore";
-import { currentJournalRoute } from "../xp/tabRoutes";
+import { currentJournalRoute, openPatientsTab } from "../xp/tabRoutes";
 import { useActivePatientSync } from "../xp/useActivePatientSync";
 import { useAccessExpiry } from "../xp/useAccessExpiry";
 import { useAppSync } from "../xp/useAppSync";
@@ -25,7 +25,6 @@ import { useRouteTabSync } from "../xp/useRouteTabSync";
 import { useSearchSubmit } from "../xp/useSearchSubmit";
 import {
   JOURNAL_TAB_ID,
-  PATIENTS_TAB_ID,
   useWorkspaceStore,
 } from "../xp/workspaceStore";
 
@@ -48,13 +47,7 @@ function RootComponent() {
           telefon: state.legekontor.tlf ?? undefined,
         }
       : null;
-  const openPatients = () => {
-    const workspace = useWorkspaceStore.getState();
-    if (workspace.tabs.some((t) => t.id === PATIENTS_TAB_ID)) {
-      workspace.setCurrent(PATIENTS_TAB_ID);
-    }
-    void navigate({ to: "/patients" });
-  };
+  const openPatients = () => openPatientsTab((target) => void navigate(target));
   const openJournal = () => {
     const target = currentJournalRoute();
     if (!target) return;

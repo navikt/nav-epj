@@ -345,6 +345,9 @@
 .xp-frame > iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #ffffff; }
 .xp-frame-over .xp-card { width: min(520px, 100%); }
 .xp-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.xp-recent-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.xp-recent-list li { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.xp-recent-list span { color: var(--xp-text-muted); }
 .xp-appcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
 .xp-appcard-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .xp-appcard-head h3 { margin: 0; font-size: var(--xp-font-size-md); color: var(--xp-panel-fg); flex: 1; min-width: 0; }
