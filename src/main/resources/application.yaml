@@ -28,7 +28,7 @@ smart:
       navn: "Sykmelding"
       beskrivelse: "Skriv sykmelding og send den til Nav."
       ikon: "sykmelding"
-      launchMode: "iframe"
+      launchMode: "ask"
       redirectUris: [ "https://www.ekstern.dev.nav.no/samarbeidspartner/sykmelding", "https://www.ekstern.dev.nav.no/samarbeidspartner/sykmelding/fhir/callback" ]
       launchUris: [ "https://www.ekstern.dev.nav.no/samarbeidspartner/sykmelding/fhir/launch" ]
       tokenEndpointAuthMethod: "client_secret_basic"
