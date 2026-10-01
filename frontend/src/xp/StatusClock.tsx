@@ -1,9 +1,9 @@
-import { format } from "date-fns";
 import { copy } from "./copy";
+import { formatTime } from "./patientInfo";
 import { useNow } from "./useNow";
 
 export function StatusClock() {
-  const time = format(useNow(), "HH:mm");
+  const time = formatTime(useNow());
   return (
     <>
       <span aria-hidden="true">{time}</span>

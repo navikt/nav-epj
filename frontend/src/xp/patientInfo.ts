@@ -85,6 +85,10 @@ export function formatDate(iso: string) {
   return format(parseISO(iso), "dd.MM.yyyy");
 }
 
+export function formatTime(date: Date, withSeconds = false) {
+  return format(date, withSeconds ? "HH:mm:ss" : "HH:mm");
+}
+
 export function formatDateTime(iso: string) {
   return format(parseISO(iso), "dd.MM.yyyy HH:mm");
 }

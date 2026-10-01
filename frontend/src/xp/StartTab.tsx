@@ -1,6 +1,5 @@
 import { useId, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { format } from "date-fns";
 import { Button } from "./Button";
 import { Card } from "./Card";
 import { Note } from "./Note";
@@ -9,7 +8,7 @@ import { useActivePatientStore } from "./activePatientStore";
 import { accessExpiry, isOutdatedFor, useAppRunStore } from "./appRunStore";
 import { useCurrentUser } from "./currentUser";
 import { useJournalStore } from "./journalStore";
-import { birthDateOf, formatDate, fullName } from "./patientInfo";
+import { birthDateOf, formatDate, formatTime, fullName } from "./patientInfo";
 import { scopePatients, usePatientsStore } from "./patientsStore";
 import { SEARCH_INPUT_ID } from "./shellContext";
 import { openPatientsTab } from "./tabRoutes";
@@ -93,7 +92,7 @@ export function StartTab() {
                 journalPatientId,
                 activePatientId,
               );
-              const tid = format(accessExpiry(tabApp.startedAt), "HH:mm");
+              const tid = formatTime(accessExpiry(tabApp.startedAt));
               return (
                 <Note key={tabApp.id} tone={stale ? "warn" : "info"}>
                   <strong>{tabApp.navn}</strong>{" "}

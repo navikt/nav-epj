@@ -1,5 +1,4 @@
 import { useNavigate } from "@tanstack/react-router";
-import { format } from "date-fns";
 import { useActivePatientStore } from "./activePatientStore";
 import { ApiError } from "./api";
 import { MessageBox, type MessageBoxVariant } from "./MessageBox";
@@ -9,6 +8,7 @@ import { useBalloonStore } from "./balloonStore";
 import { copyText } from "./clipboard";
 import { copy } from "./copy";
 import { useJournalStore } from "./journalStore";
+import { formatTime } from "./patientInfo";
 import { journalRoute } from "./tabRoutes";
 import { useStartApp } from "./useStartApp";
 import { JOURNAL_TAB_ID, useWorkspaceStore } from "./workspaceStore";
@@ -140,7 +140,7 @@ export function LaunchErrorDialog({ dialog, onClose }: Props) {
   const items: [string, string][] = [
     [copy["s8.details.code"], code],
     [copy["s8.details.app"], dialog.clientId ?? dialog.app],
-    [copy["s8.details.time"], format(dialog.at, "HH:mm:ss")],
+    [copy["s8.details.time"], formatTime(dialog.at, true)],
   ];
   if (dialog.status !== null) {
     items.push([copy["s8.details.http"], String(dialog.status)]);

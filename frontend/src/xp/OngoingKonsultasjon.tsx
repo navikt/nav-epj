@@ -11,7 +11,7 @@ import { TextArea } from "./TextArea";
 import { copy } from "./copy";
 import { useCurrentUser } from "./currentUser";
 import { diagnoseKey, isDirty, useJournalStore } from "./journalStore";
-import { formatDateTime, minutesSince } from "./patientInfo";
+import { formatDateTime, formatTime, minutesSince } from "./patientInfo";
 import { useShell } from "./shellContext";
 import { useNow } from "./useNow";
 import type { Konsultasjon, Pasient } from "../utils/mapping/epj";
@@ -20,10 +20,6 @@ type Props = {
   patient: Pasient;
   konsultasjon: Konsultasjon;
 };
-
-function clockOf(date: Date) {
-  return date.toLocaleTimeString("nb-NO", { hour: "2-digit", minute: "2-digit" });
-}
 
 export function OngoingKonsultasjon({ patient, konsultasjon }: Props) {
   const titleId = useId();
@@ -110,7 +106,7 @@ export function OngoingKonsultasjon({ patient, konsultasjon }: Props) {
                 : dirty
                   ? copy["s4.status.dirty"]
                   : saveStatus === "saved" && savedAt
-                    ? copy["s4.status.saved"](clockOf(savedAt))
+                    ? copy["s4.status.saved"](formatTime(savedAt))
                     : ""}
             </span>
           </div>

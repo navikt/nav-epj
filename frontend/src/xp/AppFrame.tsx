@@ -1,12 +1,12 @@
 import { useEffect, useRef } from "react";
-import { format, parseISO } from "date-fns";
+import { parseISO } from "date-fns";
 import { Button } from "./Button";
 import { Progress } from "./Progress";
 import { appFrameId, appTabId, launchParts } from "./appInfo";
 import { useAppRunStore, type AppRun } from "./appRunStore";
 import { copy } from "./copy";
 import { dismissTimeoutDialog, reportTimeout } from "./launchApp";
-import { fullName } from "./patientInfo";
+import { formatTime, fullName } from "./patientInfo";
 
 export const FRAME_TIMEOUT_MS = 8000;
 
@@ -168,7 +168,7 @@ export function AppFrame({
       />
     );
   } else if (status === "starting") {
-    const time = format(parseISO(run.konsultasjon.startetTidspunkt), "HH:mm");
+    const time = formatTime(parseISO(run.konsultasjon.startetTidspunkt));
     overlay = (
       <div className="xp-frame-over">
         <section className="xp-card" role="status">

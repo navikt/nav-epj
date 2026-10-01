@@ -1,10 +1,9 @@
-import { format } from "date-fns";
 import { MessageBox } from "./MessageBox";
 import { isStaleFor, accessExpiry, useAppRunStore } from "./appRunStore";
 import { copy } from "./copy";
 import { useJournalStore } from "./journalStore";
 import { findApp } from "./launchApp";
-import { fullName } from "./patientInfo";
+import { formatTime, fullName } from "./patientInfo";
 import { useStartApp } from "./useStartApp";
 
 type Props = {
@@ -22,7 +21,7 @@ export function TabAppDialog({ tabId, onClose }: Props) {
 
   if (!tabApp) return null;
   const { clientId } = tabApp;
-  const expiry = format(accessExpiry(tabApp.startedAt), "HH:mm");
+  const expiry = formatTime(accessExpiry(tabApp.startedAt));
   const owner = fullName(tabApp.patient);
   const stale = isStaleFor(tabApp.patient.id, journalPatientId);
   const remove = () => {

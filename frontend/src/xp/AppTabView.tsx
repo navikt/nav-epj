@@ -11,7 +11,7 @@ import { useAppsStore } from "./appsStore";
 import { copy } from "./copy";
 import { useJournalStore } from "./journalStore";
 import { closeApp, reloadApp } from "./launchApp";
-import { fullName } from "./patientInfo";
+import { formatTime, fullName } from "./patientInfo";
 import { useShell } from "./shellContext";
 import { useOpenJournal } from "./useOpenJournal";
 import { usePatientLabel } from "./usePatientName";
@@ -54,7 +54,7 @@ export function AppTabView({ clientId }: Props) {
 
   if (!run) return null;
   const patientName = fullName(run.patient);
-  const started = format(run.startedAt, "HH:mm");
+  const started = formatTime(run.startedAt);
   const canNavigate = run.status === "running" && !stale;
   const canReload = run.status !== "starting" && run.status !== "session" && !stale;
 
@@ -63,7 +63,7 @@ export function AppTabView({ clientId }: Props) {
   else if (run.status === "running") {
     footer = copy["s5.status.running"](
       started,
-      format(accessExpiry(run.startedAt), "HH:mm"),
+      formatTime(accessExpiry(run.startedAt)),
     );
   } else if (run.status === "timeout") footer = copy["s5.status.timeout"];
   else if (run.status === "error") footer = copy["s5.status.error"];

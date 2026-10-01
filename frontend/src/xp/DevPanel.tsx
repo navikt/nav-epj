@@ -1,20 +1,18 @@
 import { Fragment, useId } from "react";
-import { format, parseISO } from "date-fns";
+import { parseISO } from "date-fns";
 import { Button } from "./Button";
 import { IFRAME_REFERRER_POLICY, IFRAME_SANDBOX } from "./AppFrame";
 import { devPanelId, launchParts } from "./appInfo";
 import { accessExpiry, type AppRun } from "./appRunStore";
 import { copyText } from "./clipboard";
 import { copy } from "./copy";
-import { fullName } from "./patientInfo";
+import { formatTime, fullName } from "./patientInfo";
 
 type Props = {
   run: AppRun;
   hidden?: boolean;
   onClose: () => void;
 };
-
-const time = (date: Date) => format(date, "HH:mm");
 
 export function DevPanel({ run, hidden, onClose }: Props) {
   const headingId = useId();
@@ -31,13 +29,13 @@ export function DevPanel({ run, hidden, onClose }: Props) {
     [copy["dev.iss"], parts.iss || "–"],
     [copy["dev.patient"], `Patient/${run.patient.id}`],
     [copy["dev.encounter"], `Encounter/${run.konsultasjon.id}`],
-    [copy["dev.started"], time(run.startedAt)],
-    [copy["dev.expires"], time(accessExpiry(run.startedAt))],
+    [copy["dev.started"], formatTime(run.startedAt)],
+    [copy["dev.expires"], formatTime(accessExpiry(run.startedAt))],
     [copy["dev.sandbox"], IFRAME_SANDBOX],
     [copy["dev.referrer"], IFRAME_REFERRER_POLICY],
   ];
   const events = run.events.map((event) => {
-    const at = format(event.at, "HH:mm:ss");
+    const at = formatTime(event.at, true);
     return {
       id: event.id,
       text:
@@ -49,7 +47,7 @@ export function DevPanel({ run, hidden, onClose }: Props) {
 
   function copyAll() {
     const text = [
-      `${run.navn} (${fullName(run.patient)}, ${format(parseISO(run.konsultasjon.startetTidspunkt), "HH:mm")})`,
+      `${run.navn} (${fullName(run.patient)}, ${formatTime(parseISO(run.konsultasjon.startetTidspunkt))})`,
       ...rows.map(([key, value]) => `${key}: ${value}`),
       ...events.map((event) => event.text),
     ].join("\n");

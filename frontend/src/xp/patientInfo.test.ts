@@ -5,6 +5,7 @@ import {
   derivePersonident,
   formatDate,
   formatDateTime,
+  formatTime,
   fullName,
   genderLabel,
   genderOf,
@@ -96,5 +97,13 @@ describe("patientInfo", () => {
 
   it("joins the name", () => {
     expect(fullName(pasient)).toBe("Matematisk Ape");
+  });
+});
+
+describe("formatTime", () => {
+  it("formats hours and minutes, optionally with seconds", () => {
+    const date = new Date(2026, 8, 30, 9, 4, 7);
+    expect(formatTime(date)).toBe("09:04");
+    expect(formatTime(date, true)).toBe("09:04:07");
   });
 });
