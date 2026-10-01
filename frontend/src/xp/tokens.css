@@ -66,7 +66,7 @@
 :root, .xp-root {
   --xp-font: "Tahoma", "Segoe UI", "Verdana", system-ui, sans-serif;
   --xp-font-mono: "Consolas", "DejaVu Sans Mono", ui-monospace, monospace;
-  --xp-font-size: 0.875rem;          /* 14px – minimum for all text */
+  --xp-font-size: 0.875rem;
   --xp-font-size-md: 1rem;
   --xp-font-size-lg: 1.25rem;
   --xp-font-size-xl: 1.75rem;
@@ -83,8 +83,8 @@
   --xp-text: #1a1a1a;
   --xp-text-muted: #4a4a4a;
   --xp-text-disabled: #5f5f5f;
-  --xp-border: #8e8a78;              /* decorative separators only */
-  --xp-border-input: #5a7ea8;        /* was #7f9db9 (XP) – failed 3:1 */
+  --xp-border: #8e8a78;
+  --xp-border-input: #5a7ea8;
   --xp-button-border: #003c74;
   --xp-button-bg-start: #ffffff;
   --xp-button-bg-end: #e3e0cf;
@@ -97,7 +97,7 @@
   --xp-header-start: #1c5bd9;
   --xp-header-end: #0a246a;
   --xp-header-fg: #ffffff;
-  --xp-pane-start: #7ba2e7;          /* task pane background – decorative, no text sits on it */
+  --xp-pane-start: #7ba2e7;
   --xp-pane-end: #6375d6;
   --xp-panel-bg: #eef3fd;
   --xp-panel-head-start: #ffffff;
@@ -106,16 +106,16 @@
   --xp-panel-primary-start: #2e5fd8;
   --xp-panel-primary-end: #0a246a;
   --xp-tab-strip-start: #f7f6f1;
-  --xp-tab-accent: #e89a1b;          /* XP orange line on selected tab – decorative, paired with bold text */
+  --xp-tab-accent: #e89a1b;
   --xp-card-border: #cfcab6;
   --xp-card-radius: 6px;
   --xp-menu-bg: #ffffff;
 
-  --xp-focus-ring: #ffbf47;          /* outer halo – visible on dark/blue surfaces */
-  --xp-focus-inner: #0b1a3d;         /* inner line – visible on light surfaces (≥3:1) */
+  --xp-focus-ring: #ffbf47;
+  --xp-focus-inner: #0b1a3d;
 
-  --xp-banner-bg: #ffffff;           /* patient context header: neutral, not a warning */
-  --xp-banner-border: #cfcab6;       /* decorative separator */
+  --xp-banner-bg: #ffffff;
+  --xp-banner-border: #cfcab6;
   --xp-banner-fg: #1a1a1a;
 
   --xp-status-ok: #1b5e20;
