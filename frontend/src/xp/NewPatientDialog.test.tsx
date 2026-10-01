@@ -65,6 +65,11 @@ describe("NewPatientDialog", () => {
     await expectNoSeriousViolations(baseElement);
   });
 
+  it("does not spell-check the fødselsnummer", () => {
+    setup();
+    expect(screen.getByLabelText("Fødselsnummer")).toHaveAttribute("spellcheck", "false");
+  });
+
   it("validates on submit, shows all errors and focuses the first one", async () => {
     const fn = stubFetch(() => ({ ok: true, body: created }));
     const user = userEvent.setup();

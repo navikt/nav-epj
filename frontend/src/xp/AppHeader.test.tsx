@@ -71,6 +71,14 @@ describe("AppHeader", () => {
     );
   });
 
+  it("does not spell-check the search, which accepts fødselsnumre", () => {
+    renderHeader();
+    expect(screen.getByLabelText(copy["header.search.label"])).toHaveAttribute(
+      "spellcheck",
+      "false",
+    );
+  });
+
   it("uses the short placeholder in narrow mode", () => {
     mockMatchMedia({ "(max-width: 1023px)": true });
     renderHeader();

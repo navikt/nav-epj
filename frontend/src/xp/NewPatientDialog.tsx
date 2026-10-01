@@ -108,6 +108,7 @@ export function NewPatientDialog({ onClose }: Props) {
             disabled={saving}
             inputMode="numeric"
             autoComplete="off"
+            spellCheck={false}
             inputRef={fnrRef}
             onChange={(event) => setFnr(event.target.value)}
           />

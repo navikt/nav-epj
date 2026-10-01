@@ -84,6 +84,7 @@ export function AppHeader({ user, onLogout, onSearchSubmit }: Props) {
           id={SEARCH_INPUT_ID}
           type="search"
           autoComplete="off"
+          spellCheck={false}
           value={query}
           placeholder={
             narrow
