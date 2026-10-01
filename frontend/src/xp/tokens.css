@@ -1,7 +1,7 @@
 /*
  * nav-epj – design tokens
  * Themes: Luna (default, on .xp-root / :root) and Klassisk (high contrast, [data-theme="klassisk"]).
- * Put in its own layer: @layer tokens, xpcss, xp, aksel, tailwind;  (see components.md)
+ * Put in its own layer: @layer tokens, xpcss, xp, aksel;  (see components.md)
  *
  * CONTRAST TABLE (WCAG 2.1: 4.5:1 text, 3:1 large text, component edges and focus)
  * Every gradient stop is measured separately.

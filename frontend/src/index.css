@@ -1,8 +1,6 @@
-@layer preflight, tokens, xpcss, aksel, xp, tailwind;
+@layer preflight, tokens, xpcss, aksel, xp;
 
-@import "tailwindcss/theme.css" layer(tailwind);
-@import "tailwindcss/preflight.css" layer(preflight);
-@import "tailwindcss/utilities.css" layer(tailwind);
+@import "./reset.css" layer(preflight);
 @import "@navikt/ds-css" layer(aksel);
 @import "./xp/tokens.css";
 @import "./xp/xp.css";
