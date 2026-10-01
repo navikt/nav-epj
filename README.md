@@ -53,6 +53,20 @@ HelseID id_token that Wonderwall forwards (`iss`, `aud`, `name`, `hpr_number`) a
 issue and expiry times. It never returns raw tokens or the `pid` claim. With local development
 security it returns `{ "idp": "local-stub", "claims": { "sub": "local-dev" } }`.
 
+### Changing how a SMART app opens (window vs. new tab)
+
+Each registered SMART client has a fixed `launchMode` set in its config entry under `smart.clients`
+in `application.yaml` / `application-local.yaml`:
+
+| `launchMode` | Behaviour |
+| --- | --- |
+| `iframe` (default) | Opens inside nav-epj, in the app tab ("Vindu"). |
+| `tab` | Opens in its own browser tab ("Ny fane"); never framed, so it's excluded from the CSP `frame-src` list below. |
+| `ask` | The clinician is asked each launch ("Velg visning") and can tick "Husk valget for denne appen" to remember the choice per app (stored in the browser's `localStorage`, scoped per clinician). |
+
+There is no in-app setting to change this per clinician for `iframe`/`tab` clients — it's a
+registry-level decision, matching the app's SMART client registry rather than a user preference.
+
 ### Security headers
 
 Every response carries these headers (`SecurityHeaders.kt`):
