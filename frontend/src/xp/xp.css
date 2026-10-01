@@ -99,12 +99,14 @@
 .xp-option.is-hi .sys { color: var(--xp-selection-fg); }
 .xp-option[aria-selected="true"] { font-weight: 700; }
 
-.xp-tablist { display: flex; gap: 2px; padding: var(--xp-space-2) var(--xp-space-2) 0; border-bottom: 1px solid var(--xp-border-input); }
+.xp-tablist { display: flex; gap: 2px; padding: var(--xp-space-2) 0 0; border-bottom: 1px solid var(--xp-border-input); }
 .xp-tab { position: relative; top: 1px; min-height: 32px; padding: 4px 14px; font: inherit; color: var(--xp-text); background: linear-gradient(180deg, #fff, #ecebe5); border: 1px solid var(--xp-border-input); border-bottom: 0; border-radius: 3px 3px 0 0; }
 .xp-tab:hover, .xp-tab.is-hover { box-shadow: inset 0 3px 0 var(--xp-hover-glow); }
 .xp-tab[aria-selected="true"] { background: var(--xp-window-bg); font-weight: 700; box-shadow: inset 0 3px 0 var(--xp-hover-glow); padding-bottom: 6px; }
 .xp-tab:disabled { color: var(--xp-text-disabled); }
-.xp-tabpanel { flex: 1; min-height: 0; overflow: auto; padding: var(--xp-space-4); }
+.xp-tabpanel { flex: 1; min-height: 0; overflow: auto; padding: var(--xp-space-4) 0; }
+.xp-dialog .xp-tablist { padding-inline: var(--xp-space-2); }
+.xp-dialog .xp-tabpanel { padding: var(--xp-space-4); }
 
 .xp-toolbar { display: flex; align-items: center; gap: var(--xp-space-2); padding: var(--xp-space-2); border-bottom: 1px solid var(--xp-border); flex-wrap: wrap; }
 .xp-toolbar .sep { width: 1px; align-self: stretch; background: var(--xp-border); margin: 0 4px; }
