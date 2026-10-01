@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { expectNoSeriousViolations } from "./axeHelper";
 import { copy } from "./copy";
 import { sykInn, validator } from "./appFixtures";
-import { THEME_KEY } from "./preferencesStore";
 import { renderApp, setupBrowserStubs, stubApi, testKontor } from "./testApp";
 
 const session = {
@@ -105,24 +104,6 @@ describe("system pages in the shell", () => {
     expect(person.getByText("Kari Nordmann")).toBeInTheDocument();
     expect(person.getByText("9144889")).toBeInTheDocument();
     expect(person.getByText("Lege")).toBeInTheDocument();
-  });
-
-  it("changes the theme of the whole shell from the Tema page and stores it", async () => {
-    const { container } = renderApp("/");
-    await openSystemPage(copy["pane.system.kontroll"]);
-    await userEvent.click(
-      await screen.findByRole("button", {
-        name: new RegExp(copy["s9.cat.tema"]),
-      }),
-    );
-    await userEvent.click(
-      screen.getByRole("radio", { name: copy["s9.tema.klassisk"] }),
-    );
-    expect(container.querySelector(".xp-root")).toHaveAttribute(
-      "data-theme",
-      "klassisk",
-    );
-    expect(localStorage.getItem(THEME_KEY)).toBe("klassisk");
   });
 
   it("has no theme controls left in the task pane", async () => {

@@ -200,6 +200,7 @@
 .xp-brand { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
 .xp-brand img { width: 28px; height: 28px; }
 .xp-brand b { font-size: 1.25rem; }
+.xp-brand .sub { font-size: 0.85rem; font-weight: 400; opacity: .78; padding-left: 10px; border-left: 1px solid rgba(255,255,255,.45); }
 .xp-hsearch { position: relative; flex: 0 1 380px; display: flex; align-items: center; }
 .xp-hsearch img { position: absolute; left: 9px; width: 16px; height: 16px; pointer-events: none; }
 .xp-hsearch input { width: 100%; min-height: 34px; padding: 4px 10px 4px 32px; border: 1px solid #081c52; border-radius: 3px; background: #ffffff; color: var(--xp-text); font: inherit; }
@@ -348,8 +349,8 @@
 .xp-recent-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .xp-recent-list li { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .xp-recent-list span { color: var(--xp-text-muted); }
-.xp-start-grid { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
-.xp-start-grid > .xp-card { flex: 1 1 320px; }
+.xp-card-grid { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.xp-card-grid > .xp-card { flex: 1 1 320px; }
 .xp-btnrow { display: flex; gap: 8px; flex-wrap: wrap; }
 .xp-appcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
 .xp-appcard-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }

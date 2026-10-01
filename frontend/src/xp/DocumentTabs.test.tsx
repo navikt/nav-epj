@@ -144,6 +144,13 @@ describe("DocumentTabs", () => {
     expect(store().tabs.map((t) => t.id)).toEqual(["start", "patients"]);
   });
 
+  it("closes the current closable tab with Cmd+W (Mac)", () => {
+    render(<DocumentTabs />);
+    openSecondAndThird();
+    fireEvent.keyDown(document, { key: "w", code: "KeyW", metaKey: true });
+    expect(store().tabs.map((t) => t.id)).toEqual(["start", "patients"]);
+  });
+
   it("switches tabs with Ctrl+Alt+PageDown and Ctrl+Alt+PageUp", async () => {
     const user = userEvent.setup();
     render(<DocumentTabs />);
@@ -152,6 +159,17 @@ describe("DocumentTabs", () => {
     expect(store().current).toBe("start");
     await user.keyboard("{Control>}{Alt>}{PageUp}{/Alt}{/Control}");
     expect(store().current).toBe("journal");
+  });
+
+  it("switches tabs with Cmd+Alt+PageDown (Mac)", () => {
+    render(<DocumentTabs />);
+    openSecondAndThird();
+    fireEvent.keyDown(document, {
+      key: "PageDown",
+      metaKey: true,
+      altKey: true,
+    });
+    expect(store().current).toBe("start");
   });
 
   it("closes with Delete and moves focus to the new current tab", async () => {

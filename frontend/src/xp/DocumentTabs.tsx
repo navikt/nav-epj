@@ -68,12 +68,12 @@ export function DocumentTabs({ onActivate, onBeforeClose }: Props) {
       const { tabs, current, close, activate } = latest.current;
       if (isModalOpen()) return;
       const isW = event.code === "KeyW" || event.key?.toLowerCase() === "w";
-      if (event.ctrlKey && !event.shiftKey && isW) {
+      if ((event.ctrlKey || event.metaKey) && !event.shiftKey && isW) {
         event.preventDefault();
         const tab = tabs.find((t) => t.id === current);
         if (tab) close(tab, false);
       } else if (
-        event.ctrlKey &&
+        (event.ctrlKey || event.metaKey) &&
         event.altKey &&
         (event.key === "PageDown" || event.key === "PageUp")
       ) {

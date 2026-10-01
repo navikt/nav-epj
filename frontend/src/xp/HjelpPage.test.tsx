@@ -30,10 +30,12 @@ describe("HjelpPage", () => {
     ).toEqual([copy["s13.keys.col.key"], copy["s13.keys.col.what"]]);
     const rows = within(table).getAllByRole("row").slice(1);
     expect(rows).toHaveLength(6);
-    expect(within(rows[0]).getByText("Ctrl+Shift+P")).toBeInTheDocument();
+    expect(
+      within(rows[0]).getByText("Ctrl+Shift+P (Cmd+Shift+P på Mac)"),
+    ).toBeInTheDocument();
     expect(within(rows[0]).getByText("Går til pasientsøket")).toBeInTheDocument();
     expect(
-      within(rows[1]).getByText("Ctrl+W (eller Ctrl+Alt+W)"),
+      within(rows[1]).getByText("Ctrl+W eller Ctrl+Alt+W (Cmd+W på Mac)"),
     ).toBeInTheDocument();
     expect(screen.getByText(copy["s13.keys.note"])).toBeInTheDocument();
   });

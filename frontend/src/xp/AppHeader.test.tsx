@@ -1,4 +1,4 @@
-import { act, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppHeader } from "./AppHeader";
@@ -83,6 +83,16 @@ describe("AppHeader", () => {
     const u = userEvent.setup();
     renderHeader();
     await u.keyboard("{Control>}{Shift>}p{/Shift}{/Control}");
+    expect(screen.getByLabelText(copy["header.search.label"])).toHaveFocus();
+  });
+
+  it("focuses the search with Cmd+Shift+P (Mac)", () => {
+    renderHeader();
+    fireEvent.keyDown(document, {
+      key: "p",
+      metaKey: true,
+      shiftKey: true,
+    });
     expect(screen.getByLabelText(copy["header.search.label"])).toHaveFocus();
   });
 

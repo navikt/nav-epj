@@ -26,7 +26,7 @@ function renderPage(options?: { strict: boolean }) {
 describe("KontrollpanelPage", () => {
   beforeEach(() => seedApps([sykInn]));
 
-  it("starts on the home page with the heading, the note and three categories", () => {
+  it("starts on the home page with the heading, the note and two categories", () => {
     renderPage();
     expect(
       screen.getByRole("heading", { level: 1, name: copy["s9.title"] }),
@@ -35,7 +35,6 @@ describe("KontrollpanelPage", () => {
     expect(screen.getAllByRole("button").map((b) => b.textContent)).toEqual([
       `${copy["s9.cat.apps"]}${copy["s9.cat.apps.sub"]}`,
       `${copy["s9.cat.org"]}${copy["s9.cat.org.sub"]}`,
-      `${copy["s9.cat.tema"]}${copy["s9.cat.tema.sub"]}`,
     ]);
   });
 
@@ -70,16 +69,6 @@ describe("KontrollpanelPage", () => {
     expect(screen.getByText("Kari Nordmann")).toBeInTheDocument();
   });
 
-  it("shows the theme page", async () => {
-    renderPage();
-    await userEvent.click(
-      screen.getByRole("button", { name: new RegExp(copy["s9.cat.tema"]) }),
-    );
-    expect(
-      screen.getByRole("radiogroup", { name: copy["s9.tema.theme"] }),
-    ).toBeInTheDocument();
-  });
-
   it("goes back to the home page and focuses its heading", async () => {
     renderPage();
     await userEvent.click(
@@ -93,7 +82,7 @@ describe("KontrollpanelPage", () => {
       name: copy["s9.title"],
     });
     expect(heading).toHaveFocus();
-    expect(screen.getAllByRole("button")).toHaveLength(3);
+    expect(screen.getAllByRole("button")).toHaveLength(2);
   });
 
   it("has no serious accessibility violations on any page", async () => {
@@ -102,7 +91,6 @@ describe("KontrollpanelPage", () => {
     for (const name of [
       copy["s9.cat.apps"],
       copy["s9.cat.org"],
-      copy["s9.cat.tema"],
     ]) {
       await userEvent.click(
         screen.getByRole("button", { name: new RegExp(name) }),

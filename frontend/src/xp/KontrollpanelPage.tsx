@@ -2,11 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "./Button";
 import { KontrollAppsPage } from "./KontrollAppsPage";
 import { KontrollOrgPage } from "./KontrollOrgPage";
-import { KontrollTemaPage } from "./KontrollTemaPage";
 import { XpIcon, type IconName } from "./XpIcon";
 import { copy } from "./copy";
 
-type Category = "apps" | "org" | "tema";
+type Category = "apps" | "org";
 
 const CATEGORIES: ReadonlyArray<{
   id: Category;
@@ -26,12 +25,6 @@ const CATEGORIES: ReadonlyArray<{
     title: copy["s9.cat.org"],
     sub: copy["s9.cat.org.sub"],
   },
-  {
-    id: "tema",
-    icon: "kontrollpanel",
-    title: copy["s9.cat.tema"],
-    sub: copy["s9.cat.tema.sub"],
-  },
 ];
 
 function CategoryPage({ id }: { id: Category }) {
@@ -40,8 +33,6 @@ function CategoryPage({ id }: { id: Category }) {
       return <KontrollAppsPage />;
     case "org":
       return <KontrollOrgPage />;
-    case "tema":
-      return <KontrollTemaPage />;
   }
 }
 

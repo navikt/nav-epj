@@ -33,7 +33,7 @@ export function AppHeader({ user, onLogout, onSearchSubmit }: Props) {
     function onKeyDown(event: globalThis.KeyboardEvent) {
       if (
         !isModalOpen() &&
-        event.ctrlKey &&
+        (event.ctrlKey || event.metaKey) &&
         event.shiftKey &&
         !event.altKey &&
         event.key?.toLowerCase() === "p"
@@ -72,7 +72,7 @@ export function AppHeader({ user, onLogout, onSearchSubmit }: Props) {
       <div className="xp-brand">
         <XpIcon name="app" size={32} />
         <b>{copy["app.name"]}</b>
-        <span className="xp-hide-narrow">{copy["app.subtitle"]}</span>
+        <span className="sub xp-hide-narrow">{copy["app.subtitle"]}</span>
       </div>
       <div className="xp-hsearch" role="search">
         <label htmlFor={SEARCH_INPUT_ID} className="sr-only">
