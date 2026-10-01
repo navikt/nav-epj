@@ -95,7 +95,7 @@ describe("journal deep links", () => {
     await screen.findByRole("heading", { name: "Matematisk Ape" });
     const nav = screen.getByRole("navigation", { name: "Oppgaver" });
     expect(within(nav).getByText("Matematisk Ape")).toBeInTheDocument();
-    expect(within(nav).getByRole("button", { name: /Åpne journal/ })).toHaveAttribute("aria-current", "page");
+    expect(within(nav).getByRole("button", { name: "Aktiv journal" })).toHaveAttribute("aria-current", "page");
     expect(
       screen.getByRole("button", { name: "Aktiv pasient: Matematisk Ape. Åpne journal." }),
     ).toBeInTheDocument();

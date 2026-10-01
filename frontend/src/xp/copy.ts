@@ -13,7 +13,7 @@ export const copy = {
   "pane.patient.title": "Pasient",
   "pane.patient.none": "Ingen pasient valgt.",
   "pane.patient.info": (dato: string, alder: number, kjonn: string) => `Født ${dato} (${alder} år) · ${kjonn}`,
-  "pane.patient.openJournal": "Åpne journal",
+  "pane.patient.openJournal": "Aktiv journal",
   "pane.patient.find": "Finn pasient",
   "pane.patient.findOther": "Finn en annen pasient",
   "pane.apps.title": "SMART-apper",
