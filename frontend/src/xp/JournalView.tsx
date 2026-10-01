@@ -46,7 +46,14 @@ export function JournalView() {
             : copy["s4.loadError.patient"]}
         </span>
         {patientId && (
-          <Button onClick={() => void open(patientId)}>
+          <Button
+            onClick={() =>
+              void open(
+                patientId,
+                useJournalStore.getState().selectedKonsultasjonId ?? undefined,
+              )
+            }
+          >
             {copy["s1.error.retry"]}
           </Button>
         )}

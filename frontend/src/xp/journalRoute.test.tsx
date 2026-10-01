@@ -147,6 +147,35 @@ describe("journal sub-tab in the URL", () => {
     expect(screen.getByRole("table")).toBeInTheDocument();
   });
 
+  it.each(["tidligere", "apper"] as const)("keeps %s selected after retrying a failed load", async (tab) => {
+    let fail = true;
+    api({
+      "GET /api/patients/p1/konsultasjoner": () =>
+        fail ? { status: 500 } : { body: [kons(), done] },
+    });
+    const { router } = renderApp(`/patients/p1?tab=${tab}`);
+    await screen.findByRole("alert");
+    fail = false;
+    await userEvent.click(screen.getByRole("button", { name: "Prøv igjen" }));
+    await screen.findByRole("heading", { name: "Matematisk Ape" });
+    selected(tab === "tidligere" ? /^Tidligere konsultasjoner/ : /^Apper/);
+    expect(router.state.location.search).toEqual({ tab });
+  });
+
+  it("keeps the deep-linked konsultasjon selected after retrying a failed load", async () => {
+    let fail = true;
+    api({
+      "GET /api/patients/p1/konsultasjoner": () =>
+        fail ? { status: 500 } : { body: [kons(), done] },
+    });
+    const { router } = renderApp("/patients/p1/konsultasjon/k9");
+    await screen.findByRole("alert");
+    fail = false;
+    await userEvent.click(screen.getByRole("button", { name: "Prøv igjen" }));
+    expect(await screen.findByRole("heading", { name: "Fullført konsultasjon" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/patients/p1/konsultasjon/k9");
+  });
+
   it("falls back to Konsultasjon for an unknown tab value", async () => {
     withHistory();
     renderApp("/patients/p1?tab=nonsense");

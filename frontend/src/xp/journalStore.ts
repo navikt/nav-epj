@@ -207,6 +207,7 @@ export const useJournalStore = create<JournalState>((set, get) => {
       const isCurrent = session.capture();
       commit({
         ...initialState(),
+        subTab: current.patientId === patientId ? current.subTab : "konsultasjon",
         ...selection,
         patientId,
         status: "loading",
