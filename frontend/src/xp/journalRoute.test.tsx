@@ -207,6 +207,37 @@ describe("journal sub-tab in the URL", () => {
     expect(screen.getByRole("table")).toBeInTheDocument();
   });
 
+  it("returns to the selected konsultasjon after visiting another sub-tab", async () => {
+    withHistory();
+    const { router } = renderApp("/patients/p1/konsultasjon/k9");
+    await screen.findByRole("heading", { name: "Fullført konsultasjon" });
+    await userEvent.click(screen.getByRole("tab", { name: /^Apper/ }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/patients/p1"));
+    await userEvent.click(screen.getByRole("tab", { name: "Konsultasjon" }));
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe("/patients/p1/konsultasjon/k9"),
+    );
+    expect(await screen.findByRole("heading", { name: "Fullført konsultasjon" })).toBeInTheDocument();
+  });
+
+  it("returns to the selected konsultasjon after leaving and reopening the journal", async () => {
+    withHistory();
+    const { router } = renderApp("/patients/p1/konsultasjon/k9");
+    await screen.findByRole("heading", { name: "Fullført konsultasjon" });
+    await userEvent.click(screen.getByRole("tab", { name: /^Tidligere konsultasjoner/ }));
+    await waitFor(() => expect(router.state.location.search).toEqual({ tab: "tidligere" }));
+    act(() => {
+      void router.navigate({ to: "/patients" });
+    });
+    await screen.findByRole("heading", { name: "Pasienter" });
+    const nav = screen.getByRole("navigation", { name: "Oppgaver" });
+    await userEvent.click(within(nav).getByRole("button", { name: "Aktiv journal" }));
+    await waitFor(() => expect(router.state.location.search).toEqual({ tab: "tidligere" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Konsultasjon" }));
+    expect(await screen.findByRole("heading", { name: "Fullført konsultasjon" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/patients/p1/konsultasjon/k9");
+  });
+
   it("ignores the tab param on a konsultasjon route", async () => {
     withHistory();
     renderApp("/patients/p1/konsultasjon/k9?tab=apper");

@@ -43,9 +43,17 @@ export function useRouteTabSync(
         .tabs.some((t) => t.id === JOURNAL_TAB_ID);
       if (exists) setCurrent(JOURNAL_TAB_ID);
       else openTab({ kind: "journal", label: copy["s4.tabs.label"] });
-      applyingRoute.current = true;
-      void useJournalStore.getState().open(patientId, konsultasjonId);
-      applyingRoute.current = false;
+      const journal = useJournalStore.getState();
+      const keepSelection =
+        !konsultasjonId &&
+        subTab !== "konsultasjon" &&
+        journal.patientId === patientId &&
+        journal.status !== "error";
+      if (!keepSelection) {
+        applyingRoute.current = true;
+        void journal.open(patientId, konsultasjonId);
+        applyingRoute.current = false;
+      }
     }
   }, [route.kind, patientId, konsultasjonId]);
 
