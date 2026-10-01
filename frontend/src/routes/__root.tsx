@@ -1,5 +1,5 @@
 import { Outlet, createRootRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { AppDialogs } from "../xp/AppDialogs";
 import { AppHeader } from "../xp/AppHeader";
 import { AppShell } from "../xp/AppShell";
@@ -36,17 +36,20 @@ function RootComponent() {
   const navigate = useNavigate();
   const route = useCurrentRoute();
   const { state, retry } = useHelsepersonell();
-  const currentUser: CurrentUser | null =
-    state.status === "ready"
-      ? {
-          navn: state.helsepersonell.navn,
-          hpr: state.helsepersonell.hpr,
-          autorisasjon: state.helsepersonell.autorisasjon,
-          legekontor: state.legekontor.navn,
-          orgnummer: state.legekontor.orgnummer ?? undefined,
-          telefon: state.legekontor.tlf ?? undefined,
-        }
-      : null;
+  const currentUser = useMemo<CurrentUser | null>(
+    () =>
+      state.status === "ready"
+        ? {
+            navn: state.helsepersonell.navn,
+            hpr: state.helsepersonell.hpr,
+            autorisasjon: state.helsepersonell.autorisasjon,
+            legekontor: state.legekontor.navn,
+            orgnummer: state.legekontor.orgnummer ?? undefined,
+            telefon: state.legekontor.tlf ?? undefined,
+          }
+        : null,
+    [state],
+  );
   const openPatients = () => openPatientsTab((target) => void navigate(target));
   const openJournal = () => {
     const target = currentJournalRoute();
