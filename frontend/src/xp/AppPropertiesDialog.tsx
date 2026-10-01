@@ -111,7 +111,6 @@ export function AppPropertiesDialog({ app, onClose }: Props) {
   return (
     <Dialog
       title={copy["s10.title"](app.navn)}
-      titleIcon={appIconName(app.ikon)}
       wide
       onClose={onClose}
     >

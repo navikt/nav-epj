@@ -48,7 +48,6 @@ export function MessageBox({
   return (
     <Dialog
       title={title}
-      titleIcon={icons[variant]}
       role={variant === "info" ? "dialog" : "alertdialog"}
       labelledBy={headingId}
       describedBy={children ? bodyId : undefined}

@@ -7,7 +7,6 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { copy } from "./copy";
-import { XpIcon, type IconName } from "./XpIcon";
 import { useModalStore } from "./modalStore";
 import { useShell } from "./shellContext";
 
@@ -16,7 +15,6 @@ const FOCUSABLE =
 
 type Props = {
   title: string;
-  titleIcon?: IconName;
   role?: "dialog" | "alertdialog";
   labelledBy?: string;
   describedBy?: string;
@@ -27,7 +25,6 @@ type Props = {
 
 export function Dialog({
   title,
-  titleIcon,
   role = "dialog",
   labelledBy,
   describedBy,
@@ -113,7 +110,6 @@ export function Dialog({
       >
         <div className="xp-titlebar">
           <span className="xp-title" id={titleId}>
-            {titleIcon && <XpIcon name={titleIcon} />}
             {title}
           </span>
           <div className="xp-tbtns">

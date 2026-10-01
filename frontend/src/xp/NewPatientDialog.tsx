@@ -74,7 +74,7 @@ export function NewPatientDialog({ onClose }: Props) {
   }
 
   return (
-    <Dialog title={copy["s3b.title"]} titleIcon="nypasient" onClose={saving ? () => {} : onClose}>
+    <Dialog title={copy["s3b.title"]} onClose={saving ? () => {} : onClose}>
       <form className="xp-msg" noValidate onSubmit={submit}>
         <div className="xp-msg-main">
           <div className="xp-pagehead">
