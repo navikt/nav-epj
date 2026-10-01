@@ -66,7 +66,7 @@ private fun Application.configureLocalDevelopmentSecurity() {
 
     val stubPrincipal =
         HelseIdPrincipal(
-            user = User(name = "Bjarte Legesen", hpr = "111222333"),
+            user = User(name = "GRØNN VITS", hpr = "565501872"),
             debug =
                 DebugInfo(
                     accessToken = "eyJhbGciOiJub25lIn0.eyJzdWIiOiJsb2NhbC1kZXYifQ.",
