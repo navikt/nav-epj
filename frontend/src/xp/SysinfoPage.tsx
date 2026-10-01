@@ -22,7 +22,7 @@ import { useSystemInfo } from "./useSystemInfo";
 export function SysinfoPage() {
   const { session, smart, fhir } = useSystemInfo();
   const user = useCurrentUser();
-  const now = useNow(60_000);
+  const now = useNow();
   const helseIdId = useId();
   const claimsId = useId();
   const smartId = useId();

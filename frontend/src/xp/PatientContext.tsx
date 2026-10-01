@@ -24,7 +24,7 @@ type Props = {
 export function PatientContext({ pasient, compact, stale }: Props) {
   const user = useCurrentUser();
   const { announce } = useShell();
-  const now = useNow(60_000);
+  const now = useNow();
   const [revealed, setRevealed] = useState(false);
   const birthDate = birthDateOf(pasient);
   const showOffice = !compact && user !== null;

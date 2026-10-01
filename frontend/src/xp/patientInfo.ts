@@ -1,4 +1,10 @@
-import { differenceInYears, format, parseISO } from "date-fns";
+import {
+  differenceInMinutes,
+  differenceInYears,
+  format,
+  parseISO,
+  startOfMinute,
+} from "date-fns";
 import type { OpprettPasientRequest, Pasient } from "../utils/mapping/epj";
 import { copy } from "./copy";
 
@@ -85,6 +91,13 @@ export function formatDateTime(iso: string) {
 
 export function ageOn(birthDate: string, now: Date) {
   return differenceInYears(now, parseISO(birthDate));
+}
+
+export function minutesSince(startIso: string, now: Date) {
+  return Math.max(
+    0,
+    differenceInMinutes(startOfMinute(now), startOfMinute(parseISO(startIso))),
+  );
 }
 
 export function fullName(pasient: Pick<Pasient, "fornavn" | "etternavn">) {

@@ -43,7 +43,7 @@ export function TaskPane({
   const patient = useJournalStore((s) => s.patient);
   const journalCurrent = useWorkspaceStore((s) => s.current === JOURNAL_TAB_ID);
   const current = useWorkspaceStore((s) => s.current);
-  const now = useNow(60_000);
+  const now = useNow();
   const birthDate = patient ? birthDateOf(patient) : null;
   return (
     <nav

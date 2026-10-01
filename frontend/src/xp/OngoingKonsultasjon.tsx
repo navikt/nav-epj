@@ -1,5 +1,4 @@
 import { useId, useMemo, useState } from "react";
-import { differenceInMinutes, parseISO } from "date-fns";
 import { Badge } from "./Badge";
 import { Button } from "./Button";
 import { CancelDialog } from "./CancelDialog";
@@ -12,7 +11,7 @@ import { TextArea } from "./TextArea";
 import { copy } from "./copy";
 import { useCurrentUser } from "./currentUser";
 import { diagnoseKey, isDirty, useJournalStore } from "./journalStore";
-import { formatDateTime } from "./patientInfo";
+import { formatDateTime, minutesSince } from "./patientInfo";
 import { useShell } from "./shellContext";
 import { useNow } from "./useNow";
 import type { Konsultasjon, Pasient } from "../utils/mapping/epj";
@@ -31,7 +30,7 @@ export function OngoingKonsultasjon({ patient, konsultasjon }: Props) {
   const infoId = useId();
   const user = useCurrentUser();
   const { announce } = useShell();
-  const now = useNow(30_000);
+  const now = useNow();
   const [finishing, setFinishing] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const draft = useJournalStore((s) => s.draft);
@@ -40,10 +39,7 @@ export function OngoingKonsultasjon({ patient, konsultasjon }: Props) {
   const savedAt = useJournalStore((s) => s.savedAt);
   const dirty = isDirty({ draft, baseline });
   const saving = saveStatus === "saving";
-  const minutes = Math.max(
-    0,
-    differenceInMinutes(now, parseISO(konsultasjon.startetTidspunkt)),
-  );
+  const minutes = minutesSince(konsultasjon.startetTidspunkt, now);
   const savedKeys = useMemo(
     () => new Set(baseline.diagnoser.map(diagnoseKey)),
     [baseline.diagnoser],

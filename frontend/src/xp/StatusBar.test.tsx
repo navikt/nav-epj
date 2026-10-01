@@ -11,7 +11,7 @@ import { useAppRunStore } from "./appRunStore";
 
 describe("StatusBar", () => {
   beforeEach(() => {
-    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "Date"] });
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });
     vi.setSystemTime(new Date(2026, 8, 30, 9, 14, 58));
   });
 
@@ -54,7 +54,7 @@ describe("StatusBar", () => {
     expect(screen.getByText(copy["status.clock.sr"]("09:14"))).toBeInTheDocument();
   });
 
-  it("updates the clock every second", () => {
+  it("updates the clock when the minute changes", () => {
     render(<StatusBar onOpenPatients={vi.fn()} />);
     act(() => {
       vi.advanceTimersByTime(2000);

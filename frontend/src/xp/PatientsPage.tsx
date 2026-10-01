@@ -47,7 +47,7 @@ export function PatientsPage({ canCreate, onNewPatient, onOpenJournal }: Props) 
     [patients, recentIds],
   );
   const { load, setQuery, setView, setPage } = usePatientsStore.getState();
-  const now = useNow(60_000);
+  const now = useNow();
 
   useEffect(() => {
     if (usePatientsStore.getState().status === "idle") void load();
