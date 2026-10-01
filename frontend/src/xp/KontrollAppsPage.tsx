@@ -63,7 +63,9 @@ export function KontrollAppsPage() {
             {apps.map((app) => (
               <tr key={app.clientId}>
                 <td id={`kontroll-app-${app.clientId}`}>
-                  <XpIcon name={appIconName(app.ikon)} /> {app.navn}
+                  <span className="xp-namecell">
+                    <XpIcon name={appIconName(app.ikon)} /> {app.navn}
+                  </span>
                 </td>
                 <td className="mono">{app.clientId}</td>
                 <td>{APP_MODE_LABELS[app.launchMode]}</td>

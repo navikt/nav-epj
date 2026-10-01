@@ -122,6 +122,8 @@
 .xp-list tbody tr[aria-selected="true"] td { background: var(--xp-selection-bg); color: var(--xp-selection-fg); }
 .xp-list tbody tr[aria-selected="true"] .xp-link { color: var(--xp-selection-fg); }
 .xp-list .mono, .mono { font-family: var(--xp-font-mono); }
+.xp-list .xp-namecell { display: flex; align-items: center; gap: 6px; }
+.xp-list .xp-namecell img { flex: none; }
 .xp-empty { padding: 32px 16px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; color: var(--xp-text); }
 
 .xp-menuitem { width: 100%; display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 6px 10px; border: 0; background: transparent; color: var(--xp-text); font: inherit; text-align: left; border-radius: 2px; }

@@ -59,20 +59,22 @@ export function KontrollpanelPage() {
           </h1>
         </div>
         <p>{copy["s9.note"]}</p>
-        {CATEGORIES.map((c) => (
-          <button
-            key={c.id}
-            type="button"
-            className="xp-card xp-menuitem"
-            onClick={() => setCategory(c.id)}
-          >
-            <XpIcon name={c.icon} size={32} />
-            <span>
-              <strong>{c.title}</strong>
-              <span className="sub">{c.sub}</span>
-            </span>
-          </button>
-        ))}
+        <div className="xp-card-grid">
+          {CATEGORIES.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              className="xp-card xp-menuitem"
+              onClick={() => setCategory(c.id)}
+            >
+              <XpIcon name={c.icon} size={32} />
+              <span>
+                <strong>{c.title}</strong>
+                <span className="sub">{c.sub}</span>
+              </span>
+            </button>
+          ))}
+        </div>
       </>
     );
   }
