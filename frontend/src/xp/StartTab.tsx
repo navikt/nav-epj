@@ -39,72 +39,76 @@ export function StartTab() {
   return (
     <>
       <h1 className="xp-h1">{copy["s2.greeting"](user.navn)}</h1>
-      <Card heading={copy["s2.find.title"]} headingId={findId}>
-        <p>{copy["s2.find.body"]}</p>
-        <Button
-          isDefault
-          onClick={() => openPatientsTab((target) => void navigate(target))}
-        >
-          {copy["s2.find.open"]}
-        </Button>
-        <Button
-          onClick={() => document.getElementById(SEARCH_INPUT_ID)?.focus()}
-        >
-          {copy["s2.find.search"]}
-        </Button>
-      </Card>
-      {recent.length > 0 && (
-        <Card heading={copy["s2.recent.title"]} headingId={recentId}>
-          <ul className="xp-recent-list">
-            {recent.map((pasient) => {
-              const birthDate = birthDateOf(pasient);
-              const last = lastKonsultasjon[pasient.id];
-              const siste =
-                !last
-                  ? "–"
-                  : last.status === "PÅGÅENDE"
-                    ? copy["s3.col.last.ongoing"]
-                    : formatDate(last.tidspunkt);
+      <div className="xp-start-grid">
+        <Card heading={copy["s2.find.title"]} headingId={findId}>
+          <p>{copy["s2.find.body"]}</p>
+          <div className="xp-btnrow">
+            <Button
+              isDefault
+              onClick={() => openPatientsTab((target) => void navigate(target))}
+            >
+              {copy["s2.find.open"]}
+            </Button>
+            <Button
+              onClick={() => document.getElementById(SEARCH_INPUT_ID)?.focus()}
+            >
+              {copy["s2.find.search"]}
+            </Button>
+          </div>
+        </Card>
+        {recent.length > 0 && (
+          <Card heading={copy["s2.recent.title"]} headingId={recentId}>
+            <ul className="xp-recent-list">
+              {recent.map((pasient) => {
+                const birthDate = birthDateOf(pasient);
+                const last = lastKonsultasjon[pasient.id];
+                const siste =
+                  !last
+                    ? "–"
+                    : last.status === "PÅGÅENDE"
+                      ? copy["s3.col.last.ongoing"]
+                      : formatDate(last.tidspunkt);
+                return (
+                  <li key={pasient.id}>
+                    <Button variant="link" onClick={() => openJournal(pasient)}>
+                      {fullName(pasient)}
+                    </Button>
+                    <span>
+                      {copy["s2.recent.item"](
+                        birthDate ? formatDate(birthDate) : "–",
+                        siste,
+                      )}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </Card>
+        )}
+        {tabApps.length > 0 && (
+          <Card heading={copy["s2.tabApps.title"]} headingId={tabAppsId}>
+            {tabApps.map((tabApp) => {
+              const stale = isOutdatedFor(
+                tabApp.patient.id,
+                journalPatientId,
+                activePatientId,
+              );
+              const tid = format(accessExpiry(tabApp.startedAt), "HH:mm");
               return (
-                <li key={pasient.id}>
-                  <Button variant="link" onClick={() => openJournal(pasient)}>
-                    {fullName(pasient)}
-                  </Button>
-                  <span>
-                    {copy["s2.recent.item"](
-                      birthDate ? formatDate(birthDate) : "–",
-                      siste,
-                    )}
-                  </span>
-                </li>
+                <Note key={tabApp.id} tone={stale ? "warn" : "info"}>
+                  <strong>{tabApp.navn}</strong>{" "}
+                  {stale
+                    ? copy["s2.tabApps.stale"](tid)
+                    : copy["s2.tabApps.running"](tid)}
+                </Note>
               );
             })}
-          </ul>
+          </Card>
+        )}
+        <Card heading={copy["s2.about.title"]} headingId={aboutId}>
+          <p>{copy["s2.about.body"]}</p>
         </Card>
-      )}
-      {tabApps.length > 0 && (
-        <Card heading={copy["s2.tabApps.title"]} headingId={tabAppsId}>
-          {tabApps.map((tabApp) => {
-            const stale = isOutdatedFor(
-              tabApp.patient.id,
-              journalPatientId,
-              activePatientId,
-            );
-            const tid = format(accessExpiry(tabApp.startedAt), "HH:mm");
-            return (
-              <Note key={tabApp.id} tone={stale ? "warn" : "info"}>
-                <strong>{tabApp.navn}</strong>{" "}
-                {stale
-                  ? copy["s2.tabApps.stale"](tid)
-                  : copy["s2.tabApps.running"](tid)}
-              </Note>
-            );
-          })}
-        </Card>
-      )}
-      <Card heading={copy["s2.about.title"]} headingId={aboutId}>
-        <p>{copy["s2.about.body"]}</p>
-      </Card>
+      </div>
     </>
   );
 }
