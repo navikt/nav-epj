@@ -1,6 +1,9 @@
 @layer preflight, tokens, xpcss, aksel, xp;
 
 @import "./reset.css" layer(preflight);
-@import "@navikt/ds-css" layer(aksel);
+@import "@navikt/ds-css/dist/global/tokens.css" layer(aksel);
+@import "@navikt/ds-css/dist/global/baseline.css" layer(aksel);
+@import "@navikt/ds-css/dist/component/typography.css" layer(aksel);
+@import "@navikt/ds-css/dist/component/form.css" layer(aksel);
 @import "./xp/tokens.css";
 @import "./xp/xp.css";
