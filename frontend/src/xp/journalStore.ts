@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import {
+  cancelKonsultasjon,
   fetchKonsultasjoner,
   fetchPatient,
   saveKonsultasjon,
@@ -43,6 +44,7 @@ type JournalState = {
   removeDiagnose: (code: string, system: string) => void;
   start: () => Promise<void>;
   save: (options?: { ferdigstill?: boolean }) => Promise<boolean>;
+  cancel: () => Promise<boolean>;
   discardDraft: () => void;
   clear: () => void;
 };
@@ -129,6 +131,14 @@ function applySaved(
         : k.avsluttetTidspunkt,
     };
   });
+}
+
+function applyCancelled(konsultasjoner: Konsultasjon[], id: string): Konsultasjon[] {
+  return konsultasjoner.map((k) =>
+    k.id === id
+      ? { ...k, status: "AVLYST", avsluttetTidspunkt: new Date().toISOString() }
+      : k,
+  );
 }
 
 function latestOf(konsultasjoner: Konsultasjon[]) {
@@ -328,6 +338,37 @@ export const useJournalStore = create<JournalState>((set, get) => {
               body: copy["s4.saved.body"](name),
             },
       );
+      return true;
+    },
+
+    cancel: async () => {
+      const { patientId, patient, draftKonsultasjonId } = get();
+      if (!patientId || !patient || !draftKonsultasjonId) return false;
+      if (get().saveStatus === "saving") return false;
+      const isCurrent = session.capture();
+      commit({ saveStatus: "saving" });
+      try {
+        await cancelKonsultasjon(patientId, draftKonsultasjonId);
+      } catch {
+        if (isCurrent()) {
+          commit({ saveStatus: "error" });
+        }
+        return false;
+      }
+      let refreshed: Konsultasjon[];
+      try {
+        refreshed = await fetchKonsultasjoner(patientId);
+      } catch {
+        refreshed = applyCancelled(get().konsultasjoner, draftKonsultasjonId);
+      }
+      if (!isCurrent()) return true;
+      publishLatest(patientId, refreshed);
+      commit({ saveStatus: "idle", savedAt: null });
+      applyKonsultasjoner(refreshed);
+      useBalloonStore.getState().show({
+        title: copy["s4.cancelDlg.balloon.title"],
+        body: copy["s4.cancelDlg.balloon.body"](fullName(patient)),
+      });
       return true;
     },
 

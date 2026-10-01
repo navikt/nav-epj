@@ -2,6 +2,7 @@ import { useId, useMemo, useState } from "react";
 import { differenceInMinutes, parseISO } from "date-fns";
 import { Badge } from "./Badge";
 import { Button } from "./Button";
+import { CancelDialog } from "./CancelDialog";
 import { Card } from "./Card";
 import { DiagnoseCombobox } from "./DiagnoseCombobox";
 import { FinishDialog } from "./FinishDialog";
@@ -32,6 +33,7 @@ export function OngoingKonsultasjon({ patient, konsultasjon }: Props) {
   const { announce } = useShell();
   const now = useNow(30_000);
   const [finishing, setFinishing] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const draft = useJournalStore((s) => s.draft);
   const baseline = useJournalStore((s) => s.baseline);
   const saveStatus = useJournalStore((s) => s.saveStatus);
@@ -46,13 +48,19 @@ export function OngoingKonsultasjon({ patient, konsultasjon }: Props) {
     () => new Set(baseline.diagnoser.map(diagnoseKey)),
     [baseline.diagnoser],
   );
-  const { addDiagnose, removeDiagnose, setNotat, save } =
+  const { addDiagnose, removeDiagnose, setNotat, save, cancel } =
     useJournalStore.getState();
 
   async function confirmFinish() {
     setFinishing(false);
     const ok = await save({ ferdigstill: true });
     if (ok) announce(copy["live.konsDone"]);
+  }
+
+  async function confirmCancel() {
+    setCancelling(false);
+    const ok = await cancel();
+    if (ok) announce(copy["live.konsCancelled"]);
   }
 
   return (
@@ -91,6 +99,14 @@ export function OngoingKonsultasjon({ patient, konsultasjon }: Props) {
               }}
             >
               {copy["s4.finish"]}
+            </Button>
+            <Button
+              aria-disabled={saving}
+              onClick={() => {
+                if (!saving) setCancelling(true);
+              }}
+            >
+              {copy["s4.cancelKons"]}
             </Button>
             <span className="xp-status-text" role="status">
               {saveStatus === "error"
@@ -131,6 +147,14 @@ export function OngoingKonsultasjon({ patient, konsultasjon }: Props) {
           unsaved={dirty}
           onConfirm={() => void confirmFinish()}
           onCancel={() => setFinishing(false)}
+        />
+      )}
+      {cancelling && (
+        <CancelDialog
+          patient={patient}
+          unsaved={dirty}
+          onConfirm={() => void confirmCancel()}
+          onCancel={() => setCancelling(false)}
         />
       )}
     </div>

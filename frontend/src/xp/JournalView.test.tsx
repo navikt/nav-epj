@@ -229,6 +229,61 @@ describe("JournalView", () => {
     expect(screen.getByRole("button", { name: "Start konsultasjon" })).toBeInTheDocument();
   });
 
+  it("asks for confirmation before cancelling and returns to the no-konsultasjon state afterwards", async () => {
+    const { calls } = await openJournal(
+      [kons({ diagnoser: [diag], journalnotat: [savedNote] })],
+      {
+        "POST /api/patients/p1/konsultasjoner/k1/avbryt": () => ({ body: {} }),
+      },
+    );
+    await userEvent.type(await screen.findByLabelText("Journalnotat"), "!");
+    await userEvent.click(screen.getByRole("button", { name: "Avlys konsultasjon" }));
+    const dialog = screen.getByRole("alertdialog", {
+      name: "Avlyse konsultasjonen for Matematisk Ape?",
+    });
+    expect(within(dialog).getByText("Ulagrede endringer går tapt.")).toBeInTheDocument();
+    await userEvent.click(within(dialog).getByRole("button", { name: "Avbryt" }));
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(calls.some((c) => c.key.includes("avbryt"))).toBe(false);
+
+    await userEvent.click(screen.getByRole("button", { name: "Avlys konsultasjon" }));
+    const again = screen.getByRole("alertdialog");
+    stub({
+      ...base,
+      "POST /api/patients/p1/konsultasjoner/k1/avbryt": () => ({ body: {} }),
+      "GET /api/patients/p1/konsultasjoner": () => ({
+        body: [
+          kons({
+            status: "AVLYST",
+            avsluttetTidspunkt: "2026-09-30T09:20:00",
+            diagnoser: [diag],
+            journalnotat: [savedNote],
+          }),
+        ],
+      }),
+    });
+    await userEvent.click(within(again).getByRole("button", { name: "Avlys konsultasjon" }));
+    expect(
+      await screen.findByRole("heading", { name: "Ingen pågående konsultasjon" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Start konsultasjon" })).toBeInTheDocument();
+  });
+
+  it("lists a cancelled konsultasjon as Avlyst in Tidligere konsultasjoner", async () => {
+    await openJournal([
+      kons(),
+      kons({
+        id: "k0",
+        status: "AVLYST",
+        startetTidspunkt: "2026-09-01T09:00:00",
+        avsluttetTidspunkt: "2026-09-01T09:10:00",
+      }),
+    ]);
+    await userEvent.click(await screen.findByRole("tab", { name: "Tidligere konsultasjoner (1)" }));
+    const table = screen.getByRole("table", { name: "Tidligere konsultasjoner (1)" });
+    expect(within(table).getByText("✖ Avlyst")).toBeInTheDocument();
+  });
+
   it("lists previous konsultasjoner and shows the selected one read-only", async () => {
     await openJournal([
       kons(),

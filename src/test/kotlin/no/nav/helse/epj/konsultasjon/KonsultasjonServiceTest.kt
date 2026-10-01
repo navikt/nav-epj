@@ -185,6 +185,31 @@ class KonsultasjonServiceTest {
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
+    fun `cancelKonsultasjon throws KonsultasjonNotFoundForPatientException when 0 rows are updated`() =
+        runTest {
+            val pasientId = PasientId(Uuid.generateV4())
+            val konsultasjonId = KonsultasjonId(Uuid.generateV4())
+            coEvery { konsultasjonRepository.avbryt(konsultasjonId, pasientId) } returns 0
+
+            assertFailsWith<KonsultasjonNotFoundForPatientException> {
+                konsultasjonService.cancelKonsultasjon(konsultasjonId, pasientId)
+            }
+        }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `cancelKonsultasjon completes without error when a row is updated`() = runTest {
+        val pasientId = PasientId(Uuid.generateV4())
+        val konsultasjonId = KonsultasjonId(Uuid.generateV4())
+        coEvery { konsultasjonRepository.avbryt(konsultasjonId, pasientId) } returns 1
+
+        konsultasjonService.cancelKonsultasjon(konsultasjonId, pasientId)
+
+        coVerify(exactly = 1) { konsultasjonRepository.avbryt(konsultasjonId, pasientId) }
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
     fun `getDiagnoser by konsultasjonId returns diagnoser resolved from the katalog`() = runTest {
         val konsultasjonId = KonsultasjonId(Uuid.generateV4())
         val diagnose = Diagnose(system = DiagnoseType.ICPC2, code = "A01", text = "Diagnose")

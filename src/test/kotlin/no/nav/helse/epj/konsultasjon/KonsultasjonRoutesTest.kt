@@ -187,4 +187,32 @@ class KonsultasjonRoutesTest {
         coVerify(exactly = 0) { valkeyService.setActivePatient(any(), any()) }
         coVerify(exactly = 0) { konsultasjonService.getOrCreateKonsultasjon(any(), any()) }
     }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `POST avbryt cancels the konsultasjon and returns 200`() = testApp {
+        val pasientId = PasientId(Uuid.generateV4())
+        val konsultasjonId = KonsultasjonId(Uuid.generateV4())
+        coEvery { konsultasjonService.cancelKonsultasjon(konsultasjonId, pasientId) } returns Unit
+
+        val response =
+            post("/api/patients/${pasientId.value}/konsultasjoner/${konsultasjonId.value}/avbryt")
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        coVerify(exactly = 1) { konsultasjonService.cancelKonsultasjon(konsultasjonId, pasientId) }
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `POST avbryt for a konsultasjon not owned by the patient returns 404`() = testApp {
+        val pasientId = PasientId(Uuid.generateV4())
+        val konsultasjonId = KonsultasjonId(Uuid.generateV4())
+        coEvery { konsultasjonService.cancelKonsultasjon(konsultasjonId, pasientId) } throws
+            KonsultasjonNotFoundForPatientException(pasientId)
+
+        val response =
+            post("/api/patients/${pasientId.value}/konsultasjoner/${konsultasjonId.value}/avbryt")
+
+        assertEquals(HttpStatusCode.NotFound, response.status)
+    }
 }

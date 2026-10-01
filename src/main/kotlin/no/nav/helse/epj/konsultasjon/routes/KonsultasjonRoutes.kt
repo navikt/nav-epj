@@ -39,6 +39,12 @@ fun Route.konsultasjonRoutes(
                 konsultasjonService.updateKonsultasjon(request, pasientId)
                 call.respond(HttpStatusCode.OK)
             }
+            post("/{konsultasjonId}/avbryt") {
+                val pasientId = call.patientId()
+                val konsultasjonId = call.konsultasjonId()
+                konsultasjonService.cancelKonsultasjon(konsultasjonId, pasientId)
+                call.respond(HttpStatusCode.OK)
+            }
             get("/active") {
                 val pasientId = call.patientId()
                 val konsultasjoner =

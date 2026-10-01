@@ -114,6 +114,16 @@ export async function saveKonsultasjon(
   );
 }
 
+export async function cancelKonsultasjon(
+  patientId: string,
+  konsultasjonId: string,
+): Promise<void> {
+  await request(
+    `/api/patients/${encodeURIComponent(patientId)}/konsultasjoner/${encodeURIComponent(konsultasjonId)}/avbryt`,
+    { method: "POST" },
+  );
+}
+
 export async function fetchApps(): Promise<App[]> {
   const response = await request("/api/apps");
   return AppSchema.array().parse(await response.json());
