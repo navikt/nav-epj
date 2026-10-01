@@ -237,7 +237,7 @@ describe("JournalView", () => {
       },
     );
     await userEvent.type(await screen.findByLabelText("Journalnotat"), "!");
-    await userEvent.click(screen.getByRole("button", { name: "Avlys konsultasjon" }));
+    await userEvent.click(screen.getByRole("button", { name: "Slett" }));
     const dialog = screen.getByRole("alertdialog", {
       name: "Avlyse konsultasjonen for Matematisk Ape?",
     });
@@ -246,7 +246,7 @@ describe("JournalView", () => {
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
     expect(calls.some((c) => c.key.includes("avbryt"))).toBe(false);
 
-    await userEvent.click(screen.getByRole("button", { name: "Avlys konsultasjon" }));
+    await userEvent.click(screen.getByRole("button", { name: "Slett" }));
     const again = screen.getByRole("alertdialog");
     stub({
       ...base,
@@ -262,7 +262,7 @@ describe("JournalView", () => {
         ],
       }),
     });
-    await userEvent.click(within(again).getByRole("button", { name: "Avlys konsultasjon" }));
+    await userEvent.click(within(again).getByRole("button", { name: "Slett" }));
     expect(
       await screen.findByRole("heading", { name: "Ingen pågående konsultasjon" }),
     ).toBeInTheDocument();

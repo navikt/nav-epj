@@ -203,7 +203,7 @@ export const copy = {
   "s4.finishDlg.head": (navn: string) => `Fullføre konsultasjonen for ${navn}?`,
   "s4.finishDlg.body": "Konsultasjonen blir skrivebeskyttet. Du kan ikke endre diagnoser eller journalnotat etterpå, og apper kan ikke startes før du starter en ny konsultasjon.",
   "s4.finishDlg.unsaved": "Ulagrede endringer lagres samtidig.",
-  "s4.cancelKons": "Avlys konsultasjon",
+  "s4.cancelKons": "Slett",
   "s4.cancelDlg.title": "Avlys konsultasjon",
   "s4.cancelDlg.head": (navn: string) => `Avlyse konsultasjonen for ${navn}?`,
   "s4.cancelDlg.body": "Konsultasjonen merkes som avlyst og blir skrivebeskyttet. Lagrede diagnoser og journalnotat beholdes.",
