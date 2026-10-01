@@ -27,7 +27,10 @@ describe("AppsTab", () => {
     expect(within(cards[0]).getByText(copy["pane.apps.mode.iframe"])).toBeInTheDocument();
     expect(within(cards[1]).getByText(copy["pane.apps.mode.ask"])).toBeInTheDocument();
     expect(within(cards[2]).getByText(copy["pane.apps.mode.tab"])).toBeInTheDocument();
-    expect(screen.getByText(copy["s4.apps.help"])).toBeInTheDocument();
+    const help = screen.getByText(/Spør: du velger hver gang\./).closest(".xp-note");
+    expect(help).toHaveTextContent(/Vindu: appen vises som en fane her i nav-epj\./);
+    expect(help).toHaveTextContent(/Ny fane: appen åpnes i en egen nettleserfane som nav-epj ikke kan lukke\./);
+    expect(help).toHaveTextContent(/Spør: du velger hver gang\./);
   });
 
   it("starts an app when a konsultasjon is ongoing", async () => {

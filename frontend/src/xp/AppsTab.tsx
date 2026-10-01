@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { Fragment, useId } from "react";
 import { Badge } from "./Badge";
 import { Button } from "./Button";
 import { Note } from "./Note";
@@ -16,6 +16,26 @@ const modeLabels = {
   tab: copy["pane.apps.mode.tab"],
   ask: copy["pane.apps.mode.ask"],
 } as const;
+
+// s4.apps.help is one copy.md string covering all three launch modes. Split
+// it on its own glyph markers (▣/↗/?) so each mode reads as its own line
+// instead of one dense run-on sentence, without altering the copy itself.
+function ModeHelp() {
+  const lines = copy["s4.apps.help"]
+    .split(/(?=[▣↗?] )/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  return (
+    <Note tone="info">
+      {lines.map((line, index) => (
+        <Fragment key={line}>
+          {index > 0 && <br />}
+          {line}
+        </Fragment>
+      ))}
+    </Note>
+  );
+}
 
 function AppCard({
   app,
@@ -104,7 +124,7 @@ export function AppsTab() {
           />
         ))}
       </div>
-      <p>{copy["s4.apps.help"]}</p>
+      <ModeHelp />
     </>
   );
 }
