@@ -1,4 +1,5 @@
 import { act, render, screen } from "@testing-library/react";
+import { useEffect, useState } from "react";
 import { useAppRunStore } from "./appRunStore";
 import {
   ola,
@@ -87,6 +88,36 @@ describe("Workspace", () => {
       expect(
         screen.queryByRole("heading", { level: 1, name: copy["s13.title"] }),
       ).not.toBeInTheDocument();
+    });
+
+    it("keeps the routed page's state and pauses its effects while hidden", () => {
+      const active: boolean[] = [];
+      function Page() {
+        const [text] = useState("Sideinnhold");
+        useEffect(() => {
+          active.push(true);
+          return () => {
+            active.push(false);
+          };
+        }, []);
+        return <p>{text}</p>;
+      }
+      render(
+        <Workspace>
+          <Page />
+        </Workspace>,
+      );
+      expect(active).toEqual([true]);
+      act(() => {
+        useWorkspaceStore
+          .getState()
+          .openTab({ kind: "hjelp", label: copy["s13.title"] });
+      });
+      expect(active).toEqual([true, false]);
+      expect(screen.getByText("Sideinnhold")).toBeInTheDocument();
+      act(() => useWorkspaceStore.getState().setCurrent("start"));
+      expect(active).toEqual([true, false, true]);
+      expect(screen.getByText("Sideinnhold")).toBeVisible();
     });
 
     it("drops the page when its tab is closed", () => {

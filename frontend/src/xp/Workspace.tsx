@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { Activity, type ReactNode } from "react";
 import { AppTabView } from "./AppTabView";
 import { DocumentTabs } from "./DocumentTabs";
 import { HjelpPage } from "./HjelpPage";
@@ -33,6 +33,7 @@ export function Workspace({
   const tabs = useWorkspaceStore((s) => s.tabs);
   const appCurrent = current.startsWith(APP_TAB_PREFIX);
   const systemCurrent = tabs.find((t) => t.id === current)?.kind;
+  const keepHidden = appCurrent || isSystemPage(systemCurrent);
   return (
     <main className="xp-work" data-xp-landmark="main" tabIndex={-1}>
       <DocumentTabs
@@ -45,11 +46,8 @@ export function Workspace({
         aria-labelledby={`tab-${current}`}
         className={appCurrent ? "xp-page xp-page-app" : "xp-page"}
       >
-        <div
-          className="xp-keep"
-          hidden={appCurrent || isSystemPage(systemCurrent)}
-        >
-          {children}
+        <div className="xp-keep" hidden={keepHidden}>
+          <Activity mode={keepHidden ? "hidden" : "visible"}>{children}</Activity>
         </div>
         {systemCurrent === "kontrollpanel" && <KontrollpanelPage />}
         {systemCurrent === "sysinfo" && <SysinfoPage />}
