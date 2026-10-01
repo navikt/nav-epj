@@ -6,11 +6,3 @@
 @import "@navikt/ds-css" layer(aksel);
 @import "./xp/tokens.css";
 @import "./xp/xp.css";
-
-:root {
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-  }
-}
