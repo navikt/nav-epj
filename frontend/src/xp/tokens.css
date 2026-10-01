@@ -136,7 +136,7 @@
   --xp-radius-title: 8px 8px 0 0;
   --xp-radius-control: 3px;
   --xp-shadow-window: 2px 2px 8px rgba(0,0,0,.35);
-  --xp-space-1: 4px; --xp-space-2: 8px; --xp-space-3: 12px; --xp-space-4: 16px; --xp-space-6: 24px;
+  --xp-space-1: 4px; --xp-space-2: 8px; --xp-space-3: 12px; --xp-space-4: 16px; --xp-space-5: 20px; --xp-space-6: 24px; --xp-space-8: 32px;
   --xp-motion: 120ms;
 }
 
