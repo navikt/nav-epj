@@ -1,15 +1,20 @@
-import { useJournalStore } from "./journalStore";
+import { useJournalStore, type JournalSubTab } from "./journalStore";
 import { PATIENTS_TAB_ID, useWorkspaceStore } from "./workspaceStore";
 import type { Tab } from "./workspaceStore";
 
-export type TabRoute =
+export type TabRoute = (
   | { to: "/" }
   | { to: "/patients" }
-  | { to: "/patients/$patientId"; params: { patientId: string } }
+  | {
+      to: "/patients/$patientId";
+      params: { patientId: string };
+      search?: { tab: JournalSubTab };
+    }
   | {
       to: "/patients/$patientId/konsultasjon/$konsultasjonId";
       params: { patientId: string; konsultasjonId: string };
-    };
+    }
+) & { replace?: boolean };
 
 export function openPatientsTab(navigate: (target: TabRoute) => void) {
   const workspace = useWorkspaceStore.getState();
@@ -22,7 +27,15 @@ export function openPatientsTab(navigate: (target: TabRoute) => void) {
 export function journalRoute(
   patientId: string,
   konsultasjonId?: string | null,
+  tab: JournalSubTab = "konsultasjon",
 ): TabRoute {
+  if (tab !== "konsultasjon") {
+    return {
+      to: "/patients/$patientId",
+      params: { patientId },
+      search: { tab },
+    };
+  }
   return konsultasjonId
     ? {
         to: "/patients/$patientId/konsultasjon/$konsultasjonId",
@@ -32,8 +45,11 @@ export function journalRoute(
 }
 
 export function currentJournalRoute(): TabRoute | null {
-  const { patientId, selectedKonsultasjonId } = useJournalStore.getState();
-  return patientId ? journalRoute(patientId, selectedKonsultasjonId) : null;
+  const { patientId, selectedKonsultasjonId, subTab } =
+    useJournalStore.getState();
+  return patientId
+    ? journalRoute(patientId, selectedKonsultasjonId, subTab)
+    : null;
 }
 
 function assertNever(value: never): never {

@@ -1,10 +1,16 @@
 import { useRouterState } from "@tanstack/react-router";
 import { useMemo } from "react";
+import type { JournalSubTab } from "./journalStore";
 
 export type CurrentRoute =
   | { kind: "start" }
   | { kind: "patients" }
-  | { kind: "journal"; patientId: string; konsultasjonId?: string }
+  | {
+      kind: "journal";
+      patientId: string;
+      konsultasjonId?: string;
+      tab?: JournalSubTab;
+    }
   | { kind: "other" };
 
 const JOURNAL_ROUTE_ID = "/patients/$patientId";
@@ -23,13 +29,16 @@ export function useCurrentRoute(): CurrentRoute {
     select: (s) =>
       (s.matches.at(-1)?.params as RouteParams | undefined)?.konsultasjonId,
   });
+  const tab = useRouterState({
+    select: (s) => (s.matches.at(-1)?.search as { tab?: JournalSubTab } | undefined)?.tab,
+  });
 
   return useMemo<CurrentRoute>(() => {
     if (isJournal && patientId) {
-      return { kind: "journal", patientId, konsultasjonId };
+      return { kind: "journal", patientId, konsultasjonId, tab };
     }
     if (routeId === "/") return { kind: "start" };
     if (routeId === "/patients/") return { kind: "patients" };
     return { kind: "other" };
-  }, [isJournal, patientId, konsultasjonId, routeId]);
+  }, [isJournal, patientId, konsultasjonId, tab, routeId]);
 }

@@ -22,6 +22,23 @@ describe("journalRoute", () => {
     });
     expect(journalRoute("p1", null)).toEqual(journalRoute("p1"));
   });
+
+  it("carries a non-default sub-tab in the search and omits the default", () => {
+    expect(journalRoute("p1", null, "apper")).toEqual({
+      to: "/patients/$patientId",
+      params: { patientId: "p1" },
+      search: { tab: "apper" },
+    });
+    expect(journalRoute("p1", null, "konsultasjon")).toEqual(journalRoute("p1"));
+  });
+
+  it("drops the konsultasjon when another sub-tab is chosen", () => {
+    expect(journalRoute("p1", "k1", "tidligere")).toEqual({
+      to: "/patients/$patientId",
+      params: { patientId: "p1" },
+      search: { tab: "tidligere" },
+    });
+  });
 });
 
 describe("routeForTab", () => {
@@ -35,6 +52,11 @@ describe("routeForTab", () => {
     useJournalStore.setState({ patientId: "p1", selectedKonsultasjonId: "k2" });
     expect(routeForTab(tab("journal"))).toEqual(journalRoute("p1", "k2"));
     expect(currentJournalRoute()).toEqual(journalRoute("p1", "k2"));
+  });
+
+  it("keeps the sub-tab of the open journal", () => {
+    useJournalStore.setState({ patientId: "p1", subTab: "apper" });
+    expect(routeForTab(tab("journal"))).toEqual(journalRoute("p1", null, "apper"));
   });
 
   it("returns no route for tabs that are not URL-addressable", () => {

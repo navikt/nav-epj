@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { copy } from "./copy";
-import { useJournalStore } from "./journalStore";
+import { useJournalStore, type JournalSubTab } from "./journalStore";
 import type { CurrentRoute } from "./useCurrentRoute";
 import { useRouteTabSync } from "./useRouteTabSync";
 import { useWorkspaceStore } from "./workspaceStore";
@@ -10,10 +10,15 @@ const store = () => useWorkspaceStore.getState();
 
 const start: CurrentRoute = { kind: "start" };
 const patients: CurrentRoute = { kind: "patients" };
-const journal = (patientId: string, konsultasjonId?: string): CurrentRoute => ({
+const journal = (
+  patientId: string,
+  konsultasjonId?: string,
+  tab?: JournalSubTab,
+): CurrentRoute => ({
   kind: "journal",
   patientId,
   konsultasjonId,
+  tab,
 });
 
 beforeEach(() => store().reset());
@@ -209,6 +214,64 @@ describe("useRouteTabSync journal routes", () => {
     navigate.mockClear();
     act(() => store().setCurrent("journal"));
     expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it("shows the sub-tab named by the route", async () => {
+    renderHook(() => useRouteTabSync(journal("p1", undefined, "tidligere"), vi.fn()));
+    await waitFor(() => expect(useJournalStore.getState().status).toBe("ready"));
+    expect(useJournalStore.getState().subTab).toBe("tidligere");
+  });
+
+  it("shows Konsultasjon when the route names no sub-tab or a konsultasjon", async () => {
+    const { rerender } = renderHook(
+      ({ route }) => useRouteTabSync(route, vi.fn()),
+      { initialProps: { route: journal("p1", undefined, "apper") as CurrentRoute } },
+    );
+    await waitFor(() => expect(useJournalStore.getState().status).toBe("ready"));
+    rerender({ route: journal("p1") });
+    expect(useJournalStore.getState().subTab).toBe("konsultasjon");
+    rerender({ route: journal("p1", undefined, "apper") });
+    expect(useJournalStore.getState().subTab).toBe("apper");
+    rerender({ route: journal("p1", "k2", "apper") });
+    expect(useJournalStore.getState().subTab).toBe("konsultasjon");
+  });
+
+  it("keeps the sub-tab of the route when another patient is opened", async () => {
+    const navigate = vi.fn();
+    const { rerender } = renderHook(
+      ({ route }) => useRouteTabSync(route, navigate),
+      { initialProps: { route: journal("p1", undefined, "tidligere") as CurrentRoute } },
+    );
+    await waitFor(() => expect(useJournalStore.getState().status).toBe("ready"));
+    rerender({ route: journal("p2", undefined, "apper") });
+    await waitFor(() => expect(useJournalStore.getState().patientId).toBe("p2"));
+    expect(useJournalStore.getState().subTab).toBe("apper");
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it("replaces the URL when the sub-tab is chosen in the app", async () => {
+    const navigate = vi.fn();
+    renderHook(() => useRouteTabSync(journal("p1"), navigate));
+    await waitFor(() => expect(useJournalStore.getState().status).toBe("ready"));
+    act(() => useJournalStore.getState().setSubTab("apper"));
+    expect(navigate).toHaveBeenCalledExactlyOnceWith({
+      to: "/patients/$patientId",
+      params: { patientId: "p1" },
+      search: { tab: "apper" },
+      replace: true,
+    });
+  });
+
+  it("replaces the URL when the app switches back to Konsultasjon", async () => {
+    const navigate = vi.fn();
+    renderHook(() => useRouteTabSync(journal("p1", undefined, "apper"), navigate));
+    await waitFor(() => expect(useJournalStore.getState().status).toBe("ready"));
+    act(() => useJournalStore.getState().setSubTab("konsultasjon"));
+    expect(navigate).toHaveBeenCalledExactlyOnceWith({
+      to: "/patients/$patientId",
+      params: { patientId: "p1" },
+      replace: true,
+    });
   });
 
   it("clears the journal when its tab is closed", async () => {

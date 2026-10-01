@@ -125,6 +125,96 @@ describe("journal deep links", () => {
   });
 });
 
+describe("journal sub-tab in the URL", () => {
+  const done = kons({
+    id: "k9",
+    status: "FULLFØRT",
+    avsluttetTidspunkt: "2026-09-01T10:00:00",
+    startetTidspunkt: "2026-09-01T09:00:00",
+  });
+  const withHistory = () =>
+    api({
+      "GET /api/patients/p1/konsultasjoner": () => ({ body: [kons(), done] }),
+    });
+  const selected = (name: string | RegExp) =>
+    expect(screen.getByRole("tab", { name })).toHaveAttribute("aria-selected", "true");
+
+  it("opens the sub-tab named by the tab search param", async () => {
+    withHistory();
+    renderApp("/patients/p1?tab=tidligere");
+    await screen.findByRole("heading", { name: "Matematisk Ape" });
+    selected(/^Tidligere konsultasjoner/);
+    expect(screen.getByRole("table")).toBeInTheDocument();
+  });
+
+  it("falls back to Konsultasjon for an unknown tab value", async () => {
+    withHistory();
+    renderApp("/patients/p1?tab=nonsense");
+    await screen.findByRole("heading", { name: "Matematisk Ape" });
+    selected("Konsultasjon");
+    expect(screen.getByRole("heading", { name: "Pågående konsultasjon" })).toBeInTheDocument();
+  });
+
+  it("writes the chosen sub-tab to the URL by replacing the entry and drops it for Konsultasjon", async () => {
+    withHistory();
+    const { router } = renderApp("/patients/p1");
+    await screen.findByRole("heading", { name: "Matematisk Ape" });
+    const length = router.history.length;
+    await userEvent.click(screen.getByRole("tab", { name: /^Apper/ }));
+    await waitFor(() => expect(router.state.location.search).toEqual({ tab: "apper" }));
+    selected(/^Apper/);
+    await userEvent.click(screen.getByRole("tab", { name: "Konsultasjon" }));
+    await waitFor(() => expect(router.state.location.search).toEqual({}));
+    selected("Konsultasjon");
+    expect(router.history.length).toBe(length);
+  });
+
+  it("follows the URL when it changes", async () => {
+    withHistory();
+    const { router } = renderApp("/patients/p1");
+    await screen.findByRole("heading", { name: "Matematisk Ape" });
+    act(() => {
+      void router.navigate({
+        to: "/patients/$patientId",
+        params: { patientId: "p1" },
+        search: { tab: "tidligere" },
+      });
+    });
+    await waitFor(() => selected(/^Tidligere konsultasjoner/));
+  });
+
+  it("keeps the chosen sub-tab when the Journal tab is activated again", async () => {
+    withHistory();
+    const { router } = renderApp("/patients/p1?tab=tidligere");
+    await screen.findByRole("heading", { name: "Matematisk Ape" });
+    act(() => {
+      void router.navigate({ to: "/patients" });
+    });
+    await screen.findByRole("heading", { name: "Pasienter" });
+    await userEvent.click(docTab("Journal · Matematisk Ape"));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/patients/p1"));
+    expect(router.state.location.search).toEqual({ tab: "tidligere" });
+    selected(/^Tidligere konsultasjoner/);
+  });
+
+  it("leaves the konsultasjon route when another sub-tab is chosen", async () => {
+    withHistory();
+    const { router } = renderApp("/patients/p1/konsultasjon/k9");
+    await screen.findByRole("heading", { name: "Fullført konsultasjon" });
+    await userEvent.click(screen.getByRole("tab", { name: /^Tidligere konsultasjoner/ }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/patients/p1"));
+    expect(router.state.location.search).toEqual({ tab: "tidligere" });
+    expect(screen.getByRole("table")).toBeInTheDocument();
+  });
+
+  it("ignores the tab param on a konsultasjon route", async () => {
+    withHistory();
+    renderApp("/patients/p1/konsultasjon/k9?tab=apper");
+    expect(await screen.findByRole("heading", { name: "Fullført konsultasjon" })).toBeInTheDocument();
+    selected("Konsultasjon");
+  });
+});
+
 describe("journal guards", () => {
   it("guards closing the tab with unsaved changes", async () => {
     const calls = api({
