@@ -1,5 +1,4 @@
 import { useRouterState } from "@tanstack/react-router";
-import { useMemo } from "react";
 import type { JournalSubTab } from "./journalStore";
 
 export type CurrentRoute =
@@ -13,32 +12,24 @@ export type CurrentRoute =
     }
   | { kind: "other" };
 
-const JOURNAL_ROUTE_ID = "/patients/$patientId";
-
 type RouteParams = { patientId?: string; konsultasjonId?: string };
 
 export function useCurrentRoute(): CurrentRoute {
-  const routeId = useRouterState({ select: (s) => s.matches.at(-1)?.routeId });
-  const isJournal = useRouterState({
-    select: (s) => s.matches.some((m) => m.routeId === JOURNAL_ROUTE_ID),
+  return useRouterState({
+    structuralSharing: true,
+    select: (s): CurrentRoute => {
+      const match = s.matches.at(-1);
+      const { patientId, konsultasjonId } = (match?.params as RouteParams) ?? {};
+      if (
+        patientId &&
+        s.matches.some((m) => m.routeId === "/patients/$patientId")
+      ) {
+        const { tab } = match?.search as { tab?: JournalSubTab };
+        return { kind: "journal", patientId, konsultasjonId, tab };
+      }
+      if (match?.routeId === "/") return { kind: "start" };
+      if (match?.routeId === "/patients/") return { kind: "patients" };
+      return { kind: "other" };
+    },
   });
-  const patientId = useRouterState({
-    select: (s) => (s.matches.at(-1)?.params as RouteParams | undefined)?.patientId,
-  });
-  const konsultasjonId = useRouterState({
-    select: (s) =>
-      (s.matches.at(-1)?.params as RouteParams | undefined)?.konsultasjonId,
-  });
-  const tab = useRouterState({
-    select: (s) => (s.matches.at(-1)?.search as { tab?: JournalSubTab } | undefined)?.tab,
-  });
-
-  return useMemo<CurrentRoute>(() => {
-    if (isJournal && patientId) {
-      return { kind: "journal", patientId, konsultasjonId, tab };
-    }
-    if (routeId === "/") return { kind: "start" };
-    if (routeId === "/patients/") return { kind: "patients" };
-    return { kind: "other" };
-  }, [isJournal, patientId, konsultasjonId, tab, routeId]);
 }
