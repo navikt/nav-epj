@@ -58,7 +58,7 @@ One fixed grid: header, task pane (264px), workspace, status bar. Under 1024px t
 
 ## Design rules
 
-- Colours, type sizes, spacing and motion come from `src/xp/tokens.css`. `index.css` sets the layer order `preflight, tokens, xpcss, aksel, xp`, so `xp` overrides Aksel.
+- Colours, type sizes, spacing and motion come from `src/xp/tokens.css`. `index.css` sets the layer order `preflight, tokens, aksel, xp`, so `xp` overrides Aksel.
 - Every colour pair that carries text, a control edge or focus is in the contrast table at the top of `tokens.css`, with its ratio and the rejected values. Add new pairs there. WCAG 2.1 AA is a release gate.
 - Two themes: Luna (default) and Klassisk (`data-theme="klassisk"`, high contrast, square corners, black borders). Define every new token for both.
 - Layout spacing uses `--xp-space-1` to `-8` (4px grid: 4, 8, 12, 16, 20, 24, 32). XP control internals (buttons, tabs, inputs, chips, table cells, menu items) keep their own padding.
