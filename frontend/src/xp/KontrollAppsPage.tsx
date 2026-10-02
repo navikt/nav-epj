@@ -62,7 +62,7 @@ export function KontrollAppsPage() {
           <tbody>
             {apps.map((app) => (
               <tr key={app.clientId}>
-                <td id={`kontroll-app-${app.clientId}`}>
+                <td>
                   <span className="xp-namecell">
                     <XpIcon name={appIconName(app.ikon)} /> {app.navn}
                   </span>
@@ -75,7 +75,7 @@ export function KontrollAppsPage() {
                 <td>
                   <Button
                     variant="small"
-                    aria-describedby={`kontroll-app-${app.clientId}`}
+                    aria-label={copy["s10.title"](app.navn)}
                     onClick={() => setSelected(app)}
                   >
                     {copy["s9.apps.props"]}

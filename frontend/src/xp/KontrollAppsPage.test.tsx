@@ -40,15 +40,17 @@ describe("KontrollAppsPage", () => {
 
   it("opens the properties dialog for the chosen app and returns focus on close", async () => {
     render(<KontrollAppsPage />);
-    const buttons = screen.getAllByRole("button", { name: copy["s9.apps.props"] });
-    expect(buttons[0]).toHaveAccessibleDescription(/Sykmelding/);
-    await userEvent.click(buttons[1]);
+    expect(
+      screen.getByRole("button", { name: copy["s10.title"]("Sykmelding") }),
+    ).toBeInTheDocument();
+    const props = screen.getByRole("button", { name: copy["s10.title"]("Validator") });
+    await userEvent.click(props);
     expect(
       screen.getByRole("dialog", { name: copy["s10.title"]("Validator") }),
     ).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: copy["common.ok"] }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(buttons[1]).toHaveFocus();
+    expect(props).toHaveFocus();
   });
 
   it("shows loading while the apps are being fetched", () => {
