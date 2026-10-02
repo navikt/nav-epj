@@ -32,7 +32,6 @@ export function useHelsepersonell() {
   useEffect(() => {
     const controller = new AbortController();
     const { signal } = controller;
-    setState({ status: "loading" });
     (async () => {
       try {
         const helsepersonell = HelsepersonellSchema.parse(
@@ -52,7 +51,10 @@ export function useHelsepersonell() {
     return () => controller.abort();
   }, [attempt]);
 
-  const retry = useCallback(() => setAttempt((n) => n + 1), []);
+  const retry = useCallback(() => {
+    setState({ status: "loading" });
+    setAttempt((n) => n + 1);
+  }, []);
 
   return { state, retry };
 }

@@ -13,7 +13,6 @@ function useLoadable<T>(load: () => Promise<T>) {
   const [state, setState] = useState<Loadable<T>>({ status: "loading" });
   useEffect(() => {
     let current = true;
-    setState({ status: "loading" });
     load().then(
       (data) => {
         if (current) setState({ status: "ready", data });
@@ -26,7 +25,10 @@ function useLoadable<T>(load: () => Promise<T>) {
       current = false;
     };
   }, [load, attempt]);
-  const retry = useCallback(() => setAttempt((n) => n + 1), []);
+  const retry = useCallback(() => {
+    setState({ status: "loading" });
+    setAttempt((n) => n + 1);
+  }, []);
   return { state, retry };
 }
 

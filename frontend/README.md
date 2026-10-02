@@ -17,7 +17,7 @@ SCREENS_DIR=../screens yarn test:e2e e2e/visual.spec.ts   # screenshots, default
 ```
 
 - `yarn typecheck` is the real type check. The root `tsconfig.json` has `files: []`, so `tsc --noEmit` checks nothing.
-- `yarn lint` only matches `.js` and `.jsx`, which today means the two config files. TypeScript is not linted.
+- `yarn lint` runs typescript-eslint (recommended, not type-aware) with the react-hooks and react-refresh rules on `.ts` and `.tsx`, and eslint recommended on the `.js` config files. `src/routes` turns off `react-refresh/only-export-components` because TanStack file routes must export `Route`.
 - No Node version is pinned (no `engines`, `.nvmrc` or `mise.toml` entry). CI builds with Node 24. Vite 8 needs 20.19 or newer and Vitest 5 needs 22.12 or newer.
 
 ## Stack

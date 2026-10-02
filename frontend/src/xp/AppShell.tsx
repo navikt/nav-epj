@@ -27,6 +27,11 @@ export function AppShell({ children }: Props) {
   const [rootElement, setRootElement] = useState<HTMLElement | null>(null);
   const [message, setMessage] = useState("");
   const announceToggle = useRef(false);
+  const [prevNarrow, setPrevNarrow] = useState(narrow);
+  if (narrow !== prevNarrow) {
+    setPrevNarrow(narrow);
+    if (!narrow) setDrawerRequested(false);
+  }
   const drawerOpen = narrow && drawerRequested;
 
   const announce = useCallback((text: string) => {
@@ -76,10 +81,6 @@ export function AppShell({ children }: Props) {
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [rootElement, narrow, drawerOpen]);
-
-  useEffect(() => {
-    if (!narrow) setDrawerRequested(false);
-  }, [narrow]);
 
   useEffect(() => {
     if (drawerOpen) {
