@@ -1,8 +1,8 @@
 # SMART client authentication
 
-`nav-epj` is the authorization server for the SMART on FHIR launch flow. Every registered client
-authenticates itself at the token endpoint (`POST /oidc/token`) using one of the methods listed in
-`token_endpoint_auth_methods_supported` in the discovery document
+`nav-epj` is the authorization server for SMART on FHIR launch and Backend Services flows. Every
+registered client authenticates itself at the token endpoint (`POST /oidc/token`) using one of the
+methods listed in `token_endpoint_auth_methods_supported` in the discovery document
 (`GET /fhir/.well-known/smart-configuration`).
 
 ## Supported methods
@@ -13,10 +13,40 @@ authenticates itself at the token endpoint (`POST /oidc/token`) using one of the
 | `client_secret_basic`                   | `clientSecret`                       | HTTP Basic auth, constant-time comparison                                                                               |
 | `private_key_jwt`                       | `jwksUri` or `jwkSet`                | Signed JWT assertion, verified against the client's published JWKS or inline JWK Set (`client-confidential-asymmetric`) |
 
-### Unsupported methods and grants
+### Unsupported method
 
-`client_secret_post` is not implemented. The `client_credentials` grant is planned separately and
-will use `private_key_jwt`.
+`client_secret_post` is not implemented.
+
+## Backend Services clients
+
+Backend Services clients use only the `client_credentials` grant and authenticate with
+`private_key_jwt`. They have no redirect or launch URIs and may register only system scopes. The
+supported system scopes are listed by the discovery document; requested scopes must be a subset
+of those registered for the client.
+
+```yaml
+smart:
+  clients:
+    - clientId: "team-01-backend"
+      tokenEndpointAuthMethod: "private_key_jwt"
+      jwksUri: "https://backend.example.com/jwks.json"
+      grantTypes: [ "client_credentials" ]
+      scopes:
+        - "system/Patient.rs"
+        - "system/Encounter.rs"
+        - "system/Condition.s"
+        - "system/Observation.crs"
+        - "system/Practitioner.r"
+        - "system/PractitionerRole.s"
+        - "system/Organization.r"
+        - "system/DocumentReference.crs"
+```
+
+Request a token with `grant_type=client_credentials`, the registered `client_id`, the requested
+`scope`, and a signed `client_assertion`. The assertion uses the same claims and verification
+rules described below. The issued access token has no patient or encounter context, expires within
+five minutes, and has no refresh token. FHIR searches still require the server's supported search
+criteria; for example, `Patient` search requires `identifier`.
 
 ## Registering a client for `private_key_jwt`
 
