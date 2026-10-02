@@ -15,6 +15,17 @@ enum class TokenEndpointAuthMethod(@get:JsonValue val value: String) {
     }
 }
 
+enum class GrantType(@get:JsonValue val value: String) {
+    AUTHORIZATION_CODE("authorization_code"),
+    CLIENT_CREDENTIALS("client_credentials");
+
+    companion object {
+        fun from(value: String): GrantType =
+            entries.find { it.value == value }
+                ?: throw IllegalArgumentException("Invalid grant type: $value")
+    }
+}
+
 enum class LaunchMode(@get:JsonValue val value: String) {
     IFRAME("iframe"),
     TAB("tab"),
@@ -51,6 +62,7 @@ data class SmartClient(
     val beskrivelse: String = "",
     val ikon: String = DEFAULT_APP_ICON,
     val launchMode: LaunchMode = LaunchMode.IFRAME,
+    val grantTypes: Set<GrantType> = setOf(GrantType.AUTHORIZATION_CODE),
 ) {
     /**
      * The safe subset of this registration a future EPJ launch picker can show a clinician: no

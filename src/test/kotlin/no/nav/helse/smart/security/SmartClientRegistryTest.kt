@@ -116,6 +116,99 @@ class SmartClientRegistryTest {
     }
 
     @Test
+    fun `grant types default to authorization_code`() {
+        val client =
+            buildRegistry(listOf(RawClientRegistration(clientId = "c", scopes = listOf("openid"))))
+                .single()
+        assertEquals(setOf(GrantType.AUTHORIZATION_CODE), client.grantTypes)
+    }
+
+    @Test
+    fun `parses a backend services client from yaml`() {
+        val config =
+            yamlConfigFor(
+                """
+                - clientId: "backend"
+                  tokenEndpointAuthMethod: "private_key_jwt"
+                  jwksUri: "https://backend.example.org/jwks.json"
+                  grantTypes: [ "client_credentials" ]
+                  scopes: [ "system/Patient.rs" ]
+                """
+                    .trimIndent()
+            )
+        val client = loadSmartClients(config).single()
+        assertEquals(setOf(GrantType.CLIENT_CREDENTIALS), client.grantTypes)
+        assertEquals(TokenEndpointAuthMethod.PRIVATE_KEY_JWT, client.tokenEndpointAuthMethod)
+    }
+
+    private fun backend(
+        method: String? = "private_key_jwt",
+        grants: List<String> = listOf("client_credentials"),
+        scopes: List<String> = listOf("system/Patient.rs"),
+        secret: String? = null,
+        redirects: List<String> = emptyList(),
+    ) =
+        RawClientRegistration(
+            clientId = "backend",
+            tokenEndpointAuthMethod = method,
+            jwksUri =
+                "https://backend.example.org/jwks.json".takeIf { method == "private_key_jwt" },
+            clientSecret = secret,
+            grantTypes = grants,
+            scopes = scopes,
+            redirectUris = redirects,
+        )
+
+    @Test
+    fun `backend services client with valid registration is accepted`() {
+        val client = buildRegistry(listOf(backend())).single()
+        assertEquals(setOf(GrantType.CLIENT_CREDENTIALS), client.grantTypes)
+    }
+
+    @Test
+    fun `backend services client rejects invalid combinations`() {
+        listOf(
+                backend(method = "client_secret_basic", secret = "s"),
+                backend(method = "none"),
+                backend(scopes = listOf("user/Patient.rs")),
+                backend(scopes = listOf("system/Patient.rs", "openid")),
+                backend(grants = listOf("client_credentials", "authorization_code")),
+                backend(redirects = listOf("https://backend.example.org/cb")),
+            )
+            .forEach { assertFailsWith<IllegalArgumentException> { buildRegistry(listOf(it)) } }
+    }
+
+    @Test
+    fun `unknown or empty grant types fail`() {
+        val unknown =
+            assertFailsWith<IllegalArgumentException> {
+                buildRegistry(
+                    listOf(
+                        RawClientRegistration(
+                            clientId = "c",
+                            scopes = listOf("openid"),
+                            grantTypes = listOf("password"),
+                        )
+                    )
+                )
+            }
+        assertTrue("'password'" in unknown.message.orEmpty())
+        listOf(listOf("password"), emptyList()).forEach {
+            assertFailsWith<IllegalArgumentException> {
+                buildRegistry(
+                    listOf(
+                        RawClientRegistration(
+                            clientId = "c",
+                            scopes = listOf("openid"),
+                            grantTypes = it,
+                        )
+                    )
+                )
+            }
+        }
+    }
+
+    @Test
     fun `duplicate client id fails startup`() {
         val ex =
             assertFailsWith<IllegalArgumentException> {
@@ -361,6 +454,25 @@ class SmartClientRegistryTest {
         assertEquals(1, clients.size)
         assertEquals("json-app", clients.single().clientId)
         assertEquals(TokenEndpointAuthMethod.NONE, clients.single().tokenEndpointAuthMethod)
+    }
+
+    @Test
+    fun `secret-backed JSON registry parses a backend services client`() {
+        val config =
+            yamlConfig(
+                """
+                smart:
+                  issuerBaseUrl: "http://test/oidc"
+                  fhirServerUrl: "http://test/fhir"
+                  privateKeyJwk: "unused"
+                  clientRegistryJson: '[{"clientId":"json-backend","tokenEndpointAuthMethod":"private_key_jwt","jwksUri":"https://backend.example.org/jwks.json","grantTypes":["client_credentials"],"scopes":["system/Patient.rs"]}]'
+                """
+                    .trimIndent()
+            )
+
+        val client = loadSmartClients(config).single()
+        assertEquals(setOf(GrantType.CLIENT_CREDENTIALS), client.grantTypes)
+        assertEquals(TokenEndpointAuthMethod.PRIVATE_KEY_JWT, client.tokenEndpointAuthMethod)
     }
 
     @Test

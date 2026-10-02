@@ -26,6 +26,7 @@ internal data class RawClientRegistration(
     val beskrivelse: String? = null,
     val ikon: String? = null,
     val launchMode: String? = null,
+    val grantTypes: List<String>? = null,
 )
 
 private val LOCAL_HOSTS = setOf("localhost", "127.0.0.1")
@@ -69,6 +70,7 @@ private fun ApplicationConfig.toRawRegistration() =
         beskrivelse = propertyOrNull("beskrivelse")?.getString(),
         ikon = propertyOrNull("ikon")?.getString(),
         launchMode = propertyOrNull("launchMode")?.getString(),
+        grantTypes = propertyOrNull("grantTypes")?.getList(),
     )
 
 internal fun buildRegistry(raw: List<RawClientRegistration>): List<SmartClient> {
@@ -81,11 +83,16 @@ internal fun buildRegistry(raw: List<RawClientRegistration>): List<SmartClient> 
 
 private fun RawClientRegistration.toSmartClient(): SmartClient {
     val method = resolveAuthMethod()
+    val grants = resolveGrantTypes()
     validateAuthMaterial(method)
     redirectUris.forEach { requireSecureUri(clientId, "redirectUri", it) }
     launchUris.forEach { requireSecureUri(clientId, "launchUri", it) }
     jwksUri?.let { requireSecureUri(clientId, "jwksUri", it) }
     require(scopes.isNotEmpty()) { "smart.clients: client '$clientId' has no registered scopes" }
+    val allowedScopes = parseRegisteredScopes(scopes)
+    if (GrantType.CLIENT_CREDENTIALS in grants) {
+        validateBackendServices(method, grants, allowedScopes)
+    }
 
     return SmartClient(
         clientId = clientId,
@@ -95,13 +102,51 @@ private fun RawClientRegistration.toSmartClient(): SmartClient {
         clientSecret = clientSecret,
         jwksUri = jwksUri,
         inlineJwkSet = jwkSet?.let { parsePublicJwkSet(clientId, it) },
-        allowedScopes = parseRegisteredScopes(scopes),
+        allowedScopes = allowedScopes,
         displayName = navn ?: displayName ?: clientId,
         teamSlot = teamSlot,
         beskrivelse = beskrivelse.orEmpty(),
         ikon = ikon ?: DEFAULT_APP_ICON,
         launchMode = resolveLaunchMode(),
+        grantTypes = grants,
     )
+}
+
+private fun RawClientRegistration.resolveGrantTypes(): Set<GrantType> {
+    val declared = grantTypes ?: return setOf(GrantType.AUTHORIZATION_CODE)
+    require(declared.isNotEmpty()) { "smart.clients: client '$clientId' declares no grantTypes" }
+    return declared.mapTo(linkedSetOf()) { value ->
+        runCatching { GrantType.from(value) }
+            .getOrElse {
+                throw IllegalArgumentException(
+                    "smart.clients: client '$clientId' declares unsupported grant type " +
+                        "'$value'; use one of ${GrantType.entries.joinToString { g -> g.value }}"
+                )
+            }
+    }
+}
+
+private fun RawClientRegistration.validateBackendServices(
+    method: TokenEndpointAuthMethod,
+    grants: Set<GrantType>,
+    allowedScopes: Set<SmartScope>,
+) {
+    require(grants == setOf(GrantType.CLIENT_CREDENTIALS)) {
+        "smart.clients: client '$clientId' declares client_credentials together with another " +
+            "grant type; a backend services client must register client_credentials only"
+    }
+    require(method == TokenEndpointAuthMethod.PRIVATE_KEY_JWT) {
+        "smart.clients: client '$clientId' declares client_credentials but not private_key_jwt; " +
+            "backend services clients must authenticate with private_key_jwt"
+    }
+    require(allowedScopes.all { it is SmartScope.Fhir && it.context == ScopeContext.SYSTEM }) {
+        "smart.clients: client '$clientId' declares client_credentials but has non-system/ " +
+            "scopes; backend services clients may only register system/ scopes"
+    }
+    require(redirectUris.isEmpty() && launchUris.isEmpty()) {
+        "smart.clients: client '$clientId' declares client_credentials but has redirect or " +
+            "launch uris"
+    }
 }
 
 private fun RawClientRegistration.resolveLaunchMode(): LaunchMode =
