@@ -76,6 +76,32 @@ export type Konsultasjon = z.infer<typeof KonsultasjonSchema>;
 
 export type Diagnose = z.infer<typeof DiagnoseSchema>;
 
+export const MaalingStatusSchema = z.enum([
+    "REGISTERED",
+    "PRELIMINARY",
+    "FINAL",
+    "AMENDED",
+    "CORRECTED",
+    "CANCELLED",
+    "ENTERED_IN_ERROR",
+    "UNKNOWN",
+]);
+
+export const MaalingSchema = z.object({
+    id: z.string(),
+    pasientId: z.string(),
+    konsultasjonId: z.string(),
+    loincKode: z.string(),
+    loincVisningsnavn: z.string(),
+    verdi: z.number(),
+    enhetKode: z.string(),
+    enhetVisningsnavn: z.string(),
+    effektivTidspunkt: z.string(),
+    status: MaalingStatusSchema,
+});
+
+export type Maaling = z.infer<typeof MaalingSchema>;
+
 export const LaunchModeSchema = z.enum(["iframe", "tab", "ask"]);
 
 export type LaunchMode = z.infer<typeof LaunchModeSchema>;

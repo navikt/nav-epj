@@ -6,6 +6,7 @@ import {
   formatDate,
   formatDateTime,
   formatTime,
+  formatUtcDateTimeInOslo,
   fullName,
   genderLabel,
   genderOf,
@@ -93,6 +94,15 @@ describe("patientInfo", () => {
     expect(formatDateTime("2026-09-30T09:14:05.123")).toBe("30.09.2026 09:14");
     expect(ageOn("1990-10-01", new Date(2026, 8, 30))).toBe(35);
     expect(ageOn("1990-09-30", new Date(2026, 8, 30))).toBe(36);
+  });
+
+  it("formats UTC date-times in Oslo time across daylight-saving seasons", () => {
+    expect(formatUtcDateTimeInOslo("2026-09-30T09:15:00Z")).toBe(
+      "30.09.2026 11:15",
+    );
+    expect(formatUtcDateTimeInOslo("2026-02-01T09:15:00Z")).toBe(
+      "01.02.2026 10:15",
+    );
   });
 
   it("joins the name", () => {

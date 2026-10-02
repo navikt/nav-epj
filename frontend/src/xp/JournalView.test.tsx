@@ -318,6 +318,16 @@ describe("JournalView", () => {
     await userEvent.click(await screen.findByRole("tab", { name: "Tidligere konsultasjoner (0)" }));
     expect(screen.getByText("Ingen tidligere konsultasjoner.")).toBeInTheDocument();
   });
+
+  it("keeps the journal usable when the measurements request fails", async () => {
+    await openJournal([kons()], { "GET /api/patient/p1/maalinger": () => ({ ok: false }) });
+    await userEvent.click(await screen.findByRole("tab", { name: "Målinger" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Feil ved lasting av målinger");
+    expect(screen.getByText(/Ape/)).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("tab", { name: "Konsultasjon" }));
+    expect(screen.getByRole("tab", { name: "Konsultasjon" })).toHaveAttribute("aria-selected", "true");
+  });
 });
 
 function stubFinished() {
