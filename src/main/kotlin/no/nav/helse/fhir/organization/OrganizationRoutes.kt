@@ -6,6 +6,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.helse.core.utils.logger
 import no.nav.helse.fhir.organizationId
+import no.nav.helse.fhir.security.requireSystemScopeIfSystemContext
+import no.nav.helse.smart.security.Interaction
 
 fun Route.organizationRoutes(
     organizationService: OrganizationService,
@@ -15,8 +17,7 @@ fun Route.organizationRoutes(
     val log = logger()
     route("/fhir") {
         get("/Organization/{organizationId}") {
-            // TODO: no scope check because syk-inn reads Organization without an Organization
-            // scope; require patient/Organization.r once it requests one.
+            call.requireSystemScopeIfSystemContext("Organization", Interaction.READ)
             val organizationId = call.organizationId()
             val organization =
                 organizationService.getOrganization(organizationId)

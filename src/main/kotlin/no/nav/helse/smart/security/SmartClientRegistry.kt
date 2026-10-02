@@ -92,6 +92,11 @@ private fun RawClientRegistration.toSmartClient(): SmartClient {
     val allowedScopes = parseRegisteredScopes(scopes)
     if (GrantType.CLIENT_CREDENTIALS in grants) {
         validateBackendServices(method, grants, allowedScopes)
+    } else {
+        require(allowedScopes.none { it is SmartScope.Fhir && it.context == ScopeContext.SYSTEM }) {
+            "smart.clients: client '$clientId' registers system/ scopes without client_credentials; " +
+                "system/ scopes are reserved for backend services clients"
+        }
     }
 
     return SmartClient(

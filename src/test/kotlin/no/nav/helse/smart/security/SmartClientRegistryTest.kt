@@ -368,6 +368,24 @@ class SmartClientRegistryTest {
     }
 
     @Test
+    fun `authorization_code client with a system scope fails`() {
+        listOf(null, listOf("authorization_code")).forEach { grants ->
+            assertFailsWith<IllegalArgumentException> {
+                buildRegistry(
+                    listOf(
+                        RawClientRegistration(
+                            clientId = "c",
+                            redirectUris = listOf("https://app.example.com/callback"),
+                            scopes = listOf("openid", "system/Patient.rs"),
+                            grantTypes = grants,
+                        )
+                    )
+                )
+            }
+        }
+    }
+
+    @Test
     fun `missing scopes fails`() {
         assertFailsWith<IllegalArgumentException> {
             buildRegistry(listOf(RawClientRegistration(clientId = "c")))

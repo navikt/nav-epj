@@ -17,6 +17,8 @@ import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.legekontor.LegekontorService
 import no.nav.helse.plugins.configureStatusPages
 import no.nav.helse.smart.security.SmartPrincipal
+import no.nav.helse.smart.security.SmartScope
+import no.nav.helse.smart.security.parseScopes
 import org.junit.Test
 
 class OrganizationRoutesTest {
@@ -26,7 +28,10 @@ class OrganizationRoutesTest {
     private val fhirJson = FhirR4Json()
     private val fhirContentType = ContentType("application", "fhir+json")
 
-    private fun testApp(block: suspend io.ktor.client.HttpClient.() -> Unit) = testApplication {
+    private fun testApp(
+        scopes: Set<SmartScope> = emptySet(),
+        block: suspend io.ktor.client.HttpClient.() -> Unit,
+    ) = testApplication {
         application {
             configureStatusPages()
             authentication {
@@ -35,7 +40,7 @@ class OrganizationRoutesTest {
                         ctx.principal(
                             SmartPrincipal(
                                 subject = "test-client",
-                                scopes = emptySet(),
+                                scopes = scopes,
                                 patient = null,
                                 encounter = null,
                             )
@@ -81,6 +86,37 @@ class OrganizationRoutesTest {
             val response = get("/fhir/Organization/${id.value}")
 
             assertEquals(HttpStatusCode.NotFound, response.status)
+        }
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `GET Organization is forbidden for a system token without an Organization scope`() {
+        val id = LegekontorId(Uuid.generateV4())
+
+        testApp(parseScopes("system/Patient.rs")) {
+            val response = get("/fhir/Organization/${id.value}")
+
+            assertEquals(HttpStatusCode.Forbidden, response.status)
+        }
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `GET Organization returns 200 for a system token with system Organization r`() {
+        val kontor =
+            Legekontor(
+                id = LegekontorId(Uuid.generateV4()),
+                navn = "Testlegekontor",
+                orgnummer = "123456789",
+                tlf = "12345678",
+            )
+        coEvery { legekontorService.getLegekontor(kontor.id) } returns kontor
+
+        testApp(parseScopes("system/Organization.r")) {
+            val response = get("/fhir/Organization/${kontor.id.value}")
+
+            assertEquals(HttpStatusCode.OK, response.status)
         }
     }
 }
