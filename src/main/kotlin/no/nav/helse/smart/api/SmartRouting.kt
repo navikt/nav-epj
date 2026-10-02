@@ -19,13 +19,17 @@ import no.nav.helse.smart.IntrospectionResponse
 import no.nav.helse.smart.SmartDiscoveryDocument
 import no.nav.helse.smart.TokenResponse
 import no.nav.helse.smart.security.ClientAssertionVerifier
+import no.nav.helse.smart.security.GrantType
 import no.nav.helse.smart.security.SUPPORTED_CLIENT_ASSERTION_ALGORITHMS
+import no.nav.helse.smart.security.ScopeContext
+import no.nav.helse.smart.security.SmartClient
 import no.nav.helse.smart.security.SmartKeys
 import no.nav.helse.smart.security.SmartScope
 import no.nav.helse.smart.security.TokenEndpointAuthMethod
 import no.nav.helse.smart.security.authenticateClient
 import no.nav.helse.smart.security.codeChallengeS256
 import no.nav.helse.smart.security.grantScopes
+import no.nav.helse.smart.security.parseScope
 import no.nav.helse.smart.security.parseScopes
 import no.nav.helse.smart.security.resolveAssertedClientId
 import no.nav.helse.smart.security.serialize
@@ -259,6 +263,17 @@ fun Application.configureSmartRouting() {
                 // Deliberate test diagnostics
                 log.debug("SMART: /token called with params: {}", params)
 
+                if (params["grant_type"] == GrantType.CLIENT_CREDENTIALS.value) {
+                    return@post issueClientCredentialsToken(
+                        params,
+                        clients,
+                        clientAssertionVerifier,
+                        issuerUrl,
+                        env.smart.fhirServerUrl,
+                        smartKeys,
+                    )
+                }
+
                 val code = params["code"] ?: return@post rejectMissingToken("code")
                 val grantType = params["grant_type"] ?: return@post rejectMissingToken("grant_type")
                 if (grantType != "authorization_code") {
@@ -346,8 +361,10 @@ fun Application.configureSmartRouting() {
                     buildAccessToken(
                         issuerUrl,
                         env.smart.fhirServerUrl,
-                        ctx,
+                        ctx.subject,
                         ctx.scope,
+                        ctx.launch.patientId,
+                        ctx.launch.encounterId,
                         now,
                         expiresAt,
                         smartKeys,
@@ -470,8 +487,10 @@ fun Application.configureSmartRouting() {
 private fun buildAccessToken(
     issuerUrl: String,
     fhirServerUrl: String,
-    ctx: AuthCodeContext,
+    subject: String,
     grantedScope: String,
+    patientId: String?,
+    encounterId: String?,
     now: Date,
     expiresAt: Date,
     smartKeys: SmartKeys,
@@ -480,7 +499,7 @@ private fun buildAccessToken(
         .withHeader(mapOf("typ" to "at+jwt"))
         .withIssuer(issuerUrl)
         .withAudience(fhirServerUrl) // RFC 9068 2.2: resource server(s) this token is valid for
-        .withSubject(ctx.subject)
+        .withSubject(subject)
         .withKeyId(smartKeys.keyId)
         .withIssuedAt(now)
         .withExpiresAt(expiresAt)
@@ -488,9 +507,92 @@ private fun buildAccessToken(
             UUID.randomUUID().toString()
         ) // RFC 9068 2.2: unique identifier for revocation/logging
         .withClaim("scope", grantedScope)
-        .withClaim("patient", ctx.launch.patientId)
-        .withClaim("encounter", ctx.launch.encounterId)
+        .apply {
+            patientId?.let { withClaim("patient", it) }
+            encounterId?.let { withClaim("encounter", it) }
+        }
         .sign(smartKeys.algorithm)
+
+private const val CLIENT_CREDENTIALS_LIFETIME_SECONDS = 300
+
+private suspend fun RoutingContext.issueClientCredentialsToken(
+    params: Parameters,
+    clients: List<SmartClient>,
+    clientAssertionVerifier: ClientAssertionVerifier,
+    issuerUrl: String,
+    fhirServerUrl: String,
+    smartKeys: SmartKeys,
+) {
+    val assertedClientId =
+        resolveAssertedClientId(call.request, params) ?: return rejectMissingToken("client_id")
+    val client =
+        clients.find { it.clientId == assertedClientId }
+            ?: return rejectToken(
+                HttpStatusCode.BadRequest,
+                OAuth2Error.INVALID_CLIENT.appendDescription("unknown client"),
+            )
+    authenticateClient(call.request, client, params, clientAssertionVerifier)?.let {
+        return rejectToken(HttpStatusCode.Unauthorized, it)
+    }
+    if (GrantType.CLIENT_CREDENTIALS !in client.grantTypes) {
+        return rejectToken(
+            HttpStatusCode.BadRequest,
+            OAuth2Error.UNAUTHORIZED_CLIENT.appendDescription(
+                "client is not registered for grant_type client_credentials"
+            ),
+        )
+    }
+    val requestedScope = params["scope"] ?: return rejectMissingToken("scope")
+    val scopeTokens = requestedScope.split(" ")
+    val requested = scopeTokens.mapNotNull { parseScope(it) }.filterIsInstance<SmartScope.Fhir>()
+    if (
+        scopeTokens.any { it.isEmpty() } ||
+            requested.size != scopeTokens.size ||
+            requested.any { it.context != ScopeContext.SYSTEM }
+    ) {
+        return rejectToken(
+            HttpStatusCode.BadRequest,
+            OAuth2Error.INVALID_SCOPE.appendDescription(
+                "scope must be a space-separated list of valid system/ scopes"
+            ),
+        )
+    }
+    if (requested.any { it !in grantScopes(setOf(it), client.allowedScopes) }) {
+        return rejectToken(
+            HttpStatusCode.BadRequest,
+            OAuth2Error.INVALID_SCOPE.appendDescription(
+                "scope is not pre-authorized for this client"
+            ),
+        )
+    }
+
+    val now = Date()
+    val expiresAt = Date(now.time + CLIENT_CREDENTIALS_LIFETIME_SECONDS * 1000L)
+    val grantedScope = scopeTokens.distinct().joinToString(" ")
+    call.application.log.info(
+        "SMART: issuing client_credentials token for client={}",
+        client.clientId,
+    )
+    call.respond(
+        TokenResponse(
+            accessToken =
+                buildAccessToken(
+                    issuerUrl,
+                    fhirServerUrl,
+                    client.clientId,
+                    grantedScope,
+                    null,
+                    null,
+                    now,
+                    expiresAt,
+                    smartKeys,
+                ),
+            expiresIn = CLIENT_CREDENTIALS_LIFETIME_SECONDS,
+            scope = grantedScope,
+            needPatientBanner = false,
+        )
+    )
+}
 
 private fun buildIdToken(
     issuerUrl: String,

@@ -51,9 +51,12 @@ class DocumentReferenceRoutesTest {
     private val fhirContentType = ContentType("application", "fhir+json")
     private val fhirServerUrl = "https://fhir.example.test/fhir"
 
-    private fun documentReferenceScope(interactions: Set<Interaction>) =
+    private fun documentReferenceScope(
+        interactions: Set<Interaction>,
+        context: ScopeContext = ScopeContext.PATIENT,
+    ) =
         SmartScope.Fhir(
-            context = ScopeContext.PATIENT,
+            context = context,
             resourceType = "DocumentReference",
             interactions = interactions,
         )
@@ -223,6 +226,24 @@ class DocumentReferenceRoutesTest {
             val response = get("/fhir/DocumentReference?patient=Patient/$patientId")
 
             assertEquals(HttpStatusCode.OK, response.status)
+        }
+    }
+
+    @Test
+    fun `GET DocumentReference search accepts a system-level scope without launch context`() {
+        val patientId = Uuid.generateV4()
+        coEvery {
+            documentReferenceService.searchDocumentReferences(PatientInputId(patientId), null)
+        } returns Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
+
+        testApp(
+            scopes = setOf(documentReferenceScope(setOf(Interaction.SEARCH), ScopeContext.SYSTEM)),
+            boundPatient = null,
+        ) {
+            val response = get("/fhir/DocumentReference?patient=Patient/$patientId")
+
+            assertEquals(HttpStatusCode.OK, response.status)
+            assertEquals(true, response.bodyAsText().contains("\"searchset\""))
         }
     }
 

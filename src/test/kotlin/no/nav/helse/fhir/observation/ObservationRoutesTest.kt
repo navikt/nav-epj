@@ -40,9 +40,12 @@ class ObservationRoutesTest {
     private val fhirContentType = ContentType("application", "fhir+json")
     private val fhirServerUrl = "https://fhir.example.test/fhir"
 
-    private fun observationScope(interactions: Set<Interaction>) =
+    private fun observationScope(
+        interactions: Set<Interaction>,
+        context: ScopeContext = ScopeContext.PATIENT,
+    ) =
         SmartScope.Fhir(
-            context = ScopeContext.PATIENT,
+            context = context,
             resourceType = "Observation",
             interactions = interactions,
         )
@@ -194,6 +197,24 @@ class ObservationRoutesTest {
             val response = get("/fhir/Observation?patient=Patient/$patientId")
 
             assertEquals(HttpStatusCode.OK, response.status)
+        }
+    }
+
+    @Test
+    fun `GET Observation search accepts a system-level scope without launch context`() {
+        val patientId = Uuid.generateV4()
+        coEvery {
+            observationService.searchObservations(PatientInputId(patientId), null, null)
+        } returns Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
+
+        testApp(
+            scopes = setOf(observationScope(setOf(Interaction.SEARCH), ScopeContext.SYSTEM)),
+            boundPatient = null,
+        ) {
+            val response = get("/fhir/Observation?patient=Patient/$patientId")
+
+            assertEquals(HttpStatusCode.OK, response.status)
+            assertEquals(true, response.bodyAsText().contains("\"searchset\""))
         }
     }
 
