@@ -62,6 +62,7 @@ One fixed grid: header, task pane (264px), workspace, status bar. Under 1024px t
 - Every colour pair that carries text, a control edge or focus is in the contrast table at the top of `tokens.css`, with its ratio and the rejected values. Add new pairs there. WCAG 2.1 AA is a release gate.
 - Two themes: Luna (default) and Klassisk (`data-theme="klassisk"`, high contrast, square corners, black borders). Define every new token for both.
 - Layout spacing uses `--xp-space-1` to `-8` (4px grid: 4, 8, 12, 16, 20, 24, 32). XP control internals (buttons, tabs, inputs, chips, table cells, menu items) keep their own padding.
+- `.xp-page` and `.xp-tabpanel` stack their children 16px apart. Render blocks as direct children instead of adding margins; use `.xp-group` (8px) to keep a heading close to its content.
 - Cards in `.xp-card-grid` and `.xp-appcards` share one width and height. A card's last `.xp-form-actions` or `.xp-btnrow` sits at the bottom, so buttons line up whatever the text length.
 - Text is at least `--xp-font-size` (14px). The Kontrollpanel text-size option (100, 125, 150%) scales it from `AppShell`. Click targets are 32px, 44px in narrow mode.
 - Focus is a dark inner outline plus a yellow halo (`--xp-focus-inner`, `--xp-focus-ring`), set once on `:focus-visible` in `xp.css`. Yellow alone is 1.35:1 on the workspace. The dark line works on light surfaces and the halo on the blue header.

@@ -34,7 +34,7 @@ const validator = {
   launchUri: "https://validator.example/fhir",
 };
 
-export function fakeBackend({ withHistory = false } = {}) {
+export function fakeBackend({ withHistory = false, ongoing = true } = {}) {
   const state = { activeId: null as string | null, launches: [] as Launch[] };
   const json = (route: Route, body: unknown, status = 200) =>
     route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
@@ -61,17 +61,21 @@ export function fakeBackend({ withHistory = false } = {}) {
       if (key === `GET /api/patient/${patientId}` && known) return json(route, known);
       if (key === `GET /api/patients/${patientId}/konsultasjoner` && known) {
         return json(route, [
-          {
-            id: `k-${known.id}`,
-            pasientId: known.id,
-            hpr: ["9144889"],
-            journalnotat: [],
-            diagnoser: [],
-            startetTidspunkt: "2026-09-30T09:14:00",
-            avsluttetTidspunkt: null,
-            status: "PÅGÅENDE",
-            problemstilling: null,
-          },
+          ...(ongoing
+            ? [
+                {
+                  id: `k-${known.id}`,
+                  pasientId: known.id,
+                  hpr: ["9144889"],
+                  journalnotat: [],
+                  diagnoser: [],
+                  startetTidspunkt: "2026-09-30T09:14:00",
+                  avsluttetTidspunkt: null,
+                  status: "PÅGÅENDE",
+                  problemstilling: null,
+                },
+              ]
+            : []),
           ...(withHistory
             ? [
                 {

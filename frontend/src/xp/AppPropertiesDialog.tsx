@@ -89,7 +89,7 @@ function ScopesTab({ app }: { app: App }) {
   return (
     <>
       {groupScopes(app.scopes).map((group) => (
-        <Fragment key={group.id}>
+        <section key={group.id} className="xp-group">
           <h3 className="xp-h2">{group.label}</h3>
           <dl className="xp-dl">
             {group.scopes.map((scope) => (
@@ -99,7 +99,7 @@ function ScopesTab({ app }: { app: App }) {
               </Fragment>
             ))}
           </dl>
-        </Fragment>
+        </section>
       ))}
     </>
   );
