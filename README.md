@@ -38,6 +38,8 @@ yarn
 yarn dev
 ```
 
+See [frontend/README.md](./frontend/README.md) for the architecture and design rules.
+
 ### Backend
 
 From the backend directory, start the application using Gradle:
