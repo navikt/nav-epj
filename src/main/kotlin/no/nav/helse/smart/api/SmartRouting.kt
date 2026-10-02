@@ -443,8 +443,7 @@ fun Application.configureSmartRouting() {
                         authorizationEndpoint = "$issuerUrl/authorize",
                         tokenEndpoint = "$issuerUrl/token",
                         introspectionEndpoint = "$issuerUrl/introspect",
-                        // client_credentials is not implemented yet (SMART Backend Services).
-                        grantTypesSupported = listOf("authorization_code"),
+                        grantTypesSupported = listOf("authorization_code", "client_credentials"),
                         scopesSupported =
                             listOf(
                                 "openid",
@@ -452,6 +451,14 @@ fun Application.configureSmartRouting() {
                                 "launch",
                                 "patient/*.cruds",
                                 "user/*.cruds",
+                                "system/Patient.rs",
+                                "system/Encounter.rs",
+                                "system/Condition.s",
+                                "system/Observation.crs",
+                                "system/Practitioner.r",
+                                "system/PractitionerRole.s",
+                                "system/Organization.r",
+                                "system/DocumentReference.crs",
                                 "offline_access",
                             ),
                         responseTypesSupported = listOf("code"),
@@ -462,6 +469,7 @@ fun Application.configureSmartRouting() {
                                 "permission-patient",
                                 "permission-user",
                                 "permission-offline",
+                                "permission-system",
                                 "permission-v1",
                                 "permission-v2",
                                 "client-public",

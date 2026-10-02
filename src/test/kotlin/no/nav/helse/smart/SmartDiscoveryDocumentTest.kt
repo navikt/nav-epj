@@ -25,25 +25,36 @@ class SmartDiscoveryDocumentTest {
             listOf("none", "client_secret_basic", "private_key_jwt"),
             doc.tokenEndpointAuthMethodsSupported,
         )
-        assertEquals(listOf("authorization_code"), doc.grantTypesSupported)
+        assertEquals(listOf("authorization_code", "client_credentials"), doc.grantTypesSupported)
         assertTrue("permission-v1" in doc.capabilities)
         assertTrue("permission-v2" in doc.capabilities)
         assertTrue("permission-user" in doc.capabilities)
         assertTrue("permission-offline" in doc.capabilities)
+        assertTrue("permission-system" in doc.capabilities)
         assertTrue("context-ehr-encounter" in doc.capabilities)
         assertEquals(listOf("S256"), doc.codeChallengeMethodsSupported)
     }
 
     @Test
-    fun `discovery does not advertise system scopes before client_credentials exists`() =
-        testApplication {
-            application { configureTestSmartDependencies() }
-            val response = client.get("/fhir/.well-known/smart-configuration")
+    fun `discovery advertises only implemented system scopes`() = testApplication {
+        application { configureTestSmartDependencies() }
+        val response = client.get("/fhir/.well-known/smart-configuration")
 
-            val doc = jacksonObjectMapper().readValue<SmartDiscoveryDocument>(response.bodyAsText())
-            assertTrue(doc.scopesSupported.none { it.startsWith("system/") })
-            assertTrue("client_credentials" !in doc.grantTypesSupported)
-        }
+        val doc = jacksonObjectMapper().readValue<SmartDiscoveryDocument>(response.bodyAsText())
+        assertEquals(
+            listOf(
+                "system/Patient.rs",
+                "system/Encounter.rs",
+                "system/Condition.s",
+                "system/Observation.crs",
+                "system/Practitioner.r",
+                "system/PractitionerRole.s",
+                "system/Organization.r",
+                "system/DocumentReference.crs",
+            ),
+            doc.scopesSupported.filter { it.startsWith("system/") },
+        )
+    }
 
     @Test
     fun `discovery does not advertise unimplemented registration or management endpoints`() =
