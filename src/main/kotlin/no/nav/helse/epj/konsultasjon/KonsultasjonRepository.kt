@@ -246,6 +246,18 @@ class KonsultasjonRepository {
             it[status] = KonsultasjonStatus.FULLFØRT
         }
 
+    suspend fun avbryt(konsultasjonId: KonsultasjonId, pasientId: PasientId): Int = dbQuery {
+        logger.info("Avbryter konsultasjon {}", konsultasjonId)
+        KonsultasjonTable.update({
+            (KonsultasjonTable.id eq konsultasjonId.value) and
+                (KonsultasjonTable.pasientId eq pasientId.value) and
+                (KonsultasjonTable.status eq KonsultasjonStatus.PÅGÅENDE)
+        }) {
+            it[avsluttetTidspunkt] = LocalDateTime.now()
+            it[status] = KonsultasjonStatus.AVLYST
+        }
+    }
+
     suspend fun updateJournalnotat(
         konsultasjonId: KonsultasjonId,
         pasientId: PasientId,

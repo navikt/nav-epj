@@ -1,10 +1,9 @@
-@import "tailwindcss";
-@import "@navikt/ds-css" layer(components);
+@layer preflight, tokens, aksel, xp;
 
-:root {
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-  }
-}
+@import "./reset.css" layer(preflight);
+@import "@navikt/ds-css/dist/global/tokens.css" layer(aksel);
+@import "@navikt/ds-css/dist/global/baseline.css" layer(aksel);
+@import "@navikt/ds-css/dist/component/typography.css" layer(aksel);
+@import "@navikt/ds-css/dist/component/form.css" layer(aksel);
+@import "./xp/tokens.css";
+@import "./xp/xp.css";

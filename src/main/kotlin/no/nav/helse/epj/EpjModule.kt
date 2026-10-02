@@ -19,9 +19,12 @@ import no.nav.helse.epj.konsultasjon.routes.konsultasjonRoutes
 import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.legekontor.LegekontorService
 import no.nav.helse.epj.legekontor.legekontorRoutes
+import no.nav.helse.epj.pasient.ActivePatientService
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.epj.pasient.PasientService
+import no.nav.helse.epj.pasient.activePatientRoutes
 import no.nav.helse.epj.pasient.pasientRoutes
+import no.nav.helse.helseId.sessionRoutes
 import no.nav.helse.smart.valkey.ValkeyService
 
 fun Application.configureEpjModule() {
@@ -30,6 +33,7 @@ fun Application.configureEpjModule() {
     val konsultasjonService: KonsultasjonService by dependencies
     val legekontorService: LegekontorService by dependencies
     val valkeyService: ValkeyService by dependencies
+    val activePatientService = ActivePatientService(pasientService, valkeyService)
     // TODO: integrasjon med persontjenesten
     // val persontjenstenService: PersontjenstenService by dependencies
 
@@ -40,9 +44,11 @@ fun Application.configureEpjModule() {
                 defaultPage = "index.html"
                 filesPath = "static"
             }
+            sessionRoutes()
             pasientRoutes(pasientService)
+            activePatientRoutes(activePatientService, valkeyService)
             helsepersonellRoutes(helsepersonellService, legekontorService)
-            konsultasjonRoutes(konsultasjonService, valkeyService)
+            konsultasjonRoutes(konsultasjonService, activePatientService)
             legekontorRoutes(legekontorService)
             diagnoseRoutes(konsultasjonService)
             journalnotatRoutes(konsultasjonService)

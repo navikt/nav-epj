@@ -1,0 +1,175 @@
+/*
+ * nav-epj – design tokens
+ * Themes: Luna (default, on .xp-root / :root) and Klassisk (high contrast, [data-theme="klassisk"]).
+ * Layer order is set in src/index.css: preflight, tokens, aksel, xp.
+ *
+ * CONTRAST TABLE (WCAG 2.1: 4.5:1 text, 3:1 large text, component edges and focus)
+ * Every gradient stop is measured separately.
+ * Luna      #ffffff  on #0a246a   14.25:1  (min 4.5)  PASS  header/title text, gradient stop 1
+ * Luna      #ffffff  on #1c5bd9    5.92:1  (min 4.5)  PASS  header/title text, gradient stop 2
+ * Luna      #0b1a3d  on #7a96df    5.90:1  (min 4.5)  PASS  inactive title text
+ * Luna      #1a1a1a  on #ece9d8   14.27:1  (min 4.5)  PASS  text on workspace
+ * Luna      #1a1a1a  on #ffffff   17.40:1  (min 4.5)  PASS  text on card / patient context value
+ * Luna      #4a4a4a  on #ffffff    8.86:1  (min 4.5)  PASS  muted text on card / patient context key
+ * Luna      #4a4a4a  on #ece9d8    7.26:1  (min 4.5)  PASS  muted text on workspace
+ * Luna      #5f5f5f  on #ece9d8    5.23:1  (min 4.5)  PASS  disabled text
+ * Luna      #0b4fb3  on #ffffff    7.54:1  (min 4.5)  PASS  link on card
+ * Luna      #0b4fb3  on #ece9d8    6.18:1  (min 4.5)  PASS  link on workspace
+ * Luna      #ffffff  on #316ac5    5.25:1  (min 4.5)  PASS  selected option
+ * Luna      #0a246a  on #ffffff   14.25:1  (min 4.5)  PASS  patient name / headings
+ * Luna      #0a246a  on #eef3fd   12.81:1  (min 4.5)  PASS  task pane text
+ * Luna      #4a4a4a  on #eef3fd    7.97:1  (min 4.5)  PASS  task pane sub text
+ * Luna      #0a246a  on #ffffff   14.25:1  (min 4.5)  PASS  panel heading, gradient stop 1
+ * Luna      #0a246a  on #c6d3f7    9.54:1  (min 4.5)  PASS  panel heading, gradient stop 2
+ * Luna      #ffffff  on #2e5fd8    5.61:1  (min 4.5)  PASS  primary panel heading, stop 1
+ * Luna      #ffffff  on #0a246a   14.25:1  (min 4.5)  PASS  primary panel heading, stop 2
+ * Luna      #1a1a1a  on #ffffff   17.40:1  (min 4.5)  PASS  button text, gradient stop 1
+ * Luna      #1a1a1a  on #e3e0cf   13.12:1  (min 4.5)  PASS  button text, gradient stop 2
+ * Luna      #1a1a1a  on #e6e3d3   13.50:1  (min 4.5)  PASS  tab text, gradient stop 2
+ * Luna      #5a7ea8  on #ffffff    4.21:1  (min 3)  PASS  input border
+ * Luna      #5a7ea8  on #ece9d8    3.45:1  (min 3)  PASS  input border on workspace
+ * Luna      #003c74  on #ece9d8    9.07:1  (min 3)  PASS  button border
+ * Luna      #0b1a3d  on #ece9d8   14.00:1  (min 3)  PASS  focus inner line
+ * Luna      #0b1a3d  on #ffffff   17.08:1  (min 3)  PASS  focus inner line on card
+ * Luna      #ffbf47  on #0a246a    8.68:1  (min 3)  PASS  focus halo on header
+ * Luna      #ffbf47  on #1c5bd9    3.61:1  (min 3)  PASS  focus halo on header stop 2
+ * Luna      #1b5e20  on #e4f2e5    6.79:1  (min 4.5)  PASS  status ok
+ * Luna      #8a5300  on #fff1d6    5.67:1  (min 4.5)  PASS  status warning
+ * Luna      #b3261e  on #fbe3e1    5.35:1  (min 4.5)  PASS  status error
+ * Luna      #0b4fb3  on #e3ecfa    6.34:1  (min 4.5)  PASS  status info
+ * Luna      #5c3700  on #fff1d6    9.40:1  (min 4.5)  PASS  stale tab app (⚠)
+ * Luna      #ffffff  on #b3261e    6.54:1  (min 4.5)  PASS  TEST marker
+ * Luna      #1a1a1a  on #ffffe1   17.11:1  (min 4.5)  PASS  balloon
+ * Luna      #1a1a1a  on #e3ebf8   14.51:1  (min 4.5)  PASS  row hover
+ * Klassisk  #ffffff  on #000080   16.01:1  (min 4.5)  PASS  header/title
+ * Klassisk  #000000  on #ffffff   21.00:1  (min 4.5)  PASS  text
+ * Klassisk  #595959  on #ffffff    7.00:1  (min 4.5)  PASS  disabled text
+ * Klassisk  #ffffff  on #000080   16.01:1  (min 4.5)  PASS  selected option
+ * Klassisk  #00005c  on #ffffff   18.19:1  (min 4.5)  PASS  link
+ * Klassisk  #ffff00  on #000000   19.56:1  (min 4.5)  PASS  TEST marker
+ * Klassisk  #000000  on #ffffff   21.00:1  (min 3)  PASS  focus inner line
+ * Klassisk  #ffff00  on #000080   14.91:1  (min 3)  PASS  focus halo on header
+ * Klassisk  #005a00  on #ffffff    8.53:1  (min 4.5)  PASS  status ok
+ * Klassisk  #6b3f00  on #ffffff    8.99:1  (min 4.5)  PASS  status warning
+ * Klassisk  #a00000  on #ffffff    8.42:1  (min 4.5)  PASS  status error
+ * Klassisk  #000000  on #ffff00   19.56:1  (min 4.5)  PASS  stale tab app (⚠)
+ *
+ * Rejected values from the starting proposal:
+ *   #b58900 on #fff4cc  2.91:1  yellow patient banner border (banner is now white; yellow read as a warning)
+ *   #ffbf47 on #ece9d8  1.35:1  yellow focus ring alone → now dark inner line + yellow halo
+ *   #7f9db9 on #ffffff  2.83:1  XP input border → #5a7ea8
+ *   #ffffff on #4d7ff0  3.74:1  planned hover colour → #2d62d6
+ * Decorative only (no text on them): --xp-pane-start/end, --xp-tab-accent, --xp-card-border, --xp-banner-border.
+ */
+
+@layer tokens {
+:root, .xp-root {
+  --xp-font: "Tahoma", "Segoe UI", "Verdana", system-ui, sans-serif;
+  --xp-font-mono: "Consolas", "DejaVu Sans Mono", ui-monospace, monospace;
+  --xp-font-size: 0.875rem;
+  --xp-font-size-md: 1rem;
+  --xp-font-size-lg: 1.25rem;
+  --xp-font-size-xl: 1.75rem;
+
+  --xp-title-bg-start: #0a246a;
+  --xp-title-bg-end: #1c5bd9;
+  --xp-title-fg: #ffffff;
+  --xp-title-inactive-bg: #7a96df;
+  --xp-title-inactive-fg: #0b1a3d;
+  --xp-window-frame: #0a246a;
+  --xp-window-frame-inactive: #7a96df;
+  --xp-window-bg: #ece9d8;
+  --xp-surface: #ffffff;
+  --xp-text: #1a1a1a;
+  --xp-text-muted: #4a4a4a;
+  --xp-text-disabled: #5f5f5f;
+  --xp-border: #8e8a78;
+  --xp-border-input: #5a7ea8;
+  --xp-button-border: #003c74;
+  --xp-button-bg-start: #ffffff;
+  --xp-button-bg-end: #e3e0cf;
+  --xp-hover-glow: #e89a1b;
+  --xp-selection-bg: #316ac5;
+  --xp-selection-fg: #ffffff;
+  --xp-row-hover: #e3ebf8;
+  --xp-link: #0b4fb3;
+
+  --xp-header-start: #1c5bd9;
+  --xp-header-end: #0a246a;
+  --xp-header-fg: #ffffff;
+  --xp-pane-start: #7ba2e7;
+  --xp-pane-end: #6375d6;
+  --xp-panel-bg: #eef3fd;
+  --xp-panel-head-start: #ffffff;
+  --xp-panel-head-end: #c6d3f7;
+  --xp-panel-fg: #0a246a;
+  --xp-panel-primary-start: #2e5fd8;
+  --xp-panel-primary-end: #0a246a;
+  --xp-tab-strip-start: #f7f6f1;
+  --xp-tab-accent: #e89a1b;
+  --xp-card-border: #cfcab6;
+  --xp-card-radius: 6px;
+  --xp-menu-bg: #ffffff;
+
+  --xp-focus-ring: #ffbf47;
+  --xp-focus-inner: #0b1a3d;
+
+  --xp-banner-bg: #ffffff;
+  --xp-banner-border: #cfcab6;
+  --xp-banner-fg: #1a1a1a;
+
+  --xp-status-ok: #1b5e20;
+  --xp-status-warn: #8a5300;
+  --xp-status-error: #b3261e;
+  --xp-status-info: #0b4fb3;
+  --xp-status-ok-bg: #e4f2e5;
+  --xp-status-warn-bg: #fff1d6;
+  --xp-status-error-bg: #fbe3e1;
+  --xp-status-info-bg: #e3ecfa;
+  --xp-test-bg: #b3261e;
+  --xp-test-fg: #ffffff;
+  --xp-close-bg: #c4381f;
+  --xp-balloon-bg: #ffffe1;
+  --xp-code-bg: #ffffff;
+  --xp-overlay: rgba(10, 20, 45, 0.45);
+
+  --xp-radius-title: 8px 8px 0 0;
+  --xp-radius-control: 3px;
+  --xp-shadow-window: 2px 2px 8px rgba(0,0,0,.35);
+  --xp-space-1: 4px; --xp-space-2: 8px; --xp-space-3: 12px; --xp-space-4: 16px; --xp-space-5: 20px; --xp-space-6: 24px; --xp-space-8: 32px;
+  --xp-motion: 120ms;
+}
+
+[data-theme="klassisk"] {
+  --xp-title-bg-start: #000080; --xp-title-bg-end: #000080;
+  --xp-title-inactive-bg: #595959; --xp-title-inactive-fg: #ffffff;
+  --xp-window-frame: #000000; --xp-window-frame-inactive: #595959;
+  --xp-window-bg: #ffffff; --xp-surface: #ffffff;
+  --xp-text: #000000; --xp-text-muted: #000000; --xp-text-disabled: #595959;
+  --xp-border: #000000; --xp-border-input: #000000; --xp-button-border: #000000;
+  --xp-button-bg-start: #ffffff; --xp-button-bg-end: #ffffff;
+  --xp-hover-glow: #000080;
+  --xp-selection-bg: #000080; --xp-selection-fg: #ffffff; --xp-row-hover: #e6e6ff;
+  --xp-link: #00005c;
+  --xp-header-start: #000080; --xp-header-end: #000080;
+  --xp-pane-start: #ffffff; --xp-pane-end: #ffffff;
+  --xp-panel-bg: #ffffff; --xp-panel-head-start: #ffffff; --xp-panel-head-end: #ffffff; --xp-panel-fg: #000000;
+  --xp-panel-primary-start: #000080; --xp-panel-primary-end: #000080;
+  --xp-tab-strip-start: #ffffff; --xp-tab-accent: #000000;
+  --xp-card-border: #000000; --xp-card-radius: 0;
+  --xp-menu-bg: #ffffff;
+  --xp-focus-ring: #ffff00; --xp-focus-inner: #000000;
+  --xp-banner-bg: #ffffff; --xp-banner-border: #000000; --xp-banner-fg: #000000;
+  --xp-status-ok: #005a00; --xp-status-warn: #6b3f00; --xp-status-error: #a00000; --xp-status-info: #00005c;
+  --xp-status-ok-bg: #ffffff; --xp-status-warn-bg: #ffffff; --xp-status-error-bg: #ffffff; --xp-status-info-bg: #ffffff;
+  --xp-test-bg: #000000; --xp-test-fg: #ffff00;
+  --xp-close-bg: #000080;
+  --xp-balloon-bg: #ffffff; --xp-code-bg: #ffffff;
+  --xp-shadow-window: none;
+  --xp-radius-title: 0; --xp-radius-control: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root, .xp-root { --xp-motion: 0ms; }
+}
+}

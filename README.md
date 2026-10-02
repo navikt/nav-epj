@@ -38,6 +38,8 @@ yarn
 yarn dev
 ```
 
+See [frontend/README.md](./frontend/README.md) for the architecture and design rules.
+
 ### Backend
 
 From the backend directory, start the application using Gradle:
@@ -45,6 +47,47 @@ From the backend directory, start the application using Gradle:
 ```bash
 ./gradlew runLocal
 ```
+
+### Session information
+
+`GET /api/session` backs the Systeminformasjon page. It returns a fixed selection of claims from the
+HelseID id_token that Wonderwall forwards (`iss`, `aud`, `name`, `hpr_number`) and the token's
+issue and expiry times. It never returns raw tokens or the `pid` claim. With local development
+security it returns `{ "idp": "local-stub", "claims": { "sub": "local-dev" } }`.
+
+### Changing how a SMART app opens (window vs. new tab)
+
+Each registered SMART client has a fixed `launchMode` set in its config entry under `smart.clients`
+in `application.yaml` / `application-local.yaml`:
+
+| `launchMode` | Behaviour |
+| --- | --- |
+| `iframe` (default) | Opens inside nav-epj, in the app tab ("Vindu"). |
+| `tab` | Opens in its own browser tab ("Ny fane"); never framed, so it's excluded from the CSP `frame-src` list below. |
+| `ask` | The clinician is asked each launch ("Velg visning") and can tick "Husk valget for denne appen" to remember the choice per app (stored in the browser's `localStorage`, scoped per clinician). |
+
+There is no in-app setting to change this per clinician for `iframe`/`tab` clients — it's a
+registry-level decision, matching the app's SMART client registry rather than a user preference.
+
+### Security headers
+
+Every response carries these headers (`SecurityHeaders.kt`):
+
+| Header | Value |
+| --- | --- |
+| `Content-Security-Policy` | `frame-src 'self' <app origins>; frame-ancestors 'self'` |
+| `X-Content-Type-Options` | `nosniff` |
+| `Referrer-Policy` | `no-referrer` |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=(), serial=(), display-capture=()` |
+
+`<app origins>` is built at startup from the launch and redirect URIs of the registered SMART clients
+(`smart.clients` or `smart.clientRegistryJson`), so a new app can be embedded by registering it.
+Clients with `launchMode: tab` are left out because they are never framed. `frame-ancestors` is
+`'self'` and not `'none'` because `/fhir/launch` and `/oidc/authorize` run inside nav-epj's own
+iframe.
+
+The policy only sets framing directives. It has no `default-src`, so scripts, styles and
+connections are not restricted.
 
 ### Testing the SMART launch flow with SMART on FHIR Validator
 

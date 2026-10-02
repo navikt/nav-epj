@@ -1,59 +1,99 @@
-import * as React from "react";
-import { Outlet, createRootRoute } from "@tanstack/react-router";
-import { HStack, InternalHeader, Search, Spacer } from "@navikt/ds-react";
-import { useEffect, useState } from "react";
-import type { Helsepersonell } from "@utils/mapping/epj";
+import { Outlet, createRootRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo } from "react";
+import { AppDialogs } from "../xp/AppDialogs";
+import { AppHeader } from "../xp/AppHeader";
+import { AppShell } from "../xp/AppShell";
+import { BalloonHost } from "../xp/BalloonHost";
+import { JournalGuards } from "../xp/JournalGuards";
+import { StatusBar } from "../xp/StatusBar";
+import { TaskPane } from "../xp/TaskPane";
+import { CurrentUserContext, type CurrentUser } from "../xp/currentUser";
+import { UserGate } from "../xp/UserGate";
+import { Workspace } from "../xp/Workspace";
+import { useAppsStore } from "../xp/appsStore";
+import { guardTabClose } from "../xp/journalGuardStore";
+import { useLaunchModeStore } from "../xp/launchModeStore";
+import { usePatientsStore } from "../xp/patientsStore";
+import { currentJournalRoute, openPatientsTab } from "../xp/tabRoutes";
+import { useActivePatientSync } from "../xp/useActivePatientSync";
+import { useAccessExpiry } from "../xp/useAccessExpiry";
+import { useAppSync } from "../xp/useAppSync";
+import { useCurrentRoute } from "../xp/useCurrentRoute";
+import { logout } from "../xp/logout";
+import { useHelsepersonell } from "../xp/useHelsepersonell";
+import { useRouteTabSync } from "../xp/useRouteTabSync";
+import { useSearchSubmit } from "../xp/useSearchSubmit";
+import {
+  JOURNAL_TAB_ID,
+  useWorkspaceStore,
+} from "../xp/workspaceStore";
 
 export const Route = createRootRoute({
   component: RootComponent,
 });
 
-
-
-
 function RootComponent() {
-   const [isLoading, setIsLoading] = useState(true);
-   const [userInfo, setUserInfo] = useState<Helsepersonell | null>(null)
-  
-    useEffect(() => {
-      async function fetchHelsepersonell() {
-        const info = await fetch('/api/helsepersonell/me').then((res) => res.json())
-        setUserInfo(info);
-        setIsLoading(false)
-      }
-      // TODO: Opprette helsepersonell
-      fetchHelsepersonell()
-      
-    
-    }, [])
+  const navigate = useNavigate();
+  const route = useCurrentRoute();
+  const { state, retry } = useHelsepersonell();
+  const currentUser = useMemo<CurrentUser | null>(
+    () =>
+      state.status === "ready"
+        ? {
+            navn: state.helsepersonell.navn,
+            hpr: state.helsepersonell.hpr,
+            autorisasjon: state.helsepersonell.autorisasjon,
+            legekontor: state.legekontor.navn,
+            orgnummer: state.legekontor.orgnummer ?? undefined,
+            telefon: state.legekontor.tlf ?? undefined,
+          }
+        : null,
+    [state],
+  );
+  const openPatients = () => openPatientsTab((target) => void navigate(target));
+  const openJournal = () => {
+    const target = currentJournalRoute();
+    if (!target) return;
+    useWorkspaceStore.getState().setCurrent(JOURNAL_TAB_ID);
+    void navigate(target);
+  };
+  const hpr = state.status === "ready" ? state.helsepersonell.hpr : null;
+  useEffect(() => usePatientsStore.getState().setOwner(hpr), [hpr]);
+  useEffect(() => useLaunchModeStore.getState().setOwner(hpr), [hpr]);
+  useEffect(() => {
+    if (hpr) void useAppsStore.getState().load();
+  }, [hpr]);
+  useAppSync();
+  useActivePatientSync(hpr !== null);
+  useAccessExpiry();
+  const submitSearch = useSearchSubmit();
+  useRouteTabSync(route, (target) => void navigate(target));
+
   return (
-    <React.Fragment>
-      <InternalHeader>
-        <InternalHeader.Title>Nav EPJ</InternalHeader.Title>
-        <Spacer />
-        <HStack
-          as="form"
-          paddingInline="space-20"
-          align="center"
-          onSubmit={(e) => {
-            e.preventDefault();
-            console.info("Search!");
-          }}
-        >
-          <Search
-            label="InternalHeader søk"
-            size="small"
-            variant="simple"
-            placeholder="Søk"
-          />
-        </HStack>
-        <InternalHeader.User name={userInfo?.navn} />
-      </InternalHeader>
-      <main className="mt-4 mx-6">
-        {isLoading ? <div>Laster...</div> : 
-        <Outlet />
-        }
-      </main>
-    </React.Fragment>
+    <CurrentUserContext.Provider value={currentUser}>
+      <AppShell>
+        <AppHeader
+          user={currentUser}
+          onLogout={logout}
+          onSearchSubmit={() => void submitSearch()}
+        />
+        <TaskPane
+          userName={currentUser?.navn}
+          patientsCurrent={route.kind === "patients"}
+          onOpenPatients={openPatients}
+          onOpenJournal={openJournal}
+          onLogout={logout}
+        />
+        <Workspace onBeforeCloseTab={guardTabClose}>
+          <UserGate state={state} onRetry={retry}>
+            <Outlet />
+          </UserGate>
+        </Workspace>
+        <StatusBar onOpenPatients={openPatients} onOpenJournal={openJournal} />
+        <BalloonHost />
+        <JournalGuards />
+        <AppDialogs />
+      </AppShell>
+    </CurrentUserContext.Provider>
   );
 }

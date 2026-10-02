@@ -22,6 +22,10 @@ internal data class RawClientRegistration(
     val scopes: List<String> = emptyList(),
     val displayName: String? = null,
     val teamSlot: String? = null,
+    val navn: String? = null,
+    val beskrivelse: String? = null,
+    val ikon: String? = null,
+    val launchMode: String? = null,
 )
 
 private val LOCAL_HOSTS = setOf("localhost", "127.0.0.1")
@@ -61,6 +65,10 @@ private fun ApplicationConfig.toRawRegistration() =
         scopes = propertyOrNull("scopes")?.getList() ?: emptyList(),
         displayName = propertyOrNull("displayName")?.getString(),
         teamSlot = propertyOrNull("teamSlot")?.getString(),
+        navn = propertyOrNull("navn")?.getString(),
+        beskrivelse = propertyOrNull("beskrivelse")?.getString(),
+        ikon = propertyOrNull("ikon")?.getString(),
+        launchMode = propertyOrNull("launchMode")?.getString(),
     )
 
 internal fun buildRegistry(raw: List<RawClientRegistration>): List<SmartClient> {
@@ -88,10 +96,24 @@ private fun RawClientRegistration.toSmartClient(): SmartClient {
         jwksUri = jwksUri,
         inlineJwkSet = jwkSet?.let { parsePublicJwkSet(clientId, it) },
         allowedScopes = parseRegisteredScopes(scopes),
-        displayName = displayName ?: clientId,
+        displayName = navn ?: displayName ?: clientId,
         teamSlot = teamSlot,
+        beskrivelse = beskrivelse.orEmpty(),
+        ikon = ikon ?: DEFAULT_APP_ICON,
+        launchMode = resolveLaunchMode(),
     )
 }
+
+private fun RawClientRegistration.resolveLaunchMode(): LaunchMode =
+    launchMode?.let {
+        runCatching { LaunchMode.from(it) }
+            .getOrElse {
+                throw IllegalArgumentException(
+                    "smart.clients: client '$clientId' declares unsupported launchMode " +
+                        "'$launchMode'; use one of ${LaunchMode.entries.joinToString { it.value }}"
+                )
+            }
+    } ?: LaunchMode.IFRAME
 
 private fun RawClientRegistration.resolveAuthMethod(): TokenEndpointAuthMethod =
     tokenEndpointAuthMethod?.let {
@@ -156,6 +178,9 @@ private fun requireSecureUri(clientId: String, kind: String, uri: String) {
                     "smart.clients: client '$clientId' has an unparseable $kind ($uri)"
                 )
             }
+    require(!parsed.host.isNullOrBlank()) {
+        "smart.clients: client '$clientId' has a $kind without a host ($uri)"
+    }
     require(parsed.scheme == "https" || (parsed.scheme == "http" && parsed.host in LOCAL_HOSTS)) {
         "smart.clients: client '$clientId' has an insecure $kind ($uri); https is required, " +
             "since plain http can be intercepted (plain http is only permitted for localhost " +

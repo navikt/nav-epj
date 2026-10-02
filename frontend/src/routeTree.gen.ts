@@ -14,8 +14,6 @@ import { Route as PatientsIndexRouteImport } from './routes/patients/index'
 import { Route as PatientsPatientIdRouteImport } from './routes/patients/$patientId'
 import { Route as PatientsPatientIdIndexRouteImport } from './routes/patients/$patientId/index'
 import { Route as PatientsPatientIdKonsultasjonKonsultasjonIdIndexRouteImport } from './routes/patients/$patientId/konsultasjon/$konsultasjonId/index'
-import { Route as PatientsPatientIdKonsultasjonKonsultasjonIdSykmeldingIndexRouteImport } from './routes/patients/$patientId/konsultasjon/$konsultasjonId/sykmelding/index'
-import { Route as PatientsPatientIdKonsultasjonKonsultasjonIdValidatorIndexRouteImport } from './routes/patients/$patientId/konsultasjon/$konsultasjonId/validator/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -43,18 +41,6 @@ const PatientsPatientIdKonsultasjonKonsultasjonIdIndexRoute =
     path: '/konsultasjon/$konsultasjonId/',
     getParentRoute: () => PatientsPatientIdRoute,
   } as any)
-const PatientsPatientIdKonsultasjonKonsultasjonIdSykmeldingIndexRoute =
-  PatientsPatientIdKonsultasjonKonsultasjonIdSykmeldingIndexRouteImport.update({
-    id: '/konsultasjon/$konsultasjonId/sykmelding/',
-    path: '/konsultasjon/$konsultasjonId/sykmelding/',
-    getParentRoute: () => PatientsPatientIdRoute,
-  } as any)
-const PatientsPatientIdKonsultasjonKonsultasjonIdValidatorIndexRoute =
-  PatientsPatientIdKonsultasjonKonsultasjonIdValidatorIndexRouteImport.update({
-    id: '/konsultasjon/$konsultasjonId/validator/',
-    path: '/konsultasjon/$konsultasjonId/validator/',
-    getParentRoute: () => PatientsPatientIdRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -62,16 +48,12 @@ export interface FileRoutesByFullPath {
   '/patients/': typeof PatientsIndexRoute
   '/patients/$patientId/': typeof PatientsPatientIdIndexRoute
   '/patients/$patientId/konsultasjon/$konsultasjonId/': typeof PatientsPatientIdKonsultasjonKonsultasjonIdIndexRoute
-  '/patients/$patientId/konsultasjon/$konsultasjonId/sykmelding/': typeof PatientsPatientIdKonsultasjonKonsultasjonIdSykmeldingIndexRoute
-  '/patients/$patientId/konsultasjon/$konsultasjonId/validator/': typeof PatientsPatientIdKonsultasjonKonsultasjonIdValidatorIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/patients': typeof PatientsIndexRoute
   '/patients/$patientId': typeof PatientsPatientIdIndexRoute
   '/patients/$patientId/konsultasjon/$konsultasjonId': typeof PatientsPatientIdKonsultasjonKonsultasjonIdIndexRoute
-  '/patients/$patientId/konsultasjon/$konsultasjonId/sykmelding': typeof PatientsPatientIdKonsultasjonKonsultasjonIdSykmeldingIndexRoute
-  '/patients/$patientId/konsultasjon/$konsultasjonId/validator': typeof PatientsPatientIdKonsultasjonKonsultasjonIdValidatorIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -80,8 +62,6 @@ export interface FileRoutesById {
   '/patients/': typeof PatientsIndexRoute
   '/patients/$patientId/': typeof PatientsPatientIdIndexRoute
   '/patients/$patientId/konsultasjon/$konsultasjonId/': typeof PatientsPatientIdKonsultasjonKonsultasjonIdIndexRoute
-  '/patients/$patientId/konsultasjon/$konsultasjonId/sykmelding/': typeof PatientsPatientIdKonsultasjonKonsultasjonIdSykmeldingIndexRoute
-  '/patients/$patientId/konsultasjon/$konsultasjonId/validator/': typeof PatientsPatientIdKonsultasjonKonsultasjonIdValidatorIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -91,16 +71,12 @@ export interface FileRouteTypes {
     | '/patients/'
     | '/patients/$patientId/'
     | '/patients/$patientId/konsultasjon/$konsultasjonId/'
-    | '/patients/$patientId/konsultasjon/$konsultasjonId/sykmelding/'
-    | '/patients/$patientId/konsultasjon/$konsultasjonId/validator/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/patients'
     | '/patients/$patientId'
     | '/patients/$patientId/konsultasjon/$konsultasjonId'
-    | '/patients/$patientId/konsultasjon/$konsultasjonId/sykmelding'
-    | '/patients/$patientId/konsultasjon/$konsultasjonId/validator'
   id:
     | '__root__'
     | '/'
@@ -108,8 +84,6 @@ export interface FileRouteTypes {
     | '/patients/'
     | '/patients/$patientId/'
     | '/patients/$patientId/konsultasjon/$konsultasjonId/'
-    | '/patients/$patientId/konsultasjon/$konsultasjonId/sykmelding/'
-    | '/patients/$patientId/konsultasjon/$konsultasjonId/validator/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -155,38 +129,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PatientsPatientIdKonsultasjonKonsultasjonIdIndexRouteImport
       parentRoute: typeof PatientsPatientIdRoute
     }
-    '/patients/$patientId/konsultasjon/$konsultasjonId/sykmelding/': {
-      id: '/patients/$patientId/konsultasjon/$konsultasjonId/sykmelding/'
-      path: '/konsultasjon/$konsultasjonId/sykmelding'
-      fullPath: '/patients/$patientId/konsultasjon/$konsultasjonId/sykmelding/'
-      preLoaderRoute: typeof PatientsPatientIdKonsultasjonKonsultasjonIdSykmeldingIndexRouteImport
-      parentRoute: typeof PatientsPatientIdRoute
-    }
-    '/patients/$patientId/konsultasjon/$konsultasjonId/validator/': {
-      id: '/patients/$patientId/konsultasjon/$konsultasjonId/validator/'
-      path: '/konsultasjon/$konsultasjonId/validator'
-      fullPath: '/patients/$patientId/konsultasjon/$konsultasjonId/validator/'
-      preLoaderRoute: typeof PatientsPatientIdKonsultasjonKonsultasjonIdValidatorIndexRouteImport
-      parentRoute: typeof PatientsPatientIdRoute
-    }
   }
 }
 
 interface PatientsPatientIdRouteChildren {
   PatientsPatientIdIndexRoute: typeof PatientsPatientIdIndexRoute
   PatientsPatientIdKonsultasjonKonsultasjonIdIndexRoute: typeof PatientsPatientIdKonsultasjonKonsultasjonIdIndexRoute
-  PatientsPatientIdKonsultasjonKonsultasjonIdSykmeldingIndexRoute: typeof PatientsPatientIdKonsultasjonKonsultasjonIdSykmeldingIndexRoute
-  PatientsPatientIdKonsultasjonKonsultasjonIdValidatorIndexRoute: typeof PatientsPatientIdKonsultasjonKonsultasjonIdValidatorIndexRoute
 }
 
 const PatientsPatientIdRouteChildren: PatientsPatientIdRouteChildren = {
   PatientsPatientIdIndexRoute: PatientsPatientIdIndexRoute,
   PatientsPatientIdKonsultasjonKonsultasjonIdIndexRoute:
     PatientsPatientIdKonsultasjonKonsultasjonIdIndexRoute,
-  PatientsPatientIdKonsultasjonKonsultasjonIdSykmeldingIndexRoute:
-    PatientsPatientIdKonsultasjonKonsultasjonIdSykmeldingIndexRoute,
-  PatientsPatientIdKonsultasjonKonsultasjonIdValidatorIndexRoute:
-    PatientsPatientIdKonsultasjonKonsultasjonIdValidatorIndexRoute,
 }
 
 const PatientsPatientIdRouteWithChildren =

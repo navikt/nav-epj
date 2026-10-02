@@ -102,4 +102,12 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
             throw KonsultasjonNotFoundForPatientException(pasientId)
         }
     }
+
+    suspend fun cancelKonsultasjon(konsultasjonId: KonsultasjonId, pasientId: PasientId) {
+        log.info("avbryter konsultasjon {} for pasientId: {}", konsultasjonId, pasientId)
+        val updatedRows = konsultasjonRepository.avbryt(konsultasjonId, pasientId)
+        if (updatedRows == 0) {
+            throw KonsultasjonNotFoundForPatientException(pasientId)
+        }
+    }
 }

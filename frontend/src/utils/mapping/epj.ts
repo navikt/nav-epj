@@ -3,14 +3,17 @@ import * as z from "zod";
 export const LegekontorSchema = z.object({
     id: z.string(),
     navn: z.string(),
+    orgnummer: z.string().nullish(),
+    tlf: z.string().nullish(),
 });
 
 export type Legekontor = z.infer<typeof LegekontorSchema>;
 
 export const HelsepersonellSchema = z.object({
-    id: z.string(),
     hpr: z.string(),
+    legekontorId: z.string(),
     navn: z.string(),
+    autorisasjon: z.string(),
 });
 
 export type Helsepersonell = z.infer<typeof HelsepersonellSchema>;
@@ -72,3 +75,86 @@ export const KonsultasjonSchema = z.object({
 export type Konsultasjon = z.infer<typeof KonsultasjonSchema>;
 
 export type Diagnose = z.infer<typeof DiagnoseSchema>;
+
+export const LaunchModeSchema = z.enum(["iframe", "tab", "ask"]);
+
+export type LaunchMode = z.infer<typeof LaunchModeSchema>;
+
+export const AppSchema = z.object({
+    clientId: z.string(),
+    navn: z.string(),
+    beskrivelse: z.string().nullish(),
+    ikon: z.string(),
+    launchMode: LaunchModeSchema,
+    launchUri: z.string().nullable(),
+    tokenEndpointAuthMethod: z.string().nullish(),
+    jwksUri: z.string().nullish(),
+    redirectUris: z.array(z.string()),
+    scopes: z.array(z.string()),
+});
+
+export type App = z.infer<typeof AppSchema>;
+
+export const LaunchResponseSchema = z.object({
+    launchUrl: z.string(),
+});
+
+export const ActivePatientSchema = z.object({
+    patientId: z.string(),
+    expiresAt: z.string(),
+});
+
+export type ActivePatient = z.infer<typeof ActivePatientSchema>;
+
+export const LaunchErrorCodeSchema = z.enum([
+    "NO_ACTIVE_PATIENT",
+    "NO_ACTIVE_ENCOUNTER",
+    "UNKNOWN_APP",
+    "PATIENT_MISMATCH",
+]);
+
+export const LaunchErrorSchema = z.object({
+    code: LaunchErrorCodeSchema,
+    message: z.string(),
+    appId: z.string().nullish(),
+});
+
+export const SessionSchema = z.object({
+    idp: z.enum(["helseid", "local-stub"]),
+    claims: z.record(z.string(), z.string()),
+    issuedAt: z.string().nullish(),
+    expiresAt: z.string().nullish(),
+});
+
+export type Session = z.infer<typeof SessionSchema>;
+
+export const SmartConfigurationSchema = z.object({
+    issuer: z.string(),
+    jwks_uri: z.string(),
+    authorization_endpoint: z.string(),
+    token_endpoint: z.string(),
+    token_endpoint_auth_methods_supported: z.array(z.string()),
+    capabilities: z.array(z.string()),
+});
+
+export type SmartConfiguration = z.infer<typeof SmartConfigurationSchema>;
+
+export const CapabilityStatementSchema = z.object({
+    fhirVersion: z.string(),
+    rest: z
+        .array(
+            z.object({
+                resource: z
+                    .array(
+                        z.object({
+                            type: z.string(),
+                            interaction: z.array(z.object({ code: z.string() })).nullish(),
+                        }),
+                    )
+                    .nullish(),
+            }),
+        )
+        .nullish(),
+});
+
+export type CapabilityStatement = z.infer<typeof CapabilityStatementSchema>;

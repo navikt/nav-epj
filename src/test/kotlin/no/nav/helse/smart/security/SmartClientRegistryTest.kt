@@ -225,6 +225,25 @@ class SmartClientRegistryTest {
     }
 
     @Test
+    fun `redirect and launch uris without a host fail`() {
+        listOf("https:/host/callback", "https:///callback").forEach { uri ->
+            val ex =
+                assertFailsWith<IllegalArgumentException>(uri) {
+                    buildRegistry(
+                        listOf(
+                            RawClientRegistration(
+                                clientId = "c",
+                                launchUris = listOf(uri),
+                                scopes = listOf("openid"),
+                            )
+                        )
+                    )
+                }
+            assertTrue("without a host" in ex.message.orEmpty(), uri)
+        }
+    }
+
+    @Test
     fun `insecure non-localhost redirect uri fails`() {
         assertFailsWith<IllegalArgumentException> {
             buildRegistry(
@@ -361,5 +380,80 @@ class SmartClientRegistryTest {
         assertEquals("basic-app", display.clientId)
         assertEquals("team-01", display.teamSlot)
         assertTrue("top-secret-value" !in display.toString())
+    }
+
+    @Test
+    fun `parses display fields with defaults for a client that has none`() {
+        val config =
+            yamlConfigFor(
+                """
+                - clientId: "plain-app"
+                  redirectUris: [ "https://plain.example.com/callback" ]
+                  launchUris: [ "https://plain.example.com/launch" ]
+                  tokenEndpointAuthMethod: "none"
+                  scopes: [ "openid", "launch" ]
+                - clientId: "shown-app"
+                  navn: "Vist app"
+                  beskrivelse: "En beskrivelse."
+                  ikon: "sykmelding"
+                  launchMode: "ask"
+                  redirectUris: [ "https://shown.example.com/callback" ]
+                  launchUris: [ "https://shown.example.com/launch" ]
+                  tokenEndpointAuthMethod: "none"
+                  scopes: [ "openid", "launch" ]
+                """
+                    .trimIndent()
+            )
+
+        val (plain, shown) = loadSmartClients(config)
+
+        assertEquals("plain-app", plain.displayName)
+        assertEquals("", plain.beskrivelse)
+        assertEquals("vindu", plain.ikon)
+        assertEquals(LaunchMode.IFRAME, plain.launchMode)
+        assertEquals("Vist app", shown.displayName)
+        assertEquals("En beskrivelse.", shown.beskrivelse)
+        assertEquals("sykmelding", shown.ikon)
+        assertEquals(LaunchMode.ASK, shown.launchMode)
+    }
+
+    @Test
+    fun `rejects an unknown launchMode`() {
+        val config =
+            yamlConfigFor(
+                """
+                - clientId: "bad-mode"
+                  launchMode: "popup"
+                  redirectUris: [ "https://bad.example.com/callback" ]
+                  launchUris: [ "https://bad.example.com/launch" ]
+                  tokenEndpointAuthMethod: "none"
+                  scopes: [ "openid", "launch" ]
+                """
+                    .trimIndent()
+            )
+
+        val error = assertFailsWith<IllegalArgumentException> { loadSmartClients(config) }
+        assertTrue("launchMode" in error.message.orEmpty())
+        assertTrue("bad-mode" in error.message.orEmpty())
+    }
+
+    @Test
+    fun `secret-backed JSON registry document carries the display fields`() {
+        val config =
+            yamlConfig(
+                """
+                smart:
+                  issuerBaseUrl: "http://test/oidc"
+                  fhirServerUrl: "http://test/fhir"
+                  privateKeyJwk: "unused"
+                  clientRegistryJson: '[{"clientId":"json-app","navn":"Json app","launchMode":"tab","ikon":"validator","redirectUris":["https://app.example.com/callback"],"launchUris":["https://app.example.com/launch"],"tokenEndpointAuthMethod":"none","scopes":["openid"]}]'
+                """
+                    .trimIndent()
+            )
+
+        val client = loadSmartClients(config).single()
+        assertEquals("Json app", client.displayName)
+        assertEquals(LaunchMode.TAB, client.launchMode)
+        assertEquals("validator", client.ikon)
     }
 }

@@ -9,13 +9,13 @@ import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
 import no.nav.helse.epj.konsultasjon.OppdaterKonsultasjonRequest
 import no.nav.helse.epj.konsultasjonId
+import no.nav.helse.epj.pasient.ActivePatientService
 import no.nav.helse.epj.patientId
 import no.nav.helse.helseId.loggedInUser
-import no.nav.helse.smart.valkey.ValkeyService
 
 fun Route.konsultasjonRoutes(
     konsultasjonService: KonsultasjonService,
-    valkeyService: ValkeyService,
+    activePatientService: ActivePatientService,
 ) {
 
     val log = logger()
@@ -23,23 +23,26 @@ fun Route.konsultasjonRoutes(
         route("/patients/{patientId}/konsultasjoner") {
             get {
                 val pasientId = call.patientId()
-                val principal = loggedInUser()
-                val konsultasjoner = konsultasjonService.getKonsultasjoner(pasientId)
-                valkeyService.setActivePatient(principal.hpr, pasientId.value.toString())
-                call.respond(konsultasjoner)
+                call.respond(konsultasjonService.getKonsultasjoner(pasientId))
             }
             post {
                 val pasientId = call.patientId()
                 val principal = loggedInUser()
                 val hpr = HelsepersonellHpr(principal.hpr)
-                val konsultasjon = konsultasjonService.getOrCreateKonsultasjon(pasientId, hpr)
-                valkeyService.setActivePatient(principal.hpr, pasientId.value.toString())
-                call.respond(konsultasjon)
+                activePatientService.claimActivePatient(principal.hpr, pasientId.value)
+                    ?: return@post call.respond(HttpStatusCode.NotFound)
+                call.respond(konsultasjonService.getOrCreateKonsultasjon(pasientId, hpr))
             }
             patch {
                 val request = call.receive<OppdaterKonsultasjonRequest>()
                 val pasientId = call.patientId()
                 konsultasjonService.updateKonsultasjon(request, pasientId)
+                call.respond(HttpStatusCode.OK)
+            }
+            post("/{konsultasjonId}/avbryt") {
+                val pasientId = call.patientId()
+                val konsultasjonId = call.konsultasjonId()
+                konsultasjonService.cancelKonsultasjon(konsultasjonId, pasientId)
                 call.respond(HttpStatusCode.OK)
             }
             get("/active") {

@@ -582,6 +582,79 @@ class KonsultasjonRepositoryTest : WithPostgresql() {
     }
 
     @Test
+    fun `avbryt marks an ongoing konsultasjon as AVLYST`() = runTest {
+        val hpr = HelsepersonellHpr("123")
+        val pasientId = opprettPasient(hpr = hpr)
+        val konsultasjonId =
+            konsultasjonRepository.insert(
+                OpprettKonsultasjon(
+                    pasientId,
+                    listOf(hpr),
+                    LocalDateTime.now(),
+                    KonsultasjonStatus.PÅGÅENDE,
+                )
+            )
+
+        val updatedRows = konsultasjonRepository.avbryt(konsultasjonId, pasientId)
+
+        assertEquals(1, updatedRows)
+        val konsultasjon = konsultasjonRepository.findByKonsultasjonId(konsultasjonId)
+        assertNotNull(konsultasjon)
+        assertEquals(KonsultasjonStatus.AVLYST, konsultasjon.status)
+        assertNotNull(konsultasjon.avsluttetTidspunkt)
+    }
+
+    @Test
+    fun `avbryt returns 0 rows and makes no changes when pasientId does not own the konsultasjon`() =
+        runTest {
+            val hpr = HelsepersonellHpr("123")
+            val pasientId = opprettPasient(hpr = hpr)
+            val annenPasientId = opprettPasient(hpr = hpr)
+            val konsultasjonId =
+                konsultasjonRepository.insert(
+                    OpprettKonsultasjon(
+                        pasientId,
+                        listOf(hpr),
+                        LocalDateTime.now(),
+                        KonsultasjonStatus.PÅGÅENDE,
+                    )
+                )
+
+            val updatedRows = konsultasjonRepository.avbryt(konsultasjonId, annenPasientId)
+
+            assertEquals(0, updatedRows)
+            val konsultasjon = konsultasjonRepository.findByKonsultasjonId(konsultasjonId)
+            assertNotNull(konsultasjon)
+            assertEquals(KonsultasjonStatus.PÅGÅENDE, konsultasjon.status)
+        }
+
+    @Test
+    fun `avbryt does not reopen an already completed konsultasjon`() = runTest {
+        val hpr = HelsepersonellHpr("123")
+        val pasientId = opprettPasient(hpr = hpr)
+        val konsultasjonId =
+            konsultasjonRepository.insert(
+                OpprettKonsultasjon(
+                    pasientId,
+                    listOf(hpr),
+                    LocalDateTime.now(),
+                    KonsultasjonStatus.PÅGÅENDE,
+                )
+            )
+        konsultasjonRepository.update(
+            OppdaterKonsultasjonRequest(konsultasjonId, emptyList(), null, ferdigstill = true),
+            pasientId,
+        )
+
+        val updatedRows = konsultasjonRepository.avbryt(konsultasjonId, pasientId)
+
+        assertEquals(0, updatedRows)
+        val konsultasjon = konsultasjonRepository.findByKonsultasjonId(konsultasjonId)
+        assertNotNull(konsultasjon)
+        assertEquals(KonsultasjonStatus.FULLFØRT, konsultasjon.status)
+    }
+
+    @Test
     fun `update saving the same journalnotat text twice does not create a duplicate row`() =
         runTest {
             val hpr = HelsepersonellHpr("123")

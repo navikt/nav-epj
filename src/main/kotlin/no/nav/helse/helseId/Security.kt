@@ -54,6 +54,7 @@ fun Application.configureHelseId() {
                                 request.headers["Authorization"]?.replace("Bearer ", "")
                                     ?: "missing",
                         ),
+                    idToken = decodedIdToken.toIdTokenClaims(),
                 )
             }
         }
@@ -65,12 +66,13 @@ private fun Application.configureLocalDevelopmentSecurity() {
 
     val stubPrincipal =
         HelseIdPrincipal(
-            user = User(name = "Bjarte Legesen", hpr = "111222333"),
+            user = User(name = "GRØNN VITS", hpr = "565501872"),
             debug =
                 DebugInfo(
                     accessToken = "eyJhbGciOiJub25lIn0.eyJzdWIiOiJsb2NhbC1kZXYifQ.",
                     idToken = "eyJhbGciOiJub25lIn0.eyJzdWIiOiJsb2NhbC1kZXYifQ.",
                 ),
+            idp = Idp.LOCAL_STUB,
         )
 
     authentication {
