@@ -71,7 +71,7 @@ describe("AppHeader", () => {
     );
   });
 
-  it("does not spell-check the search, which accepts fødselsnumre", () => {
+  it("disables spell-check in patient search", () => {
     renderHeader();
     expect(screen.getByLabelText(copy["header.search.label"])).toHaveAttribute(
       "spellcheck",

@@ -2,16 +2,12 @@ import { act, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useNow } from "./useNow";
 
-let renders = 0;
-
 function Clock({ id }: { id: string }) {
-  renders += 1;
   return <span data-testid={id}>{useNow().toISOString()}</span>;
 }
 
 describe("useNow", () => {
   beforeEach(() => {
-    renders = 0;
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });
     vi.setSystemTime(new Date("2026-09-30T09:14:40Z"));
   });

@@ -139,7 +139,7 @@ describe("journal sub-tab in the URL", () => {
   const selected = (name: string | RegExp) =>
     expect(screen.getByRole("tab", { name })).toHaveAttribute("aria-selected", "true");
 
-  it("opens the sub-tab named by the tab search param", async () => {
+  it("opens the URL's sub-tab", async () => {
     withHistory();
     renderApp("/patients/p1?tab=tidligere");
     await screen.findByRole("heading", { name: "Matematisk Ape" });
@@ -184,7 +184,7 @@ describe("journal sub-tab in the URL", () => {
     expect(screen.getByRole("heading", { name: "Pågående konsultasjon" })).toBeInTheDocument();
   });
 
-  it("writes the chosen sub-tab to the URL by replacing the entry and drops it for Konsultasjon", async () => {
+  it("replaces the URL when switching sub-tabs", async () => {
     withHistory();
     const { router } = renderApp("/patients/p1");
     await screen.findByRole("heading", { name: "Matematisk Ape" });
@@ -198,7 +198,7 @@ describe("journal sub-tab in the URL", () => {
     expect(router.history.length).toBe(length);
   });
 
-  it("follows the URL when it changes", async () => {
+  it("follows sub-tab URL changes", async () => {
     withHistory();
     const { router } = renderApp("/patients/p1");
     await screen.findByRole("heading", { name: "Matematisk Ape" });
@@ -212,7 +212,7 @@ describe("journal sub-tab in the URL", () => {
     await waitFor(() => selected(/^Tidligere konsultasjoner/));
   });
 
-  it("keeps the chosen sub-tab when the Journal tab is activated again", async () => {
+  it("restores the sub-tab when reopening Journal", async () => {
     withHistory();
     const { router } = renderApp("/patients/p1?tab=tidligere");
     await screen.findByRole("heading", { name: "Matematisk Ape" });
@@ -249,7 +249,7 @@ describe("journal sub-tab in the URL", () => {
     expect(await screen.findByRole("heading", { name: "Fullført konsultasjon" })).toBeInTheDocument();
   });
 
-  it("returns to the selected konsultasjon after leaving and reopening the journal", async () => {
+  it("restores the konsultasjon when reopening Journal", async () => {
     withHistory();
     const { router } = renderApp("/patients/p1/konsultasjon/k9");
     await screen.findByRole("heading", { name: "Fullført konsultasjon" });

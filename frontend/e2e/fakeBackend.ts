@@ -2,7 +2,7 @@ import type { BrowserContext, Route } from "@playwright/test";
 
 type Launch = { appId: string; patientId: string };
 
-export const patients = [
+const patients = [
   { id: "p1", fornavn: "Ola", etternavn: "Nordmann", birthDate: "1990-01-01" },
   { id: "p2", fornavn: "Kari", etternavn: "Hansen", birthDate: "1985-05-05" },
 ].map((p) => ({
