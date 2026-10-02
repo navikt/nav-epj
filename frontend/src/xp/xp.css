@@ -206,7 +206,7 @@
 .xp-brand { display: flex; align-items: center; gap: var(--xp-space-2); white-space: nowrap; }
 .xp-brand img { width: 28px; height: 28px; }
 .xp-brand b { font-size: 1.25rem; }
-.xp-brand .sub { font-size: 0.85rem; font-weight: 400; opacity: .78; padding-left: 10px; border-left: 1px solid rgba(255,255,255,.45); }
+.xp-brand .sub { font-size: var(--xp-font-size); font-weight: 400; padding-left: var(--xp-space-3); border-left: 1px solid rgba(255,255,255,.45); }
 .xp-hsearch { position: relative; flex: 0 1 380px; display: flex; align-items: center; }
 .xp-hsearch img { position: absolute; left: 9px; width: 16px; height: 16px; pointer-events: none; }
 .xp-hsearch input { width: 100%; min-height: 34px; padding: 4px 10px 4px 32px; border: 1px solid #081c52; border-radius: 3px; background: #ffffff; color: var(--xp-text); font: inherit; }
