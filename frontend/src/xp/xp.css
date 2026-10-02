@@ -356,10 +356,10 @@
 .xp-recent-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--xp-space-2); }
 .xp-recent-list li { display: flex; align-items: baseline; gap: var(--xp-space-2); flex-wrap: wrap; }
 .xp-recent-list span { color: var(--xp-text-muted); }
-.xp-card-grid { display: flex; flex-wrap: wrap; gap: var(--xp-space-4); align-items: flex-start; }
-.xp-card-grid > .xp-card { flex: 1 1 320px; }
+.xp-card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); grid-auto-rows: 1fr; gap: var(--xp-space-4); }
 .xp-btnrow { display: flex; gap: var(--xp-space-2); flex-wrap: wrap; }
-.xp-appcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--xp-space-4); }
+.xp-card > :is(.xp-form-actions, .xp-btnrow):last-child { margin-top: auto; }
+.xp-appcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)); grid-auto-rows: 1fr; gap: var(--xp-space-4); }
 .xp-appcard-head { display: flex; align-items: center; gap: var(--xp-space-2); flex-wrap: wrap; }
 .xp-appcard-head h3 { margin: 0; font-size: var(--xp-font-size-md); color: var(--xp-panel-fg); flex: 1; min-width: 0; }
 .xp-devpanel-head { display: flex; align-items: center; gap: 8px; }

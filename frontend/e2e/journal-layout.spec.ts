@@ -35,7 +35,8 @@ for (const width of [1280, 800]) {
     await page.getByRole("navigation", { name: "Oppgaver" })
       .getByRole("button", { name: "Kontrollpanel", exact: true }).click();
     await page.getByRole("button", { name: /^SMART-apper/ }).click();
-    await page.getByRole("button", { name: "Egenskaper", exact: true }).click();
+    await page.getByRole("row", { name: /Sykmelding/ })
+      .getByRole("button", { name: "Egenskaper", exact: true }).click();
     const dialog = page.getByRole("dialog", { name: "Egenskaper for Sykmelding" });
     const body = await edges(dialog.locator(".xp-body"));
     const dialogTabs = dialog.getByRole("tablist");

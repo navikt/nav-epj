@@ -25,6 +25,15 @@ const app = {
   scopes: ["launch"],
 };
 
+const validator = {
+  ...app,
+  clientId: "validator",
+  navn: "Validator",
+  beskrivelse: "Tester SMART on FHIR-oppstart og FHIR-API-et mot nav-epj, med en beskrivelse som brekker over flere linjer.",
+  ikon: "validator",
+  launchUri: "https://validator.example/fhir",
+};
+
 export function fakeBackend({ withHistory = false } = {}) {
   const state = { activeId: null as string | null, launches: [] as Launch[] };
   const json = (route: Route, body: unknown, status = 200) =>
@@ -48,7 +57,7 @@ export function fakeBackend({ withHistory = false } = {}) {
         return json(route, { id: "k1", navn: "Storgata legekontor", orgnummer: "123456789", tlf: null });
       }
       if (key === "GET /api/patient") return json(route, patients);
-      if (key === "GET /api/apps") return json(route, [app]);
+      if (key === "GET /api/apps") return json(route, [app, validator]);
       if (key === `GET /api/patient/${patientId}` && known) return json(route, known);
       if (key === `GET /api/patients/${patientId}/konsultasjoner` && known) {
         return json(route, [
