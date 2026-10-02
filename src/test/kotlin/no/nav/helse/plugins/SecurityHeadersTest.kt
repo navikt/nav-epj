@@ -158,6 +158,31 @@ class SecurityHeadersTest {
     }
 
     @Test
+    fun `dev validator registration uses the validator callback and well-known jwks`() {
+        val validator =
+            loadSmartClients(shippedConfig("application.yaml")).single {
+                it.clientId == "NAV_SMART_on_FHIR_validator"
+            }
+
+        assertEquals(
+            listOf("https://nav-on-fhir.ekstern.dev.nav.no/callback"),
+            validator.redirectUris,
+        )
+        assertEquals(listOf("https://nav-on-fhir.ekstern.dev.nav.no/launch"), validator.launchUris)
+        assertEquals(
+            "https://nav-on-fhir.ekstern.dev.nav.no/.well-known/jwks.json",
+            validator.jwksUri,
+        )
+    }
+
+    @Test
+    fun `dev nais spec allows outbound traffic to the validator jwks host`() {
+        val spec = File(".nais/nais-dev.yaml").readText()
+
+        assertTrue(spec.contains("- host: 'nav-on-fhir.ekstern.dev.nav.no'"))
+    }
+
+    @Test
     fun `frames registered apps that can run in a frame`() {
         listOf("application.yaml", "application-local.yaml").forEach { file ->
             val registered = loadSmartClients(shippedConfig(file))

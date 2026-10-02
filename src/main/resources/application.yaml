@@ -50,10 +50,10 @@ smart:
       beskrivelse: "Tester SMART on FHIR-oppstart og FHIR-API-et mot nav-epj."
       ikon: "validator"
       launchMode: "iframe"
-      redirectUris: [ "https://nav-on-fhir.ekstern.dev.nav.no" ]
+      redirectUris: [ "https://nav-on-fhir.ekstern.dev.nav.no/callback" ]
       launchUris: [ "https://nav-on-fhir.ekstern.dev.nav.no/launch" ]
       tokenEndpointAuthMethod: "private_key_jwt"
-      jwksUri: "https://nav-on-fhir.ekstern.dev.nav.no/jwks.json"
+      jwksUri: "https://nav-on-fhir.ekstern.dev.nav.no/.well-known/jwks.json"
       scopes:
         - openid
         - fhirUser

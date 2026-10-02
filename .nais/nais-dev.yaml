@@ -81,6 +81,7 @@ spec:
           namespace: nais-system
       external:
         - host: 'helseid-sts.test.nhn.no'
+        - host: 'nav-on-fhir.ekstern.dev.nav.no'
 
   envFrom:
     - secret: nav-epj-config
