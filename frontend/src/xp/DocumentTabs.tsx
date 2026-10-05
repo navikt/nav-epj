@@ -1,7 +1,6 @@
 import { useEffect, useRef, type KeyboardEvent } from "react";
 import { copy } from "./copy";
 import { XpIcon, type IconName } from "./XpIcon";
-import { isModalOpen } from "./modalStore";
 import { WORK_PANEL_ID } from "./shellContext";
 import { useWorkspaceStore, type Tab, type TabKind } from "./workspaceStore";
 
@@ -58,35 +57,6 @@ export function DocumentTabs({ onActivate, onBeforeClose }: Props) {
     }
   }
 
-  const latest = useRef({ tabs, current, close, activate });
-  useEffect(() => {
-    latest.current = { tabs, current, close, activate };
-  });
-
-  useEffect(() => {
-    function onKeyDown(event: globalThis.KeyboardEvent) {
-      const { tabs, current, close, activate } = latest.current;
-      if (isModalOpen()) return;
-      const isW = event.code === "KeyW" || event.key?.toLowerCase() === "w";
-      if ((event.ctrlKey || event.metaKey) && !event.shiftKey && isW) {
-        event.preventDefault();
-        const tab = tabs.find((t) => t.id === current);
-        if (tab) close(tab, false);
-      } else if (
-        (event.ctrlKey || event.metaKey) &&
-        event.altKey &&
-        (event.key === "PageDown" || event.key === "PageUp")
-      ) {
-        event.preventDefault();
-        const index = tabs.findIndex((t) => t.id === current);
-        const step = event.key === "PageDown" ? 1 : -1;
-        activate(tabs[(index + step + tabs.length) % tabs.length], false);
-      }
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, []);
-
   function onTabKeyDown(event: KeyboardEvent, index: number) {
     let target: number | null = null;
     if (event.key === "ArrowRight") target = (index + 1) % tabs.length;
@@ -130,7 +100,6 @@ export function DocumentTabs({ onActivate, onBeforeClose }: Props) {
               aria-selected={selected}
               aria-controls={WORK_PANEL_ID}
               aria-label={tab.ariaLabel}
-              aria-keyshortcuts={tab.closable ? "Delete" : undefined}
               tabIndex={selected ? 0 : -1}
               ref={(el) => {
                 if (el) buttons.current.set(tab.id, el);

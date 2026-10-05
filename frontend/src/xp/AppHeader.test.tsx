@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppHeader } from "./AppHeader";
@@ -87,21 +87,20 @@ describe("AppHeader", () => {
     ).toHaveAttribute("placeholder", copy["header.search.placeholderNarrow"]);
   });
 
-  it("focuses the search with Ctrl+Shift+P", async () => {
-    const u = userEvent.setup();
+  it("does not intercept Ctrl/Cmd+Shift+P", () => {
     renderHeader();
-    await u.keyboard("{Control>}{Shift>}p{/Shift}{/Control}");
-    expect(screen.getByLabelText(copy["header.search.label"])).toHaveFocus();
-  });
-
-  it("focuses the search with Cmd+Shift+P (Mac)", () => {
-    renderHeader();
-    fireEvent.keyDown(document, {
-      key: "p",
-      metaKey: true,
-      shiftKey: true,
-    });
-    expect(screen.getByLabelText(copy["header.search.label"])).toHaveFocus();
+    for (const key of [{ ctrlKey: true }, { metaKey: true }]) {
+      const event = new KeyboardEvent("keydown", {
+        key: "p",
+        shiftKey: true,
+        bubbles: true,
+        cancelable: true,
+        ...key,
+      });
+      document.dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(false);
+    }
+    expect(screen.getByLabelText(copy["header.search.label"])).not.toHaveFocus();
   });
 
   it("clears the search with Esc", async () => {

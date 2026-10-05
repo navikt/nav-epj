@@ -92,31 +92,12 @@ describe("AppShell", () => {
     expect(region.textContent?.trim()).toBe("Lagret");
   });
 
-  it("cycles landmarks forward with F6 and backward with Shift+F6", async () => {
+  it("does not move focus between landmarks with F6", async () => {
     const user = userEvent.setup();
     renderShell();
     await user.keyboard("{F6}");
-    expect(landmark("header")).toHaveFocus();
-    await user.keyboard("{F6}");
-    expect(landmark("nav")).toHaveFocus();
-    await user.keyboard("{F6}");
-    expect(landmark("main")).toHaveFocus();
-    await user.keyboard("{F6}");
-    expect(landmark("footer")).toHaveFocus();
-    await user.keyboard("{F6}");
-    expect(landmark("header")).toHaveFocus();
     await user.keyboard("{Shift>}{F6}{/Shift}");
-    expect(landmark("footer")).toHaveFocus();
-    await user.keyboard("{Shift>}{F6}{/Shift}");
-    expect(landmark("main")).toHaveFocus();
-  });
-
-  it("continues the cycle from a control inside a landmark", async () => {
-    const user = userEvent.setup();
-    renderShell();
-    screen.getByRole("button", { name: "Pasienter" }).focus();
-    await user.keyboard("{F6}");
-    expect(landmark("main")).toHaveFocus();
+    expect(document.body).toHaveFocus();
   });
 
   it("applies the stored theme, motion and text scale to the root", () => {
@@ -177,25 +158,6 @@ describe("AppShell", () => {
         "data-drawer",
       );
       expect(menu).toHaveFocus();
-    });
-
-    it("skips the hidden task pane when cycling with F6", async () => {
-      const user = userEvent.setup();
-      mockMatchMedia({ "(max-width: 1023px)": true });
-      renderShell();
-      await user.keyboard("{F6}{F6}");
-      expect(landmark("main")).toHaveFocus();
-    });
-
-    it("includes the task pane in the cycle while the drawer is open", async () => {
-      const user = userEvent.setup();
-      mockMatchMedia({ "(max-width: 1023px)": true });
-      renderShell();
-      await user.click(screen.getByRole("button", { name: copy["header.menu"] }));
-      await user.keyboard("{F6}");
-      expect(landmark("main")).toHaveFocus();
-      await user.keyboard("{Shift>}{F6}{/Shift}");
-      expect(landmark("nav")).toHaveFocus();
     });
 
     it("drops the drawer when the viewport becomes wide again", async () => {

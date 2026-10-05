@@ -53,8 +53,7 @@ describe("DocumentTabs", () => {
     const close = closeButton("Pasienter");
     expect(close).toHaveAttribute("aria-hidden", "true");
     expect(close).toHaveAttribute("tabindex", "-1");
-    expect(tab("Pasienter")).toHaveAttribute("aria-keyshortcuts", "Delete");
-    expect(tab(copy["tabs.start"])).not.toHaveAttribute("aria-keyshortcuts");
+    expect(tab("Pasienter")).not.toHaveAttribute("aria-keyshortcuts");
   });
 
   it("uses roving tabindex", () => {
@@ -98,78 +97,28 @@ describe("DocumentTabs", () => {
     expect(onActivate).toHaveBeenCalledWith(expect.objectContaining({ id: "patients" }));
   });
 
-  it("does not close the pinned Start tab with Ctrl+W but still swallows the shortcut", () => {
+  it("does not intercept Ctrl/Cmd+W or tab-switching chords", () => {
     render(<DocumentTabs />);
-    const event = new KeyboardEvent("keydown", {
-      key: "w",
-      code: "KeyW",
-      ctrlKey: true,
-      bubbles: true,
-      cancelable: true,
-    });
-    act(() => {
+    openSecondAndThird();
+    const before = store().tabs.map((t) => t.id);
+    const chords = [
+      { key: "w", code: "KeyW", ctrlKey: true },
+      { key: "w", code: "KeyW", metaKey: true },
+      { key: "w", code: "KeyW", ctrlKey: true, altKey: true },
+      { key: "PageDown", ctrlKey: true, altKey: true },
+      { key: "PageUp", metaKey: true, altKey: true },
+    ];
+    for (const chord of chords) {
+      const event = new KeyboardEvent("keydown", {
+        ...chord,
+        bubbles: true,
+        cancelable: true,
+      });
       document.dispatchEvent(event);
-    });
-    expect(event.defaultPrevented).toBe(true);
-    expect(store().tabs.map((t) => t.id)).toEqual(["start"]);
-    expect(tab(copy["tabs.start"])).toBeInTheDocument();
-  });
-
-  it("registers the global keydown listener once across re-renders", () => {
-    const add = vi.spyOn(document, "addEventListener");
-    render(<DocumentTabs />);
-    openSecondAndThird();
-    act(() => store().setCurrent("patients"));
-    const keydowns = add.mock.calls.filter(([type]) => type === "keydown");
-    expect(keydowns).toHaveLength(1);
-    fireEvent.keyDown(document, { key: "w", code: "KeyW", ctrlKey: true });
-    expect(store().tabs.map((t) => t.id)).not.toContain("patients");
-    add.mockRestore();
-  });
-
-  it("closes the current closable tab with Ctrl+W", async () => {
-    const user = userEvent.setup();
-    render(<DocumentTabs />);
-    openSecondAndThird();
-    await user.keyboard("{Control>}w{/Control}");
-    expect(store().tabs.map((t) => t.id)).toEqual(["start", "patients"]);
-    expect(store().current).toBe("patients");
-  });
-
-  it("closes the current closable tab with the Ctrl+Alt+W fallback", async () => {
-    const user = userEvent.setup();
-    render(<DocumentTabs />);
-    openSecondAndThird();
-    await user.keyboard("{Control>}{Alt>}w{/Alt}{/Control}");
-    expect(store().tabs.map((t) => t.id)).toEqual(["start", "patients"]);
-  });
-
-  it("closes the current closable tab with Cmd+W (Mac)", () => {
-    render(<DocumentTabs />);
-    openSecondAndThird();
-    fireEvent.keyDown(document, { key: "w", code: "KeyW", metaKey: true });
-    expect(store().tabs.map((t) => t.id)).toEqual(["start", "patients"]);
-  });
-
-  it("switches tabs with Ctrl+Alt+PageDown and Ctrl+Alt+PageUp", async () => {
-    const user = userEvent.setup();
-    render(<DocumentTabs />);
-    openSecondAndThird();
-    await user.keyboard("{Control>}{Alt>}{PageDown}{/Alt}{/Control}");
-    expect(store().current).toBe("start");
-    await user.keyboard("{Control>}{Alt>}{PageUp}{/Alt}{/Control}");
+      expect(event.defaultPrevented).toBe(false);
+    }
+    expect(store().tabs.map((t) => t.id)).toEqual(before);
     expect(store().current).toBe("journal");
-  });
-
-  it("switches tabs with Cmd+Alt+PageDown (Mac)", () => {
-    render(<DocumentTabs />);
-    openSecondAndThird();
-    fireEvent.keyDown(document, {
-      key: "PageDown",
-      metaKey: true,
-      altKey: true,
-    });
-    expect(store().current).toBe("start");
   });
 
   it("closes with Delete and moves focus to the new current tab", async () => {
@@ -243,11 +192,10 @@ describe("DocumentTabs", () => {
     const onBeforeClose = vi.fn(() => false);
     render(<DocumentTabs onBeforeClose={onBeforeClose} />);
     openSecondAndThird();
-    fireEvent.keyDown(document, { key: "w", code: "KeyW", ctrlKey: true });
     await userEvent.click(closeButton("Journal · Ola Nordmann"));
     tab("Journal · Ola Nordmann").focus();
     await userEvent.keyboard("{Delete}");
-    expect(onBeforeClose).toHaveBeenCalledTimes(3);
+    expect(onBeforeClose).toHaveBeenCalledTimes(2);
     expect(store().tabs).toHaveLength(3);
   });
 

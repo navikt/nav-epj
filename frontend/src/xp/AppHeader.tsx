@@ -1,8 +1,7 @@
-import { useEffect, useRef, type KeyboardEvent } from "react";
+import { type KeyboardEvent } from "react";
 import { copy } from "./copy";
 import { XpIcon } from "./XpIcon";
 import { TestMarker } from "./TestMarker";
-import { isModalOpen } from "./modalStore";
 import { usePatientsStore } from "./patientsStore";
 import {
   MENU_BUTTON_ID,
@@ -27,25 +26,6 @@ export function AppHeader({ user, onLogout, onSearchSubmit }: Props) {
   const { narrow, drawerOpen, setDrawerOpen } = useShell();
   const query = usePatientsStore((s) => s.query);
   const setQuery = usePatientsStore((s) => s.setQuery);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    function onKeyDown(event: globalThis.KeyboardEvent) {
-      if (
-        !isModalOpen() &&
-        (event.ctrlKey || event.metaKey) &&
-        event.shiftKey &&
-        !event.altKey &&
-        event.key?.toLowerCase() === "p"
-      ) {
-        event.preventDefault();
-        inputRef.current?.focus();
-        inputRef.current?.select();
-      }
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, []);
 
   function onInputKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === "Escape" && query !== "") {
@@ -80,7 +60,6 @@ export function AppHeader({ user, onLogout, onSearchSubmit }: Props) {
         </label>
         <XpIcon name="sok" />
         <input
-          ref={inputRef}
           id={SEARCH_INPUT_ID}
           type="search"
           autoComplete="off"
