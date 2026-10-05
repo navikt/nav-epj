@@ -175,7 +175,7 @@ class PatientRoutesTest {
 
             assertEquals(HttpStatusCode.OK, response.status)
             val bundle = fhirJson.decodeFromString(response.bodyAsText()) as Bundle
-            assertEquals(Bundle.BundleType.Searchset, bundle.type?.value)
+            assertEquals(Bundle.BundleType.Searchset, bundle.type.value)
             assertEquals(listOf(subject.id.value.toString()), bundle.entry.map { it.resource?.id })
         }
     }

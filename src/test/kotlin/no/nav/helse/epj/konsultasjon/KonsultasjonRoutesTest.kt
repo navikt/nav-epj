@@ -79,7 +79,7 @@ class KonsultasjonRoutesTest {
             diagnoser = emptyList(),
             startetTidspunkt = LocalDateTime.now().minusDays(1),
             avsluttetTidspunkt = null,
-            status = KonsultasjonStatus.PÅGÅENDE,
+            status = KonsultasjonStatus.PAAGAAENDE,
             problemstilling = null,
         )
 

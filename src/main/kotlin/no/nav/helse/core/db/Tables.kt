@@ -47,7 +47,8 @@ object KonsultasjonTable : Table("konsultasjon") {
     val legekontorId = reference("legekontor_id", refColumn = LegekontorTable.id)
     val startetTidspunkt = datetime("startet_tidspunkt")
     val avsluttetTidspunkt = datetime("avsluttet_tidspunkt")
-    val status = enumerationByName<KonsultasjonStatus>("status", 20)
+    val status =
+        varchar("status", 20).transform(KonsultasjonStatus::fromLabel, KonsultasjonStatus::label)
     val problemstilling = text("problemstilling").nullable()
     val created = datetime("created_at")
     val updated = datetime("updated_at")

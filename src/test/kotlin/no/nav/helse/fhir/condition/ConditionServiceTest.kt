@@ -46,7 +46,7 @@ class ConditionServiceTest {
             diagnoser = diagnoser,
             startetTidspunkt = LocalDateTime.now().minusHours(1),
             avsluttetTidspunkt = null,
-            status = KonsultasjonStatus.PÅGÅENDE,
+            status = KonsultasjonStatus.PAAGAAENDE,
             problemstilling = null,
         )
 
@@ -140,14 +140,14 @@ class ConditionServiceTest {
         coEvery { konsultasjonService.getKonsultasjon(konsultasjonId) } returns
             konsultasjon(id = konsultasjonId, pasientId = pasientId, diagnoser = listOf(diagnose))
 
-        val førsteId =
+        val firstId =
             (conditionService
                     .getConditionsByEncounterId(EncounterId(konsultasjonId.value))
                     .entry
                     .single()
                     .resource as Condition)
                 .id
-        val andreId =
+        val secondId =
             (conditionService
                     .getConditionsByEncounterId(EncounterId(konsultasjonId.value))
                     .entry
@@ -155,7 +155,7 @@ class ConditionServiceTest {
                     .resource as Condition)
                 .id
 
-        assertEquals(førsteId, andreId)
+        assertEquals(firstId, secondId)
     }
 
     @OptIn(ExperimentalUuidApi::class)

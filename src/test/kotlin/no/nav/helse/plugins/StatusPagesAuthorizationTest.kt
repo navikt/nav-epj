@@ -17,18 +17,21 @@ import no.nav.helse.smart.security.Interaction
 import org.junit.Test
 
 class StatusPagesAuthorizationTest {
+    private fun Route.failingGet(path: String, failure: () -> Exception) {
+        get(path) { throw failure() }
+    }
+
+    private fun insufficientScope() =
+        InsufficientScopeException("DocumentReference", Interaction.CREATE)
+
     private fun ApplicationTestBuilder.setup() {
         application {
             configureStatusPages()
             routing {
-                get("/fhir") {
-                    throw InsufficientScopeException("DocumentReference", Interaction.CREATE)
-                }
+                failingGet("/fhir", ::insufficientScope)
                 for (prefix in listOf("/fhir", "/fhirish", "/api")) {
-                    get("$prefix/scope") {
-                        throw InsufficientScopeException("DocumentReference", Interaction.CREATE)
-                    }
-                    get("$prefix/mismatch") { throw PatientMismatchException("DocumentReference") }
+                    failingGet("$prefix/scope", ::insufficientScope)
+                    failingGet("$prefix/mismatch") { PatientMismatchException("DocumentReference") }
                 }
             }
         }

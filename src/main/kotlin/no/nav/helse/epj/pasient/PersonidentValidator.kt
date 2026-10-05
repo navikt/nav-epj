@@ -11,9 +11,31 @@ import no.nav.helse.core.utils.UgyldigPersonidentException
  */
 object PersonidentValidator {
 
+    private const val BASE_DIGIT_COUNT = 9
+    private const val CHECKSUM_MODULUS = 11
+    private const val INVALID_CHECKSUM = 10
+    private const val DNR_DAY_OFFSET = 40
+    private const val FIRST_CHECKSUM_INDEX = 9
+    private const val SECOND_CHECKSUM_INDEX = 10
+
     private val digitsOnly = Regex("^\\d{11}$")
+    private val dayOfMonthRange = 1..31
     private val k1Weights = intArrayOf(3, 7, 6, 1, 8, 9, 4, 5, 2)
     private val k2Weights = intArrayOf(5, 4, 3, 2, 7, 6, 5, 4, 3, 2)
+
+    private class CenturyRule(
+        val century: Int,
+        val individualNumbers: IntRange,
+        val twoDigitYears: IntRange,
+    )
+
+    private val centuryRules =
+        listOf(
+            CenturyRule(century = 1900, individualNumbers = 0..499, twoDigitYears = 0..99),
+            CenturyRule(century = 1900, individualNumbers = 900..999, twoDigitYears = 40..99),
+            CenturyRule(century = 1800, individualNumbers = 500..749, twoDigitYears = 54..99),
+            CenturyRule(century = 2000, individualNumbers = 500..999, twoDigitYears = 0..39),
+        )
 
     /**
      * Validates that [personident] is a well-formed personident of the declared [personidentType],
@@ -28,68 +50,70 @@ object PersonidentValidator {
         val digits = personident.map { it - '0' }
         validateChecksums(digits)
 
-        val encodedDay = digits[0] * 10 + digits[1]
-        val month = digits[2] * 10 + digits[3]
-        val twoDigitYear = digits[4] * 10 + digits[5]
-        val individualNumber = digits[6] * 100 + digits[7] * 10 + digits[8]
-
-        val day =
-            when (personidentType) {
-                PersonidentType.FNR ->
-                    encodedDay.takeIf { it in 1..31 }
-                        ?: throw UgyldigPersonidentException(
-                            "Fødselsdag i personident samsvarer ikke med et fødselsnummer (FNR)"
-                        )
-                PersonidentType.DNR ->
-                    (encodedDay - 40).takeIf { it in 1..31 }
-                        ?: throw UgyldigPersonidentException(
-                            "Fødselsdag i personident samsvarer ikke med et D-nummer (DNR)"
-                        )
-            }
-
-        val century =
-            resolveCentury(individualNumber, twoDigitYear)
-                ?: throw UgyldigPersonidentException(
-                    "Fant ikke noe gyldig århundre for individnummeret i personidenten"
-                )
-
         val encodedBirthDate =
-            try {
-                LocalDate.of(century + twoDigitYear, month, day)
-            } catch (cause: DateTimeException) {
-                throw UgyldigPersonidentException(
-                    "Personidenten inneholder ikke en gyldig kalenderdato"
-                )
-            }
+            parseBirthDate(
+                personidentType = personidentType,
+                encodedDay = personident.substring(0, 2).toInt(),
+                month = personident.substring(2, 4).toInt(),
+                twoDigitYear = personident.substring(4, 6).toInt(),
+                individualNumber = personident.substring(6, 9).toInt(),
+            )
 
         if (encodedBirthDate != birthDate) {
             throw UgyldigPersonidentException("Fødselsdato samsvarer ikke med personident")
         }
     }
 
-    private fun validateChecksums(digits: List<Int>) {
-        val k1 =
-            checksum(digits.subList(0, 9), k1Weights)
-                ?: throw UgyldigPersonidentException("Personident har ugyldig kontrollsiffer")
-        if (k1 != digits[9]) {
-            throw UgyldigPersonidentException("Personident har ugyldig kontrollsiffer")
+    private fun parseBirthDate(
+        personidentType: PersonidentType,
+        encodedDay: Int,
+        month: Int,
+        twoDigitYear: Int,
+        individualNumber: Int,
+    ): LocalDate {
+        val day = dayOfMonth(personidentType, encodedDay)
+        val century =
+            resolveCentury(individualNumber, twoDigitYear)
+                ?: throw UgyldigPersonidentException(
+                    "Fant ikke noe gyldig århundre for individnummeret i personidenten"
+                )
+        return try {
+            LocalDate.of(century + twoDigitYear, month, day)
+        } catch (cause: DateTimeException) {
+            throw UgyldigPersonidentException(
+                "Personidenten inneholder ikke en gyldig kalenderdato",
+                cause,
+            )
         }
+    }
 
-        val k2 =
-            checksum(digits.subList(0, 9) + k1, k2Weights)
-                ?: throw UgyldigPersonidentException("Personident har ugyldig kontrollsiffer")
-        if (k2 != digits[10]) {
+    private fun dayOfMonth(personidentType: PersonidentType, encodedDay: Int): Int {
+        val (day, description) =
+            when (personidentType) {
+                PersonidentType.FNR -> encodedDay to "et fødselsnummer (FNR)"
+                PersonidentType.DNR -> (encodedDay - DNR_DAY_OFFSET) to "et D-nummer (DNR)"
+            }
+        if (day !in dayOfMonthRange) {
+            throw UgyldigPersonidentException(
+                "Fødselsdag i personident samsvarer ikke med $description"
+            )
+        }
+        return day
+    }
+
+    private fun validateChecksums(digits: List<Int>) {
+        val baseDigits = digits.subList(0, BASE_DIGIT_COUNT)
+        val k1 = checksum(baseDigits, k1Weights)
+        val k2 = k1?.let { checksum(baseDigits + it, k2Weights) }
+        if (k1 != digits[FIRST_CHECKSUM_INDEX] || k2 != digits[SECOND_CHECKSUM_INDEX]) {
             throw UgyldigPersonidentException("Personident har ugyldig kontrollsiffer")
         }
     }
 
     private fun checksum(values: List<Int>, weights: IntArray): Int? {
         val sum = values.indices.sumOf { values[it] * weights[it] }
-        return when (val remainder = 11 - (sum % 11)) {
-            11 -> 0
-            10 -> null
-            else -> remainder
-        }
+        val control = (CHECKSUM_MODULUS - sum % CHECKSUM_MODULUS) % CHECKSUM_MODULUS
+        return control.takeIf { it != INVALID_CHECKSUM }
     }
 
     /**
@@ -101,11 +125,9 @@ object PersonidentValidator {
      * - 500-999 with year 00-39 -> 2000-2039
      */
     private fun resolveCentury(individualNumber: Int, twoDigitYear: Int): Int? =
-        when {
-            individualNumber in 0..499 -> 1900
-            individualNumber in 900..999 && twoDigitYear >= 40 -> 1900
-            individualNumber in 500..749 && twoDigitYear >= 54 -> 1800
-            individualNumber in 500..999 && twoDigitYear <= 39 -> 2000
-            else -> null
-        }
+        centuryRules
+            .firstOrNull {
+                individualNumber in it.individualNumbers && twoDigitYear in it.twoDigitYears
+            }
+            ?.century
 }

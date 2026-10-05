@@ -95,8 +95,8 @@ class PasientRepository {
             throw DuplikatPasientException()
         }
 
-        pasient.hprNumbers.forEach { it ->
-            val value = it.value
+        pasient.hprNumbers.forEach { hprNumber ->
+            val value = hprNumber.value
             PasientHelsepersonell.insert {
                 it[pasientId] = pasient.id.value
                 it[PasientHelsepersonell.hpr] = value

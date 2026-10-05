@@ -53,7 +53,7 @@ class MaalingRepositoryTest : WithPostgresql() {
                     pasientId,
                     listOf(hpr),
                     LocalDateTime.now(),
-                    KonsultasjonStatus.PÅGÅENDE,
+                    KonsultasjonStatus.PAAGAAENDE,
                 )
             )
         return pasientId to konsultasjonId
@@ -191,7 +191,7 @@ class MaalingRepositoryTest : WithPostgresql() {
                         pasientId,
                         emptyList(),
                         LocalDateTime.now(),
-                        KonsultasjonStatus.PÅGÅENDE,
+                        KonsultasjonStatus.PAAGAAENDE,
                     )
                 )
 

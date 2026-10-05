@@ -29,7 +29,7 @@ class KonsultasjonServiceTest {
     private fun konsultasjon(
         id: KonsultasjonId = KonsultasjonId(Uuid.generateV4()),
         pasientId: PasientId = PasientId(Uuid.generateV4()),
-        status: KonsultasjonStatus = KonsultasjonStatus.PÅGÅENDE,
+        status: KonsultasjonStatus = KonsultasjonStatus.PAAGAAENDE,
     ) =
         Konsultasjon(
             id = id,
@@ -136,7 +136,7 @@ class KonsultasjonServiceTest {
                     pasientId = pasientId,
                     hpr = emptyList(),
                     startetTidspunkt = LocalDateTime.now().minusHours(1),
-                    status = KonsultasjonStatus.PÅGÅENDE,
+                    status = KonsultasjonStatus.PAAGAAENDE,
                 )
             coEvery { konsultasjonRepository.insert(opprettKonsultasjon) } returns opprettetId
             coEvery { konsultasjonRepository.findByKonsultasjonId(opprettetId) } returns null
