@@ -34,7 +34,7 @@ One fixed grid: header, task pane (264px), workspace, status bar. Under 1024px t
 
 | Part | Where (`src/xp` unless noted) |
 | --- | --- |
-| Shell, grid, theme and narrow attributes, F6 landmark cycling | `AppShell.tsx`, composed in `routes/__root.tsx` |
+| Shell, grid, theme and narrow attributes | `AppShell.tsx`, composed in `routes/__root.tsx` |
 | Header: patient search, user, logout | `AppHeader.tsx` |
 | Task pane: Pasient, SMART-apper, System | `TaskPane.tsx`, `TaskPanel.tsx`, `TaskLink.tsx`, `SmartAppsPanel.tsx` |
 | Document tabs and tab panel | `DocumentTabs.tsx`, `Workspace.tsx`, `workspaceStore.ts` |
@@ -48,7 +48,7 @@ One fixed grid: header, task pane (264px), workspace, status bar. Under 1024px t
 
 ## State
 
-- The URL holds the page and the open journal: `/`, `/patients`, `/patients/$patientId` and `/patients/$patientId/konsultasjon/$konsultasjonId`. The journal sub-tab is `?tab=konsultasjon|tidligere|apper`, validated with zod in `routes/patients/$patientId.tsx`.
+- The URL holds the page and the open journal: `/`, `/patients`, `/patients/$patientId` and `/patients/$patientId/konsultasjon/$konsultasjonId`. The journal sub-tab is `?tab=konsultasjon|tidligere|maalinger|apper`, validated with zod in `routes/patients/$patientId.tsx`.
 - Zustand holds everything else. `workspaceStore` has the open tabs (app, Kontrollpanel, Systeminformasjon and Hjelp tabs have no route). `journalStore` has the single open journal and its draft. `appRunStore` has running apps. `activePatientStore` has the server's active patient.
 - `useRouteTabSync` (mounted in `__root.tsx`) keeps the two in step. A route change opens or selects the tab and loads the journal. Selecting a tab navigates to `routeForTab`. A sub-tab change replaces the URL. Closing the journal tab clears `journalStore`.
 - Opening a journal claims the active patient with `PUT /api/active-patient`. `useActivePatientSync` re-reads it on window focus, on a `BroadcastChannel` message from another nav-epj tab, and every 15 s while an app runs inside nav-epj.
@@ -89,7 +89,7 @@ Token choices that need a reason:
 - "Last på nytt" is a new `POST /api/launch` and a new iframe, not a frame reload, because launch ids are single use.
 - "Utviklerverktøy" is a host panel with launch details and frame events. A page cannot open browser DevTools, and the host never holds tokens, so none are shown.
 - The iframe has a `sandbox` list, `allow=""` and `referrerpolicy="no-referrer"` (`AppFrame.tsx`).
-- Shortcuts: Ctrl+Shift+P search, Ctrl+W or Ctrl+Alt+W close tab (browsers may reserve Ctrl+W), Ctrl+Alt+PgUp/PgDn switch tab, F6 move between landmarks. Cmd works on Mac. `HjelpPage` lists them.
+- No application shortcuts. nav-epj runs inside a browser tab, so keys like Ctrl/Cmd+W belong to the browser. Standard keyboard interaction stays (Tab, arrows, Home/End, Enter/Space, Esc, Delete on a closable tab). `HjelpPage` lists it.
 - "Nylig åpnet" stores up to 10 patient ids per clinician in `localStorage`, no names or fnr.
 - Opening a journal is a button, not a link. It claims the single active patient, so opening it in a new browser tab would conflict.
 - No view transitions. Zustand and the router are read through `useSyncExternalStore`, which updates synchronously, so `<ViewTransition>` would not fire.
@@ -98,5 +98,16 @@ Token choices that need a reason:
 
 - Unit and component tests sit next to the source as `*.test.ts(x)`. `testSetup.ts` resets every store after each test. `axeHelper.ts` runs axe and fails on serious violations.
 - E2E specs in `e2e/` run against `yarn dev` with a fake backend: `fakeBackend.ts` answers `/api/**` through Playwright route mocks, so Ktor, Postgres and Valkey are not needed.
+- `e2e/real-backend-observation-writeback.spec.ts` runs against the real backend and is skipped unless `E2E_REAL_BACKEND=1`. It uses a Playwright `APIRequestContext` as a minimal SMART client (not a participant app): `POST /api/launch`, `/oidc/authorize` with PKCE and state (redirects off), token exchange, then `POST /fhir/Observation`. It checks the 201 and `Location`, the FHIR read, `/api/patient/{id}/maalinger`, the Målinger tab in the browser, and that a read-only token, a cross-patient write and malformed bodies are rejected without changing the stored count. Run it locally with:
+
+  ```bash
+  docker compose up -d                  # Postgres and Valkey, from the repo root
+  ./gradlew runLocal                      # backend on :8080 with application-local.yaml (stub login)
+  yarn dev                              # frontend on :5173
+  E2E_REAL_BACKEND=1 E2E_SMART_CLIENT_SECRET=<clientSecret of syk-inn in application-local.yaml> \
+    yarn playwright test e2e/real-backend-observation-writeback.spec.ts
+  ```
+
+  `E2E_SMART_CLIENT_SECRET` is required and must never be committed or used outside local development. Optional: `E2E_BACKEND_URL` (default `http://localhost:8080`), `E2E_SMART_CLIENT_ID` (`syk-inn`), `E2E_SMART_REDIRECT_URI` (`http://localhost:3000/fhir/callback`). The test creates two synthetic patients and consultations through `/api/*`, cancels the consultations afterwards and restores the previous active patient. Patients and the written measurement stay in the database, because there is no delete API. The test logs their ids.
 - `e2e/visual.spec.ts` captures wide and narrow screenshots with a fixed clock and reduced motion. It asserts nothing.
 - Do not assert on logger output.
