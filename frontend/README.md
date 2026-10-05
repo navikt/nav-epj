@@ -98,16 +98,16 @@ Token choices that need a reason:
 
 - Unit and component tests sit next to the source as `*.test.ts(x)`. `testSetup.ts` resets every store after each test. `axeHelper.ts` runs axe and fails on serious violations.
 - E2E specs in `e2e/` run against `yarn dev` with a fake backend: `fakeBackend.ts` answers `/api/**` through Playwright route mocks, so Ktor, Postgres and Valkey are not needed.
-- `e2e/real-backend-observation-writeback.spec.ts` runs against the real backend and is skipped unless `E2E_REAL_BACKEND=1`. It uses a Playwright `APIRequestContext` as a minimal SMART client (not a participant app): `POST /api/launch`, `/oidc/authorize` with PKCE and state (redirects off), token exchange, then `POST /fhir/Observation`. It checks the 201 and `Location`, the FHIR read, `/api/patient/{id}/maalinger`, the Målinger tab in the browser, and that a read-only token, a cross-patient write and malformed bodies are rejected without changing the stored count. Run it locally with:
+- `e2e/real-backend-observation-writeback.spec.ts` covers Observation and DocumentReference against the real backend, skipped unless `E2E_REAL_BACKEND=1`. It uses a Playwright `APIRequestContext` as a minimal SMART client (not a participant app): `POST /api/launch`, `/oidc/authorize` with PKCE and state (redirects off), token exchange, then FHIR create/read requests. Both tests check 201, `Location`, persistence, browser display, and denied writes without changing stored data. Observation also checks malformed bodies and the Målinger tab. DocumentReference checks FHIR search, the internal consultation note, and journal workspace return without reload. It dispatches simulated focus/visibility events to check unsaved-draft protection; native browser-tab return still needs manual verification. Authorization denials currently have plain-text bodies, not `OperationOutcome`. Run it locally with:
 
   ```bash
   docker compose up -d                  # Postgres and Valkey, from the repo root
-  ./gradlew runLocal                      # backend on :8080 with application-local.yaml (stub login)
-  yarn dev                              # frontend on :5173
+  ./gradlew runLocal                    # separate terminal, from the repo root
+  cd frontend                          # another terminal; Playwright starts Vite on :5173
   E2E_REAL_BACKEND=1 E2E_SMART_CLIENT_SECRET=<clientSecret of syk-inn in application-local.yaml> \
     yarn playwright test e2e/real-backend-observation-writeback.spec.ts
   ```
 
-  `E2E_SMART_CLIENT_SECRET` is required and must never be committed or used outside local development. Optional: `E2E_BACKEND_URL` (default `http://localhost:8080`), `E2E_SMART_CLIENT_ID` (`syk-inn`), `E2E_SMART_REDIRECT_URI` (`http://localhost:3000/fhir/callback`). The test creates two synthetic patients and consultations through `/api/*`, cancels the consultations afterwards and restores the previous active patient. Patients and the written measurement stay in the database, because there is no delete API. The test logs their ids.
+  `E2E_SMART_CLIENT_SECRET` is required and must never be committed or used outside local development. Optional: `E2E_BACKEND_URL` (default `http://localhost:8080`), `E2E_SMART_CLIENT_ID` (`syk-inn`), `E2E_SMART_REDIRECT_URI` (`http://localhost:3000/fhir/callback`). Each test creates two synthetic patients and consultations through `/api/*` (four of each for the suite), cancels the consultations afterwards and restores the previous active patient. If none was active, there is no API to clear the last test patient; it stays active until expiry. Patients, the measurement, and the journal note remain in the database because there is no delete API. The suite logs their ids for scoped cleanup.
 - `e2e/visual.spec.ts` captures wide and narrow screenshots with a fixed clock and reduced motion. It asserts nothing.
 - Do not assert on logger output.
