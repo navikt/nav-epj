@@ -1,9 +1,6 @@
-package no.nav.helse.smart.tooling
+package no.nav.helse.hackathon.credentials
 
 import java.nio.file.Path
-import no.nav.helse.smart.security.ClientEndpoints
-import no.nav.helse.smart.security.MAX_STARTER_TEAMS
-import no.nav.helse.smart.security.StarterTeamConfig
 import tools.jackson.databind.JsonNode
 
 private const val MAX_FIELDS = 20

@@ -102,20 +102,20 @@ tasks {
     jvmArgs("-Dio.ktor.development=true", "-Dlogback.configurationFile=logback-local.xml")
   }
 
-  register<JavaExec>("generateTeamCredentials") {
-    description = "Generates SMART team credentials into a new private directory outside the checkout"
+  register<JavaExec>("generateHackathonCredentials") {
+    description = "Hackathon-only: generates SMART team credentials into a new private directory outside the checkout"
     group = "application"
-    mainClass.set("no.nav.helse.smart.tooling.StarterCredentialCliKt")
+    mainClass.set("no.nav.helse.hackathon.credentials.StarterCredentialCliKt")
     classpath = sourceSets["main"].runtimeClasspath
     workingDir = projectDir
 
-    val manifest = providers.gradleProperty("smartManifest")
-    val output = providers.gradleProperty("smartOutput")
-    val clinicians = providers.gradleProperty("smartClinicians")
-    val roster = providers.gradleProperty("smartRoster")
-    val credentialsOnly = providers.gradleProperty("smartCredentialsOnly")
-    val existingRegistry = providers.gradleProperty("smartExistingRegistry")
-    val rotate = providers.gradleProperty("smartRotate")
+    val manifest = providers.gradleProperty("hackathonManifest")
+    val output = providers.gradleProperty("hackathonOutput")
+    val clinicians = providers.gradleProperty("hackathonClinicians")
+    val roster = providers.gradleProperty("hackathonRoster")
+    val credentialsOnly = providers.gradleProperty("hackathonCredentialsOnly")
+    val existingRegistry = providers.gradleProperty("hackathonExistingRegistry")
+    val rotate = providers.gradleProperty("hackathonRotate")
 
     argumentProviders.add(CommandLineArgumentProvider {
       buildList {

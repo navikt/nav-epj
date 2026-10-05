@@ -1,4 +1,4 @@
-package no.nav.helse.smart.security
+package no.nav.helse.hackathon.credentials
 
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSHeader
@@ -14,6 +14,10 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import no.nav.helse.smart.security.GrantType
+import no.nav.helse.smart.security.TokenEndpointAuthMethod
+import no.nav.helse.smart.security.buildRegistry
+import no.nav.helse.smart.security.parseRegisteredScopes
 import org.junit.Test
 
 private val INTERACTIVE = listOf("openid", "launch", "patient/Patient.rs")

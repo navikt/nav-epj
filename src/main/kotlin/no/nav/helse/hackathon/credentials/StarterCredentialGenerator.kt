@@ -1,4 +1,4 @@
-package no.nav.helse.smart.security
+package no.nav.helse.hackathon.credentials
 
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.jwk.JWKSet
@@ -10,6 +10,8 @@ import java.math.BigInteger
 import java.security.SecureRandom
 import java.util.Base64
 import java.util.UUID
+import no.nav.helse.smart.security.RawClientRegistration
+import no.nav.helse.smart.security.buildRegistry
 
 internal const val MAX_STARTER_TEAMS = 10
 private const val KEY_BITS = 3072

@@ -1,7 +1,6 @@
-package no.nav.helse.smart.tooling
+package no.nav.helse.hackathon.credentials
 
 import java.nio.file.Path
-import no.nav.helse.smart.security.MAX_STARTER_TEAMS
 import no.nav.helse.smart.security.RawClientRegistration
 import no.nav.helse.smart.security.buildRegistry
 import tools.jackson.databind.JsonNode

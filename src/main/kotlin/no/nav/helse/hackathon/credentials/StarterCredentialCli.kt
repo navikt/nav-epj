@@ -1,4 +1,4 @@
-package no.nav.helse.smart.tooling
+package no.nav.helse.hackathon.credentials
 
 import java.io.PrintStream
 import java.nio.file.Files
@@ -6,10 +6,9 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.system.exitProcess
 import no.nav.helse.smart.security.RawClientRegistration
-import no.nav.helse.smart.security.generateStarterCredentials
 
 private const val USAGE =
-    "usage: generateTeamCredentials --manifest=FILE --output=NEW_DIRECTORY " +
+    "usage: generateHackathonCredentials --manifest=FILE --output=NEW_DIRECTORY " +
         "(--clinicians=FILE --roster=FILE | --credentials-only) " +
         "[--existing-registry=FILE [--rotate]] [--checkout-root=DIRECTORY]"
 

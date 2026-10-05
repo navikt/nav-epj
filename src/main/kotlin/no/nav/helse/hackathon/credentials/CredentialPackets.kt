@@ -1,9 +1,6 @@
-package no.nav.helse.smart.tooling
+package no.nav.helse.hackathon.credentials
 
-import no.nav.helse.smart.security.GeneratedStarterCredentials
 import no.nav.helse.smart.security.RawClientRegistration
-import no.nav.helse.smart.security.StarterTeamConfig
-import no.nav.helse.smart.security.TeamCredentials
 
 internal const val PACKET_SCHEMA_VERSION = 1
 internal const val LAUNCH_KEY_FILE = "launch-key.private.jwk.json"

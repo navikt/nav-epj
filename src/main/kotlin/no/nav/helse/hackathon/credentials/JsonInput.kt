@@ -1,4 +1,4 @@
-package no.nav.helse.smart.tooling
+package no.nav.helse.hackathon.credentials
 
 import java.io.IOException
 import java.nio.file.Files
