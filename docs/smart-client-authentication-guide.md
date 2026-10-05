@@ -17,22 +17,100 @@ methods listed in `token_endpoint_auth_methods_supported` in the discovery docum
 
 `client_secret_post` is not implemented.
 
-## Team credential tooling status
+## Team credential tooling
 
-`generateStarterCredentials` is an internal, in-memory generator, not yet an operator command.
-It accepts 1–10 team slots, exact launch/callback URLs for each interactive variant, and explicit
-interactive/system scopes. Each team receives public, secret-based, asymmetric launch, and Backend
-Services registrations, validated through the existing registry.
+`./gradlew generateTeamCredentials` is a local operator command. It reads a non-secret manifest
+and writes secret-backed credentials for 1-10 teams into a new directory outside the checkout. It
+is not a server endpoint and does not deploy anything.
 
-Secrets use 32 random bytes. The two asymmetric clients have independent RSA 3072-bit RS384 keys
-and key IDs. Registrations contain only public JWK Sets; per-team credentials retain the private
-keys separately. Generated credential and registration summaries redact secrets.
+Each team gets four registrations: public, `client_secret_basic`, `private_key_jwt` launch, and
+Backend Services. Client secrets are 32 random bytes. The two asymmetric clients have independent
+RSA 3072-bit RS384 keys and key IDs. Every registration is validated by the normal registry loader
+before anything is written.
 
-No files are written, registrations deployed, or credentials printed. Private file output, the
-operator CLI, and packet assembly remain outstanding. Clinician credentials and the patient roster
-must come from the track team and cohort provisioner. This tooling does not implement or configure
-the separate starter apps; their callback URLs and configuration format need coordination with
-the starter owner.
+```bash
+./gradlew generateTeamCredentials \
+  -PsmartManifest=/path/to/manifest.json \
+  -PsmartOutput=/path/outside/checkout/team-credentials \
+  -PsmartClinicians=/path/to/clinicians.json \
+  -PsmartRoster=/path/to/roster.json
+```
+
+Pass `-PsmartCredentialsOnly=true` instead of the last two properties to produce incomplete
+packets when the clinician logins and roster are not available yet. Passing only one of the two
+inputs, or neither without `smartCredentialsOnly`, is refused, so a missing input is never
+silent. Only paths are given as properties; no secret is passed on a command line.
+
+### Manifest (non-secret)
+
+```json
+{
+  "schemaVersion": 1,
+  "interactiveScopes": ["openid", "launch", "patient/Patient.rs"],
+  "systemScopes": ["system/Patient.rs"],
+  "teams": [
+    {
+      "teamSlot": "alpha",
+      "publicClient": {"launchUri": "https://...", "callbackUri": "https://..."},
+      "clientSecretClient": {"launchUri": "https://...", "callbackUri": "https://..."},
+      "privateKeyJwtClient": {"launchUri": "https://...", "callbackUri": "https://..."}
+    }
+  ]
+}
+```
+
+URLs are exact; the tool assumes no callback paths or ports. `teamSlot` is 1-64 letters, digits,
+underscores or hyphens, starting with a letter or digit, and must be unique ignoring case.
+
+### Separate sensitive inputs
+
+The track team supplies the clinician logins and the cohort provisioner supplies the roster. Their
+content is copied into packets verbatim as flat string fields; the tool invents no fields.
+
+```json
+{"schemaVersion": 1, "teams": [{"teamSlot": "alpha", "clinician": {"<field>": "<value>"}}]}
+```
+
+```json
+{"schemaVersion": 1, "patients": [{"<field>": "<value>"}]}
+```
+
+The clinician file must have exactly one entry per manifest team. The roster is shared by all
+teams. Limits: 20 fields per object, 200 patients, 2048 characters per value, 1 MiB per file.
+
+### Output
+
+```
+<output>/                         mode 700
+  registry.json                   mode 600, whole registry for smart.clientRegistryJson
+  teams/<teamSlot>/               mode 700
+    packet.json                   mode 600, schemaVersion 1
+    launch-key.private.jwk.json   mode 600, private key of the private_key_jwt launch client
+    backend-key.private.jwk.json  mode 600, private key of the Backend Services client
+```
+
+`registry.json` holds public JWKs and the shared client secrets, never private keys or clinician
+data, and is sensitive. Give a team only its own `teams/<teamSlot>/` directory.
+
+`packet.json` carries `status` (`COMPLETE` or `CREDENTIALS_ONLY`), `missingInputs` (empty, or
+`clinician` and `roster`), `teamSlot`, `clients` (`public`, `clientSecret`, `privateKeyJwt`,
+`backendServices` with client IDs, secret or key ID, algorithm and key file name, plus launch and
+callback URLs for the interactive variants), `scopes`, and, for complete packets only,
+`clinician` and `roster`.
+
+### Safety rules
+
+- The output path must be new: existing files, directories and symlinks are never overwritten, the
+  parent must exist, and any path that resolves inside the checkout (including through symlinks)
+  is refused.
+- Directories and files are created with owner-only permissions from the start. Platforms without
+  POSIX permissions are refused.
+- Inputs are validated before keys are generated or anything is written. If a write fails, only
+  paths created by that run are removed.
+- Errors name the input and field but never print file contents; secrets are not printed to
+  stdout or stderr.
+- Deployment is separate: copy `registry.json` into the secret store yourself. This tooling does
+  not implement the starter apps.
 
 ## Backend Services clients
 

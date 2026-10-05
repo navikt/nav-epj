@@ -2,6 +2,7 @@ import com.diffplug.gradle.spotless.SpotlessExtension
 import dev.detekt.gradle.Detekt
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.withType
+import org.gradle.process.CommandLineArgumentProvider
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 
 
@@ -99,6 +100,31 @@ tasks {
 
     args("-config=application-local.yaml")
     jvmArgs("-Dio.ktor.development=true", "-Dlogback.configurationFile=logback-local.xml")
+  }
+
+  register<JavaExec>("generateTeamCredentials") {
+    description = "Generates SMART team credentials into a new private directory outside the checkout"
+    group = "application"
+    mainClass.set("no.nav.helse.smart.tooling.StarterCredentialCliKt")
+    classpath = sourceSets["main"].runtimeClasspath
+    workingDir = projectDir
+
+    val manifest = providers.gradleProperty("smartManifest")
+    val output = providers.gradleProperty("smartOutput")
+    val clinicians = providers.gradleProperty("smartClinicians")
+    val roster = providers.gradleProperty("smartRoster")
+    val credentialsOnly = providers.gradleProperty("smartCredentialsOnly")
+
+    argumentProviders.add(CommandLineArgumentProvider {
+      buildList {
+        manifest.orNull?.let { add("--manifest=$it") }
+        output.orNull?.let { add("--output=$it") }
+        clinicians.orNull?.let { add("--clinicians=$it") }
+        roster.orNull?.let { add("--roster=$it") }
+        if (credentialsOnly.isPresent) add("--credentials-only")
+        add("--checkout-root=${projectDir.absolutePath}")
+      }
+    })
   }
 
   withType<Detekt>().configureEach {
