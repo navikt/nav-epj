@@ -10,10 +10,14 @@ const CLIENT_SECRET = process.env.E2E_SMART_CLIENT_SECRET;
 
 const WRITE_SCOPE = "launch openid fhirUser patient/Observation.rs patient/Observation.write";
 const READ_SCOPE = "launch patient/Observation.rs";
+const DOC_WRITE_SCOPE = "launch patient/DocumentReference.rs patient/DocumentReference.c";
+const DOC_READ_SCOPE = "launch patient/DocumentReference.rs";
 const FHIR_JSON = "application/fhir+json";
 
 type Patient = { id: string; fornavn: string; etternavn: string };
 type Konsultasjon = { id: string };
+type Notat = { id: string; journalnotat: string };
+type KonsultasjonMedNotater = Konsultasjon & { journalnotat: Notat[] };
 type Maaling = { id: string; verdi: number; enhetKode: string; enhetVisningsnavn: string };
 type Token = { access_token: string; patient?: string; encounter?: string; scope: string; token_type: string };
 
@@ -68,7 +72,19 @@ function observation(patientId: string, encounterId: string, effective: string, 
   };
 }
 
-test.describe("Observation write-back against the real backend", () => {
+function documentReference(patientId: string, encounterId: string, description: string) {
+  return {
+    resourceType: "DocumentReference",
+    status: "current",
+    description,
+    type: { coding: [{ system: "urn:oid:2.16.578.1.12.4.1.1.9602", code: "J01-2" }] },
+    content: [{ attachment: { contentType: "application/pdf" } }],
+    subject: { reference: `Patient/${patientId}` },
+    context: { encounter: [{ reference: `Encounter/${encounterId}` }] },
+  };
+}
+
+test.describe("FHIR write-back against the real backend", () => {
   test.skip(!ENABLED, "Set E2E_REAL_BACKEND=1 to run against a running backend, Postgres and Valkey");
 
   let api: APIRequestContext;
@@ -119,6 +135,11 @@ test.describe("Observation write-back against the real backend", () => {
 
   async function maalinger(patientId: string): Promise<Maaling[]> {
     return json<Maaling[]>(api.get(`/api/patient/${patientId}/maalinger`));
+  }
+
+  async function notater(patientId: string): Promise<Notat[]> {
+    const list = await json<KonsultasjonMedNotater[]>(api.get(`/api/patients/${patientId}/konsultasjoner`));
+    return list.flatMap((k) => k.journalnotat);
   }
 
   async function smartToken(patientId: string, scope: string): Promise<Token> {
@@ -337,5 +358,97 @@ test.describe("Observation write-back against the real backend", () => {
     await expect(row).toContainText(`${value} degree Celsius (Cel)`);
     await expect(row).toContainText(formatOslo(effective));
     await expect(row).toContainText("Endelig");
+  });
+
+  test("writes a DocumentReference through SMART auth and shows it in the journal", async ({ page }) => {
+    const target = await createPatient("Notattest");
+    const other = await createPatient("Annennotat");
+    const otherKonsultasjon = await startKonsultasjon(other);
+    const konsultasjon = await startKonsultasjon(target);
+    expect(await notater(target.id)).toEqual([]);
+    expect(await notater(other.id)).toEqual([]);
+
+    const writeToken = await smartToken(target.id, DOC_WRITE_SCOPE);
+    expect(writeToken.encounter).toBe(konsultasjon.id);
+    const writeGrants = writeToken.scope.split(" ");
+    expect(writeGrants).toContain("patient/DocumentReference.rs");
+    expect(writeGrants).toContain("patient/DocumentReference.c");
+    const readToken = await smartToken(target.id, DOC_READ_SCOPE);
+    const readGrants = readToken.scope.split(" ");
+    expect(readGrants).toEqual(["launch", "patient/DocumentReference.rs"]);
+
+    const konsultasjonRequests: string[] = [];
+    page.on("request", (request) => {
+      if (request.url().includes("/konsultasjoner")) konsultasjonRequests.push(request.url());
+    });
+
+    await page.goto(`/patients/${target.id}`);
+    const editor = page.getByRole("textbox", { name: "Journalnotat" });
+    await expect(editor).toBeVisible();
+    await expect(editor).toHaveValue("");
+
+    const text = `E2E journalnotat ${randomBytes(4).toString("hex")}`;
+    const created201 = await api.post("/fhir/DocumentReference", {
+      headers: fhirHeaders(writeToken),
+      data: documentReference(target.id, konsultasjon.id, text),
+    });
+    expect(created201.status(), await created201.text()).toBe(201);
+    const createdBody = (await created201.json()) as { id: string };
+    expect(createdBody.id).toBeTruthy();
+    expect(created201.headers()["location"]).toBe(`${BACKEND_URL}/fhir/DocumentReference/${createdBody.id}`);
+
+    const fetched = await api.get(`/fhir/DocumentReference/${createdBody.id}`, { headers: fhirHeaders(readToken) });
+    expect(fetched.status(), await fetched.text()).toBe(200);
+    expect(await fetched.json()).toMatchObject({
+      resourceType: "DocumentReference",
+      id: createdBody.id,
+      description: text,
+      subject: { reference: `Patient/${target.id}` },
+      context: { encounter: [{ reference: `Encounter/${konsultasjon.id}` }] },
+    });
+
+    const searched = await api.get(`/fhir/DocumentReference?patient=${target.id}`, { headers: fhirHeaders(readToken) });
+    expect(searched.status(), await searched.text()).toBe(200);
+    const bundle = (await searched.json()) as { resourceType: string; entry?: { resource: { id: string } }[] };
+    expect(bundle.resourceType).toBe("Bundle");
+    expect((bundle.entry ?? []).map((e) => e.resource.id)).toContain(createdBody.id);
+
+    const stored = await notater(target.id);
+    expect(stored).toHaveLength(1);
+    expect(stored[0]).toMatchObject({ id: createdBody.id, journalnotat: text });
+
+    const draft = "ulagret utkast";
+    await editor.fill(draft);
+    const requestsBeforeReturn = konsultasjonRequests.length;
+    await page.evaluate(() => {
+      window.dispatchEvent(new Event("focus"));
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    expect(konsultasjonRequests.length).toBe(requestsBeforeReturn);
+    await expect(editor).toHaveValue(draft);
+
+    await editor.fill("");
+    await page.getByRole("tab", { name: "Start" }).click();
+    await page.getByRole("tab", { name: /^Journal/ }).click();
+    await expect(page.getByRole("textbox", { name: "Journalnotat" })).toHaveValue(text);
+
+    const countsBefore = [(await notater(target.id)).length, (await notater(other.id)).length];
+    const readOnly = await api.post("/fhir/DocumentReference", {
+      headers: fhirHeaders(readToken),
+      data: documentReference(target.id, konsultasjon.id, `${text} read-only`),
+    });
+    expect(readOnly.status(), await readOnly.text()).toBe(403);
+    expect(await readOnly.text()).toBe("No granted scope covers DocumentReference.c");
+
+    const crossPatient = await api.post("/fhir/DocumentReference", {
+      headers: fhirHeaders(writeToken),
+      data: documentReference(other.id, otherKonsultasjon.id, `${text} cross-patient`),
+    });
+    expect(crossPatient.status(), await crossPatient.text()).toBe(404);
+    expect(await crossPatient.text()).toBe("Not found");
+
+    expect([(await notater(target.id)).length, (await notater(other.id)).length]).toEqual(countsBefore);
+    expect(countsBefore).toEqual([1, 0]);
+    expect(await notater(target.id)).toEqual(stored);
   });
 });
