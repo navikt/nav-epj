@@ -98,6 +98,27 @@ data, and is sensitive. Give a team only its own `teams/<teamSlot>/` directory.
 callback URLs for the interactive variants), `scopes`, and, for complete packets only,
 `clinician` and `roster`.
 
+### Adding or rotating teams in a deployed registry
+
+The output never overwrites a deployed registry. To change a registry that is already deployed,
+export the current `smart.clientRegistryJson` secret to a file (it is sensitive) and pass it with
+`-PsmartExistingRegistry=/path/to/current-registry.json`. The tool validates it, keeps every
+registration it does not touch unchanged (including clients without a `teamSlot`), and writes the
+merged result to the new `registry.json`.
+
+- Add teams: the manifest lists only the new teams. A team that is already registered
+  (compared ignoring case) is refused, and the registry may not exceed 10 teams.
+- Rotate teams: add `-PsmartRotate=true` and list only the teams to rotate, with their exact
+  URLs. Each must already have exactly its four generated registrations (public,
+  `client_secret_basic`, `private_key_jwt` launch, `client_credentials`); unknown teams and
+  partially registered teams are refused. The four registrations are replaced with new client
+  IDs, secret and keys.
+
+Clinician and roster inputs must cover exactly the teams in the manifest, and packets are written
+only for those teams. After reviewing the output, store the new `registry.json` in the secret
+store and redeploy, since the registry is loaded at startup. Rotated credentials stop working only
+once the new registry is live, so hand out the new packet after that.
+
 ### Safety rules
 
 - The output path must be new: existing files, directories and symlinks are never overwritten, the

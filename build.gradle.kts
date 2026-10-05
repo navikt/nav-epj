@@ -114,6 +114,8 @@ tasks {
     val clinicians = providers.gradleProperty("smartClinicians")
     val roster = providers.gradleProperty("smartRoster")
     val credentialsOnly = providers.gradleProperty("smartCredentialsOnly")
+    val existingRegistry = providers.gradleProperty("smartExistingRegistry")
+    val rotate = providers.gradleProperty("smartRotate")
 
     argumentProviders.add(CommandLineArgumentProvider {
       buildList {
@@ -122,6 +124,8 @@ tasks {
         clinicians.orNull?.let { add("--clinicians=$it") }
         roster.orNull?.let { add("--roster=$it") }
         if (credentialsOnly.isPresent) add("--credentials-only")
+        existingRegistry.orNull?.let { add("--existing-registry=$it") }
+        if (rotate.isPresent) add("--rotate")
         add("--checkout-root=${projectDir.absolutePath}")
       }
     })

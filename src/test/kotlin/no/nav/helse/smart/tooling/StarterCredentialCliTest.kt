@@ -381,4 +381,189 @@ class StarterCredentialCliTest {
         assertEquals(1, run("--manifest"))
         assertFalse("CANARY" in stderr)
     }
+
+    private val legacyClient =
+        """{"clientId":"legacy-app","redirectUris":["https://legacy.example.com/cb"],""" +
+            """"launchUris":["https://legacy.example.com/launch"],""" +
+            """"scopes":["openid","launch","patient/Patient.rs"],"navn":"Legacy","beskrivelse":"keep me"}"""
+
+    private fun existingRegistry(): Path {
+        assertEquals(0, generateComplete(base.resolve("initial")), stderr)
+        val text = base.resolve("initial/registry.json").readText().trimEnd().removeSuffix("]")
+        return file("existing.json", "$text,$legacyClient]")
+    }
+
+    private fun clientIds(registry: Path, slot: String? = null) =
+        tree(registry)
+            .filter { slot == null || it["teamSlot"]?.stringValue() == slot }
+            .map { it["clientId"].stringValue() }
+            .toSet()
+
+    private fun runWithExisting(
+        existing: Path,
+        out: Path,
+        slots: List<String>,
+        vararg extra: String,
+    ) =
+        run(
+            "--manifest=${file("m-${out.fileName}.json", manifestJson(*slots.toTypedArray()))}",
+            "--output=$out",
+            "--clinicians=${file("c-${out.fileName}.json", clinicianJson(*slots.toTypedArray()))}",
+            "--roster=${file("r-${out.fileName}.json", ROSTER_JSON)}",
+            "--existing-registry=$existing",
+            *extra,
+        )
+
+    @Test
+    fun `adding a team preserves every existing registration and packets cover only new teams`() {
+        val existing = existingRegistry()
+        val out = base.resolve("added")
+
+        assertEquals(0, runWithExisting(existing, out, listOf("gamma")), stderr)
+
+        val before = tree(existing).toList()
+        val after = tree(out.resolve("registry.json")).toList()
+        assertEquals(before.size + 4, after.size)
+        before.forEach { assertTrue(it in after) }
+        assertEquals(4, clientIds(out.resolve("registry.json"), "gamma").size)
+        assertEquals(
+            listOf("gamma"),
+            Files.list(out.resolve("teams")).use { s -> s.map { it.fileName.toString() }.toList() },
+        )
+        assertEquals(
+            before.size + 4,
+            loadSmartClients(
+                    MapApplicationConfig(
+                        "smart.clientRegistryJson" to out.resolve("registry.json").readText()
+                    )
+                )
+                .size,
+        )
+        assertTrue("keeps ${before.size} existing" in stdout)
+    }
+
+    @Test
+    fun `adding an already registered team is refused and the input is untouched`() {
+        val existing = existingRegistry()
+        val original = existing.readText()
+
+        listOf("alpha", "ALPHA").forEach {
+            val out = base.resolve("dup-$it")
+            assertEquals(1, runWithExisting(existing, out, listOf(it)))
+            assertTrue("use --rotate" in stderr, stderr)
+            assertFalse(out.exists())
+        }
+        assertEquals(original, existing.readText())
+    }
+
+    @Test
+    fun `rotation replaces only the selected team`() {
+        val existing = existingRegistry()
+        val out = base.resolve("rotated")
+        val oldAlpha = clientIds(existing, "alpha")
+        val oldKeyId =
+            tree(base.resolve("initial/teams/alpha/packet.json"))["clients"]["backendServices"][
+                    "keyId"]
+                .stringValue()
+
+        assertEquals(0, runWithExisting(existing, out, listOf("alpha"), "--rotate"), stderr)
+
+        val registry = out.resolve("registry.json")
+        val newAlpha = clientIds(registry, "alpha")
+        assertEquals(4, newAlpha.size)
+        assertTrue(newAlpha.intersect(oldAlpha).isEmpty())
+        assertEquals(clientIds(existing, "beta"), clientIds(registry, "beta"))
+        assertTrue("legacy-app" in clientIds(registry))
+        val betaBefore = tree(existing).filter { it["teamSlot"]?.stringValue() == "beta" }
+        betaBefore.forEach { assertTrue(it in tree(registry).toList()) }
+        assertEquals(9, tree(registry).size())
+        assertEquals(
+            9,
+            loadSmartClients(
+                    MapApplicationConfig("smart.clientRegistryJson" to registry.readText())
+                )
+                .size,
+        )
+        val newKeyId =
+            tree(out.resolve("teams/alpha/packet.json"))["clients"]["backendServices"]["keyId"]
+                .stringValue()
+        assertFalse(oldKeyId == newKeyId)
+        assertFalse(Files.exists(out.resolve("teams/beta")))
+        assertTrue("Rotated credentials for 1" in stdout)
+    }
+
+    @Test
+    fun `rotation refuses unknown or partial teams`() {
+        val existing = existingRegistry()
+        val partial =
+            tree(existing).filterNot { it["clientId"].stringValue().startsWith("beta-public-") }
+        val partialFile = file("partial.json", toolMapper.writeValueAsString(partial))
+
+        assertEquals(
+            1,
+            runWithExisting(existing, base.resolve("unknown"), listOf("gamma"), "--rotate"),
+        )
+        assertTrue("unknown team" in stderr, stderr)
+        errBytes.reset()
+        assertEquals(
+            1,
+            runWithExisting(partialFile, base.resolve("partial"), listOf("beta"), "--rotate"),
+        )
+        assertTrue("partial rotation" in stderr, stderr)
+        assertFalse(base.resolve("unknown").exists() || base.resolve("partial").exists())
+    }
+
+    @Test
+    fun `rotate requires an existing registry`() {
+        val manifest = file("manifest.json", manifestJson("alpha"))
+        assertEquals(
+            1,
+            run(
+                "--manifest=$manifest",
+                "--output=${base.resolve("o")}",
+                "--credentials-only",
+                "--rotate",
+            ),
+        )
+        assertFalse(base.resolve("o").exists())
+    }
+
+    @Test
+    fun `invalid existing registries fail safely`() {
+        val bad =
+            listOf(
+                "{}",
+                "[]",
+                """[{"clientId":"x","clientSecret":"CANARY-existing","bogus":1}]""",
+                """[{"clientId":"x","clientSecret":"CANARY-existing"}""",
+                """[{"clientId":"x","clientSecret":"CANARY-existing","scopes":[]}]""",
+                """[{"clientId":"x","clientSecret":"CANARY-existing","scopes":["openid"]},""" +
+                    """{"clientId":"x","clientSecret":"CANARY-existing","scopes":["openid"]}]""",
+            )
+        bad.forEachIndexed { index, content ->
+            errBytes.reset()
+            val out = base.resolve("bad-$index")
+            assertEquals(
+                1,
+                runWithExisting(file("bad-$index.json", content), out, listOf("gamma")),
+                "case $index",
+            )
+            assertFalse("CANARY" in stderr, "case $index")
+            assertFalse(out.exists(), "case $index")
+        }
+    }
+
+    @Test
+    fun `team cap counts existing teams`() {
+        val tenTeams =
+            (1..10).joinToString(",", "[", "]") {
+                """{"clientId":"t$it","teamSlot":"t$it","scopes":["openid"]}"""
+            }
+        val out = base.resolve("eleventh")
+
+        assertEquals(1, runWithExisting(file("ten.json", tenTeams), out, listOf("gamma")))
+
+        assertTrue("more than 10 teams" in stderr, stderr)
+        assertFalse(out.exists())
+    }
 }
