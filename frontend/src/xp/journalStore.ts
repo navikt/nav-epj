@@ -38,7 +38,10 @@ type JournalState = {
   savedAt: Date | null;
   starting: boolean;
   startFailed: boolean;
+  refreshing: boolean;
+  refreshFailed: boolean;
   open: (patientId: string, konsultasjonId?: string) => Promise<void>;
+  refresh: () => Promise<void>;
   setSubTab: (subTab: JournalSubTab) => void;
   setNotat: (notat: string) => void;
   addDiagnose: (diagnose: DiagnoseItem) => void;
@@ -68,6 +71,8 @@ function initialState() {
     savedAt: null as Date | null,
     starting: false,
     startFailed: false,
+    refreshing: false,
+    refreshFailed: false,
   };
 }
 
@@ -230,6 +235,45 @@ export const useJournalStore = create<JournalState>((set, get) => {
       publishLatest(patientId, konsultasjoner.value);
       commit({ patient: patient.value, status: "ready", loadError: null });
       applyKonsultasjoner(konsultasjoner.value);
+    },
+
+    refresh: async () => {
+      const start = get();
+      const { patientId } = start;
+      if (
+        !patientId ||
+        start.status !== "ready" ||
+        start.refreshing ||
+        start.saveStatus === "saving" ||
+        start.starting ||
+        isDirty(start)
+      ) {
+        return;
+      }
+      const isCurrent = session.capture();
+      const before = start.konsultasjoner;
+      commit({ refreshing: true });
+      let fetched: Konsultasjon[];
+      try {
+        fetched = await fetchKonsultasjoner(patientId);
+      } catch {
+        if (isCurrent()) commit({ refreshing: false, refreshFailed: true });
+        return;
+      }
+      if (!isCurrent()) return;
+      const now = get();
+      if (
+        now.saveStatus === "saving" ||
+        now.starting ||
+        isDirty(now) ||
+        now.konsultasjoner !== before
+      ) {
+        commit({ refreshing: false });
+        return;
+      }
+      publishLatest(patientId, fetched);
+      commit({ refreshing: false, refreshFailed: false });
+      applyKonsultasjoner(fetched);
     },
 
     setSubTab: (subTab) => commit({ subTab }),

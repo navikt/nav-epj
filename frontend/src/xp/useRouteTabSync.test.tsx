@@ -144,6 +144,27 @@ describe("useRouteTabSync journal routes", () => {
     vi.unstubAllGlobals();
   });
 
+  it("refreshes consultation data when returning from an embedded app tab", async () => {
+    renderHook(() => useRouteTabSync(journal("p1"), vi.fn()));
+    await waitFor(() => expect(useJournalStore.getState().status).toBe("ready"));
+    act(() => store().openTab({ kind: "app", clientId: "test-app", label: "SMART" }));
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify([{
+      id: "k1",
+      pasientId: "p1",
+      status: "PÅGÅENDE",
+      startetTidspunkt: "2026-09-30T09:00:00",
+      avsluttetTidspunkt: null,
+      problemstilling: null,
+      hpr: ["9144889"],
+      diagnoser: [],
+      journalnotat: [{
+        id: "n1", konsultasjonId: "k1", pasientId: "p1", journalnotat: "Fra SMART",
+      }],
+    }])));
+    act(() => store().setCurrent("journal"));
+    await waitFor(() => expect(useJournalStore.getState().draft.notat).toBe("Fra SMART"));
+  });
+
   it("opens and selects the single Journal tab for a patient route and loads that patient", async () => {
     const navigate = vi.fn();
     renderHook(() => useRouteTabSync(journal("p1"), navigate));

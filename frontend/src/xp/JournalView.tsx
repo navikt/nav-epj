@@ -27,7 +27,8 @@ export function JournalView() {
   const subTab = useJournalStore((s) => s.subTab);
   const dirty = useJournalStore((s) => isDirty(s));
   const appCount = useAppsStore((s) => s.apps.length);
-  const { setSubTab, open } = useJournalStore.getState();
+  const refreshFailed = useJournalStore((s) => s.refreshFailed);
+  const { setSubTab, open, refresh } = useJournalStore.getState();
   const { announce } = useShell();
   const announcedFor = useRef<string | null>(null);
 
@@ -37,6 +38,19 @@ export function JournalView() {
       announce(copy["live.journalOpened"](fullName(patient)));
     }
   }, [status, patient, announce]);
+
+  useEffect(() => {
+    if (status !== "ready") return;
+    const onFocus = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+    };
+  }, [status, refresh]);
 
   if (status === "error") {
     return (
@@ -73,6 +87,12 @@ export function JournalView() {
   return (
     <>
       <PatientContext pasient={patient} />
+      {refreshFailed && (
+        <div className="xp-note error" role="alert">
+          <span>{copy["s4.refreshError"]}</span>
+          <Button onClick={() => void refresh()}>{copy["s1.error.retry"]}</Button>
+        </div>
+      )}
       <SubTabs<JournalSubTab>
         label={copy["s4.tabs.label"]}
         idPrefix={ID_PREFIX}

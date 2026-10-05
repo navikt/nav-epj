@@ -93,6 +93,9 @@ export function useRouteTabSync(
           useJournalStore.getState().clear();
         }
         if (state.current === previous.current) return;
+        if (state.current === JOURNAL_TAB_ID) {
+          void useJournalStore.getState().refresh();
+        }
         const active = state.tabs.find((t) => t.id === state.current);
         if (!active || routeRef.current.kind === active.kind) return;
         const target = routeForTab(active);

@@ -270,6 +270,70 @@ describe("journalStore", () => {
       await journal().open("p1");
     });
 
+    const note = { id: "n1", konsultasjonId: "k1", pasientId: "p1", journalnotat: "Ekstern" };
+    const konsCalls = () =>
+      calls.filter((c) => c.key === "GET /api/patients/p1/konsultasjoner").length;
+
+    it("turns an external note into the draft on a clean refresh without claiming again", async () => {
+      journal().setSubTab("tidligere");
+      const claims = calls.filter((c) => c.key === "PUT /api/active-patient").length;
+      serverKons = kons({ diagnoser: [diag], journalnotat: [note] });
+      await journal().refresh();
+      expect(journal().draft.notat).toBe("Ekstern");
+      expect(isDirty(journal())).toBe(false);
+      expect(journal().subTab).toBe("tidligere");
+      expect(calls.filter((c) => c.key === "PUT /api/active-patient")).toHaveLength(claims);
+    });
+
+    it("skips refresh while the draft is dirty", async () => {
+      journal().setNotat("mitt");
+      const before = konsCalls();
+      await journal().refresh();
+      expect(konsCalls()).toBe(before);
+      expect(journal().draft.notat).toBe("mitt");
+    });
+
+    it("keeps edits made while a refresh is pending", async () => {
+      serverKons = kons({ journalnotat: [note] });
+      const pending = journal().refresh();
+      journal().setNotat("mitt");
+      await pending;
+      expect(journal().draft.notat).toBe("mitt");
+      expect(isDirty(journal())).toBe(true);
+    });
+
+    it("ignores a refresh response that arrives after the journal switched patient", async () => {
+      serverKons = kons({ journalnotat: [note] });
+      const pending = journal().refresh();
+      journal().clear();
+      await pending;
+      expect(journal().patientId).toBeNull();
+      expect(journal().konsultasjoner).toEqual([]);
+    });
+
+    it("does not start a second refresh while one is pending", async () => {
+      const before = konsCalls();
+      const first = journal().refresh();
+      const second = journal().refresh();
+      await Promise.all([first, second]);
+      expect(konsCalls()).toBe(before + 1);
+    });
+
+    it("keeps the loaded data and flags a failed refresh, then recovers on retry", async () => {
+      const fetchMock = vi.mocked(fetch);
+      const ok = fetchMock.getMockImplementation()!;
+      fetchMock.mockImplementationOnce(async () => ({ ok: false, status: 500 }) as Response);
+      await journal().refresh();
+      expect(journal().refreshFailed).toBe(true);
+      expect(journal().status).toBe("ready");
+      expect(journal().konsultasjoner).toHaveLength(1);
+      fetchMock.mockImplementation(ok);
+      serverKons = kons({ journalnotat: [note] });
+      await journal().refresh();
+      expect(journal().refreshFailed).toBe(false);
+      expect(journal().draft.notat).toBe("Ekstern");
+    });
+
     it("marks the tab unsaved when the draft differs and clears it when it matches again", () => {
       const tab = () => useWorkspaceStore.getState().tabs.find((t) => t.kind === "journal");
       journal().setNotat("ny tekst");

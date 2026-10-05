@@ -264,6 +264,7 @@ export const copy = {
   "s3b.err.server": "Kunne ikke opprette pasient. Kontroller opplysningene eller sjekk om pasienten finnes fra før.",
   "s4.loadError.patient": "Feil ved lasting av pasient",
   "s4.loadError.kons": "Feil ved lasting av konsultasjoner",
+  "s4.refreshError": "Kunne ikke oppdatere konsultasjoner",
   "context.gender": "Kjønn",
   "context.gender.other": "Annet",
   "context.gender.unknown": "Ukjent",

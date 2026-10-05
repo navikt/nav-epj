@@ -94,6 +94,44 @@ describe("JournalView", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Laster …");
   });
 
+  it("refreshes on visible return without overlapping requests and stops listening on unmount", async () => {
+    let served: unknown[] = [kons()];
+    const { calls, unmount } = await openJournal([], {
+      "GET /api/patients/p1/konsultasjoner": () => ({ body: served }),
+    });
+    const count = () =>
+      calls.filter((c) => c.key === "GET /api/patients/p1/konsultasjoner").length;
+    served = [kons({ journalnotat: [savedNote] })];
+    const before = count();
+    await act(async () => {
+      window.dispatchEvent(new Event("focus"));
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    expect(count()).toBe(before + 1);
+    expect(useJournalStore.getState().draft.notat).toBe("Hei");
+    unmount();
+    window.dispatchEvent(new Event("focus"));
+    document.dispatchEvent(new Event("visibilitychange"));
+    expect(count()).toBe(before + 1);
+  });
+
+  it("shows a retryable alert when a focus refresh fails and keeps the journal", async () => {
+    let fail = false;
+    await openJournal([kons()], {
+      "GET /api/patients/p1/konsultasjoner": () =>
+        fail ? { ok: false } : { body: [kons()] },
+    });
+    fail = true;
+    await act(async () => {
+      window.dispatchEvent(new Event("focus"));
+    });
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveTextContent("Kunne ikke oppdatere konsultasjoner");
+    fail = false;
+    await userEvent.click(within(alert).getByRole("button", { name: "Prøv igjen" }));
+    await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+  });
+
   it("shows a retryable alert when loading failed", async () => {
     const calls = stub({
       "GET /api/patient/p1": () => ({ ok: false }),
