@@ -122,7 +122,7 @@ private fun generateCredentials(options: CliOptions, out: PrintStream) {
         if (inputs == null) {
             "Packets are CREDENTIALS_ONLY: clinician login and roster are still missing."
         } else {
-            "Packets are COMPLETE."
+            "Packets are $STATUS_INPUTS_SUPPLIED: $VERIFICATION_NOTE"
         }
     )
 }

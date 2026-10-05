@@ -21,6 +21,13 @@ application {
   mainClass = "io.ktor.server.netty.EngineMain"
 }
 
+fun booleanProperty(name: String, value: String?): Boolean =
+  when (value) {
+    null, "false" -> false
+    "true" -> true
+    else -> throw GradleException("-P$name must be true or false")
+  }
+
 tasks {
   shadowJar {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
@@ -123,9 +130,11 @@ tasks {
         output.orNull?.let { add("--output=$it") }
         clinicians.orNull?.let { add("--clinicians=$it") }
         roster.orNull?.let { add("--roster=$it") }
-        if (credentialsOnly.isPresent) add("--credentials-only")
+        if (booleanProperty("hackathonCredentialsOnly", credentialsOnly.orNull)) {
+          add("--credentials-only")
+        }
         existingRegistry.orNull?.let { add("--existing-registry=$it") }
-        if (rotate.isPresent) add("--rotate")
+        if (booleanProperty("hackathonRotate", rotate.orNull)) add("--rotate")
         add("--checkout-root=${projectDir.absolutePath}")
       }
     })

@@ -113,7 +113,9 @@ class StarterCredentialCliTest {
             .forEach { assertEquals("rw-------", perms(out.resolve(it))) }
 
         val alpha = tree(out.resolve("teams/alpha/packet.json"))
-        assertEquals("COMPLETE", alpha["status"].stringValue())
+        assertEquals("INPUTS_SUPPLIED_UNVERIFIED", alpha["status"].stringValue())
+        assertEquals(VERIFICATION_NOTE, alpha["verificationNote"].stringValue())
+        assertTrue("INPUTS_SUPPLIED_UNVERIFIED" in stdout && "not validated" in stdout)
         assertEquals(0, alpha["missingInputs"].size())
         assertEquals("CANARY-clinician-alpha", alpha["clinician"]["password"].stringValue())
         assertEquals(2, alpha["roster"]["patients"].size())
@@ -185,6 +187,7 @@ class StarterCredentialCliTest {
         )
         assertFalse(packet.has("clinician") || packet.has("roster"))
         assertTrue("CREDENTIALS_ONLY" in stdout)
+        assertTrue("incomplete" in packet["verificationNote"].stringValue())
     }
 
     @Test
@@ -565,5 +568,21 @@ class StarterCredentialCliTest {
 
         assertTrue("more than 10 teams" in stderr, stderr)
         assertFalse(out.exists())
+    }
+
+    @Test
+    fun `placeholder inputs are never reported as complete or ready`() {
+        val out = base.resolve("out")
+        assertEquals(0, generateComplete(out), stderr)
+
+        val texts =
+            listOf(stdout) +
+                listOf("alpha", "beta").map { out.resolve("teams/$it/packet.json").readText() }
+        texts.forEach {
+            assertFalse(
+                Regex("COMPLETE|READY", RegexOption.IGNORE_CASE)
+                    .containsMatchIn(it.replace("incomplete", ""))
+            )
+        }
     }
 }

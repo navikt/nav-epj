@@ -17,7 +17,8 @@ before anything is written.
   -PhackathonRoster=/path/to/roster.json
 ```
 
-Pass `-PhackathonCredentialsOnly=true` instead of the last two properties to produce incomplete
+Boolean properties accept only `true` or `false` (absent means `false`); anything else fails the
+task. Pass `-PhackathonCredentialsOnly=true` instead of the last two properties to produce incomplete
 packets when the clinician logins and roster are not available yet. Passing only one of the two
 inputs, or neither without `hackathonCredentialsOnly`, is refused, so a missing input is never
 silent. Only paths are given as properties; no secret is passed on a command line.
@@ -46,7 +47,10 @@ underscores or hyphens, starting with a letter or digit, and must be unique igno
 ## Separate sensitive inputs
 
 The track team supplies the clinician logins and the cohort provisioner supplies the roster. Their
-content is copied into packets verbatim as flat string fields; the tool invents no fields.
+content is copied into packets verbatim as flat string fields; the tool invents no fields and
+does not validate them against any HelseID or cohort schema. Such packets are marked
+`INPUTS_SUPPLIED_UNVERIFIED`, never complete or ready: the operator must verify the clinician login
+and roster before handing a packet out.
 
 ```json
 {"schemaVersion": 1, "teams": [{"teamSlot": "alpha", "clinician": {"<field>": "<value>"}}]}
@@ -73,10 +77,10 @@ teams. Limits: 20 fields per object, 200 patients, 2048 characters per value, 1 
 `registry.json` holds public JWKs and the shared client secrets, never private keys or clinician
 data, and is sensitive. Give a team only its own `teams/<teamSlot>/` directory.
 
-`packet.json` carries `status` (`COMPLETE` or `CREDENTIALS_ONLY`), `missingInputs` (empty, or
+`packet.json` carries `status` (`INPUTS_SUPPLIED_UNVERIFIED` or `CREDENTIALS_ONLY`), `verificationNote`, `missingInputs` (empty, or
 `clinician` and `roster`), `teamSlot`, `clients` (`public`, `clientSecret`, `privateKeyJwt`,
 `backendServices` with client IDs, secret or key ID, algorithm and key file name, plus launch and
-callback URLs for the interactive variants), `scopes`, and, for complete packets only,
+callback URLs for the interactive variants), `scopes`, and, when both inputs were supplied only,
 `clinician` and `roster`.
 
 ## Adding or rotating teams in a deployed registry

@@ -5,6 +5,11 @@ import no.nav.helse.smart.security.RawClientRegistration
 internal const val PACKET_SCHEMA_VERSION = 1
 internal const val LAUNCH_KEY_FILE = "launch-key.private.jwk.json"
 internal const val BACKEND_KEY_FILE = "backend-key.private.jwk.json"
+internal const val STATUS_CREDENTIALS_ONLY = "CREDENTIALS_ONLY"
+internal const val STATUS_INPUTS_SUPPLIED = "INPUTS_SUPPLIED_UNVERIFIED"
+internal const val VERIFICATION_NOTE =
+    "Clinician and roster content was copied verbatim and not validated; " +
+        "the operator must verify it before this packet is handed out."
 private const val SIGNING_ALGORITHM = "RS384"
 
 internal class ExternalInputs(val clinicians: ClinicianInput, val roster: RosterInput)
@@ -61,7 +66,13 @@ private fun packetJson(
 ): ByteArray {
     val packet = linkedMapOf<String, Any>()
     packet["schemaVersion"] = PACKET_SCHEMA_VERSION
-    packet["status"] = if (inputs == null) "CREDENTIALS_ONLY" else "COMPLETE"
+    packet["status"] = if (inputs == null) STATUS_CREDENTIALS_ONLY else STATUS_INPUTS_SUPPLIED
+    packet["verificationNote"] =
+        if (inputs == null) {
+            "Clinician login and roster were not supplied; this packet is incomplete."
+        } else {
+            VERIFICATION_NOTE
+        }
     packet["missingInputs"] = if (inputs == null) listOf("clinician", "roster") else emptyList()
     packet["teamSlot"] = team.teamSlot
     packet["clients"] =
