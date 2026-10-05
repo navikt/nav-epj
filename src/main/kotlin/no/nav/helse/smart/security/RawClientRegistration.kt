@@ -22,4 +22,7 @@ internal data class RawClientRegistration(
     val ikon: String? = null,
     val launchMode: String? = null,
     val grantTypes: List<String>? = null,
-)
+) {
+    override fun toString(): String =
+        "RawClientRegistration(clientId=$clientId, teamSlot=$teamSlot, credentials=redacted)"
+}

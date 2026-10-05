@@ -17,6 +17,23 @@ methods listed in `token_endpoint_auth_methods_supported` in the discovery docum
 
 `client_secret_post` is not implemented.
 
+## Team credential tooling status
+
+`generateStarterCredentials` is an internal, in-memory generator, not yet an operator command.
+It accepts 1–10 team slots, exact launch/callback URLs for each interactive variant, and explicit
+interactive/system scopes. Each team receives public, secret-based, asymmetric launch, and Backend
+Services registrations, validated through the existing registry.
+
+Secrets use 32 random bytes. The two asymmetric clients have independent RSA 3072-bit RS384 keys
+and key IDs. Registrations contain only public JWK Sets; per-team credentials retain the private
+keys separately. Generated credential and registration summaries redact secrets.
+
+No files are written, registrations deployed, or credentials printed. Private file output, the
+operator CLI, and packet assembly remain outstanding. Clinician credentials and the patient roster
+must come from the track team and cohort provisioner. This tooling does not implement or configure
+the separate starter apps; their callback URLs and configuration format need coordination with
+the starter owner.
+
 ## Backend Services clients
 
 Backend Services clients use only the `client_credentials` grant and authenticate with
