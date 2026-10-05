@@ -438,14 +438,22 @@ test.describe("FHIR write-back against the real backend", () => {
       data: documentReference(target.id, konsultasjon.id, `${text} read-only`),
     });
     expect(readOnly.status(), await readOnly.text()).toBe(403);
-    expect(await readOnly.text()).toBe("No granted scope covers DocumentReference.c");
+    expect(readOnly.headers()["content-type"]).toContain("application/fhir+json");
+    expect(await readOnly.json()).toMatchObject({
+      resourceType: "OperationOutcome",
+      issue: [{ severity: "error", code: "forbidden", diagnostics: "No granted scope covers DocumentReference.c" }],
+    });
 
     const crossPatient = await api.post("/fhir/DocumentReference", {
       headers: fhirHeaders(writeToken),
       data: documentReference(other.id, otherKonsultasjon.id, `${text} cross-patient`),
     });
     expect(crossPatient.status(), await crossPatient.text()).toBe(404);
-    expect(await crossPatient.text()).toBe("Not found");
+    expect(crossPatient.headers()["content-type"]).toContain("application/fhir+json");
+    expect(await crossPatient.json()).toMatchObject({
+      resourceType: "OperationOutcome",
+      issue: [{ severity: "error", code: "not-found", diagnostics: "Not found" }],
+    });
 
     expect([(await notater(target.id)).length, (await notater(other.id)).length]).toEqual(countsBefore);
     expect(countsBefore).toEqual([1, 0]);

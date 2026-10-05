@@ -99,7 +99,7 @@ Referenced by every exercise row below as "cohort requirement". Owned by todo 4.
 | Option | Responsible endpoint/capability | Cohort requirement | Starter variant / TODO | Acceptance ID | Current status/gap | Owning todo |
 |---|---|---|---|---|---|---|
 | Clinical mini-app (trend/summary/flag) | `GET /fhir/Condition?subject=&encounter=`, `GET /fhir/Observation?subject=&code=` | At least 3 trend-ready patients; ICPC-2/ICD-10 diagnoses present | Extends TODO 10's fetch/render step; reference-only, not separately numbered | `SILVER-CLINICAL-01` | `Condition` always references its patient and source encounter, and `subject` plus `encounter` filter together. `Observation` search supports `patient`/`subject`, `encounter`, and LOINC `code`. Needs trend-ready cohort data | 3, 4, 5, 11 |
-| Scope detective (request narrower scopes, decode tokens, prove enforcement) | `POST /oidc/token`, any scoped `GET /fhir/*` route | Any patient | Extends TODO 5 (build authorization request with scopes) | `SILVER-SCOPE-01` | Patient/user/system scope enforcement exists. Shared scope-denial responses currently return plain text, not the required OperationOutcome. Needs response-format correction and acceptance for the hackathon's exact scope set | 5, 11 |
+| Scope detective (request narrower scopes, decode tokens, prove enforcement) | `POST /oidc/token`, any scoped `GET /fhir/*` route | Any patient | Extends TODO 5 (build authorization request with scopes) | `SILVER-SCOPE-01` | Patient/user/system scope enforcement exists. Shared FHIR scope denials return OperationOutcome with HTTP 403. Needs acceptance for the hackathon's exact scope set | 5, 11 |
 | Confidential client (`client_secret_basic`) | `POST /oidc/token` with HTTP Basic credentials | Any patient | `client-secret` variant; variant-specific token-exchange TODO | `SILVER-CONFIDENTIAL-01` | Implemented. Needs coverage in the per-team registry and black-box suite | 7, 10, 11 |
 
 ## Gold
@@ -121,8 +121,8 @@ Local write-back coverage is in `frontend/e2e/real-backend-observation-writeback
 see [frontend testing instructions](../frontend/README.md#testing) for the opt-in command.
 It uses a minimal HTTP SMART client, not a participant app. Browser focus and visibility events
 are simulated for draft-protection coverage; workspace return is exercised through the actual UI.
-The OperationOutcome assertions below remain requirements, not claims about the current shared
-authorization-error responses, which return plain text.
+Shared FHIR scope and patient-binding denials return OperationOutcome with HTTP 403 and 404
+respectively. Non-FHIR responses are unchanged.
 
 | ID | Focus | Machine-checkable assertion |
 |---|---|---|
