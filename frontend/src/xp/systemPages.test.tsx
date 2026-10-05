@@ -135,7 +135,8 @@ describe("system pages in the shell", () => {
     expect(
       await screen.findByRole("heading", { level: 1, name: copy["s13.title"] }),
     ).toBeVisible();
-    await userEvent.keyboard("{Control>}w{/Control}");
+    screen.getByRole("tab", { name: "Hjelp" }).focus();
+    await userEvent.keyboard("{Delete}");
     await waitFor(() =>
       expect(
         screen.queryByRole("heading", { level: 1, name: copy["s13.title"] }),

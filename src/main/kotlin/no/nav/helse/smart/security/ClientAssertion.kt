@@ -98,10 +98,14 @@ class ClientAssertionVerifier(
         }
 
     private fun validateLifetime(claims: JWTClaimsSet): ErrorObject? {
-        val maxAllowedExpiry = Clock.System.now().plus(MAX_ASSERTION_LIFETIME_SECONDS.seconds)
+        val now = Clock.System.now()
         val expiry = Instant.fromEpochMilliseconds(claims.expirationTime.time)
-        return if (expiry <= maxAllowedExpiry) null
-        else invalidClient("client_assertion exp too far in the future")
+        return when {
+            expiry <= now -> invalidClient("client_assertion has expired")
+            expiry > now.plus(MAX_ASSERTION_LIFETIME_SECONDS.seconds) ->
+                invalidClient("client_assertion exp too far in the future")
+            else -> null
+        }
     }
 
     private suspend fun claimJti(clientId: String, claims: JWTClaimsSet): ErrorObject? {

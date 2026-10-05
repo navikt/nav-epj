@@ -93,6 +93,21 @@ export function formatDateTime(iso: string) {
   return format(parseISO(iso), "dd.MM.yyyy HH:mm");
 }
 
+export function formatUtcDateTimeInOslo(iso: string) {
+  const parts = new Intl.DateTimeFormat("nb-NO", {
+    timeZone: "Europe/Oslo",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(parseISO(iso));
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((item) => item.type === type)?.value ?? "";
+  return `${part("day")}.${part("month")}.${part("year")} ${part("hour")}:${part("minute")}`;
+}
+
 export function ageOn(birthDate: string, now: Date) {
   return differenceInYears(now, parseISO(birthDate));
 }

@@ -33,6 +33,24 @@ fun ApplicationCall.requireFhirScope(
     return principal
 }
 
+fun ApplicationCall.requireSystemScopeIfSystemContext(
+    resourceType: String,
+    interaction: Interaction,
+): SmartPrincipal {
+    val principal = principal<SmartPrincipal>()!!
+    val isSystemContext =
+        principal.scopes.any { it is SmartScope.Fhir && it.context == ScopeContext.SYSTEM }
+    if (
+        isSystemContext &&
+            principal.matchingScopes(resourceType, interaction).none {
+                it.context == ScopeContext.SYSTEM
+            }
+    ) {
+        throw InsufficientScopeException(resourceType, interaction)
+    }
+    return principal
+}
+
 fun ApplicationCall.requireFhirScopeOrFhirUserSelf(
     resourceType: String,
     interaction: Interaction,

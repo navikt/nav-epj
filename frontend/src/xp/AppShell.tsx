@@ -54,33 +54,14 @@ export function AppShell({ children }: Props) {
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (isModalOpen()) return;
-      if (event.key === "F6" && rootElement) {
-        event.preventDefault();
-        const landmarks = Array.from(
-          rootElement.querySelectorAll<HTMLElement>("[data-xp-landmark]"),
-        ).filter(
-          (el) =>
-            !(narrow && !drawerOpen && el.dataset.xpLandmark === "nav"),
-        );
-        if (landmarks.length === 0) return;
-        const active = document.activeElement;
-        const index = landmarks.findIndex((el) => el.contains(active));
-        const step = event.shiftKey ? -1 : 1;
-        const next =
-          index === -1
-            ? event.shiftKey
-              ? landmarks.length - 1
-              : 0
-            : (index + step + landmarks.length) % landmarks.length;
-        landmarks[next].focus();
-      } else if (event.key === "Escape" && drawerOpen) {
+      if (event.key === "Escape" && drawerOpen) {
         setDrawerRequested(false);
         document.getElementById(MENU_BUTTON_ID)?.focus();
       }
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [rootElement, narrow, drawerOpen]);
+  }, [drawerOpen]);
 
   useEffect(() => {
     if (drawerOpen) {

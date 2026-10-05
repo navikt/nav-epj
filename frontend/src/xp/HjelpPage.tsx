@@ -3,11 +3,7 @@ import { Note } from "./Note";
 import { XpIcon } from "./XpIcon";
 import { copy } from "./copy";
 
-const SHORTCUTS = [
-  copy["s13.keys.search"],
-  copy["s13.keys.close"],
-  copy["s13.keys.tabs"],
-  copy["s13.keys.f6"],
+const KEYBOARD_USE = [
   copy["s13.keys.arrows"],
   copy["s13.keys.esc"],
 ].map((text) => {
@@ -35,7 +31,7 @@ export function HjelpPage() {
             </tr>
           </thead>
           <tbody>
-            {SHORTCUTS.map(({ key, what }) => (
+            {KEYBOARD_USE.map(({ key, what }) => (
               <tr key={key}>
                 <td>
                   <kbd className="mono">{key}</kbd>
@@ -45,7 +41,6 @@ export function HjelpPage() {
             ))}
           </tbody>
         </table>
-        <p className="xp-hint">{copy["s13.keys.note"]}</p>
       </Card>
       <Card heading={copy["s13.mode.title"]} headingId="help-mode">
         <p>{copy["s13.mode.iframe"]}</p>

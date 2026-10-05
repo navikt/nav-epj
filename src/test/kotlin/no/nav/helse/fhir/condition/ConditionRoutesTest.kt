@@ -69,6 +69,7 @@ class ConditionRoutesTest {
 
     private fun testApp(
         boundPatient: String? = pasientId.value.toString(),
+        scopeContext: ScopeContext = ScopeContext.PATIENT,
         block: suspend io.ktor.client.HttpClient.() -> Unit,
     ) = testApplication {
         application {
@@ -82,7 +83,7 @@ class ConditionRoutesTest {
                                 scopes =
                                     setOf(
                                         SmartScope.Fhir(
-                                            context = ScopeContext.PATIENT,
+                                            context = scopeContext,
                                             resourceType = "Condition",
                                             interactions = setOf(Interaction.SEARCH),
                                         )
@@ -178,6 +179,22 @@ class ConditionRoutesTest {
         givenPatientHasTwoEncounters()
 
         testApp {
+            val response = get("/fhir/Condition?subject=Patient/${pasientId.value}")
+
+            assertEquals(HttpStatusCode.OK, response.status)
+            val codes =
+                response.conditions(response.bodyAsText()).map {
+                    it.code?.coding?.single()?.code?.value
+                }
+            assertEquals(listOf("A01", "B02"), codes)
+        }
+    }
+
+    @Test
+    fun `GET Condition with subject returns the patient's conditions for a system-level scope without launch context`() {
+        givenPatientHasTwoEncounters()
+
+        testApp(boundPatient = null, scopeContext = ScopeContext.SYSTEM) {
             val response = get("/fhir/Condition?subject=Patient/${pasientId.value}")
 
             assertEquals(HttpStatusCode.OK, response.status)

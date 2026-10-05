@@ -32,6 +32,7 @@ import no.nav.helse.helseId.User
 import no.nav.helse.plugins.configureSerialization
 import no.nav.helse.smart.api.configureSmartRouting
 import no.nav.helse.smart.security.ClientAssertionVerifier
+import no.nav.helse.smart.security.GrantType
 import no.nav.helse.smart.security.LaunchMode
 import no.nav.helse.smart.security.SmartClient
 import no.nav.helse.smart.security.SmartKeys
@@ -83,7 +84,10 @@ class AppRoutesTest : WithValkey() {
     private val encounterService = mockk<EncounterService>()
     private val mapper = jacksonObjectMapper()
 
-    private fun testApp(block: suspend HttpClient.() -> Unit) = testApplication {
+    private fun testApp(
+        registered: List<SmartClient> = clients,
+        block: suspend HttpClient.() -> Unit,
+    ) = testApplication {
         val environment =
             Environment(
                 postgres = simpleTestEnvironment.postgres,
@@ -91,7 +95,7 @@ class AppRoutesTest : WithValkey() {
                     SmartConfig(
                         issuerBaseUrl = "http://test/oidc",
                         fhirServerUrl = ISS,
-                        clients = clients,
+                        clients = registered,
                         privateKeyJwk = simpleTestEnvironment.smart.privateKeyJwk,
                     ),
                 valkey = ValkeyConfig("valkey", 8080, false, null, null),
@@ -194,6 +198,27 @@ class AppRoutesTest : WithValkey() {
             ),
             apps[1],
         )
+    }
+
+    @Test
+    fun `GET api apps omits clients that cannot be launched`() {
+        val backend =
+            SmartClient(
+                clientId = "backend",
+                redirectUris = emptyList(),
+                launchUris = emptyList(),
+                tokenEndpointAuthMethod = TokenEndpointAuthMethod.PRIVATE_KEY_JWT,
+                jwksUri = "https://backend.test/jwks.json",
+                allowedScopes = parseRegisteredScopes(listOf("system/Patient.rs")),
+                grantTypes = setOf(GrantType.CLIENT_CREDENTIALS),
+            )
+        val noLaunchUri = clients[1].copy(clientId = "no-launch-uri", launchUris = emptyList())
+
+        testApp(listOf(backend, noLaunchUri, clients[0])) {
+            val apps = mapper.readValue<List<Map<String, Any?>>>(get("/api/apps").bodyAsText())
+
+            assertEquals(listOf("syk-inn"), apps.map { it["clientId"] })
+        }
     }
 
     @Test

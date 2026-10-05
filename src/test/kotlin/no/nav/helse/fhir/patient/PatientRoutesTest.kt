@@ -240,6 +240,19 @@ class PatientRoutesTest {
     }
 
     @Test
+    fun `GET Patient by identifier finds a patient with a system-level scope and no launch context`() {
+        val other = pasient()
+        coEvery { epjPatientService.getPasientByPersonident(other.personident) } returns other
+
+        testApp(patientId = null, scopes = setOf(scope(ScopeContext.SYSTEM, Interaction.SEARCH))) {
+            val response = get("/fhir/Patient") { parameter("identifier", other.personident) }
+
+            assertEquals(HttpStatusCode.OK, response.status)
+            assertEquals(listOf(other.id.value.toString()), response.entries().map { it.id })
+        }
+    }
+
+    @Test
     fun `GET Patient by identifier returns an empty searchset for an unknown identifier`() {
         coEvery { epjPatientService.getPasientByPersonident("15068500017") } returns null
 

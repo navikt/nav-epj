@@ -197,6 +197,12 @@ class ClientAssertionVerifierTest {
     }
 
     @Test
+    fun `expired assertion is rejected`() = runTest {
+        val result = verifier.verify(client, paramsWith(assertion(exp = dateIn(-1.seconds))))
+        assertEquals("invalid_client", result?.code)
+    }
+
+    @Test
     fun `missing jti is rejected`() = runTest {
         coEvery { jtiStore.setIfAbsent(any(), any(), any()) } returns true
         val result = verifier.verify(client, paramsWith(assertion(jti = null)))

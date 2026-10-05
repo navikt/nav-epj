@@ -5,6 +5,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.helse.helseId.loggedInUser
+import no.nav.helse.smart.security.GrantType
 import no.nav.helse.smart.security.LaunchMode
 import no.nav.helse.smart.security.SmartClient
 import no.nav.helse.smart.security.TokenEndpointAuthMethod
@@ -56,7 +57,16 @@ fun Route.appRoutes(
     launchPreparer: LaunchPreparer,
 ) {
     route("/api") {
-        get("/apps") { call.respond(clients.map { it.toAppDto() }) }
+        get("/apps") {
+            call.respond(
+                clients
+                    .filter {
+                        GrantType.AUTHORIZATION_CODE in it.grantTypes &&
+                            it.launchUris.any { uri -> uri.isNotEmpty() }
+                    }
+                    .map { it.toAppDto() }
+            )
+        }
 
         post("/launch") {
             val request = call.receive<LaunchRequest>()

@@ -6,6 +6,7 @@ import {
   KonsultasjonSchema,
   LaunchErrorSchema,
   LaunchResponseSchema,
+  MaalingSchema,
   PasientSchema,
   SessionSchema,
   SmartConfigurationSchema,
@@ -13,6 +14,7 @@ import {
   type App,
   type CapabilityStatement,
   type Konsultasjon,
+  type Maaling,
   type OpprettPasientRequest,
   type Pasient,
   type Session,
@@ -92,6 +94,13 @@ export async function fetchKonsultasjoner(
     `/api/patients/${encodeURIComponent(patientId)}/konsultasjoner`,
   );
   return KonsultasjonSchema.array().parse(await response.json());
+}
+
+export async function fetchMaalinger(patientId: string): Promise<Maaling[]> {
+  const response = await request(
+    `/api/patient/${encodeURIComponent(patientId)}/maalinger`,
+  );
+  return MaalingSchema.array().parse(await response.json());
 }
 
 export async function startKonsultasjon(

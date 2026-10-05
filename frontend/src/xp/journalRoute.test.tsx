@@ -349,14 +349,16 @@ describe("journal guards", () => {
     await userEvent.type(await screen.findByLabelText("Journalnotat"), "Hei");
     expect(docTab("Journal · Matematisk Ape •")).toBeInTheDocument();
 
-    await userEvent.keyboard("{Control>}w{/Control}");
+    docTab(/Journal ·/).focus();
+    await userEvent.keyboard("{Delete}");
     const dialog = await screen.findByRole("alertdialog", { name: "Lukke journalen uten å lagre?" });
     await expectNoSeriousViolations(document.body);
     await userEvent.click(within(dialog).getByRole("button", { name: "Avbryt" }));
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
     expect(useJournalStore.getState().draft.notat).toBe("Hei");
 
-    await userEvent.keyboard("{Control>}w{/Control}");
+    docTab(/Journal ·/).focus();
+    await userEvent.keyboard("{Delete}");
     await userEvent.click(
       within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Lagre og lukk" }),
     );
@@ -370,7 +372,8 @@ describe("journal guards", () => {
     const calls = api();
     renderApp("/patients/p1");
     await userEvent.type(await screen.findByLabelText("Journalnotat"), "Hei");
-    await userEvent.keyboard("{Control>}w{/Control}");
+    docTab(/Journal ·/).focus();
+    await userEvent.keyboard("{Delete}");
     await userEvent.click(
       within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Lukk uten å lagre" }),
     );
@@ -384,7 +387,8 @@ describe("journal guards", () => {
     api();
     renderApp("/patients/p1");
     await screen.findByRole("heading", { name: "Matematisk Ape" });
-    await userEvent.keyboard("{Control>}w{/Control}");
+    docTab(/Journal ·/).focus();
+    await userEvent.keyboard("{Delete}");
     await waitFor(() =>
       expect(screen.queryByRole("tab", { name: /Journal ·/ })).not.toBeInTheDocument(),
     );
@@ -554,7 +558,8 @@ describe("journal guards", () => {
     api();
     renderApp("/patients/p1");
     await userEvent.type(await screen.findByLabelText("Journalnotat"), "Hei");
-    await userEvent.keyboard("{Control>}w{/Control}");
+    docTab(/Journal ·/).focus();
+    await userEvent.keyboard("{Delete}");
     await userEvent.click(
       within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Lukk uten å lagre" }),
     );
