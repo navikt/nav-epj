@@ -55,7 +55,7 @@ class ConditionRoutesTest {
                 listOf(Diagnose(system = DiagnoseType.ICPC2, code = code, text = "Diagnose $code")),
             startetTidspunkt = LocalDateTime.now().minusHours(1),
             avsluttetTidspunkt = null,
-            status = KonsultasjonStatus.PÅGÅENDE,
+            status = KonsultasjonStatus.PAAGAAENDE,
             problemstilling = null,
         )
 

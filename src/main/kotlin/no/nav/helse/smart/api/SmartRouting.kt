@@ -523,6 +523,73 @@ private fun buildAccessToken(
 
 private const val CLIENT_CREDENTIALS_LIFETIME_SECONDS = 300
 
+private suspend fun RoutingContext.authenticateClientCredentialsClient(
+    params: Parameters,
+    clients: List<SmartClient>,
+    clientAssertionVerifier: ClientAssertionVerifier,
+): SmartClient? {
+    val assertedClientId = resolveAssertedClientId(call.request, params)
+    if (assertedClientId == null) {
+        rejectMissingToken("client_id")
+        return null
+    }
+    val client = clients.find { it.clientId == assertedClientId }
+    if (client == null) {
+        rejectToken(
+            HttpStatusCode.BadRequest,
+            OAuth2Error.INVALID_CLIENT.appendDescription("unknown client"),
+        )
+        return null
+    }
+    val authenticationError =
+        authenticateClient(call.request, client, params, clientAssertionVerifier)
+    if (authenticationError != null) {
+        rejectToken(HttpStatusCode.Unauthorized, authenticationError)
+        return null
+    }
+    if (GrantType.CLIENT_CREDENTIALS !in client.grantTypes) {
+        rejectToken(
+            HttpStatusCode.BadRequest,
+            OAuth2Error.UNAUTHORIZED_CLIENT.appendDescription(
+                "client is not registered for grant_type client_credentials"
+            ),
+        )
+        return null
+    }
+    return client
+}
+
+private suspend fun RoutingContext.validatedSystemScopeTokens(
+    params: Parameters,
+    client: SmartClient,
+): List<String>? {
+    val requestedScope = params["scope"]
+    if (requestedScope == null) {
+        rejectMissingToken("scope")
+        return null
+    }
+    val scopeTokens = requestedScope.split(" ")
+    val requested = scopeTokens.mapNotNull { parseScope(it) }.filterIsInstance<SmartScope.Fhir>()
+    val invalidScopeDescription =
+        when {
+            scopeTokens.any { it.isEmpty() } ||
+                requested.size != scopeTokens.size ||
+                requested.any { it.context != ScopeContext.SYSTEM } ->
+                "scope must be a space-separated list of valid system/ scopes"
+            requested.any { it !in grantScopes(setOf(it), client.allowedScopes) } ->
+                "scope is not pre-authorized for this client"
+            else -> null
+        }
+    if (invalidScopeDescription != null) {
+        rejectToken(
+            HttpStatusCode.BadRequest,
+            OAuth2Error.INVALID_SCOPE.appendDescription(invalidScopeDescription),
+        )
+        return null
+    }
+    return scopeTokens
+}
+
 private suspend fun RoutingContext.issueClientCredentialsToken(
     params: Parameters,
     clients: List<SmartClient>,
@@ -531,48 +598,9 @@ private suspend fun RoutingContext.issueClientCredentialsToken(
     fhirServerUrl: String,
     smartKeys: SmartKeys,
 ) {
-    val assertedClientId =
-        resolveAssertedClientId(call.request, params) ?: return rejectMissingToken("client_id")
     val client =
-        clients.find { it.clientId == assertedClientId }
-            ?: return rejectToken(
-                HttpStatusCode.BadRequest,
-                OAuth2Error.INVALID_CLIENT.appendDescription("unknown client"),
-            )
-    authenticateClient(call.request, client, params, clientAssertionVerifier)?.let {
-        return rejectToken(HttpStatusCode.Unauthorized, it)
-    }
-    if (GrantType.CLIENT_CREDENTIALS !in client.grantTypes) {
-        return rejectToken(
-            HttpStatusCode.BadRequest,
-            OAuth2Error.UNAUTHORIZED_CLIENT.appendDescription(
-                "client is not registered for grant_type client_credentials"
-            ),
-        )
-    }
-    val requestedScope = params["scope"] ?: return rejectMissingToken("scope")
-    val scopeTokens = requestedScope.split(" ")
-    val requested = scopeTokens.mapNotNull { parseScope(it) }.filterIsInstance<SmartScope.Fhir>()
-    if (
-        scopeTokens.any { it.isEmpty() } ||
-            requested.size != scopeTokens.size ||
-            requested.any { it.context != ScopeContext.SYSTEM }
-    ) {
-        return rejectToken(
-            HttpStatusCode.BadRequest,
-            OAuth2Error.INVALID_SCOPE.appendDescription(
-                "scope must be a space-separated list of valid system/ scopes"
-            ),
-        )
-    }
-    if (requested.any { it !in grantScopes(setOf(it), client.allowedScopes) }) {
-        return rejectToken(
-            HttpStatusCode.BadRequest,
-            OAuth2Error.INVALID_SCOPE.appendDescription(
-                "scope is not pre-authorized for this client"
-            ),
-        )
-    }
+        authenticateClientCredentialsClient(params, clients, clientAssertionVerifier) ?: return
+    val scopeTokens = validatedSystemScopeTokens(params, client) ?: return
 
     val now = Date()
     val expiresAt = Date(now.time + CLIENT_CREDENTIALS_LIFETIME_SECONDS * 1000L)

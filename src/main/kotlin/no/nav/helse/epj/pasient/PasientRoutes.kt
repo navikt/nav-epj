@@ -36,37 +36,6 @@ fun Route.pasientRoutes(pasientService: PasientService) {
                         ?: return@get call.respond(HttpStatusCode.NotFound, "Pasient not found")
                 call.respond(pasient)
             }
-            // TODO: integrasjon med persontjenesten
-            /*
-                post("/serach/{pasientFnr}") {
-                    val pasientFnr = call.receiveText()
-                    val pasientInDb = pasientService.getPasientByFnr(pasientFnr)
-                    if (pasientInDb != null) {
-                        return@post call.respond(pasientFnr)
-                    }
-
-                    securelog.info(
-                        "logger tokens: ${
-                jacksonMapperBuilder().build()
-                  .writeValueAsString(call.principal<HelseIdPrincipal>()?.debug)
-              }"
-                    )
-
-                    val personFraPersontjensten = persontjenstenService.serachByFnr(pasientFnr)
-
-                    if (personFraPersontjensten != null) {
-                        val opprettPasientRequest =
-                            OpprettPasientRequest(
-                                fornavn = personFraPersontjensten.givenName!!,
-                                etternavn = personFraPersontjensten.familyName!!,
-                                fnr = pasientFnr,
-                            )
-
-                        val principal = loggedInUser()
-                        pasientService.createPasient(opprettPasientRequest, principal.hpr)
-                    }
-                }
-            */
         }
     }
 }

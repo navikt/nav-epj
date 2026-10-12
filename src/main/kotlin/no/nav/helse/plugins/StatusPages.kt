@@ -1,9 +1,14 @@
 package no.nav.helse.plugins
 
+import com.google.fhir.model.r4.Enumeration
+import com.google.fhir.model.r4.FhirR4Json
+import com.google.fhir.model.r4.OperationOutcome
+import com.google.fhir.model.r4.String as FhirString
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.request.path
 import io.ktor.server.response.*
 import no.nav.helse.core.utils.AktivKonsultasjonNotFoundException
 import no.nav.helse.core.utils.DuplikatPasientException
@@ -69,10 +74,18 @@ fun Application.configureStatusPages() {
                 HttpHeaders.WWWAuthenticate,
                 "Bearer error=\"insufficient_scope\", scope=\"${cause.resourceType}.${cause.interaction.code}\"",
             )
-            call.respondText(text = cause.message ?: "Forbidden", status = HttpStatusCode.Forbidden)
+            call.respondAuthorizationFailure(
+                status = HttpStatusCode.Forbidden,
+                issueType = OperationOutcome.IssueType.Forbidden,
+                text = cause.message ?: "Forbidden",
+            )
         }
         exception<PatientMismatchException> { call, cause ->
-            call.respondText(text = "Not found", status = HttpStatusCode.NotFound)
+            call.respondAuthorizationFailure(
+                status = HttpStatusCode.NotFound,
+                issueType = OperationOutcome.IssueType.Not_Found,
+                text = "Not found",
+            )
         }
         exception<BadRequestException> { call, cause ->
             call.respondText(
@@ -102,4 +115,32 @@ fun Application.configureStatusPages() {
             )
         }
     }
+}
+
+private val fhirR4Json = FhirR4Json()
+private val fhirContentType = ContentType("application", "fhir+json")
+
+private fun ApplicationCall.isFhirPath(): Boolean {
+    val path = request.path()
+    return path == "/fhir" || path.startsWith("/fhir/")
+}
+
+private suspend fun ApplicationCall.respondAuthorizationFailure(
+    status: HttpStatusCode,
+    issueType: OperationOutcome.IssueType,
+    text: String,
+) {
+    if (!isFhirPath()) return respondText(text = text, status = status)
+    val outcome =
+        OperationOutcome(
+            issue =
+                listOf(
+                    OperationOutcome.Issue(
+                        severity = Enumeration(value = OperationOutcome.IssueSeverity.Error),
+                        code = Enumeration(value = issueType),
+                        diagnostics = FhirString(value = text),
+                    )
+                )
+        )
+    respondText(fhirR4Json.encodeToString(outcome), fhirContentType, status)
 }

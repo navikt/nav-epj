@@ -37,8 +37,6 @@ fun Application.configureEpjModule() {
     val maalingService: MaalingService by dependencies
     val valkeyService: ValkeyService by dependencies
     val activePatientService = ActivePatientService(pasientService, valkeyService)
-    // TODO: integrasjon med persontjenesten
-    // val persontjenstenService: PersontjenstenService by dependencies
 
     routing {
         authenticate("wonderwall-helseid") {

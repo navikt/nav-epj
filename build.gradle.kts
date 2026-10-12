@@ -2,6 +2,7 @@ import com.diffplug.gradle.spotless.SpotlessExtension
 import dev.detekt.gradle.Detekt
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.withType
+import org.gradle.process.CommandLineArgumentProvider
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 
 
@@ -19,6 +20,13 @@ version = "0.0.1"
 application {
   mainClass = "io.ktor.server.netty.EngineMain"
 }
+
+fun booleanProperty(name: String, value: String?): Boolean =
+  when (value) {
+    null, "false" -> false
+    "true" -> true
+    else -> throw GradleException("-P$name must be true or false")
+  }
 
 tasks {
   shadowJar {
@@ -99,6 +107,37 @@ tasks {
 
     args("-config=application-local.yaml")
     jvmArgs("-Dio.ktor.development=true", "-Dlogback.configurationFile=logback-local.xml")
+  }
+
+  register<JavaExec>("generateHackathonCredentials") {
+    description = "Hackathon-only: generates SMART team credentials into a new private directory outside the checkout"
+    group = "application"
+    mainClass.set("no.nav.helse.hackathon.credentials.StarterCredentialCliKt")
+    classpath = sourceSets["main"].runtimeClasspath
+    workingDir = projectDir
+
+    val manifest = providers.gradleProperty("hackathonManifest")
+    val output = providers.gradleProperty("hackathonOutput")
+    val clinicians = providers.gradleProperty("hackathonClinicians")
+    val roster = providers.gradleProperty("hackathonRoster")
+    val credentialsOnly = providers.gradleProperty("hackathonCredentialsOnly")
+    val existingRegistry = providers.gradleProperty("hackathonExistingRegistry")
+    val rotate = providers.gradleProperty("hackathonRotate")
+
+    argumentProviders.add(CommandLineArgumentProvider {
+      buildList {
+        manifest.orNull?.let { add("--manifest=$it") }
+        output.orNull?.let { add("--output=$it") }
+        clinicians.orNull?.let { add("--clinicians=$it") }
+        roster.orNull?.let { add("--roster=$it") }
+        if (booleanProperty("hackathonCredentialsOnly", credentialsOnly.orNull)) {
+          add("--credentials-only")
+        }
+        existingRegistry.orNull?.let { add("--existing-registry=$it") }
+        if (booleanProperty("hackathonRotate", rotate.orNull)) add("--rotate")
+        add("--checkout-root=${projectDir.absolutePath}")
+      }
+    })
   }
 
   withType<Detekt>().configureEach {

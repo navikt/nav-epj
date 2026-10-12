@@ -62,6 +62,5 @@ fun Application.configureDependencies() {
         provide(PatientService::class)
         provide(PractitionerService::class)
         provide(PractitionerRoleService::class)
-        // provide(PersontjenstenService::class)
     }
 }

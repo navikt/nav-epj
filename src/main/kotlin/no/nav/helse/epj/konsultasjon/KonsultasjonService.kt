@@ -87,7 +87,7 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
                 pasientId = pasientId,
                 hpr = listOf(hpr),
                 startetTidspunkt = LocalDateTime.now(),
-                status = KonsultasjonStatus.PÅGÅENDE,
+                status = KonsultasjonStatus.PAAGAAENDE,
             )
         return createKonsultasjon(opprettKonsultasjon)
     }

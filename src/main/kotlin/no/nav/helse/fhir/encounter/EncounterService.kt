@@ -56,8 +56,8 @@ class EncounterService(val konsultasjonService: KonsultasjonService) {
         val status =
             when (this.status) {
                 KonsultasjonStatus.PLANLAGT -> Encounter.EncounterStatus.Planned
-                KonsultasjonStatus.PÅGÅENDE -> Encounter.EncounterStatus.In_Progress
-                KonsultasjonStatus.FULLFØRT -> Encounter.EncounterStatus.Finished
+                KonsultasjonStatus.PAAGAAENDE -> Encounter.EncounterStatus.In_Progress
+                KonsultasjonStatus.FULLFOERT -> Encounter.EncounterStatus.Finished
                 KonsultasjonStatus.AVLYST -> Encounter.EncounterStatus.Cancelled
             }
         return Encounter(

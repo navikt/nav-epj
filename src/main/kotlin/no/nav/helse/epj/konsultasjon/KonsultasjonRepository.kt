@@ -243,7 +243,7 @@ class KonsultasjonRepository {
                 (KonsultasjonTable.pasientId eq pasientId.value)
         }) {
             it[avsluttetTidspunkt] = LocalDateTime.now()
-            it[status] = KonsultasjonStatus.FULLFØRT
+            it[status] = KonsultasjonStatus.FULLFOERT
         }
 
     suspend fun avbryt(konsultasjonId: KonsultasjonId, pasientId: PasientId): Int = dbQuery {
@@ -251,7 +251,7 @@ class KonsultasjonRepository {
         KonsultasjonTable.update({
             (KonsultasjonTable.id eq konsultasjonId.value) and
                 (KonsultasjonTable.pasientId eq pasientId.value) and
-                (KonsultasjonTable.status eq KonsultasjonStatus.PÅGÅENDE)
+                (KonsultasjonTable.status eq KonsultasjonStatus.PAAGAAENDE)
         }) {
             it[avsluttetTidspunkt] = LocalDateTime.now()
             it[status] = KonsultasjonStatus.AVLYST

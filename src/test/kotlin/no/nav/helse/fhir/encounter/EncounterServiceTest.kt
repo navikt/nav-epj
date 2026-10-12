@@ -37,7 +37,7 @@ class EncounterServiceTest {
         legekontorId: LegekontorId = LegekontorId(Uuid.generateV4()),
         hpr: List<String> = emptyList(),
         diagnoser: List<Diagnose> = emptyList(),
-        status: KonsultasjonStatus = KonsultasjonStatus.PÅGÅENDE,
+        status: KonsultasjonStatus = KonsultasjonStatus.PAAGAAENDE,
         startetTidspunkt: LocalDateTime = LocalDateTime.now().minusHours(1),
         avsluttetTidspunkt: LocalDateTime? = null,
     ) =
@@ -66,7 +66,7 @@ class EncounterServiceTest {
                 id = konsultasjonId,
                 pasientId = pasientId,
                 hpr = listOf("1234567"),
-                status = KonsultasjonStatus.FULLFØRT,
+                status = KonsultasjonStatus.FULLFOERT,
                 startetTidspunkt = start,
                 avsluttetTidspunkt = end,
             )

@@ -26,7 +26,8 @@ class KonsultasjonNotFoundForPatientException(pasientId: PasientId) :
 class UgyldigDiagnoseException(kode: String, system: String) :
     RuntimeException("Fant ikke diagnosekode=$kode i kodeverk=$system")
 
-class UgyldigPersonidentException(message: String) : RuntimeException(message)
+class UgyldigPersonidentException(message: String, cause: Throwable? = null) :
+    RuntimeException(message, cause)
 
 class DuplikatPasientException : RuntimeException("Pasienten finnes allerede")
 
