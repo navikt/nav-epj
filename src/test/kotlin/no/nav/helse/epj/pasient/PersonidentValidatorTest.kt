@@ -3,6 +3,7 @@ package no.nav.helse.epj.pasient
 import java.time.LocalDate
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import no.nav.helse.core.utils.UgyldigPersonidentException
 import org.junit.Test
 
@@ -158,6 +159,98 @@ class PersonidentValidatorTest {
         assertFailsWith<UgyldigPersonidentException> {
             PersonidentValidator.validate(
                 personident = "150685000",
+                personidentType = PersonidentType.FNR,
+                birthDate = LocalDate.of(1985, 6, 15),
+            )
+        }
+    }
+
+    @Test
+    fun `accepts a synthetic FNR with the month offset by 80`() {
+        PersonidentValidator.validate(
+            personident = "15868500082",
+            personidentType = PersonidentType.FNR,
+            birthDate = LocalDate.of(1985, 6, 15),
+        )
+    }
+
+    @Test
+    fun `accepts a synthetic DNR with the day offset by 40 and month by 80`() {
+        PersonidentValidator.validate(
+            personident = "63917800091",
+            personidentType = PersonidentType.DNR,
+            birthDate = LocalDate.of(1978, 11, 23),
+        )
+    }
+
+    @Test
+    fun `identifies synthetic and conventional personidents`() {
+        assertTrue(PersonidentValidator.isSynthetic("15868500082"))
+        assertTrue(PersonidentValidator.isSynthetic("63917800091"))
+        assertFalse(PersonidentValidator.isSynthetic("15068500017"))
+        assertFalse(PersonidentValidator.isSynthetic("63117800026"))
+        assertFalse(PersonidentValidator.isSynthetic("not-a-number"))
+    }
+
+    @Test
+    fun `rejects a synthetic FNR with a bad checksum`() {
+        assertFailsWith<UgyldigPersonidentException> {
+            PersonidentValidator.validate(
+                personident = "15868500083",
+                personidentType = PersonidentType.FNR,
+                birthDate = LocalDate.of(1985, 6, 15),
+            )
+        }
+    }
+
+    @Test
+    fun `rejects a synthetic FNR declared as DNR`() {
+        assertFailsWith<UgyldigPersonidentException> {
+            PersonidentValidator.validate(
+                personident = "15868500082",
+                personidentType = PersonidentType.DNR,
+                birthDate = LocalDate.of(1985, 6, 15),
+            )
+        }
+    }
+
+    @Test
+    fun `rejects a synthetic DNR declared as FNR`() {
+        assertFailsWith<UgyldigPersonidentException> {
+            PersonidentValidator.validate(
+                personident = "63917800091",
+                personidentType = PersonidentType.FNR,
+                birthDate = LocalDate.of(1978, 11, 23),
+            )
+        }
+    }
+
+    @Test
+    fun `rejects a synthetic personident whose birth date does not match the decoded date`() {
+        assertFailsWith<UgyldigPersonidentException> {
+            PersonidentValidator.validate(
+                personident = "15868500082",
+                personidentType = PersonidentType.FNR,
+                birthDate = LocalDate.of(1985, 6, 16),
+            )
+        }
+        assertFailsWith<UgyldigPersonidentException> {
+            PersonidentValidator.validate(
+                personident = "15868500082",
+                personidentType = PersonidentType.FNR,
+                birthDate = LocalDate.of(1985, 12, 15),
+            )
+        }
+    }
+
+    @Test
+    fun `rejects the NAV month offset of 40 with a valid checksum`() {
+        val personident = "15468500180"
+
+        assertFalse(PersonidentValidator.isSynthetic(personident))
+        assertFailsWith<UgyldigPersonidentException> {
+            PersonidentValidator.validate(
+                personident = personident,
                 personidentType = PersonidentType.FNR,
                 birthDate = LocalDate.of(1985, 6, 15),
             )
