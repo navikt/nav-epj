@@ -12,10 +12,12 @@ import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.helsepersonell.HelsepersonellService
 import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.legekontor.LegekontorRepository
+import no.nav.helse.epj.sessionorg.FastlegelisteRepository
 
 class PractitionerRoleService(
     val helsepersonellService: HelsepersonellService,
     val legekontorRepository: LegekontorRepository,
+    val fastlegelisteRepository: FastlegelisteRepository,
 ) {
 
     suspend fun getPractitionerRolesByPractitioner(
@@ -26,6 +28,7 @@ class PractitionerRoleService(
 
         val organizationId =
             sessionOrgnummer?.let { legekontorRepository.findByOrgnummer(it)?.id }
+                ?: fastlegelisteRepository.findLegekontorIdsByHpr(hpr).singleOrNull()
                 ?: helsepersonell.legekontorId
         val role = helsepersonell.toPractitionerRole(organizationId)
         return Bundle(

@@ -15,11 +15,18 @@ import no.nav.helse.epj.helsepersonell.HelsepersonellService
 import no.nav.helse.epj.legekontor.Legekontor
 import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.legekontor.LegekontorRepository
+import no.nav.helse.epj.sessionorg.FastlegelisteRepository
 
 class PractitionerRoleServiceTest {
     private val helsepersonellService = mockk<HelsepersonellService>()
     private val legekontorRepository = mockk<LegekontorRepository>()
-    private val service = PractitionerRoleService(helsepersonellService, legekontorRepository)
+    private val fastlegelisteRepository = mockk<FastlegelisteRepository>()
+    private val service =
+        PractitionerRoleService(
+            helsepersonellService,
+            legekontorRepository,
+            fastlegelisteRepository,
+        )
 
     private val sessionOrg =
         Legekontor(LegekontorId(Uuid.generateV4()), "Fjordvik", "311111116", null)
@@ -28,20 +35,23 @@ class PractitionerRoleServiceTest {
     private fun helsepersonell(legekontorId: LegekontorId?) =
         Helsepersonell(HelsepersonellHpr("565501872"), legekontorId, "Test", "LE")
 
-    private fun organizationOf(orgnummer: String?, legekontorId: LegekontorId?): String? =
-        runBlocking {
-            coEvery {
-                helsepersonellService.getHelsepersonell(HelsepersonellHpr("565501872"))
-            } returns helsepersonell(legekontorId)
-            coEvery { legekontorRepository.findByOrgnummer("311111116") } returns sessionOrg
-            val role =
-                service
-                    .getPractitionerRolesByPractitioner("565501872", orgnummer)
-                    .entry
-                    .single()
-                    .resource as com.google.fhir.model.r4.PractitionerRole
-            role.organization?.reference?.value
-        }
+    private fun organizationOf(
+        orgnummer: String?,
+        legekontorId: LegekontorId?,
+        listed: List<LegekontorId> = emptyList(),
+    ): String? = runBlocking {
+        coEvery { helsepersonellService.getHelsepersonell(HelsepersonellHpr("565501872")) } returns
+            helsepersonell(legekontorId)
+        coEvery { fastlegelisteRepository.findLegekontorIdsByHpr("565501872") } returns listed
+        coEvery { legekontorRepository.findByOrgnummer("311111116") } returns sessionOrg
+        val role =
+            service
+                .getPractitionerRolesByPractitioner("565501872", orgnummer)
+                .entry
+                .single()
+                .resource as com.google.fhir.model.r4.PractitionerRole
+        role.organization?.reference?.value
+    }
 
     @Test
     fun `organization comes from the session org rather than the stored legekontor`() {
@@ -64,5 +74,20 @@ class PractitionerRoleServiceTest {
     @Test
     fun `has no organization without a session org or stored legekontor`() {
         assertNull(organizationOf(null, null))
+    }
+
+    @Test
+    fun `uses the single fastlegeliste org without a session org`() {
+        val listedId = LegekontorId(Uuid.generateV4())
+        assertEquals(
+            "Organization/${listedId.value}",
+            organizationOf(null, storedOrgId, listOf(listedId)),
+        )
+    }
+
+    @Test
+    fun `ignores several fastlegeliste orgs without a session org`() {
+        val listed = listOf(LegekontorId(Uuid.generateV4()), LegekontorId(Uuid.generateV4()))
+        assertEquals("Organization/${storedOrgId.value}", organizationOf(null, storedOrgId, listed))
     }
 }

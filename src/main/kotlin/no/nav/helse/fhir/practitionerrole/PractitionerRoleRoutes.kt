@@ -24,7 +24,10 @@ fun Route.practitionerRoleRoutes(
 
             val hpr = practitionerRef.substringAfterLast('/')
             val bundle =
-                practitionerRoleService.getPractitionerRolesByPractitioner(hpr, principal.orgnummer)
+                practitionerRoleService.getPractitionerRolesByPractitioner(
+                    hpr,
+                    principal.orgnummer.takeIf { hpr == principal.subject },
+                )
             call.respondText(fhirR4Json.encodeToString(bundle), fhirContentType)
         }
     }
