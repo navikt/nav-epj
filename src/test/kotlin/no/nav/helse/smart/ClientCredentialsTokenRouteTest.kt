@@ -28,6 +28,7 @@ import no.nav.helse.core.Environment
 import no.nav.helse.core.EpjConfig
 import no.nav.helse.core.SmartConfig
 import no.nav.helse.core.ValkeyConfig
+import no.nav.helse.epj.sessionorg.SessionOrgResolver
 import no.nav.helse.fhir.encounter.EncounterService
 import no.nav.helse.fhir.patient.PatientService
 import no.nav.helse.helseId.DebugInfo
@@ -109,6 +110,7 @@ class ClientCredentialsTokenRouteTest {
             provide<ValkeyService> { valkey }
             provide<EncounterService> { mockk(relaxed = true) }
             provide<PatientService> { mockk(relaxed = true) }
+            provide<SessionOrgResolver> { mockk(relaxed = true) }
             provide<SmartKeys> { smartKeys }
             provide<ClientAssertionVerifier> {
                 ClientAssertionVerifier(
@@ -341,7 +343,7 @@ class ClientCredentialsTokenRouteTest {
             AuthCodeContext(
                 username = "Test",
                 redirectUrl = "http://test",
-                launch = LaunchContext("patient-1", "encounter-1", "111"),
+                launch = LaunchContext("patient-1", "encounter-1", "111", "311111116"),
                 subject = "111",
                 scope = "openid launch patient/*.cruds",
                 clientId = CODE_CLIENT_ID,

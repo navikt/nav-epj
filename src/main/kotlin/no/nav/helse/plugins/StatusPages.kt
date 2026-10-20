@@ -18,6 +18,7 @@ import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.LegekontorNotfoundException
 import no.nav.helse.core.utils.PasientCreationException
+import no.nav.helse.core.utils.SessionOrgRequiredException
 import no.nav.helse.core.utils.UgyldigDiagnoseException
 import no.nav.helse.core.utils.UgyldigPersonidentException
 import no.nav.helse.core.utils.logger
@@ -55,6 +56,12 @@ fun Application.configureStatusPages() {
             call.respondText(
                 text = "Legekontor not found: ${cause.message}",
                 status = HttpStatusCode.NotFound,
+            )
+        }
+        exception<SessionOrgRequiredException> { call, cause ->
+            call.respondText(
+                text = "Legekontor ikke valgt: ${cause.message}",
+                status = HttpStatusCode.Conflict,
             )
         }
         exception<UgyldigDiagnoseException> { call, cause ->

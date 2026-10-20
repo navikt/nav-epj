@@ -31,10 +31,10 @@ class ValkeyService(private val glideClient: GlideClient) {
     suspend fun getAndDeleteLaunchContext(launchId: String): LaunchContext? =
         glideClient.getdel(launchKey(launchId)).await()?.let { mapper.readValue<LaunchContext>(it) }
 
-    suspend fun setActivePatient(hpr: String, patientId: String) {
+    suspend fun setActivePatient(hpr: String, orgnummer: String, patientId: String) {
         glideClient
             .set(
-                activePatientKey(hpr),
+                activePatientKey(hpr, orgnummer),
                 patientId,
                 SetOptions.builder()
                     .expiry(SetOptions.Expiry.Seconds(ACTIVE_PATIENT_TTL_SECONDS))
@@ -43,16 +43,16 @@ class ValkeyService(private val glideClient: GlideClient) {
             .await()
     }
 
-    suspend fun clearActivePatient(hpr: String) {
-        glideClient.del(arrayOf(activePatientKey(hpr))).await()
+    suspend fun clearActivePatient(hpr: String, orgnummer: String) {
+        glideClient.del(arrayOf(activePatientKey(hpr, orgnummer))).await()
     }
 
-    suspend fun getActivePatient(hpr: String): String? =
-        glideClient.get(activePatientKey(hpr)).await()
+    suspend fun getActivePatient(hpr: String, orgnummer: String): String? =
+        glideClient.get(activePatientKey(hpr, orgnummer)).await()
 
-    suspend fun getActivePatientWithExpiry(hpr: String): ActivePatient? {
-        val patientId = getActivePatient(hpr) ?: return null
-        val remainingSeconds = glideClient.ttl(activePatientKey(hpr)).await()
+    suspend fun getActivePatientWithExpiry(hpr: String, orgnummer: String): ActivePatient? {
+        val patientId = getActivePatient(hpr, orgnummer) ?: return null
+        val remainingSeconds = glideClient.ttl(activePatientKey(hpr, orgnummer)).await()
         if (remainingSeconds <= 0) return null
         return ActivePatient(patientId, Instant.now().plusSeconds(remainingSeconds))
     }
@@ -105,6 +105,7 @@ private fun authCodeKey(code: String) = "smart:code:$code"
 
 private fun launchKey(launchId: String) = "smart:launch:$launchId"
 
-private fun activePatientKey(hpr: String) = "smart:active-patient:$hpr"
+private fun activePatientKey(hpr: String, orgnummer: String) =
+    "smart:active-patient:$hpr:$orgnummer"
 
 private fun sessionOrgKey(hpr: String) = "epj:session-org:$hpr"

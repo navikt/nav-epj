@@ -41,7 +41,8 @@ fun Application.configureEpjModule() {
     val valkeyService: ValkeyService by dependencies
     val sessionOrgResolver: SessionOrgResolver by dependencies
     val sessionOrgService: SessionOrgService by dependencies
-    val activePatientService = ActivePatientService(pasientService, valkeyService)
+    val activePatientService =
+        ActivePatientService(pasientService, valkeyService, sessionOrgResolver)
 
     routing {
         authenticate("wonderwall-helseid") {
@@ -53,7 +54,7 @@ fun Application.configureEpjModule() {
             sessionRoutes()
             sessionOrgRoutes(sessionOrgResolver, sessionOrgService)
             pasientRoutes(pasientService)
-            activePatientRoutes(activePatientService, valkeyService)
+            activePatientRoutes(activePatientService)
             helsepersonellRoutes(helsepersonellService)
             konsultasjonRoutes(konsultasjonService, activePatientService)
             legekontorRoutes(legekontorService)

@@ -20,6 +20,8 @@ import kotlinx.coroutines.runBlocking
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.legekontor.Legekontor
 import no.nav.helse.epj.legekontor.LegekontorId
+import no.nav.helse.epj.sessionorg.SessionOrgResolution
+import no.nav.helse.epj.sessionorg.SessionOrgResolver
 import no.nav.helse.helseId.DebugInfo
 import no.nav.helse.helseId.HelseIdPrincipal
 import no.nav.helse.helseId.User
@@ -32,16 +34,35 @@ import tools.jackson.module.kotlin.jacksonObjectMapper
 import tools.jackson.module.kotlin.readValue
 
 private const val HPR = "111"
+private const val ORG = "311111116"
+private const val OTHER_ORG = "311111124"
 
 class ActivePatientRoutesTest : WithValkey() {
 
     private val pasientService = mockk<PasientService>()
+    private val sessionOrgResolver = mockk<SessionOrgResolver>()
     private val mapper = jacksonObjectMapper()
 
     @Before
     fun clear() {
-        runBlocking { glideClient.del(arrayOf("smart:active-patient:$HPR")).get() }
+        runBlocking {
+            glideClient
+                .del(
+                    arrayOf(
+                        "smart:active-patient:$HPR:$ORG",
+                        "smart:active-patient:$HPR:$OTHER_ORG",
+                    )
+                )
+                .get()
+        }
+        coEvery { sessionOrgResolver.resolve(HPR) } returns resolvedIn(ORG)
     }
+
+    private fun resolvedIn(orgnummer: String) =
+        SessionOrgResolution.Resolved(
+            Legekontor(LegekontorId(Uuid.generateV4()), "Org", orgnummer, null),
+            derived = true,
+        )
 
     private fun testApp(block: suspend HttpClient.() -> Unit) = testApplication {
         application {
@@ -59,8 +80,7 @@ class ActivePatientRoutesTest : WithValkey() {
             routing {
                 authenticate("wonderwall-helseid") {
                     activePatientRoutes(
-                        ActivePatientService(pasientService, valkeyService),
-                        valkeyService,
+                        ActivePatientService(pasientService, valkeyService, sessionOrgResolver)
                     )
                 }
             }
@@ -96,7 +116,7 @@ class ActivePatientRoutesTest : WithValkey() {
     @Test
     fun `GET returns the active patient with the remaining time to live`() = testApp {
         val id = Uuid.generateV4().toString()
-        valkeyService.setActivePatient(HPR, id)
+        valkeyService.setActivePatient(HPR, ORG, id)
         val before = Instant.now()
 
         val response = get("/api/active-patient")
@@ -112,8 +132,8 @@ class ActivePatientRoutesTest : WithValkey() {
     @Test
     fun `GET reflects a shorter remaining time to live`() = testApp {
         val id = Uuid.generateV4().toString()
-        valkeyService.setActivePatient(HPR, id)
-        glideClient.expire("smart:active-patient:$HPR", 120).get()
+        valkeyService.setActivePatient(HPR, ORG, id)
+        glideClient.expire("smart:active-patient:$HPR:$ORG", 120).get()
 
         val expiresAt =
             Instant.parse(body(get("/api/active-patient").bodyAsText()).getValue("expiresAt"))
@@ -131,7 +151,7 @@ class ActivePatientRoutesTest : WithValkey() {
 
         assertEquals(HttpStatusCode.OK, response.status)
         assertEquals(pasient.id.value.toString(), body(response.bodyAsText())["patientId"])
-        assertEquals(pasient.id.value.toString(), valkeyService.getActivePatient(HPR))
+        assertEquals(pasient.id.value.toString(), valkeyService.getActivePatient(HPR, ORG))
         assertEquals(
             pasient.id.value.toString(),
             body(get("/api/active-patient").bodyAsText())["patientId"],
@@ -148,7 +168,7 @@ class ActivePatientRoutesTest : WithValkey() {
         put(first.id.value.toString())
         put(second.id.value.toString())
 
-        assertEquals(second.id.value.toString(), valkeyService.getActivePatient(HPR))
+        assertEquals(second.id.value.toString(), valkeyService.getActivePatient(HPR, ORG))
     }
 
     @Test
@@ -162,7 +182,7 @@ class ActivePatientRoutesTest : WithValkey() {
         val response = put(unknown.value.toString())
 
         assertEquals(HttpStatusCode.NotFound, response.status)
-        assertEquals(known.id.value.toString(), valkeyService.getActivePatient(HPR))
+        assertEquals(known.id.value.toString(), valkeyService.getActivePatient(HPR, ORG))
     }
 
     @Test
@@ -173,7 +193,7 @@ class ActivePatientRoutesTest : WithValkey() {
         val response = put(other.id.value.toString())
 
         assertEquals(HttpStatusCode.NotFound, response.status)
-        assertNull(valkeyService.getActivePatient(HPR))
+        assertNull(valkeyService.getActivePatient(HPR, ORG))
     }
 
     @Test
@@ -181,7 +201,7 @@ class ActivePatientRoutesTest : WithValkey() {
         val response = put("not-a-uuid")
 
         assertEquals(HttpStatusCode.NotFound, response.status)
-        assertNull(valkeyService.getActivePatient(HPR))
+        assertNull(valkeyService.getActivePatient(HPR, ORG))
     }
 
     @Test
@@ -193,6 +213,39 @@ class ActivePatientRoutesTest : WithValkey() {
             }
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
-        assertNull(valkeyService.getActivePatient(HPR))
+        assertNull(valkeyService.getActivePatient(HPR, ORG))
+    }
+
+    @Test
+    fun `PUT without a session org returns 409 and keeps nothing`() = testApp {
+        coEvery { sessionOrgResolver.resolve(HPR) } returns SessionOrgResolution.NeedsChoice
+        val pasient = pasient()
+        coEvery { pasientService.getPasientById(pasient.id) } returns pasient
+
+        val response = put(pasient.id.value.toString())
+
+        assertEquals(HttpStatusCode.Conflict, response.status)
+        assertNull(valkeyService.getActivePatient(HPR, ORG))
+    }
+
+    @Test
+    fun `GET without a session org returns 204`() = testApp {
+        valkeyService.setActivePatient(HPR, ORG, Uuid.generateV4().toString())
+        coEvery { sessionOrgResolver.resolve(HPR) } returns SessionOrgResolution.NeedsChoice
+
+        assertEquals(HttpStatusCode.NoContent, get("/api/active-patient").status)
+    }
+
+    @Test
+    fun `an active patient set in one org is not returned in another org`() = testApp {
+        val pasient = pasient()
+        coEvery { pasientService.getPasientById(pasient.id) } returns pasient
+        put(pasient.id.value.toString())
+        coEvery { sessionOrgResolver.resolve(HPR) } returns resolvedIn(OTHER_ORG)
+
+        assertEquals(HttpStatusCode.NoContent, get("/api/active-patient").status)
+
+        coEvery { sessionOrgResolver.resolve(HPR) } returns resolvedIn(ORG)
+        assertEquals(HttpStatusCode.OK, get("/api/active-patient").status)
     }
 }

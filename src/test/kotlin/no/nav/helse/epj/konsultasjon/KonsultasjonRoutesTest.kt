@@ -21,11 +21,14 @@ import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.konsultasjon.routes.konsultasjonRoutes
+import no.nav.helse.epj.legekontor.Legekontor
 import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.pasient.ActivePatientService
 import no.nav.helse.epj.pasient.Pasient
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.epj.pasient.PasientService
+import no.nav.helse.epj.sessionorg.SessionOrgResolution
+import no.nav.helse.epj.sessionorg.SessionOrgResolver
 import no.nav.helse.helseId.DebugInfo
 import no.nav.helse.helseId.HelseIdPrincipal
 import no.nav.helse.helseId.User
@@ -34,11 +37,20 @@ import no.nav.helse.smart.valkey.ActivePatient
 import no.nav.helse.smart.valkey.ValkeyService
 import org.junit.Test
 
+@OptIn(ExperimentalUuidApi::class)
 class KonsultasjonRoutesTest {
 
     private val konsultasjonService = mockk<KonsultasjonService>()
     private val valkeyService = mockk<ValkeyService>(relaxed = true)
     private val pasientService = mockk<PasientService>()
+    private val sessionOrgResolver =
+        mockk<SessionOrgResolver> {
+            coEvery { resolve(any()) } returns
+                SessionOrgResolution.Resolved(
+                    Legekontor(LegekontorId(Uuid.generateV4()), "Fjordvik", "311111116", null),
+                    derived = true,
+                )
+        }
 
     private fun testApp(block: suspend io.ktor.client.HttpClient.() -> Unit) = testApplication {
         application {
@@ -57,7 +69,7 @@ class KonsultasjonRoutesTest {
                 authenticate("wonderwall-helseid") {
                     konsultasjonRoutes(
                         konsultasjonService,
-                        ActivePatientService(pasientService, valkeyService),
+                        ActivePatientService(pasientService, valkeyService, sessionOrgResolver),
                     )
                 }
             }
@@ -129,7 +141,7 @@ class KonsultasjonRoutesTest {
         val response = get("/api/patients/${pasientId.value}/konsultasjoner")
 
         assertEquals(HttpStatusCode.OK, response.status)
-        coVerify(exactly = 0) { valkeyService.setActivePatient(any(), any()) }
+        coVerify(exactly = 0) { valkeyService.setActivePatient(any(), any(), any()) }
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -149,7 +161,7 @@ class KonsultasjonRoutesTest {
         val pasientId = PasientId(Uuid.generateV4())
         coEvery { pasientService.getPasientById(pasientId) } returns
             linkedPasient(pasientId, listOf("111"))
-        coEvery { valkeyService.getActivePatientWithExpiry("111") } returns
+        coEvery { valkeyService.getActivePatientWithExpiry("111", "311111116") } returns
             ActivePatient(pasientId.value.toString(), Instant.now().plusSeconds(60))
         coEvery { konsultasjonService.getOrCreateKonsultasjon(pasientId, any()) } returns
             konsultasjon(pasientId = pasientId)
@@ -157,7 +169,9 @@ class KonsultasjonRoutesTest {
         val response = post("/api/patients/${pasientId.value}/konsultasjoner")
 
         assertEquals(HttpStatusCode.OK, response.status)
-        coVerify(exactly = 1) { valkeyService.setActivePatient("111", pasientId.value.toString()) }
+        coVerify(exactly = 1) {
+            valkeyService.setActivePatient("111", "311111116", pasientId.value.toString())
+        }
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -171,9 +185,22 @@ class KonsultasjonRoutesTest {
             val response = post("/api/patients/${pasientId.value}/konsultasjoner")
 
             assertEquals(HttpStatusCode.NotFound, response.status)
-            coVerify(exactly = 0) { valkeyService.setActivePatient(any(), any()) }
+            coVerify(exactly = 0) { valkeyService.setActivePatient(any(), any(), any()) }
             coVerify(exactly = 0) { konsultasjonService.getOrCreateKonsultasjon(any(), any()) }
         }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `POST konsultasjoner without a session org returns 409 and changes nothing`() = testApp {
+        val pasientId = PasientId(Uuid.generateV4())
+        coEvery { sessionOrgResolver.resolve("111") } returns SessionOrgResolution.NeedsChoice
+
+        val response = post("/api/patients/${pasientId.value}/konsultasjoner")
+
+        assertEquals(HttpStatusCode.Conflict, response.status)
+        coVerify(exactly = 0) { valkeyService.setActivePatient(any(), any(), any()) }
+        coVerify(exactly = 0) { konsultasjonService.getOrCreateKonsultasjon(any(), any()) }
+    }
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
@@ -184,7 +211,7 @@ class KonsultasjonRoutesTest {
         val response = post("/api/patients/${pasientId.value}/konsultasjoner")
 
         assertEquals(HttpStatusCode.NotFound, response.status)
-        coVerify(exactly = 0) { valkeyService.setActivePatient(any(), any()) }
+        coVerify(exactly = 0) { valkeyService.setActivePatient(any(), any(), any()) }
         coVerify(exactly = 0) { konsultasjonService.getOrCreateKonsultasjon(any(), any()) }
     }
 

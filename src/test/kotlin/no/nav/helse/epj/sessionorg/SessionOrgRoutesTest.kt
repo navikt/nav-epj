@@ -46,7 +46,15 @@ class SessionOrgRoutesTest : WithValkey() {
     @Before
     fun setUp() {
         runBlocking {
-            glideClient.del(arrayOf("epj:session-org:$HPR", "smart:active-patient:$HPR")).get()
+            glideClient
+                .del(
+                    arrayOf(
+                        "epj:session-org:$HPR",
+                        "smart:active-patient:$HPR:311111116",
+                        "smart:active-patient:$HPR:311111124",
+                    )
+                )
+                .get()
         }
         coEvery { legekontorRepository.listChoosable() } returns listOf(fjordvik, lyngdal)
         coEvery { legekontorRepository.findByLegekontorId(fjordvik.id.value) } returns fjordvik
@@ -148,21 +156,25 @@ class SessionOrgRoutesTest : WithValkey() {
     }
 
     @Test
-    fun `changing org clears the active patient`() = testApp {
-        valkeyService.setActivePatient(HPR, Uuid.generateV4().toString())
+    fun `changing org clears the active patient of the previous and the new org`() = testApp {
+        choose("311111124")
+        valkeyService.setActivePatient(HPR, "311111124", Uuid.generateV4().toString())
+        valkeyService.setActivePatient(HPR, "311111116", Uuid.generateV4().toString())
 
         choose("311111116")
 
-        assertNull(valkeyService.getActivePatient(HPR))
+        assertNull(valkeyService.getActivePatient(HPR, "311111124"))
+        assertNull(valkeyService.getActivePatient(HPR, "311111116"))
     }
 
     @Test
     fun `a rejected change keeps the active patient`() = testApp {
+        choose("311111124")
         val patient = Uuid.generateV4().toString()
-        valkeyService.setActivePatient(HPR, patient)
+        valkeyService.setActivePatient(HPR, "311111124", patient)
 
         choose("999999999")
 
-        assertEquals(patient, valkeyService.getActivePatient(HPR))
+        assertEquals(patient, valkeyService.getActivePatient(HPR, "311111124"))
     }
 }

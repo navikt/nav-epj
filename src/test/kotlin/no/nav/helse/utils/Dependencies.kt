@@ -11,6 +11,7 @@ import no.nav.helse.core.EpjConfig
 import no.nav.helse.core.PostgresConfig
 import no.nav.helse.core.SmartConfig
 import no.nav.helse.core.ValkeyConfig
+import no.nav.helse.epj.sessionorg.SessionOrgResolver
 import no.nav.helse.fhir.encounter.EncounterService
 import no.nav.helse.fhir.patient.PatientService
 import no.nav.helse.helseId.DebugInfo
@@ -40,6 +41,7 @@ fun Application.configureTestSmartDependencies() {
         provide<ValkeyService> { valkeyService }
         provide<EncounterService> { encounterService }
         provide<PatientService> { patientService }
+        provide<SessionOrgResolver> { mockk(relaxed = true) }
         provide<ClientAssertionVerifier> { clientAssertionVerifier }
         provide<SmartKeys> { SmartKeys(TEST_PRIVATE_KEY_JWK) }
     }

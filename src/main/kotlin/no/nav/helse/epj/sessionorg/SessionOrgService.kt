@@ -28,7 +28,10 @@ class SessionOrgService(
                 ?: return ChooseOrgResult.UnknownOrg
 
         choiceStore.set(hpr, orgnummer)
-        valkeyService.clearActivePatient(hpr)
+        (current as? SessionOrgResolution.Resolved)?.org?.orgnummer?.let {
+            valkeyService.clearActivePatient(hpr, it)
+        }
+        valkeyService.clearActivePatient(hpr, orgnummer)
         log.atInfo()
             .setMessage("Session org chosen: hpr={} orgnr={}")
             .addArgument(hpr)

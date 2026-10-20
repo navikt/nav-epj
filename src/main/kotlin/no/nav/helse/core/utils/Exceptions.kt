@@ -18,6 +18,8 @@ class KonsultasjonNotFoundException(konsultasjonId: KonsultasjonId) :
 class AktivKonsultasjonNotFoundException(pasientId: PasientId) :
     RuntimeException("Fant ingen aktiv konsultasjon for pasient med id=${pasientId.value}")
 
+class SessionOrgRequiredException : RuntimeException("Legekontor er ikke valgt for denne økten")
+
 class LegekontorNotfoundException : RuntimeException("Fant ikke Legekontor")
 
 class KonsultasjonNotFoundForPatientException(pasientId: PasientId) :
