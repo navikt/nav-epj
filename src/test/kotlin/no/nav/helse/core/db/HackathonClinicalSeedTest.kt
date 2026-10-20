@@ -143,4 +143,67 @@ class HackathonClinicalSeedTest : WithPostgresql() {
             konsultasjonRepository.findActiveByPasientId(bjarne, orgWithBjarne)?.problemstilling,
         )
     }
+
+    private fun applySeed() =
+        execute(
+            checkNotNull(javaClass.classLoader.getResource("db/testdata/R__hackathon_testdata.sql"))
+                .readText()
+        )
+
+    private fun count(query: String): Int =
+        DriverManager.getConnection(
+                config.postgres.url,
+                config.postgres.username,
+                config.postgres.password,
+            )
+            .use { connection ->
+                connection.createStatement().use { statement ->
+                    statement.executeQuery(query).use { rs ->
+                        rs.next()
+                        rs.getInt(1)
+                    }
+                }
+            }
+
+    @Test
+    fun `deleted seeded diagnoses and measurements stay deleted when the seed is applied again`() {
+        val bb1 = "md5('hackathon-konsultasjon-BB1')::uuid"
+        execute(
+            "DELETE FROM konsultasjon_diagnosekode WHERE konsultasjon_id = $bb1 " +
+                "AND diagnosekode = 'I10'",
+            "DELETE FROM maaling WHERE konsultasjon_id = $bb1 AND loinc_kode = '29463-7'",
+            "DELETE FROM journalnotat WHERE konsultasjon_id = md5('hackathon-konsultasjon-BB3')::uuid",
+        )
+        val before = counts()
+
+        applySeed()
+
+        assertEquals(before, counts())
+        assertEquals(
+            0,
+            count(
+                "SELECT count(*) FROM konsultasjon_diagnosekode WHERE konsultasjon_id = $bb1 " +
+                    "AND diagnosekode = 'I10'"
+            ),
+        )
+        assertEquals(
+            0,
+            count(
+                "SELECT count(*) FROM maaling WHERE konsultasjon_id = $bb1 AND loinc_kode = '29463-7'"
+            ),
+        )
+    }
+
+    @Test
+    fun `started planned konsultasjon receives no diagnoses when the seed is applied again`() {
+        val gf5 = "md5('hackathon-konsultasjon-GF5')::uuid"
+        execute("UPDATE konsultasjon SET status = 'PÅGÅENDE' WHERE id = $gf5")
+
+        applySeed()
+
+        assertEquals(
+            0,
+            count("SELECT count(*) FROM konsultasjon_diagnosekode WHERE konsultasjon_id = $gf5"),
+        )
+    }
 }

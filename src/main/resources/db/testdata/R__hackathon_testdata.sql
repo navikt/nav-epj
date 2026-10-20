@@ -161,13 +161,15 @@ FROM (VALUES ('BB1', '20856210112', '2026-03-10 09:00', '2026-03-10 09:30', 'FUL
          JOIN fastlegeliste_pasient flp ON flp.pasient_id = p.id
          JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
 ON CONFLICT (id) DO NOTHING
-RETURNING id, pasient_id)
+RETURNING id, pasient_id, startet_tidspunkt, status),
+     helsepersonell AS (
 INSERT INTO konsultasjon_helsepersonell (konsultasjon_id, hpr)
 SELECT i.id, fl.hpr
 FROM inserted i
          JOIN fastlegeliste_pasient flp ON flp.pasient_id = i.pasient_id
-         JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id;
-
+         JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
+RETURNING konsultasjon_id),
+     diagnoser AS (
 INSERT INTO konsultasjon_diagnosekode (konsultasjon_id, diagnosesystem, diagnosekode)
 SELECT k.id, d.diagnosesystem, d.diagnosekode
 FROM (VALUES ('BB', 'ICPC2', 'K86'),
@@ -202,11 +204,11 @@ FROM (VALUES ('BB', 'ICPC2', 'K86'),
              ('RS', 'ICD10', 'E11.9'),
              ('LK', 'ICPC2', 'R96'),
              ('LK', 'ICD10', 'J45.9')) AS d (prefix, diagnosesystem, diagnosekode)
-         JOIN konsultasjon k ON k.id IN (SELECT md5('hackathon-konsultasjon-' || d.prefix || n)::uuid
-                                         FROM generate_series(1, 5) AS n)
+         JOIN inserted k ON k.id IN (SELECT md5('hackathon-konsultasjon-' || d.prefix || n)::uuid
+                                     FROM generate_series(1, 5) AS n)
 WHERE k.status NOT IN ('PLANLAGT', 'AVLYST')
-ON CONFLICT DO NOTHING;
-
+RETURNING konsultasjon_id),
+     notater AS (
 INSERT INTO journalnotat (id, konsultasjon_id, pasient_id, journalnotat)
 SELECT md5('hackathon-journalnotat-' || v.key)::uuid, k.id, k.pasient_id, v.journalnotat
 FROM (VALUES ('BB3', 'Blodtrykk synkende på amlodipin. Fortsetter dagens dose, ny kontroll om tre måneder.'),
@@ -215,10 +217,8 @@ FROM (VALUES ('BB3', 'Blodtrykk synkende på amlodipin. Fortsetter dagens dose, 
              ('HN2', 'Bedring etter oppstart samtaleterapi. Fortsatt sykmeldt 50 prosent.'),
              ('AF1', 'Forkjølelse uten tegn til bakteriell infeksjon. Symptomatisk behandling.'),
              ('LK1', 'God astmakontroll. Videreføres uendret.')) AS v (key, journalnotat)
-         JOIN konsultasjon k ON k.id = md5('hackathon-konsultasjon-' || v.key)::uuid
-WHERE NOT EXISTS (SELECT 1 FROM journalnotat j WHERE j.konsultasjon_id = k.id)
-ON CONFLICT (id) DO NOTHING;
-
+         JOIN inserted k ON k.id = md5('hackathon-konsultasjon-' || v.key)::uuid
+RETURNING id)
 INSERT INTO maaling (id, pasient_id, konsultasjon_id, hpr, loinc_kode, loinc_visningsnavn, verdi, enhet_kode,
                      enhet_visningsnavn, effektiv_tidspunkt, status)
 SELECT md5('hackathon-maaling-' || v.key || v.loinc_kode)::uuid,
@@ -303,5 +303,4 @@ FROM (VALUES ('BB1', '8480-6', 'Systolic blood pressure', '152', 'mm[Hg]', 'mm H
              ('RS2', '4548-4', 'Hemoglobin A1c/Hemoglobin.total in Blood', '8.2', '%', '%'),
              ('RS3', '4548-4', 'Hemoglobin A1c/Hemoglobin.total in Blood', '7.5', '%', '%'))
          AS v (key, loinc_kode, loinc_visningsnavn, verdi, enhet_kode, enhet_visningsnavn)
-         JOIN konsultasjon k ON k.id = md5('hackathon-konsultasjon-' || v.key)::uuid
-ON CONFLICT (id) DO NOTHING;
+         JOIN inserted k ON k.id = md5('hackathon-konsultasjon-' || v.key)::uuid;
