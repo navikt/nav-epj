@@ -12,6 +12,7 @@ database:
   url: "jdbc:postgresql://localhost:5434/nav-epj"
   user: "postgres"
   password: "postgres"
+  seedTestdata: true
 
 epj:
   baseUrl: "http://localhost:8080"
