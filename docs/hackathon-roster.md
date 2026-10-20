@@ -59,7 +59,7 @@ Solbakken).
 | EVA LUNDE | 31857810085 | FNR | No clinical history |
 | SAMIR ALI | 49819110351 | DNR | No clinical history |
 | BERIT ODEGAARD | 21865810048 | FNR | No clinical history |
-| LARS KVAM | 13841050147 | FNR | Asthma (R96, J45.9). One completed konsultasjon (child) |
+| LARS KVAM | 13841050147 | FNR | Asthma (R96, J45.9). One completed konsultasjon |
 
 ## Measurement codes
 
