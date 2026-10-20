@@ -1,10 +1,9 @@
 TODO:
-- Koble opp til persontjenesten i nhn
-    - https://et.persontjenesten.test.nhn.no/api
-    - https://et.persontjenesten.test.nhn.no/swagger/index.html
-    - https://utviklerportal.nhn.no/informasjonstjenester/persontjenesten/persontjenesten/persontjenesten/docs/person-api_nbmd
-    - https://utviklerportal.nhn.no/informasjonstjenester/persontjenesten/persontjenesten/persontjenesten/openapi/person-api
-
-
-- Ha en forhåndsdefinert liste over pasienter (koblet til en test lege man logger seg inn med) og et søkefelt for å finne testpersoner
-- Finn ut og dokumenter hvordan dolly skal brukes med dette
+- Seed handskrevne mock-pasienter med den repeterbare Flyway-migrasjonen R__testdata.sql
+    - Personidenter bruker Skatteetatens syntetiske format (måned + 80, dag + 40 for DNR)
+    - Seed fastlegelister på samme måte: fastlegens HPR-nummer, legekontorets orgnr og pasienter
+- Lag SessionOrgResolver: velg sesjonens organisasjon automatisk når legens HPR-nummer har lister
+  hos nøyaktig én org, ellers vis en org-velger ("vikar" for ukjente HPR-numre, eller leger med
+  lister hos flere orger). Lagre valget i Valkey per HPR-nummer med 8 timers TTL
+- Vis legens pasientliste og et søkefelt for å finne testpersoner
+- Senere: les organisasjonen fra et claim i HelseID-tokenet (multi-tenancy), se issue #118
