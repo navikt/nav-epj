@@ -218,4 +218,75 @@ class TestdataSeedTest : WithPostgresql() {
 
         assertEquals("8", count("fastlegeliste_pasient"))
     }
+
+    @Test
+    fun `seed keeps list membership of an app-created patient on a seeded list`() {
+        val pasientId = UUID.randomUUID()
+        withConnection { connection ->
+            connection.createStatement().use {
+                it.execute(
+                    """
+                    INSERT INTO pasient (id, fornavn, etternavn, personident)
+                    VALUES ('$pasientId', 'APP', 'OPPRETTET', 'app-created-1')
+                    """
+                        .trimIndent()
+                )
+                it.execute(
+                    """
+                    INSERT INTO fastlegeliste_pasient (fastlegeliste_id, pasient_id)
+                    SELECT id, '$pasientId' FROM fastlegeliste WHERE hpr = '565501872'
+                    """
+                        .trimIndent()
+                )
+            }
+        }
+
+        applySeedAgain()
+
+        assertEquals(
+            listOf(listOf("565501872")),
+            queryStrings(
+                """
+                SELECT fl.hpr
+                FROM fastlegeliste_pasient flp
+                         JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
+                WHERE flp.pasient_id = '$pasientId'
+                """
+                    .trimIndent()
+            ),
+        )
+        assertEquals("2", count("fastlegeliste"))
+    }
+
+    @Test
+    fun `seed moves a seeded patient back to the list defined in the seed`() {
+        withConnection { connection ->
+            connection.createStatement().use {
+                it.execute(
+                    """
+                    UPDATE fastlegeliste_pasient
+                    SET fastlegeliste_id = (SELECT id FROM fastlegeliste WHERE hpr = '900000001')
+                    WHERE pasient_id = (SELECT id FROM pasient WHERE fornavn = 'TRYGG')
+                    """
+                        .trimIndent()
+                )
+            }
+        }
+
+        applySeedAgain()
+
+        assertEquals(
+            listOf(listOf("565501872")),
+            queryStrings(
+                """
+                SELECT fl.hpr
+                FROM fastlegeliste_pasient flp
+                         JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
+                         JOIN pasient p ON p.id = flp.pasient_id
+                WHERE p.fornavn = 'TRYGG'
+                """
+                    .trimIndent()
+            ),
+        )
+    }
 }

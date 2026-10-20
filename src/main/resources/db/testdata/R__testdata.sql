@@ -34,13 +34,11 @@ ON CONFLICT (personident) DO UPDATE
         gender           = EXCLUDED.gender,
         updated_at       = now();
 
-DELETE FROM fastlegeliste_pasient;
-DELETE FROM fastlegeliste;
-
 INSERT INTO fastlegeliste (hpr, legekontor_id)
 SELECT v.hpr, (SELECT id FROM legekontor WHERE orgnummer = v.orgnummer)
 FROM (VALUES ('565501872', '311111116'),
-             ('900000001', '311111124')) AS v (hpr, orgnummer);
+             ('900000001', '311111124')) AS v (hpr, orgnummer)
+ON CONFLICT (hpr, legekontor_id) DO NOTHING;
 
 INSERT INTO fastlegeliste_pasient (fastlegeliste_id, pasient_id)
 SELECT (SELECT fl.id
@@ -56,4 +54,11 @@ FROM (VALUES ('565501872', '311111116', '21914897936'),
              ('565501872', '311111116', '03920150631'),
              ('900000001', '311111124', '17841250397'),
              ('900000001', '311111124', '65819210459'),
-             ('900000001', '311111124', '49886810767')) AS v (hpr, orgnummer, personident);
+             ('900000001', '311111124', '49886810767')) AS v (hpr, orgnummer, personident)
+ON CONFLICT (pasient_id) DO UPDATE SET fastlegeliste_id = EXCLUDED.fastlegeliste_id;
+
+DELETE
+FROM fastlegeliste fl
+WHERE fl.hpr IN ('565501872', '900000001')
+  AND fl.legekontor_id NOT IN (SELECT id FROM legekontor WHERE orgnummer IN ('311111116', '311111124'))
+  AND NOT EXISTS (SELECT 1 FROM fastlegeliste_pasient flp WHERE flp.fastlegeliste_id = fl.id);

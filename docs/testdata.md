@@ -13,8 +13,10 @@ What the seed does:
 
 - Upserts `legekontor` by `orgnummer` and `pasient` by `personident`. The seed wins on name and
   demographics.
-- Deletes and re-inserts `fastlegeliste` and `fastlegeliste_pasient`. Removing a patient from a
-  list in the seed removes only the membership.
+- Inserts the seeded `fastlegeliste` rows if missing and upserts the seeded memberships, so a
+  patient the seed places on a list moves there. Patients created in the app keep their list.
+  Removing a patient line from the seed does not remove their membership: delete the row from
+  `fastlegeliste_pasient` by hand.
 - Never deletes patients and never touches clinical tables (`konsultasjon`, `maaling`, ...).
 
 Rows are referenced by natural keys (orgnummer, personident, HPR) through subselects, so the seed
