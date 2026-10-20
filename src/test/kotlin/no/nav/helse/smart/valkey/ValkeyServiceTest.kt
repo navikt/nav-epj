@@ -191,6 +191,17 @@ class ValkeyServiceTest : WithValkey() {
     }
 
     @Test
+    fun `refreshing the session org re-arms its expiry`() = runTest {
+        valkeyService.setSessionOrg("hpr-org-3", "311111116")
+        glideClient.expire("epj:session-org:hpr-org-3", 100).get()
+
+        valkeyService.refreshSessionOrg("hpr-org-3")
+
+        val ttl = glideClient.ttl("epj:session-org:hpr-org-3").get()
+        assertTrue(ttl > 8 * 60 * 60 - 60, "$ttl")
+    }
+
+    @Test
     fun `stores and retrieves the session org per hpr with an 8 hour expiry`() = runTest {
         valkeyService.setSessionOrg("hpr-org-1", "311111116")
 

@@ -69,6 +69,10 @@ class ValkeyService(private val glideClient: GlideClient) {
             .await()
     }
 
+    suspend fun refreshSessionOrg(hpr: String) {
+        glideClient.expire(sessionOrgKey(hpr), ACTIVE_PATIENT_TTL_SECONDS).await()
+    }
+
     suspend fun getSessionOrg(hpr: String): String? = glideClient.get(sessionOrgKey(hpr)).await()
 
     suspend fun saveAuthCode(code: String, authCode: AuthCodeContext) {

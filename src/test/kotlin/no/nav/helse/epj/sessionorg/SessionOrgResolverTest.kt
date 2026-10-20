@@ -24,6 +24,12 @@ private class InMemoryChoiceStore : SessionOrgChoiceStore {
     override suspend fun set(hpr: String, orgnummer: String) {
         choices[hpr] = orgnummer
     }
+
+    val extended = mutableListOf<String>()
+
+    override suspend fun extend(hpr: String) {
+        extended += hpr
+    }
 }
 
 class SessionOrgResolverTest : WithPostgresql() {
@@ -93,6 +99,16 @@ class SessionOrgResolverTest : WithPostgresql() {
 
         assertEquals(lyngdal, resolution.org().id.value)
         assertFalse((resolution as SessionOrgResolution.Resolved).derived)
+    }
+
+    @Test
+    fun `resolving a stored choice extends it and an unresolved hpr does not`() = runTest {
+        store.set("999", "311111124")
+
+        resolver.resolve("999")
+        resolver.resolve("998")
+
+        assertEquals(listOf("999"), store.extended)
     }
 
     @Test

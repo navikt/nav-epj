@@ -17,6 +17,8 @@ interface SessionOrgChoiceStore {
     suspend fun get(hpr: String): String?
 
     suspend fun set(hpr: String, orgnummer: String)
+
+    suspend fun extend(hpr: String)
 }
 
 class ValkeySessionOrgChoiceStore(private val valkeyService: ValkeyService) :
@@ -25,6 +27,8 @@ class ValkeySessionOrgChoiceStore(private val valkeyService: ValkeyService) :
 
     override suspend fun set(hpr: String, orgnummer: String) =
         valkeyService.setSessionOrg(hpr, orgnummer)
+
+    override suspend fun extend(hpr: String) = valkeyService.refreshSessionOrg(hpr)
 }
 
 class SessionOrgResolver(
@@ -43,8 +47,9 @@ class SessionOrgResolver(
             choiceStore.get(hpr)?.let { orgnummer ->
                 legekontorRepository.listChoosable().firstOrNull { it.orgnummer == orgnummer }
             }
-        return if (chosen != null) SessionOrgResolution.Resolved(chosen, derived = false)
-        else SessionOrgResolution.NeedsChoice
+        if (chosen == null) return SessionOrgResolution.NeedsChoice
+        choiceStore.extend(hpr)
+        return SessionOrgResolution.Resolved(chosen, derived = false)
     }
 
     suspend fun choosableOrgs(hpr: String): List<ChoosableOrg> {
