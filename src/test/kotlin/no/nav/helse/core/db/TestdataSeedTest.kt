@@ -185,21 +185,30 @@ class TestdataSeedTest : WithPostgresql() {
             }
         }
         val before =
-            listOf("legekontor", "pasient", "fastlegeliste", "fastlegeliste_pasient").map {
-                count(it)
-            }
+            listOf(
+                    "legekontor",
+                    "pasient",
+                    "fastlegeliste",
+                    "fastlegeliste_pasient",
+                    "konsultasjon",
+                )
+                .map { count(it) }
 
         applySeedAgain()
 
         val after =
-            listOf("legekontor", "pasient", "fastlegeliste", "fastlegeliste_pasient").map {
-                count(it)
-            }
+            listOf(
+                    "legekontor",
+                    "pasient",
+                    "fastlegeliste",
+                    "fastlegeliste_pasient",
+                    "konsultasjon",
+                )
+                .map { count(it) }
         assertEquals(before, after)
-        assertEquals("1", count("konsultasjon"))
         assertEquals(
             listOf(listOf(konsultasjonId.toString())),
-            queryStrings("SELECT id FROM konsultasjon"),
+            queryStrings("SELECT id FROM konsultasjon WHERE id = '$konsultasjonId'"),
         )
     }
 
