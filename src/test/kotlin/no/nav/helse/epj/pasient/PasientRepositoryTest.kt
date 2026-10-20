@@ -22,6 +22,7 @@ import no.nav.helse.epj.konsultasjon.KonsultasjonRepository
 import no.nav.helse.epj.konsultasjon.OpprettKonsultasjon
 import no.nav.helse.utils.WithPostgresql
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -280,4 +281,51 @@ class PasientRepositoryTest : WithPostgresql() {
 
         assertNull(pasientRepository.findById(pasient.id.value))
     }
+
+    @Test
+    fun `a patient on another doctor's list at the same org is selectable by any doctor there`() =
+        runTest {
+            ensureOrgs()
+            val pasient = nyPasient()
+            pasientRepository.insert(pasient)
+            putOnList(pasient, listFor("colleague-${Uuid.generateV4()}", "311111116"))
+
+            val liste = pasientRepository.listAtLegekontor("311111116", HelsepersonellHpr("me"))
+
+            assertEquals(true, liste.single { it.pasient.id == pasient.id }.selectable)
+            assertTrue(pasientRepository.isListedAt(pasient.id.value, "311111116"))
+        }
+
+    @Test
+    fun `moving a patient to a list at another org keeps the clinical data at the first org`() =
+        runTest {
+            ensureOrgs()
+            val pasient = nyPasient()
+            pasientRepository.insert(pasient)
+            val oldList = listFor("a-${Uuid.generateV4()}", "311111116")
+            putOnList(pasient, oldList)
+            val konsultasjonId = startKonsultasjonAt(pasient, "311111116")
+
+            dbQuery { FastlegelistePasientTable.deleteWhere { pasientId eq pasient.id.value } }
+            putOnList(pasient, listFor("b-${Uuid.generateV4()}", "311111124"))
+
+            val konsultasjoner = KonsultasjonRepository()
+            assertEquals(
+                konsultasjonId,
+                konsultasjoner.findByKonsultasjonId(konsultasjonId, "311111116")?.id,
+            )
+            assertNull(konsultasjoner.findByKonsultasjonId(konsultasjonId, "311111124"))
+            assertTrue(konsultasjoner.listByPasientId(pasient.id, "311111124").isEmpty())
+
+            val atFirst =
+                pasientRepository.listAtLegekontor("311111116", HelsepersonellHpr("a")).single {
+                    it.pasient.id == pasient.id
+                }
+            assertFalse(atFirst.selectable)
+            val atSecond =
+                pasientRepository.listAtLegekontor("311111124", HelsepersonellHpr("b")).single {
+                    it.pasient.id == pasient.id
+                }
+            assertTrue(atSecond.selectable)
+        }
 }
