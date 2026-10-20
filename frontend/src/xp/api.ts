@@ -8,6 +8,7 @@ import {
   LaunchErrorSchema,
   LaunchResponseSchema,
   MaalingSchema,
+  PasientListeElementSchema,
   PasientSchema,
   SessionOrgSchema,
   SessionSchema,
@@ -19,6 +20,7 @@ import {
   type Maaling,
   type OpprettPasientRequest,
   type Pasient,
+  type PasientListeElement,
   type Session,
   type SessionOrg,
   type SmartConfiguration,
@@ -89,9 +91,9 @@ export async function chooseSessionOrg(
   return SessionOrgSchema.parse(await response.json());
 }
 
-export async function fetchPatients(): Promise<Pasient[]> {
+export async function fetchPatients(): Promise<PasientListeElement[]> {
   const response = await request("/api/patient");
-  return PasientSchema.array().parse(await response.json());
+  return PasientListeElementSchema.array().parse(await response.json());
 }
 
 export async function fetchPatient(id: string): Promise<Pasient> {

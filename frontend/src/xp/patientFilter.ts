@@ -1,7 +1,7 @@
 import type { Pasient } from "../utils/mapping/epj";
 import { fullName } from "./patientInfo";
 
-export function filterPatients(patients: Pasient[], query: string) {
+export function filterPatients<T extends Pasient>(patients: T[], query: string) {
   const needle = query.trim().toLowerCase();
   if (!needle) return patients;
   const digits = needle.replace(/\s/g, "");

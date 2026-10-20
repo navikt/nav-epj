@@ -12,6 +12,7 @@ const patients = [
     personidentType: "FNR",
     birthDate: "1990-01-01",
     gender: "MALE",
+    selectable: true,
   },
   {
     id: "p2",
@@ -21,6 +22,7 @@ const patients = [
     personidentType: "FNR",
     birthDate: "1990-02-02",
     gender: "MALE",
+    selectable: true,
   },
 ];
 

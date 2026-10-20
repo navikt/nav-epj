@@ -2,7 +2,7 @@ import { vi } from "vitest";
 import { useAppRunStore } from "./appRunStore";
 import { useAppsStore } from "./appsStore";
 import { useJournalStore } from "./journalStore";
-import type { App, Konsultasjon, Pasient } from "../utils/mapping/epj";
+import type { App, Konsultasjon, Pasient, PasientListeElement } from "../utils/mapping/epj";
 
 export const sykInn: App = {
   clientId: "syk-inn",
@@ -33,7 +33,7 @@ export const nyFane: App = {
   launchMode: "tab",
 };
 
-export const ola: Pasient = {
+export const ola: PasientListeElement = {
   id: "p1",
   fornavn: "Ola",
   etternavn: "Nordmann",
@@ -41,9 +41,10 @@ export const ola: Pasient = {
   personidentType: "FNR",
   birthDate: "1990-01-01",
   gender: "MALE",
+  selectable: true,
 };
 
-export const kari: Pasient = {
+export const kari: PasientListeElement = {
   ...ola,
   id: "p2",
   fornavn: "Kari",

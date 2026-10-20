@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { scopePatients, usePatientsStore } from "./patientsStore";
-import type { Pasient } from "../utils/mapping/epj";
+import type { PasientListeElement } from "../utils/mapping/epj";
 
-const pasient = (id: string): Pasient => ({
+const pasient = (id: string): PasientListeElement => ({
   id,
   fornavn: `Fornavn${id}`,
   etternavn: "Ape",
@@ -10,6 +10,7 @@ const pasient = (id: string): Pasient => ({
   personidentType: "FNR",
   birthDate: null,
   gender: null,
+  selectable: true,
 });
 
 const store = () => usePatientsStore.getState();

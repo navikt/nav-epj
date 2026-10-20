@@ -52,8 +52,10 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe("api", () => {
   it("lists patients", async () => {
-    const fn = stub([pasient]);
-    expect(await fetchPatients()).toHaveLength(1);
+    const fn = stub([{ ...pasient, selectable: false }]);
+    const patients = await fetchPatients();
+    expect(patients).toHaveLength(1);
+    expect(patients[0].selectable).toBe(false);
     expect(fn).toHaveBeenCalledWith("/api/patient", undefined);
   });
 
