@@ -48,11 +48,11 @@ class PractitionerRoleService(val helsepersonellService: HelsepersonellService) 
                         com.google.fhir.model.r4.String(value = "Practitioner/${this.hpr.value}")
                 ),
             organization =
-                Reference(
-                    reference =
-                        com.google.fhir.model.r4.String(
-                            value = "Organization/${this.legekontorId.value}"
-                        )
-                ),
+                this.legekontorId?.let {
+                    Reference(
+                        reference =
+                            com.google.fhir.model.r4.String(value = "Organization/${it.value}")
+                    )
+                },
         )
 }

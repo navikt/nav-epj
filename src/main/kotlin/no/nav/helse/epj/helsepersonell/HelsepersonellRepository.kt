@@ -21,7 +21,6 @@ class HelsepersonellRepository {
     suspend fun insert(helsePersonell: OpprettHelsepersonell) = dbQuery {
         logger.info("Inserting helsepersonell: ${helsePersonell.navn}")
         HelsepersonellTable.insertIgnore {
-            it[legekontorId] = helsePersonell.legekontorId.value
             it[hpr] = helsePersonell.hpr.value
             it[navn] = helsePersonell.navn
             it[autorisasjon] = helsePersonell.autorisasjon
@@ -56,7 +55,7 @@ class HelsepersonellRepository {
     private fun ResultRow.toHelsepersonell() =
         Helsepersonell(
             hpr = HelsepersonellHpr(this[HelsepersonellTable.hpr]),
-            legekontorId = LegekontorId(this[HelsepersonellTable.legekontorId]),
+            legekontorId = this[HelsepersonellTable.legekontorId]?.let { LegekontorId(it) },
             navn = this[HelsepersonellTable.navn],
             autorisasjon = this[HelsepersonellTable.autorisasjon],
         )

@@ -48,7 +48,7 @@ fun Application.configureEpjModule() {
             sessionRoutes()
             pasientRoutes(pasientService)
             activePatientRoutes(activePatientService, valkeyService)
-            helsepersonellRoutes(helsepersonellService, legekontorService)
+            helsepersonellRoutes(helsepersonellService)
             konsultasjonRoutes(konsultasjonService, activePatientService)
             legekontorRoutes(legekontorService)
             diagnoseRoutes(konsultasjonService)

@@ -4,7 +4,6 @@ import no.nav.helse.core.utils.HelsepersonellNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
-import no.nav.helse.epj.legekontor.Legekontor
 import no.nav.helse.epj.pasient.PasientId
 
 class HelsepersonellService(val helsepersonellRepository: HelsepersonellRepository) {
@@ -41,7 +40,6 @@ class HelsepersonellService(val helsepersonellRepository: HelsepersonellReposito
             log.info("Fant ikke helsepersonell for hpr $hpr, oppretter ny")
             val opprettHelsepersonell =
                 OpprettHelsepersonell(
-                    legekontorId = Legekontor.DEFAULT.id,
                     hpr = hpr,
                     navn = navn,
                     autorisasjon = "Lege", // TODO hent fra UserInfo

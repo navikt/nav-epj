@@ -33,7 +33,7 @@ object LegekontorTable : Table("legekontor") {
 
 object HelsepersonellTable : Table("helsepersonell") {
     val id = uuid("id")
-    val legekontorId = reference("legekontor_id", refColumn = LegekontorTable.id)
+    val legekontorId = reference("legekontor_id", refColumn = LegekontorTable.id).nullable()
     val hpr = text("hpr")
     val navn = text("navn")
     val autorisasjon = text("autorisasjon")
