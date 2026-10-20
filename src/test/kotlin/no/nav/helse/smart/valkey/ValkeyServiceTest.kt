@@ -2,6 +2,7 @@ package no.nav.helse.smart.valkey
 
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.utils.WithValkey
 import org.junit.Test
@@ -150,5 +151,15 @@ class ValkeyServiceTest : WithValkey() {
         valkeyService.setIfAbsent("jti-2", "", ttlSeconds = 60)
         val result = valkeyService.setIfAbsent("jti-2", "", ttlSeconds = 60)
         assertEquals(false, result)
+    }
+
+    @Test
+    fun `stores and retrieves the session org per hpr with an 8 hour expiry`() = runTest {
+        valkeyService.setSessionOrg("hpr-org-1", "311111116")
+
+        assertEquals("311111116", valkeyService.getSessionOrg("hpr-org-1"))
+        assertNull(valkeyService.getSessionOrg("hpr-org-2"))
+        val ttl = glideClient.ttl("epj:session-org:hpr-org-1").get()
+        assertTrue(ttl in (8 * 60 * 60 - 60)..(8 * 60 * 60), "$ttl")
     }
 }

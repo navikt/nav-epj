@@ -53,6 +53,20 @@ class ValkeyService(private val glideClient: GlideClient) {
         return ActivePatient(patientId, Instant.now().plusSeconds(remainingSeconds))
     }
 
+    suspend fun setSessionOrg(hpr: String, orgnummer: String) {
+        glideClient
+            .set(
+                sessionOrgKey(hpr),
+                orgnummer,
+                SetOptions.builder()
+                    .expiry(SetOptions.Expiry.Seconds(ACTIVE_PATIENT_TTL_SECONDS))
+                    .build(),
+            )
+            .await()
+    }
+
+    suspend fun getSessionOrg(hpr: String): String? = glideClient.get(sessionOrgKey(hpr)).await()
+
     suspend fun saveAuthCode(code: String, authCode: AuthCodeContext) {
         glideClient
             .set(
@@ -88,3 +102,5 @@ private fun authCodeKey(code: String) = "smart:code:$code"
 private fun launchKey(launchId: String) = "smart:launch:$launchId"
 
 private fun activePatientKey(hpr: String) = "smart:active-patient:$hpr"
+
+private fun sessionOrgKey(hpr: String) = "epj:session-org:$hpr"

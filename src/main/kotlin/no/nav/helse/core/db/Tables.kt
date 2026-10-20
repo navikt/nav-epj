@@ -102,3 +102,11 @@ object MaalingTable : Table("maaling") {
     val created = datetime("created_at")
     val updated = datetime("updated_at")
 }
+
+object FastlegelisteTable : Table("fastlegeliste") {
+    val id = uuid("id")
+    val hpr = text("hpr")
+    val legekontorId = reference("legekontor_id", refColumn = LegekontorTable.id)
+    val created = datetime("created_at")
+    val updated = datetime("updated_at")
+}
