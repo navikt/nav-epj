@@ -25,7 +25,7 @@ Approved scope boundaries for this delivery:
 - Three standalone EHR-launch variants: public (`none`), confidential symmetric
   (`client_secret_basic`), confidential asymmetric (`private_key_jwt`).
 - Reference implementations are visible in the starter repository, not hidden.
-- The event cohort is eight hand-written mock patients: four with fødselsnummer, four with d-nummer.
+- The event cohort is 32 mock patients in four organisations (see [hackathon-roster.md](hackathon-roster.md)), with both fødselsnummer and d-nummer in every organisation.
   Their identifiers use Skatteetaten's synthetic format (month + 80, and day + 40 for d-nummer), so
   they can never belong to a real person. No real patient data is used.
 - The maximum team roster is 10 teams. Teams have a minimum of one person with no upper size

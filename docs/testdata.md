@@ -17,7 +17,8 @@ What the seed does:
   patient the seed places on a list moves there. Patients created in the app keep their list.
   Removing a patient line from the seed does not remove their membership: delete the row from
   `fastlegeliste_pasient` by hand.
-- Never deletes patients and never touches clinical tables (`konsultasjon`, `maaling`, ...).
+- Never deletes patients or clinical data. `R__testdata.sql` does not touch clinical tables
+  (`konsultasjon`, `maaling`, ...).
 
 ## Hackathon data
 
@@ -25,8 +26,15 @@ What the seed does:
 with one list owned by a placeholder HPR (900000101 to 900000104) and eight patients (32 in total,
 FNR and DNR in every org, two households split across orgs). Attendees log in with SyntPop
 clinicians whose HPRs are not on any list, so they work as vikar and pick an org after login. The
+patients and what happens to them are listed in [hackathon-roster.md](hackathon-roster.md). The
 data is kept permanently as demo data and follows the same rules as `R__testdata.sql`. To stop
 seeding it, set `database.seedTestdata` to `false` (this also stops `R__testdata.sql`).
+
+The same file seeds konsultasjoner (active, completed, planned and cancelled), ICPC-2 and ICD-10
+diagnoses, journal notes and LOINC/UCUM measurements at the patient's list org, including trend
+series for blood pressure, HbA1c and weight. Rows get fixed ids derived from a key with `md5`, are
+inserted with `ON CONFLICT DO NOTHING`, and are never updated or deleted, so re-running the seed
+duplicates nothing and keeps edits made in the app.
 
 Rows are referenced by natural keys (orgnummer, personident, HPR) through subselects, so the seed
 never hard-codes generated ids.
