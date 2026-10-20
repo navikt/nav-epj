@@ -48,6 +48,12 @@ From the backend directory, start the application using Gradle:
 ./gradlew runLocal
 ```
 
+### Test data
+
+Organisations, mock patients and fastlegelister are seeded by a repeatable Flyway migration. See
+[docs/testdata.md](./docs/testdata.md) for how to add an organisation, a patient, a doctor's list or
+a column.
+
 ### Session information
 
 `GET /api/session` backs the Systeminformasjon page. It returns a fixed selection of claims from the
