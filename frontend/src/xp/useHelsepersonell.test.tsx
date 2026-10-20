@@ -1,5 +1,6 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { notifySessionOrgConflict } from "./sessionOrgConflict";
 import { useHelsepersonell } from "./useHelsepersonell";
 
 const me = { hpr: "9144889", legekontorId: null, navn: "Kari", autorisasjon: "Lege" };
@@ -99,5 +100,19 @@ describe("useHelsepersonell", () => {
       }),
     );
     expect(result.current.state).toMatchObject({ sessionOrg });
+  });
+
+  it("refetches the session org after a conflict so an expired choice asks again", async () => {
+    let current: unknown = sessionOrg;
+    stubFetch((url) => respond(url === "/api/session-org" ? current : me));
+    const { result } = renderHook(() => useHelsepersonell());
+    await waitFor(() => expect(result.current.state.status).toBe("ready"));
+    current = needsChoice;
+    act(() => notifySessionOrgConflict());
+    await waitFor(() =>
+      expect(result.current.state).toMatchObject({
+        sessionOrg: { needsChoice: true, org: null },
+      }),
+    );
   });
 });

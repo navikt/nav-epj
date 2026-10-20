@@ -1,3 +1,4 @@
+import { onSessionOrgConflict } from "./sessionOrgConflict";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useAppDialogStore } from "./appDialogStore";
 import { useSessionStore } from "./sessionExpiry";
@@ -245,6 +246,24 @@ describe("api", () => {
   it("rejects setting an unknown active patient", async () => {
     stub({}, false, 404);
     await expect(putActivePatient("nope")).rejects.toMatchObject({ status: 404 });
+  });
+
+  it("signals a session org conflict on a 409 from active patient", async () => {
+    const listener = vi.fn();
+    const off = onSessionOrgConflict(listener);
+    stub({}, false, 409);
+    await expect(putActivePatient("p2")).rejects.toMatchObject({ status: 409 });
+    off();
+    expect(listener).toHaveBeenCalledOnce();
+  });
+
+  it("does not signal a conflict on other errors", async () => {
+    const listener = vi.fn();
+    const off = onSessionOrgConflict(listener);
+    stub({}, false, 404);
+    await expect(putActivePatient("nope")).rejects.toMatchObject({ status: 404 });
+    off();
+    expect(listener).not.toHaveBeenCalled();
   });
 
   it("launches an app and returns the launch url", async () => {

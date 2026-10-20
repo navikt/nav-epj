@@ -114,6 +114,29 @@ describe("UserGate", () => {
     );
   });
 
+  it("lets the user re-select the current org", async () => {
+    const user = userEvent.setup();
+    const onChooseOrg = vi.fn().mockResolvedValue(undefined);
+    const org = { id: "k", navn: "Kontor", orgnummer: "311111116" };
+    render(
+      <UserGate
+        state={{
+          ...ready,
+          sessionOrg: { org, needsChoice: false, canChoose: true, choosableOrgs: [{ org, hasOwnList: false }] },
+        }}
+        onRetry={() => {}}
+        onChooseOrg={onChooseOrg}
+        changingOrg
+      >
+        <p>Innhold</p>
+      </UserGate>,
+    );
+    const button = screen.getByRole("button", { name: /Kontor/ });
+    expect(button).toBeEnabled();
+    await user.click(button);
+    expect(onChooseOrg).toHaveBeenCalledWith("311111116");
+  });
+
   it("shows the picker with cancel when the user is changing org", async () => {
     const user = userEvent.setup();
     const onCancel = vi.fn();

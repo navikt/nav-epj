@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { expireSession } from "./sessionExpiry";
-import { chooseSessionOrg } from "./api";
+import { chooseSessionOrg, fetchSessionOrg } from "./api";
+import { onSessionOrgConflict } from "./sessionOrgConflict";
 import {
   HelsepersonellSchema,
   SessionOrgSchema,
@@ -48,6 +49,20 @@ export function useHelsepersonell() {
     })();
     return () => controller.abort();
   }, [attempt]);
+
+  useEffect(
+    () =>
+      onSessionOrgConflict(() => {
+        fetchSessionOrg()
+          .then((sessionOrg) =>
+            setState((current) =>
+              current.status === "ready" ? { ...current, sessionOrg } : current,
+            ),
+          )
+          .catch(() => undefined);
+      }),
+    [],
+  );
 
   const retry = useCallback(() => {
     setState({ status: "loading" });

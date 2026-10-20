@@ -1,4 +1,5 @@
 import { expireSession } from "./sessionExpiry";
+import { notifySessionOrgConflict } from "./sessionOrgConflict";
 import {
   ActivePatientSchema,
   AppSchema,
@@ -60,6 +61,7 @@ export const callOf = (url: string, init?: RequestInit) =>
 async function request(url: string, init?: RequestInit) {
   const response = await fetch(url, init);
   if (response.status === 401) expireSession(callOf(url, init));
+  if (response.status === 409) notifySessionOrgConflict();
   if (!response.ok) throw new ApiError(response.status);
   return response;
 }
@@ -193,6 +195,7 @@ export async function launchApp(
   const init = jsonInit("POST", { appId, patientId });
   const response = await fetch("/api/launch", init);
   if (response.status === 401) expireSession(callOf("/api/launch", init));
+  if (response.status === 409) notifySessionOrgConflict();
   if (!response.ok) {
     const error = LaunchErrorSchema.safeParse(
       await response.json().catch(() => null),

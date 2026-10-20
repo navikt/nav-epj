@@ -15,7 +15,6 @@ type Props = {
 export function OrgPicker({ sessionOrg, onChoose, onCancel }: Props) {
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
-  const currentOrgnr = sessionOrg.org?.orgnummer;
 
   async function choose(orgnummer: string) {
     setPending(true);
@@ -44,7 +43,7 @@ export function OrgPicker({ sessionOrg, onChoose, onCancel }: Props) {
           {sessionOrg.choosableOrgs.map(({ org, hasOwnList }) => (
             <li key={org.id}>
               <Button
-                disabled={pending || org.orgnummer === currentOrgnr}
+                disabled={pending}
                 onClick={() => org.orgnummer && void choose(org.orgnummer)}
               >
                 {org.navn}
