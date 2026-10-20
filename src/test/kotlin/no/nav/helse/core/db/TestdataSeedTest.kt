@@ -215,4 +215,21 @@ class TestdataSeedTest : WithPostgresql() {
 
         assertEquals("8", count("fastlegeliste_pasient"))
     }
+
+    @Test
+    fun `every listed patient belongs to the legekontor of its list`() {
+        val mismatched =
+            queryStrings(
+                """
+                SELECT p.personident
+                FROM pasient p
+                         JOIN fastlegeliste_pasient flp ON flp.pasient_id = p.id
+                         JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
+                WHERE p.legekontor_id <> fl.legekontor_id
+                """
+                    .trimIndent()
+            )
+
+        assertEquals(emptyList(), mismatched)
+    }
 }

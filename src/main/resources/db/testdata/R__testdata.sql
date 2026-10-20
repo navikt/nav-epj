@@ -28,7 +28,8 @@ FROM (VALUES ('311111116', 'MATEMATISK', 'APE', '21914897936', NULL, NULL, NULL)
              ('311111124', 'RASK', 'LYNG', '49886810767', 'DNR', '1968-08-09', 'MALE'))
          AS v (orgnummer, fornavn, etternavn, personident, personident_type, birth_date, gender)
 ON CONFLICT (personident) DO UPDATE
-    SET fornavn          = EXCLUDED.fornavn,
+    SET legekontor_id    = EXCLUDED.legekontor_id,
+        fornavn          = EXCLUDED.fornavn,
         etternavn        = EXCLUDED.etternavn,
         personident_type = EXCLUDED.personident_type,
         birth_date       = EXCLUDED.birth_date,
