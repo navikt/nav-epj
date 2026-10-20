@@ -80,6 +80,18 @@ describe("PatientsPage", () => {
     expect(onOpenJournal).toHaveBeenCalledWith(expect.objectContaining({ id: "2" }));
   });
 
+  it("shows lapsed patients without an open button", () => {
+    act(() =>
+      usePatientsStore.setState({
+        status: "ready",
+        patients: [{ ...make(1), selectable: false }],
+      }),
+    );
+    setup();
+    expect(screen.getByText("Ikke lenger på en fastlegeliste her")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Åpne journal/ })).toBeNull();
+  });
+
   it("shows the pager strings and pages through the list", async () => {
     seed(30);
     setup();

@@ -135,6 +135,7 @@ export const copy = {
   "s3.col.action.sr": "Handling",
   "s3.open.aria": (navn: string) => `Åpne journal for ${navn}`,
   "s3.open.tooltip": "Åpne journal",
+  "s3.notListed": "Ikke lenger på en fastlegeliste her",
   "s3.pager.showing": (fra: number, til: number, n: number) => `Viser ${fra}–${til} av ${n} pasienter`,
   "s3.pager.filtered": (n: number) => `(filtrert fra ${n})`,
   "s3.pager.page": (side: number, sider: number) => `Side ${side} av ${sider}`,

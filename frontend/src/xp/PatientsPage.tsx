@@ -183,12 +183,16 @@ export function PatientsPage({ canCreate, onNewPatient, onOpenJournal }: Props) 
                           : formatDate(last.tidspunkt)}
                     </td>
                     <td>
-                      <IconButton
-                        icon="journal"
-                        label={copy["s3.open.aria"](fullName(pasient))}
-                        title={copy["s3.open.tooltip"]}
-                        onClick={() => onOpenJournal(pasient)}
-                      />
+                      {pasient.selectable ? (
+                        <IconButton
+                          icon="journal"
+                          label={copy["s3.open.aria"](fullName(pasient))}
+                          title={copy["s3.open.tooltip"]}
+                          onClick={() => onOpenJournal(pasient)}
+                        />
+                      ) : (
+                        <span>{copy["s3.notListed"]}</span>
+                      )}
                     </td>
                   </tr>
                 );
