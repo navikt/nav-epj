@@ -4,12 +4,18 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import java.time.ZoneOffset
 import no.nav.helse.epj.patientId
+import no.nav.helse.epj.sessionorg.SessionOrgResolver
+import no.nav.helse.epj.sessionorg.requireOrgnummer
+import no.nav.helse.helseId.loggedInUser
 
-fun Route.maalingRoutes(maalingService: MaalingService) {
+fun Route.maalingRoutes(maalingService: MaalingService, sessionOrgResolver: SessionOrgResolver) {
     route("/api/patient/{patientId}/maalinger") {
         get {
+            val orgnummer = sessionOrgResolver.requireOrgnummer(loggedInUser().hpr)
             call.respond(
-                maalingService.getMaalingerForPasient(call.patientId()).map { it.toResponse() }
+                maalingService.getMaalingerForPasient(call.patientId(), orgnummer).map {
+                    it.toResponse()
+                }
             )
         }
     }

@@ -11,24 +11,24 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
-import no.nav.helse.epj.helsepersonell.HelsepersonellService
+import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.konsultasjon.Journalnotat
 import no.nav.helse.epj.konsultasjon.JournalnotatId
+import no.nav.helse.epj.konsultasjon.Konsultasjon
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
 import no.nav.helse.epj.konsultasjon.OpprettJournalnotatRequest
+import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
+import no.nav.helse.utils.DEFAULT_ORGNUMMER
 import org.junit.Test
 
 class DocumentReferenceServiceTest {
 
     private val konsultasjonService = mockk<KonsultasjonService>()
-    private val helsepersonellService = mockk<HelsepersonellService>()
-    private val documentReferenceService =
-        DocumentReferenceService(konsultasjonService, helsepersonellService)
+    private val documentReferenceService = DocumentReferenceService(konsultasjonService)
 
     @OptIn(ExperimentalUuidApi::class)
     private fun journalnotat(
@@ -42,6 +42,21 @@ class DocumentReferenceServiceTest {
             konsultasjonId = konsultasjonId,
             pasientId = pasientId,
             journalnotat = journalnotat,
+        )
+
+    @OptIn(ExperimentalUuidApi::class)
+    private fun konsultasjon(persisted: Journalnotat, hpr: List<String>) =
+        Konsultasjon(
+            id = persisted.konsultasjonId,
+            pasientId = persisted.pasientId,
+            legekontorId = LegekontorId(Uuid.generateV4()),
+            hpr = hpr,
+            journalnotat = emptyList(),
+            diagnoser = emptyList(),
+            startetTidspunkt = java.time.LocalDateTime.of(2025, 1, 1, 10, 0),
+            avsluttetTidspunkt = null,
+            status = KonsultasjonStatus.PAAGAAENDE,
+            problemstilling = null,
         )
 
     @OptIn(ExperimentalUuidApi::class)
@@ -60,11 +75,14 @@ class DocumentReferenceServiceTest {
                     konsultasjonId = request.konsultasjonId,
                     journalnotat = request.journalnotat,
                 )
-            coEvery { konsultasjonService.opprettJournalnotat(request) } returns persisted
-            coEvery { helsepersonellService.getHelsepersonell(persisted.pasientId) } returns
-                emptyList()
+            coEvery { konsultasjonService.opprettJournalnotat(request, DEFAULT_ORGNUMMER) } returns
+                persisted
+            coEvery {
+                konsultasjonService.getKonsultasjon(persisted.konsultasjonId, DEFAULT_ORGNUMMER)
+            } returns konsultasjon(persisted, emptyList())
 
-            val documentReference = documentReferenceService.createDocumentReference(request)
+            val documentReference =
+                documentReferenceService.createDocumentReference(request, DEFAULT_ORGNUMMER)
 
             assertEquals(persisted.id.value.toString(), documentReference.id)
             assertEquals(
@@ -76,7 +94,9 @@ class DocumentReferenceServiceTest {
                 documentReference.context?.encounter?.single()?.reference?.value,
             )
             assertEquals("notat", documentReference.description?.value)
-            coVerify(exactly = 1) { konsultasjonService.opprettJournalnotat(request) }
+            coVerify(exactly = 1) {
+                konsultasjonService.opprettJournalnotat(request, DEFAULT_ORGNUMMER)
+            }
         }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -89,11 +109,11 @@ class DocumentReferenceServiceTest {
                     konsultasjonId = KonsultasjonId(Uuid.generateV4()),
                     journalnotat = "notat",
                 )
-            coEvery { konsultasjonService.opprettJournalnotat(request) } throws
+            coEvery { konsultasjonService.opprettJournalnotat(request, DEFAULT_ORGNUMMER) } throws
                 KonsultasjonNotFoundException(request.konsultasjonId)
 
             assertFailsWith<KonsultasjonNotFoundException> {
-                documentReferenceService.createDocumentReference(request)
+                documentReferenceService.createDocumentReference(request, DEFAULT_ORGNUMMER)
             }
         }
 
@@ -109,11 +129,14 @@ class DocumentReferenceServiceTest {
                 )
             val persisted =
                 journalnotat(pasientId = request.pasientId, konsultasjonId = request.konsultasjonId)
-            coEvery { konsultasjonService.opprettJournalnotat(request) } returns persisted
-            coEvery { helsepersonellService.getHelsepersonell(persisted.pasientId) } returns
-                listOf(HelsepersonellHpr("999"))
+            coEvery { konsultasjonService.opprettJournalnotat(request, DEFAULT_ORGNUMMER) } returns
+                persisted
+            coEvery {
+                konsultasjonService.getKonsultasjon(persisted.konsultasjonId, DEFAULT_ORGNUMMER)
+            } returns konsultasjon(persisted, listOf("999"))
 
-            val documentReference = documentReferenceService.createDocumentReference(request)
+            val documentReference =
+                documentReferenceService.createDocumentReference(request, DEFAULT_ORGNUMMER)
 
             assertEquals("Practitioner/999", documentReference.author.single().reference?.value)
         }
@@ -122,9 +145,11 @@ class DocumentReferenceServiceTest {
     @Test
     fun `getDocumentReferences returns null when the journalnotat does not exist`() = runTest {
         val id = DocumentReferenceId(Uuid.generateV4())
-        coEvery { konsultasjonService.getJournalnotat(JournalnotatId(id.value)) } returns null
+        coEvery {
+            konsultasjonService.getJournalnotat(JournalnotatId(id.value), DEFAULT_ORGNUMMER)
+        } returns null
 
-        assertNull(documentReferenceService.getDocumentReferences(id))
+        assertNull(documentReferenceService.getDocumentReferences(id, DEFAULT_ORGNUMMER))
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -132,13 +157,17 @@ class DocumentReferenceServiceTest {
     fun `searchDocumentReferences returns an empty searchset bundle when the patient has no notater`() =
         runTest {
             val pasientId = PasientId(Uuid.generateV4())
-            coEvery { konsultasjonService.getJournalnotater(pasientId, null) } returns emptyList()
-            coEvery { helsepersonellService.getHelsepersonell(pasientId) } returns emptyList()
+            coEvery {
+                konsultasjonService.getJournalnotater(pasientId, null, DEFAULT_ORGNUMMER)
+            } returns emptyList()
+            coEvery { konsultasjonService.getKonsultasjoner(pasientId, DEFAULT_ORGNUMMER) } returns
+                emptyList()
 
             val bundle =
                 documentReferenceService.searchDocumentReferences(
                     patientId = PatientInputId(pasientId.value),
                     encounterId = null,
+                    DEFAULT_ORGNUMMER,
                 )
 
             assertEquals(com.google.fhir.model.r4.Bundle.BundleType.Searchset, bundle.type.value)
@@ -152,14 +181,17 @@ class DocumentReferenceServiceTest {
             val pasientId = PasientId(Uuid.generateV4())
             val forste = journalnotat(pasientId = pasientId)
             val andre = journalnotat(pasientId = pasientId)
-            coEvery { konsultasjonService.getJournalnotater(pasientId, null) } returns
-                listOf(forste, andre)
-            coEvery { helsepersonellService.getHelsepersonell(pasientId) } returns emptyList()
+            coEvery {
+                konsultasjonService.getJournalnotater(pasientId, null, DEFAULT_ORGNUMMER)
+            } returns listOf(forste, andre)
+            coEvery { konsultasjonService.getKonsultasjoner(pasientId, DEFAULT_ORGNUMMER) } returns
+                emptyList()
 
             val bundle =
                 documentReferenceService.searchDocumentReferences(
                     patientId = PatientInputId(pasientId.value),
                     encounterId = null,
+                    DEFAULT_ORGNUMMER,
                 )
 
             assertEquals(
@@ -177,14 +209,17 @@ class DocumentReferenceServiceTest {
             val pasientId = PasientId(Uuid.generateV4())
             val konsultasjonId = KonsultasjonId(Uuid.generateV4())
             val notat = journalnotat(pasientId = pasientId, konsultasjonId = konsultasjonId)
-            coEvery { konsultasjonService.getJournalnotater(pasientId, konsultasjonId) } returns
-                listOf(notat)
-            coEvery { helsepersonellService.getHelsepersonell(pasientId) } returns emptyList()
+            coEvery {
+                konsultasjonService.getJournalnotater(pasientId, konsultasjonId, DEFAULT_ORGNUMMER)
+            } returns listOf(notat)
+            coEvery { konsultasjonService.getKonsultasjoner(pasientId, DEFAULT_ORGNUMMER) } returns
+                emptyList()
 
             val bundle =
                 documentReferenceService.searchDocumentReferences(
                     patientId = PatientInputId(pasientId.value),
                     encounterId = EncounterId(konsultasjonId.value),
+                    DEFAULT_ORGNUMMER,
                 )
 
             assertEquals(
@@ -192,7 +227,7 @@ class DocumentReferenceServiceTest {
                 (bundle.entry.single().resource as com.google.fhir.model.r4.DocumentReference).id,
             )
             coVerify(exactly = 1) {
-                konsultasjonService.getJournalnotater(pasientId, konsultasjonId)
+                konsultasjonService.getJournalnotater(pasientId, konsultasjonId, DEFAULT_ORGNUMMER)
             }
         }
 }

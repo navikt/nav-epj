@@ -57,10 +57,10 @@ fun Application.configureEpjModule() {
             activePatientRoutes(activePatientService)
             helsepersonellRoutes(helsepersonellService)
             konsultasjonRoutes(konsultasjonService, activePatientService, sessionOrgResolver)
-            legekontorRoutes(legekontorService)
-            diagnoseRoutes(konsultasjonService)
-            journalnotatRoutes(konsultasjonService)
-            maalingRoutes(maalingService)
+            legekontorRoutes(legekontorService, sessionOrgResolver)
+            diagnoseRoutes(konsultasjonService, sessionOrgResolver)
+            journalnotatRoutes(konsultasjonService, sessionOrgResolver)
+            maalingRoutes(maalingService, sessionOrgResolver)
         }
     }
 }

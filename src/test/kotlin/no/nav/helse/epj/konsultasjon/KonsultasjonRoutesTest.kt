@@ -33,6 +33,7 @@ import no.nav.helse.helseId.User
 import no.nav.helse.plugins.configureStatusPages
 import no.nav.helse.smart.valkey.ActivePatient
 import no.nav.helse.smart.valkey.ValkeyService
+import no.nav.helse.utils.DEFAULT_ORGNUMMER
 import org.junit.Test
 
 @OptIn(ExperimentalUuidApi::class)
@@ -45,7 +46,12 @@ class KonsultasjonRoutesTest {
         mockk<SessionOrgResolver> {
             coEvery { resolve(any()) } returns
                 SessionOrgResolution.Resolved(
-                    Legekontor(LegekontorId(Uuid.generateV4()), "Fjordvik", "311111116", null),
+                    Legekontor(
+                        LegekontorId(Uuid.generateV4()),
+                        "Fjordvik",
+                        DEFAULT_ORGNUMMER,
+                        null,
+                    ),
                     derived = true,
                 )
         }
@@ -98,7 +104,7 @@ class KonsultasjonRoutesTest {
     @Test
     fun `GET konsultasjon with known id returns 200`() = testApp {
         val konsultasjonId = KonsultasjonId(Uuid.generateV4())
-        coEvery { konsultasjonService.getKonsultasjon(konsultasjonId) } returns
+        coEvery { konsultasjonService.getKonsultasjon(konsultasjonId, DEFAULT_ORGNUMMER) } returns
             konsultasjon(id = konsultasjonId)
 
         val response = get("/api/konsultasjon/${konsultasjonId.value}")
@@ -110,7 +116,7 @@ class KonsultasjonRoutesTest {
     @Test
     fun `GET konsultasjon with unknown id returns 404`() = testApp {
         val konsultasjonId = KonsultasjonId(Uuid.generateV4())
-        coEvery { konsultasjonService.getKonsultasjon(konsultasjonId) } throws
+        coEvery { konsultasjonService.getKonsultasjon(konsultasjonId, DEFAULT_ORGNUMMER) } throws
             KonsultasjonNotFoundException(konsultasjonId)
 
         val response = get("/api/konsultasjon/${konsultasjonId.value}")
@@ -122,7 +128,7 @@ class KonsultasjonRoutesTest {
     @Test
     fun `GET konsultasjoner for unknown patient returns 404`() = testApp {
         val pasientId = PasientId(Uuid.generateV4())
-        coEvery { konsultasjonService.getKonsultasjoner(pasientId) } throws
+        coEvery { konsultasjonService.getKonsultasjoner(pasientId, DEFAULT_ORGNUMMER) } throws
             KonsultasjonNotFoundForPatientException(pasientId)
 
         val response = get("/api/patients/${pasientId.value}/konsultasjoner")
@@ -134,7 +140,7 @@ class KonsultasjonRoutesTest {
     @Test
     fun `GET konsultasjoner does not change the active patient`() = testApp {
         val pasientId = PasientId(Uuid.generateV4())
-        coEvery { konsultasjonService.getKonsultasjoner(pasientId) } returns
+        coEvery { konsultasjonService.getKonsultasjoner(pasientId, DEFAULT_ORGNUMMER) } returns
             listOf(konsultasjon(pasientId = pasientId))
 
         val response = get("/api/patients/${pasientId.value}/konsultasjoner")
@@ -147,18 +153,18 @@ class KonsultasjonRoutesTest {
     @Test
     fun `POST konsultasjoner for a listed patient starts it and makes it active`() = testApp {
         val pasientId = PasientId(Uuid.generateV4())
-        coEvery { pasientService.isListedAt(pasientId, "311111116") } returns true
-        coEvery { valkeyService.getActivePatientWithExpiry("111", "311111116") } returns
+        coEvery { pasientService.isListedAt(pasientId, DEFAULT_ORGNUMMER) } returns true
+        coEvery { valkeyService.getActivePatientWithExpiry("111", DEFAULT_ORGNUMMER) } returns
             ActivePatient(pasientId.value.toString(), Instant.now().plusSeconds(60))
         coEvery {
-            konsultasjonService.getOrCreateKonsultasjon(pasientId, any(), "311111116")
+            konsultasjonService.getOrCreateKonsultasjon(pasientId, any(), DEFAULT_ORGNUMMER)
         } returns konsultasjon(pasientId = pasientId)
 
         val response = post("/api/patients/${pasientId.value}/konsultasjoner")
 
         assertEquals(HttpStatusCode.OK, response.status)
         coVerify(exactly = 1) {
-            valkeyService.setActivePatient("111", "311111116", pasientId.value.toString())
+            valkeyService.setActivePatient("111", DEFAULT_ORGNUMMER, pasientId.value.toString())
         }
     }
 
@@ -167,7 +173,7 @@ class KonsultasjonRoutesTest {
     fun `POST konsultasjoner for a patient not on a list at the session org returns 404 and changes nothing`() =
         testApp {
             val pasientId = PasientId(Uuid.generateV4())
-            coEvery { pasientService.isListedAt(pasientId, "311111116") } returns false
+            coEvery { pasientService.isListedAt(pasientId, DEFAULT_ORGNUMMER) } returns false
 
             val response = post("/api/patients/${pasientId.value}/konsultasjoner")
 
@@ -195,7 +201,7 @@ class KonsultasjonRoutesTest {
     @Test
     fun `POST konsultasjoner for an unknown patient returns 404 and changes nothing`() = testApp {
         val pasientId = PasientId(Uuid.generateV4())
-        coEvery { pasientService.isListedAt(pasientId, "311111116") } returns false
+        coEvery { pasientService.isListedAt(pasientId, DEFAULT_ORGNUMMER) } returns false
 
         val response = post("/api/patients/${pasientId.value}/konsultasjoner")
 
@@ -209,13 +215,17 @@ class KonsultasjonRoutesTest {
     fun `POST avbryt cancels the konsultasjon and returns 200`() = testApp {
         val pasientId = PasientId(Uuid.generateV4())
         val konsultasjonId = KonsultasjonId(Uuid.generateV4())
-        coEvery { konsultasjonService.cancelKonsultasjon(konsultasjonId, pasientId) } returns Unit
+        coEvery {
+            konsultasjonService.cancelKonsultasjon(konsultasjonId, pasientId, DEFAULT_ORGNUMMER)
+        } returns Unit
 
         val response =
             post("/api/patients/${pasientId.value}/konsultasjoner/${konsultasjonId.value}/avbryt")
 
         assertEquals(HttpStatusCode.OK, response.status)
-        coVerify(exactly = 1) { konsultasjonService.cancelKonsultasjon(konsultasjonId, pasientId) }
+        coVerify(exactly = 1) {
+            konsultasjonService.cancelKonsultasjon(konsultasjonId, pasientId, DEFAULT_ORGNUMMER)
+        }
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -223,8 +233,9 @@ class KonsultasjonRoutesTest {
     fun `POST avbryt for a konsultasjon not owned by the patient returns 404`() = testApp {
         val pasientId = PasientId(Uuid.generateV4())
         val konsultasjonId = KonsultasjonId(Uuid.generateV4())
-        coEvery { konsultasjonService.cancelKonsultasjon(konsultasjonId, pasientId) } throws
-            KonsultasjonNotFoundForPatientException(pasientId)
+        coEvery {
+            konsultasjonService.cancelKonsultasjon(konsultasjonId, pasientId, DEFAULT_ORGNUMMER)
+        } throws KonsultasjonNotFoundForPatientException(pasientId)
 
         val response =
             post("/api/patients/${pasientId.value}/konsultasjoner/${konsultasjonId.value}/avbryt")

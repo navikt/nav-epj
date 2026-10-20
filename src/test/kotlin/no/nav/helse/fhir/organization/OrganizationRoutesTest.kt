@@ -19,6 +19,7 @@ import no.nav.helse.plugins.configureStatusPages
 import no.nav.helse.smart.security.SmartPrincipal
 import no.nav.helse.smart.security.SmartScope
 import no.nav.helse.smart.security.parseScopes
+import no.nav.helse.utils.DEFAULT_ORGNUMMER
 import org.junit.Test
 
 class OrganizationRoutesTest {
@@ -43,6 +44,7 @@ class OrganizationRoutesTest {
                                 scopes = scopes,
                                 patient = null,
                                 encounter = null,
+                                orgnummer = DEFAULT_ORGNUMMER,
                             )
                         )
                     }
@@ -67,7 +69,7 @@ class OrganizationRoutesTest {
                 orgnummer = "123456789",
                 tlf = "12345678",
             )
-        coEvery { legekontorService.getLegekontor(kontor.id) } returns kontor
+        coEvery { legekontorService.getLegekontor(kontor.id, DEFAULT_ORGNUMMER) } returns kontor
 
         testApp {
             val response = get("/fhir/Organization/${kontor.id.value}")
@@ -80,7 +82,8 @@ class OrganizationRoutesTest {
     @Test
     fun `GET Organization returns 404 for an unknown id`() {
         val id = LegekontorId(Uuid.generateV4())
-        coEvery { legekontorService.getLegekontor(id) } throws LegekontorNotfoundException()
+        coEvery { legekontorService.getLegekontor(id, DEFAULT_ORGNUMMER) } throws
+            LegekontorNotfoundException()
 
         testApp {
             val response = get("/fhir/Organization/${id.value}")
@@ -111,7 +114,7 @@ class OrganizationRoutesTest {
                 orgnummer = "123456789",
                 tlf = "12345678",
             )
-        coEvery { legekontorService.getLegekontor(kontor.id) } returns kontor
+        coEvery { legekontorService.getLegekontor(kontor.id, DEFAULT_ORGNUMMER) } returns kontor
 
         testApp(parseScopes("system/Organization.r")) {
             val response = get("/fhir/Organization/${kontor.id.value}")

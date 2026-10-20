@@ -31,6 +31,7 @@ import no.nav.helse.smart.security.Interaction
 import no.nav.helse.smart.security.ScopeContext
 import no.nav.helse.smart.security.SmartPrincipal
 import no.nav.helse.smart.security.SmartScope
+import no.nav.helse.utils.DEFAULT_ORGNUMMER
 import org.junit.Test
 
 class ObservationRoutesTest {
@@ -85,6 +86,7 @@ class ObservationRoutesTest {
                                 scopes = scopes,
                                 patient = boundPatient,
                                 encounter = null,
+                                orgnummer = DEFAULT_ORGNUMMER,
                             )
                         )
                     }
@@ -104,7 +106,7 @@ class ObservationRoutesTest {
     fun `GET Observation by id returns the mapped resource for the launched patient`() {
         val patientId = Uuid.generateV4().toString()
         val observationId = ObservationId(Uuid.generateV4())
-        coEvery { observationService.getObservationById(observationId) } returns
+        coEvery { observationService.getObservationById(observationId, DEFAULT_ORGNUMMER) } returns
             sampleObservation(observationId.value.toString(), patientId)
 
         testApp(boundPatient = patientId) {
@@ -123,7 +125,8 @@ class ObservationRoutesTest {
     @Test
     fun `GET Observation by id returns 404 for an unknown observation`() {
         val observationId = ObservationId(Uuid.generateV4())
-        coEvery { observationService.getObservationById(observationId) } returns null
+        coEvery { observationService.getObservationById(observationId, DEFAULT_ORGNUMMER) } returns
+            null
 
         testApp(boundPatient = Uuid.generateV4().toString()) {
             val response = get("/fhir/Observation/${observationId.value}")
@@ -137,7 +140,7 @@ class ObservationRoutesTest {
     fun `GET Observation by id rejects a token missing the Observation scope`() {
         val patientId = Uuid.generateV4().toString()
         val observationId = ObservationId(Uuid.generateV4())
-        coEvery { observationService.getObservationById(observationId) } returns
+        coEvery { observationService.getObservationById(observationId, DEFAULT_ORGNUMMER) } returns
             sampleObservation(observationId.value.toString(), patientId)
 
         testApp(scopes = emptySet(), boundPatient = patientId) {
@@ -151,7 +154,7 @@ class ObservationRoutesTest {
     @Test
     fun `GET Observation by id returns 404 for a token bound to a different patient`() {
         val observationId = ObservationId(Uuid.generateV4())
-        coEvery { observationService.getObservationById(observationId) } returns
+        coEvery { observationService.getObservationById(observationId, DEFAULT_ORGNUMMER) } returns
             sampleObservation(observationId.value.toString(), Uuid.generateV4().toString())
 
         testApp(boundPatient = Uuid.generateV4().toString()) {
@@ -190,7 +193,12 @@ class ObservationRoutesTest {
     fun `GET Observation search accepts the patient alias parameter`() {
         val patientId = Uuid.generateV4()
         coEvery {
-            observationService.searchObservations(PatientInputId(patientId), null, null)
+            observationService.searchObservations(
+                PatientInputId(patientId),
+                null,
+                null,
+                DEFAULT_ORGNUMMER,
+            )
         } returns Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
 
         testApp(boundPatient = patientId.toString()) {
@@ -204,7 +212,12 @@ class ObservationRoutesTest {
     fun `GET Observation search accepts a system-level scope without launch context`() {
         val patientId = Uuid.generateV4()
         coEvery {
-            observationService.searchObservations(PatientInputId(patientId), null, null)
+            observationService.searchObservations(
+                PatientInputId(patientId),
+                null,
+                null,
+                DEFAULT_ORGNUMMER,
+            )
         } returns Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
 
         testApp(
@@ -228,6 +241,7 @@ class ObservationRoutesTest {
                 PatientInputId(patientId),
                 EncounterId(encounterId),
                 null,
+                DEFAULT_ORGNUMMER,
             )
         } returns Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
 
@@ -242,6 +256,7 @@ class ObservationRoutesTest {
                 PatientInputId(patientId),
                 EncounterId(encounterId),
                 null,
+                DEFAULT_ORGNUMMER,
             )
         }
     }
@@ -251,7 +266,12 @@ class ObservationRoutesTest {
     fun `GET Observation search passes a bare LOINC code filter through`() {
         val patientId = Uuid.generateV4()
         coEvery {
-            observationService.searchObservations(PatientInputId(patientId), null, "8310-5")
+            observationService.searchObservations(
+                PatientInputId(patientId),
+                null,
+                "8310-5",
+                DEFAULT_ORGNUMMER,
+            )
         } returns Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
 
         testApp(boundPatient = patientId.toString()) {
@@ -266,7 +286,12 @@ class ObservationRoutesTest {
     fun `GET Observation search accepts a system-qualified LOINC code`() {
         val patientId = Uuid.generateV4()
         coEvery {
-            observationService.searchObservations(PatientInputId(patientId), null, "8310-5")
+            observationService.searchObservations(
+                PatientInputId(patientId),
+                null,
+                "8310-5",
+                DEFAULT_ORGNUMMER,
+            )
         } returns Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
 
         testApp(boundPatient = patientId.toString()) {
@@ -295,7 +320,12 @@ class ObservationRoutesTest {
     fun `GET Observation search returns an empty searchset bundle`() {
         val patientId = Uuid.generateV4()
         coEvery {
-            observationService.searchObservations(PatientInputId(patientId), null, null)
+            observationService.searchObservations(
+                PatientInputId(patientId),
+                null,
+                null,
+                DEFAULT_ORGNUMMER,
+            )
         } returns Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
 
         testApp(boundPatient = patientId.toString()) {
@@ -393,7 +423,7 @@ class ObservationRoutesTest {
         val encounterId = Uuid.generateV4()
         val generatedId = ObservationId(Uuid.generateV4())
         val persisted = sampleObservation(generatedId.value.toString(), patientId.toString())
-        coEvery { observationService.createObservation(any()) } returns persisted
+        coEvery { observationService.createObservation(any(), DEFAULT_ORGNUMMER) } returns persisted
 
         testApp(scopes = createScope(), boundPatient = patientId.toString()) {
             val response =
@@ -417,7 +447,7 @@ class ObservationRoutesTest {
             assertEquals(true, body.contains(generatedId.value.toString()))
             assertEquals(false, body.contains("client-chosen-id"))
         }
-        coVerify(exactly = 1) { observationService.createObservation(any()) }
+        coVerify(exactly = 1) { observationService.createObservation(any(), DEFAULT_ORGNUMMER) }
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -434,7 +464,7 @@ class ObservationRoutesTest {
 
             assertEquals(HttpStatusCode.Forbidden, response.status)
         }
-        coVerify(exactly = 0) { observationService.createObservation(any()) }
+        coVerify(exactly = 0) { observationService.createObservation(any(), DEFAULT_ORGNUMMER) }
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -452,7 +482,7 @@ class ObservationRoutesTest {
 
             assertEquals(HttpStatusCode.NotFound, response.status)
         }
-        coVerify(exactly = 0) { observationService.createObservation(any()) }
+        coVerify(exactly = 0) { observationService.createObservation(any(), DEFAULT_ORGNUMMER) }
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -460,7 +490,7 @@ class ObservationRoutesTest {
     fun `POST Observation rejects an encounter belonging to another patient and writes nothing`() {
         val patientId = Uuid.generateV4()
         val encounterId = Uuid.generateV4()
-        coEvery { observationService.createObservation(any()) } throws
+        coEvery { observationService.createObservation(any(), DEFAULT_ORGNUMMER) } throws
             no.nav.helse.core.utils.KonsultasjonTilhorerAnnenPasientException(
                 no.nav.helse.epj.konsultasjon.KonsultasjonId(encounterId),
                 no.nav.helse.epj.pasient.PasientId(patientId),
@@ -484,7 +514,7 @@ class ObservationRoutesTest {
     fun `POST Observation rejects an unknown encounter and writes nothing`() {
         val patientId = Uuid.generateV4()
         val encounterId = Uuid.generateV4()
-        coEvery { observationService.createObservation(any()) } throws
+        coEvery { observationService.createObservation(any(), DEFAULT_ORGNUMMER) } throws
             no.nav.helse.core.utils.KonsultasjonNotFoundException(
                 no.nav.helse.epj.konsultasjon.KonsultasjonId(encounterId)
             )
@@ -504,7 +534,7 @@ class ObservationRoutesTest {
     @Test
     fun `POST Observation surfaces a duplicate id collision explicitly instead of a fallback success`() {
         val patientId = Uuid.generateV4()
-        coEvery { observationService.createObservation(any()) } throws
+        coEvery { observationService.createObservation(any(), DEFAULT_ORGNUMMER) } throws
             no.nav.helse.core.utils.DuplikatMaalingException()
 
         testApp(scopes = createScope(), boundPatient = patientId.toString()) {
@@ -541,7 +571,7 @@ class ObservationRoutesTest {
             assertEquals(true, body.contains("\"OperationOutcome\""))
             assertEquals(true, body.contains("\"issue\""))
         }
-        coVerify(exactly = 0) { observationService.createObservation(any()) }
+        coVerify(exactly = 0) { observationService.createObservation(any(), DEFAULT_ORGNUMMER) }
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -560,6 +590,6 @@ class ObservationRoutesTest {
             val body = response.bodyAsText()
             assertEquals(true, body.contains("\"OperationOutcome\""))
         }
-        coVerify(exactly = 0) { observationService.createObservation(any()) }
+        coVerify(exactly = 0) { observationService.createObservation(any(), DEFAULT_ORGNUMMER) }
     }
 }

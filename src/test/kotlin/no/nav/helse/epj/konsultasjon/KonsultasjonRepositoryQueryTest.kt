@@ -22,7 +22,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
     @Test
     fun `finds no konsultasjon`() = runTest {
         val pasientId = PasientId(Uuid.generateV4())
-        val konsultasjon = konsultasjonRepository.listByPasientId(pasientId)
+        val konsultasjon = konsultasjonRepository.listByPasientId(pasientId, DEFAULT_ORGNUMMER)
         assertEquals(0, konsultasjon.size)
     }
 
@@ -49,7 +49,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                 orgnummer = DEFAULT_ORGNUMMER,
             )
         )
-        val konsultasjon = konsultasjonRepository.listByPasientId(pasientId)
+        val konsultasjon = konsultasjonRepository.listByPasientId(pasientId, DEFAULT_ORGNUMMER)
         assertEquals(1, konsultasjon.size)
     }
 
@@ -77,7 +77,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
             )
         )
 
-        val konsultasjonerA = konsultasjonRepository.listByPasientId(pasientA)
+        val konsultasjonerA = konsultasjonRepository.listByPasientId(pasientA, DEFAULT_ORGNUMMER)
         assertEquals(1, konsultasjonerA.size)
         assertEquals(pasientA, konsultasjonerA.single().pasientId)
     }
@@ -109,7 +109,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                 )
             )
 
-        val konsultasjoner = konsultasjonRepository.listByPasientId(pasientId)
+        val konsultasjoner = konsultasjonRepository.listByPasientId(pasientId, DEFAULT_ORGNUMMER)
         assertEquals(2, konsultasjoner.size)
         assertEquals(nyesteId, konsultasjoner[0].id)
         assertEquals(eldstId, konsultasjoner[1].id)
@@ -130,7 +130,8 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
             )
         )
 
-        val konsultasjon = konsultasjonRepository.listByPasientId(pasientId).single()
+        val konsultasjon =
+            konsultasjonRepository.listByPasientId(pasientId, DEFAULT_ORGNUMMER).single()
         assertEquals(setOf("123", "456"), konsultasjon.hpr.toSet())
     }
 
@@ -148,14 +149,15 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                 )
             )
 
-            val konsultasjon = konsultasjonRepository.listByPasientId(pasientId).single()
+            val konsultasjon =
+                konsultasjonRepository.listByPasientId(pasientId, DEFAULT_ORGNUMMER).single()
             assertTrue(konsultasjon.hpr.isEmpty())
         }
 
     @Test
     fun `findActiveByPasientId returns null when no konsultasjoner exist`() = runTest {
         val pasientId = opprettPasient()
-        assertNull(konsultasjonRepository.findActiveByPasientId(pasientId))
+        assertNull(konsultasjonRepository.findActiveByPasientId(pasientId, DEFAULT_ORGNUMMER))
     }
 
     @Test
@@ -180,9 +182,10 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                 ferdigstill = true,
             ),
             pasientId,
+            DEFAULT_ORGNUMMER,
         )
 
-        assertNull(konsultasjonRepository.findActiveByPasientId(pasientId))
+        assertNull(konsultasjonRepository.findActiveByPasientId(pasientId, DEFAULT_ORGNUMMER))
     }
 
     @Test
@@ -209,7 +212,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                 )
             )
 
-        val aktiv = konsultasjonRepository.findActiveByPasientId(pasientId)
+        val aktiv = konsultasjonRepository.findActiveByPasientId(pasientId, DEFAULT_ORGNUMMER)
         assertNotNull(aktiv)
         assertEquals(nyesteId, aktiv.id)
     }
@@ -230,7 +233,13 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                 )
             )
 
-            assertNull(konsultasjonRepository.findActiveByPasientIdAndHpr(pasientId, annenHpr))
+            assertNull(
+                konsultasjonRepository.findActiveByPasientIdAndHpr(
+                    pasientId,
+                    annenHpr,
+                    DEFAULT_ORGNUMMER,
+                )
+            )
         }
 
     @Test
@@ -260,8 +269,18 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                     )
                 )
 
-            val aktivForA = konsultasjonRepository.findActiveByPasientIdAndHpr(pasientId, legeA)
-            val aktivForB = konsultasjonRepository.findActiveByPasientIdAndHpr(pasientId, legeB)
+            val aktivForA =
+                konsultasjonRepository.findActiveByPasientIdAndHpr(
+                    pasientId,
+                    legeA,
+                    DEFAULT_ORGNUMMER,
+                )
+            val aktivForB =
+                konsultasjonRepository.findActiveByPasientIdAndHpr(
+                    pasientId,
+                    legeB,
+                    DEFAULT_ORGNUMMER,
+                )
 
             assertNotNull(aktivForA)
             assertNotNull(aktivForB)
@@ -272,7 +291,12 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `findByKonsultasjonId returns null for an unknown id`() = runTest {
-        assertNull(konsultasjonRepository.findByKonsultasjonId(KonsultasjonId(Uuid.generateV4())))
+        assertNull(
+            konsultasjonRepository.findByKonsultasjonId(
+                KonsultasjonId(Uuid.generateV4()),
+                DEFAULT_ORGNUMMER,
+            )
+        )
     }
 
     @Test
@@ -290,7 +314,8 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                 )
             )
 
-        val konsultasjon = konsultasjonRepository.findByKonsultasjonId(konsultasjonId)
+        val konsultasjon =
+            konsultasjonRepository.findByKonsultasjonId(konsultasjonId, DEFAULT_ORGNUMMER)
         assertNotNull(konsultasjon)
         assertEquals(konsultasjonId, konsultasjon.id)
     }
@@ -309,7 +334,8 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                 )
             )
 
-        val konsultasjon = konsultasjonRepository.findByKonsultasjonId(konsultasjonId)
+        val konsultasjon =
+            konsultasjonRepository.findByKonsultasjonId(konsultasjonId, DEFAULT_ORGNUMMER)
         assertNotNull(konsultasjon)
         assertEquals(Legekontor.DEFAULT.id, konsultasjon.legekontorId)
     }

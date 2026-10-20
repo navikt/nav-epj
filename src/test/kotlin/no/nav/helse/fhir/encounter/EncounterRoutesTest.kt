@@ -23,6 +23,7 @@ import no.nav.helse.smart.security.Interaction
 import no.nav.helse.smart.security.ScopeContext
 import no.nav.helse.smart.security.SmartPrincipal
 import no.nav.helse.smart.security.SmartScope
+import no.nav.helse.utils.DEFAULT_ORGNUMMER
 import org.junit.Test
 
 class EncounterRoutesTest {
@@ -47,6 +48,7 @@ class EncounterRoutesTest {
                                 scopes = scopes,
                                 patient = boundPatient,
                                 encounter = null,
+                                orgnummer = DEFAULT_ORGNUMMER,
                             )
                         )
                     }
@@ -71,8 +73,9 @@ class EncounterRoutesTest {
     @Test
     fun `GET Encounter search accepts a system-level scope without launch context`() {
         val patientId = Uuid.generateV4()
-        coEvery { encounterService.getEncountersByPatient(PatientInputId(patientId)) } returns
-            Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
+        coEvery {
+            encounterService.getEncountersByPatient(PatientInputId(patientId), DEFAULT_ORGNUMMER)
+        } returns Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
 
         testApp(scopes = setOf(encounterScope(ScopeContext.SYSTEM)), boundPatient = null) {
             val response = get("/fhir/Encounter?patient=Patient/$patientId")
@@ -80,7 +83,9 @@ class EncounterRoutesTest {
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(true, response.bodyAsText().contains("\"searchset\""))
         }
-        coVerify(exactly = 1) { encounterService.getEncountersByPatient(PatientInputId(patientId)) }
+        coVerify(exactly = 1) {
+            encounterService.getEncountersByPatient(PatientInputId(patientId), DEFAULT_ORGNUMMER)
+        }
     }
 
     @Test

@@ -24,6 +24,7 @@ import no.nav.helse.core.utils.UgyldigDiagnoseException
 import no.nav.helse.core.utils.UgyldigPersonidentException
 import no.nav.helse.core.utils.logger
 import no.nav.helse.fhir.security.InsufficientScopeException
+import no.nav.helse.fhir.security.OrganizationContextMissingException
 import no.nav.helse.fhir.security.PatientMismatchException
 
 fun Application.configureStatusPages() {
@@ -79,6 +80,13 @@ fun Application.configureStatusPages() {
         }
         exception<DuplikatPasientException> { call, cause ->
             call.respondText(text = "Pasienten finnes allerede", status = HttpStatusCode.Conflict)
+        }
+        exception<OrganizationContextMissingException> { call, cause ->
+            call.respondAuthorizationFailure(
+                status = HttpStatusCode.Forbidden,
+                issueType = OperationOutcome.IssueType.Forbidden,
+                text = cause.message ?: "Forbidden",
+            )
         }
         exception<InsufficientScopeException> { call, cause ->
             call.response.header(

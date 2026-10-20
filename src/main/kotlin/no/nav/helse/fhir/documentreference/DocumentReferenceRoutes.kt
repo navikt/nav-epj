@@ -19,6 +19,8 @@ import no.nav.helse.core.utils.logger
 import no.nav.helse.fhir.documentReferenceId
 import no.nav.helse.fhir.encounterReferenceId
 import no.nav.helse.fhir.patientOrSubjectReferenceInputId
+import no.nav.helse.fhir.security.clinicalOrgnummer
+import no.nav.helse.fhir.security.requireClinicalOrgnummer
 import no.nav.helse.fhir.security.requireFhirScope
 import no.nav.helse.fhir.security.requirePatientMatch
 import no.nav.helse.smart.security.Interaction
@@ -36,7 +38,7 @@ fun Route.documentReferenceRoutes(
             val principal = call.requireFhirScope("DocumentReference", Interaction.READ)
 
             val documentReference =
-                documentReferenceService.getDocumentReferences(id)
+                documentReferenceService.getDocumentReferences(id, principal.clinicalOrgnummer())
                     ?: return@get call.respond(
                         HttpStatusCode.NotFound,
                         "No documentReference found for $id",
@@ -61,7 +63,12 @@ fun Route.documentReferenceRoutes(
 
             val encounterId = call.parameters["encounter"]?.let { call.encounterReferenceId() }
 
-            val bundle = documentReferenceService.searchDocumentReferences(patientId, encounterId)
+            val bundle =
+                documentReferenceService.searchDocumentReferences(
+                    patientId,
+                    encounterId,
+                    principal.clinicalOrgnummer(),
+                )
             val json = fhirjson.encodeToString(bundle).replace("\"no-NO\"", "\"NO-nb\"")
             call.respondText(json, fhirContentType)
         }
@@ -122,7 +129,10 @@ fun Route.documentReferenceRoutes(
 
             val created =
                 try {
-                    documentReferenceService.createDocumentReference(request)
+                    documentReferenceService.createDocumentReference(
+                        request,
+                        principal.requireClinicalOrgnummer(),
+                    )
                 } catch (exception: KonsultasjonNotFoundException) {
                     return@post call.respondOperationOutcome(
                         fhirjson,
@@ -183,7 +193,10 @@ fun Route.documentReferenceRoutes(
 
             val created =
                 try {
-                    documentReferenceService.createDocumentReference(documentReference)
+                    documentReferenceService.createDocumentReference(
+                        documentReference,
+                        principal.requireClinicalOrgnummer(),
+                    )
                 } catch (exception: KonsultasjonNotFoundException) {
                     return@put call.respondOperationOutcome(
                         fhirjson,

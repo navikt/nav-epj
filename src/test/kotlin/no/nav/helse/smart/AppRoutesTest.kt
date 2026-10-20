@@ -263,8 +263,9 @@ class AppRoutesTest : WithValkey() {
             activePatient()
             coEvery { patientService.getPatient(any<PatientInputId>()) } returns
                 patientWithId("patient-1")
-            coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>()) } returns
-                encounterWithId("encounter-1")
+            coEvery {
+                encounterService.getActiveEncounterByPatient(any<PatientInputId>(), ORG)
+            } returns encounterWithId("encounter-1")
 
             val response = launch("syk-inn")
 
@@ -341,7 +342,7 @@ class AppRoutesTest : WithValkey() {
         activePatient()
         coEvery { patientService.getPatient(any<PatientInputId>()) } returns
             patientWithId("patient-1")
-        coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>()) } returns
+        coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>(), ORG) } returns
             encounterWithId("encounter-1")
 
         val first = tree(launch("validator").bodyAsText()).getValue("launchUrl")
@@ -369,8 +370,9 @@ class AppRoutesTest : WithValkey() {
             activePatient()
             coEvery { patientService.getPatient(any<PatientInputId>()) } returns
                 patientWithId("patient-1")
-            coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>()) } returns
-                encounterWithId("encounter-1")
+            coEvery {
+                encounterService.getActiveEncounterByPatient(any<PatientInputId>(), ORG)
+            } returns encounterWithId("encounter-1")
 
             val response = launch("syk-inn", UUID.randomUUID().toString())
 
@@ -385,7 +387,7 @@ class AppRoutesTest : WithValkey() {
         val first = activePatient()
         coEvery { patientService.getPatient(any<PatientInputId>()) } returns
             patientWithId("patient-1")
-        coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>()) } returns
+        coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>(), ORG) } returns
             encounterWithId("encounter-1")
         assertEquals(HttpStatusCode.OK, launch("syk-inn", first).status)
 
@@ -410,7 +412,7 @@ class AppRoutesTest : WithValkey() {
         val active = activePatient()
         coEvery { patientService.getPatient(any<PatientInputId>()) } returns
             patientWithId("patient-1")
-        coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>()) } returns
+        coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>(), ORG) } returns
             encounterWithId("encounter-1")
         val before = launchKeys()
 
@@ -454,8 +456,9 @@ class AppRoutesTest : WithValkey() {
             activePatient()
             coEvery { patientService.getPatient(any<PatientInputId>()) } returns
                 patientWithId("patient-1")
-            coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>()) } returns
-                null
+            coEvery {
+                encounterService.getActiveEncounterByPatient(any<PatientInputId>(), ORG)
+            } returns null
 
             val response = launch("validator")
 
@@ -482,7 +485,7 @@ class AppRoutesTest : WithValkey() {
         activePatient()
         coEvery { patientService.getPatient(any<PatientInputId>()) } returns
             patientWithId("patient-1")
-        coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>()) } returns
+        coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>(), ORG) } returns
             encounterWithId("encounter-1")
 
         val response =
@@ -519,7 +522,8 @@ class AppRoutesTest : WithValkey() {
 
         coEvery { patientService.getPatient(any<PatientInputId>()) } returns
             patientWithId("patient-1")
-        coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>()) } returns null
+        coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>(), ORG) } returns
+            null
         val noEncounter =
             noRedirects().get("/fhir/launch") {
                 parameter("url", "https://sykmelding.test/fhir/launch")

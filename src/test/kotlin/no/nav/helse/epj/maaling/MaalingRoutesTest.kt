@@ -17,18 +17,36 @@ import kotlin.test.assertTrue
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
+import no.nav.helse.epj.legekontor.Legekontor
+import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.sessionorg.SessionOrgResolution
+import no.nav.helse.epj.sessionorg.SessionOrgResolver
 import no.nav.helse.helseId.DebugInfo
 import no.nav.helse.helseId.HelseIdPrincipal
 import no.nav.helse.helseId.User
 import no.nav.helse.plugins.configureSerialization
 import no.nav.helse.plugins.configureStatusPages
+import no.nav.helse.utils.DEFAULT_ORGNUMMER
 import org.junit.Test
 
 @OptIn(ExperimentalUuidApi::class)
 class MaalingRoutesTest {
 
     private val maalingService = mockk<MaalingService>()
+    private val sessionOrgResolver =
+        mockk<SessionOrgResolver> {
+            coEvery { resolve(any()) } returns
+                SessionOrgResolution.Resolved(
+                    Legekontor(
+                        LegekontorId(Uuid.generateV4()),
+                        "Fjordvik",
+                        DEFAULT_ORGNUMMER,
+                        null,
+                    ),
+                    derived = true,
+                )
+        }
 
     private fun testApp(block: suspend io.ktor.client.HttpClient.() -> Unit) = testApplication {
         application {
@@ -43,7 +61,11 @@ class MaalingRoutesTest {
                     }
                 }
             }
-            routing { authenticate("wonderwall-helseid") { maalingRoutes(maalingService) } }
+            routing {
+                authenticate("wonderwall-helseid") {
+                    maalingRoutes(maalingService, sessionOrgResolver)
+                }
+            }
         }
         client.block()
     }
@@ -67,7 +89,8 @@ class MaalingRoutesTest {
     fun `GET maalinger returns the persisted measurements for the patient`() = testApp {
         val pasientId = PasientId(Uuid.generateV4())
         val maaling = maaling(pasientId)
-        coEvery { maalingService.getMaalingerForPasient(pasientId) } returns listOf(maaling)
+        coEvery { maalingService.getMaalingerForPasient(pasientId, DEFAULT_ORGNUMMER) } returns
+            listOf(maaling)
 
         val response = get("/api/patient/${pasientId.value}/maalinger")
 
@@ -85,7 +108,8 @@ class MaalingRoutesTest {
     @Test
     fun `GET maalinger returns an empty array when the patient has none`() = testApp {
         val pasientId = PasientId(Uuid.generateV4())
-        coEvery { maalingService.getMaalingerForPasient(pasientId) } returns emptyList()
+        coEvery { maalingService.getMaalingerForPasient(pasientId, DEFAULT_ORGNUMMER) } returns
+            emptyList()
 
         val response = get("/api/patient/${pasientId.value}/maalinger")
 
@@ -97,9 +121,9 @@ class MaalingRoutesTest {
     fun `GET maalinger only returns records for the requested patient`() = testApp {
         val pasientA = PasientId(Uuid.generateV4())
         val pasientB = PasientId(Uuid.generateV4())
-        coEvery { maalingService.getMaalingerForPasient(pasientA) } returns
+        coEvery { maalingService.getMaalingerForPasient(pasientA, DEFAULT_ORGNUMMER) } returns
             listOf(maaling(pasientA, "8310-5"))
-        coEvery { maalingService.getMaalingerForPasient(pasientB) } returns
+        coEvery { maalingService.getMaalingerForPasient(pasientB, DEFAULT_ORGNUMMER) } returns
             listOf(maaling(pasientB, "8867-4"))
 
         val body = get("/api/patient/${pasientA.value}/maalinger").bodyAsText()
@@ -107,7 +131,7 @@ class MaalingRoutesTest {
         assertTrue(body.contains(pasientA.value.toString()))
         assertFalse(body.contains(pasientB.value.toString()))
         assertFalse(body.contains("8867-4"))
-        coVerify(exactly = 0) { maalingService.getMaalingerForPasient(pasientB) }
+        coVerify(exactly = 0) { maalingService.getMaalingerForPasient(pasientB, DEFAULT_ORGNUMMER) }
     }
 
     @Test

@@ -19,6 +19,7 @@ import no.nav.helse.epj.konsultasjon.KonsultasjonService
 import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.fhir.patient.PatientInputId
+import no.nav.helse.utils.DEFAULT_ORGNUMMER
 import no.nav.tsm.diagnoser.Diagnose
 import no.nav.tsm.diagnoser.DiagnoseType
 import no.nav.tsm.diagnoser.ICD10
@@ -61,7 +62,7 @@ class EncounterServiceTest {
         val konsultasjonId = KonsultasjonId(Uuid.generateV4())
         val start = LocalDateTime.of(2026, 9, 1, 9, 30, 15, 120_000_000)
         val end = LocalDateTime.of(2026, 9, 1, 10, 5, 40)
-        coEvery { konsultasjonService.getKonsultasjon(konsultasjonId) } returns
+        coEvery { konsultasjonService.getKonsultasjon(konsultasjonId, DEFAULT_ORGNUMMER) } returns
             konsultasjon(
                 id = konsultasjonId,
                 pasientId = pasientId,
@@ -71,7 +72,8 @@ class EncounterServiceTest {
                 avsluttetTidspunkt = end,
             )
 
-        val encounter = encounterService.getEncounterById(EncounterId(konsultasjonId.value))
+        val encounter =
+            encounterService.getEncounterById(EncounterId(konsultasjonId.value), DEFAULT_ORGNUMMER)
 
         assertEquals("Patient/${pasientId.value}", encounter.subject?.reference?.value)
         assertEquals(
@@ -88,10 +90,15 @@ class EncounterServiceTest {
     fun `getEncounterById always emits a serviceProvider organization reference required by downstream FHIR consumers such as syk-inn and smart-on-fhir-validator`() =
         runTest {
             val konsultasjonId = KonsultasjonId(Uuid.generateV4())
-            coEvery { konsultasjonService.getKonsultasjon(konsultasjonId) } returns
-                konsultasjon(id = konsultasjonId)
+            coEvery {
+                konsultasjonService.getKonsultasjon(konsultasjonId, DEFAULT_ORGNUMMER)
+            } returns konsultasjon(id = konsultasjonId)
 
-            val encounter = encounterService.getEncounterById(EncounterId(konsultasjonId.value))
+            val encounter =
+                encounterService.getEncounterById(
+                    EncounterId(konsultasjonId.value),
+                    DEFAULT_ORGNUMMER,
+                )
 
             assertNotNull(encounter.serviceProvider)
         }
@@ -101,10 +108,11 @@ class EncounterServiceTest {
     fun `getEncounterById maps serviceProvider to the konsultasjon's organization`() = runTest {
         val konsultasjonId = KonsultasjonId(Uuid.generateV4())
         val legekontorId = LegekontorId(Uuid.generateV4())
-        coEvery { konsultasjonService.getKonsultasjon(konsultasjonId) } returns
+        coEvery { konsultasjonService.getKonsultasjon(konsultasjonId, DEFAULT_ORGNUMMER) } returns
             konsultasjon(id = konsultasjonId, legekontorId = legekontorId)
 
-        val encounter = encounterService.getEncounterById(EncounterId(konsultasjonId.value))
+        val encounter =
+            encounterService.getEncounterById(EncounterId(konsultasjonId.value), DEFAULT_ORGNUMMER)
 
         assertEquals(
             "Organization/${legekontorId.value}",
@@ -122,10 +130,15 @@ class EncounterServiceTest {
                     Diagnose(system = DiagnoseType.ICPC2, code = "A01", text = "Diagnose A01"),
                     Diagnose(system = DiagnoseType.ICD10, code = "A00", text = "Diagnose A00"),
                 )
-            coEvery { konsultasjonService.getKonsultasjon(konsultasjonId) } returns
-                konsultasjon(id = konsultasjonId, diagnoser = diagnoser)
+            coEvery {
+                konsultasjonService.getKonsultasjon(konsultasjonId, DEFAULT_ORGNUMMER)
+            } returns konsultasjon(id = konsultasjonId, diagnoser = diagnoser)
 
-            val encounter = encounterService.getEncounterById(EncounterId(konsultasjonId.value))
+            val encounter =
+                encounterService.getEncounterById(
+                    EncounterId(konsultasjonId.value),
+                    DEFAULT_ORGNUMMER,
+                )
 
             val systems = encounter.reasonCode.map { it.coding.single().system?.value }
             assertEquals(listOf("urn:oid:${ICPC2.OID}", "urn:oid:${ICD10.OID}"), systems)
@@ -136,10 +149,14 @@ class EncounterServiceTest {
     fun `getEncountersByPatient returns a searchset bundle with one entry per konsultasjon`() =
         runTest {
             val pasientId = PasientId(Uuid.generateV4())
-            coEvery { konsultasjonService.getKonsultasjoner(pasientId) } returns
+            coEvery { konsultasjonService.getKonsultasjoner(pasientId, DEFAULT_ORGNUMMER) } returns
                 listOf(konsultasjon(pasientId = pasientId), konsultasjon(pasientId = pasientId))
 
-            val bundle = encounterService.getEncountersByPatient(PatientInputId(pasientId.value))
+            val bundle =
+                encounterService.getEncountersByPatient(
+                    PatientInputId(pasientId.value),
+                    DEFAULT_ORGNUMMER,
+                )
 
             assertEquals(Bundle.BundleType.Searchset, bundle.type.value)
             assertEquals(2, bundle.entry.size)
@@ -150,9 +167,14 @@ class EncounterServiceTest {
     fun `getEncountersByPatient returns a valid empty searchset bundle when the patient has no konsultasjoner`() =
         runTest {
             val pasientId = PasientId(Uuid.generateV4())
-            coEvery { konsultasjonService.getKonsultasjoner(pasientId) } returns emptyList()
+            coEvery { konsultasjonService.getKonsultasjoner(pasientId, DEFAULT_ORGNUMMER) } returns
+                emptyList()
 
-            val bundle = encounterService.getEncountersByPatient(PatientInputId(pasientId.value))
+            val bundle =
+                encounterService.getEncountersByPatient(
+                    PatientInputId(pasientId.value),
+                    DEFAULT_ORGNUMMER,
+                )
 
             assertEquals(Bundle.BundleType.Searchset, bundle.type.value)
             assertTrue(bundle.entry.isEmpty())
@@ -163,10 +185,15 @@ class EncounterServiceTest {
     fun `getActiveEncounterByPatient returns null when there is no active konsultasjon`() =
         runTest {
             val pasientId = PasientId(Uuid.generateV4())
-            coEvery { konsultasjonService.getAktivKonsultasjon(pasientId) } returns null
+            coEvery {
+                konsultasjonService.getAktivKonsultasjon(pasientId, DEFAULT_ORGNUMMER)
+            } returns null
 
             val encounter =
-                encounterService.getActiveEncounterByPatient(PatientInputId(pasientId.value))
+                encounterService.getActiveEncounterByPatient(
+                    PatientInputId(pasientId.value),
+                    DEFAULT_ORGNUMMER,
+                )
 
             assertNull(encounter)
         }
@@ -176,11 +203,14 @@ class EncounterServiceTest {
     fun `getActiveEncounterByPatient maps the active konsultasjon`() = runTest {
         val pasientId = PasientId(Uuid.generateV4())
         val konsultasjonId = KonsultasjonId(Uuid.generateV4())
-        coEvery { konsultasjonService.getAktivKonsultasjon(pasientId) } returns
+        coEvery { konsultasjonService.getAktivKonsultasjon(pasientId, DEFAULT_ORGNUMMER) } returns
             konsultasjon(id = konsultasjonId, pasientId = pasientId)
 
         val encounter =
-            encounterService.getActiveEncounterByPatient(PatientInputId(pasientId.value))
+            encounterService.getActiveEncounterByPatient(
+                PatientInputId(pasientId.value),
+                DEFAULT_ORGNUMMER,
+            )
 
         assertNotNull(encounter)
         assertEquals("Patient/${pasientId.value}", encounter.subject?.reference?.value)

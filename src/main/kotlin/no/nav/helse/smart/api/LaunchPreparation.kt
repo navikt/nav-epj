@@ -81,7 +81,7 @@ class LaunchPreparer(
         val patient =
             patientService.getPatient(patientInputId) ?: return LaunchPreparation.UnknownPatient
         val encounter =
-            encounterService.getActiveEncounterByPatient(patientInputId)
+            encounterService.getActiveEncounterByPatient(patientInputId, orgnummer)
                 ?: return LaunchPreparation.NoActiveEncounter
         val patientId = patient.id
         val encounterId = encounter.id

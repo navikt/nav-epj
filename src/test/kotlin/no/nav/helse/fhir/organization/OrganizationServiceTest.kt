@@ -10,6 +10,7 @@ import kotlinx.coroutines.test.runTest
 import no.nav.helse.epj.legekontor.Legekontor
 import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.legekontor.LegekontorService
+import no.nav.helse.utils.DEFAULT_ORGNUMMER
 import org.junit.Test
 
 class OrganizationServiceTest {
@@ -29,9 +30,10 @@ class OrganizationServiceTest {
     @Test
     fun `organization has only the ENH organisasjonsnummer identifier`() = runTest {
         val kontor = legekontor()
-        coEvery { legekontorService.getLegekontor(kontor.id) } returns kontor
+        coEvery { legekontorService.getLegekontor(kontor.id, DEFAULT_ORGNUMMER) } returns kontor
 
-        val organization = organizationService.getOrganization(OrganizationId(kontor.id.value))
+        val organization =
+            organizationService.getOrganization(OrganizationId(kontor.id.value), DEFAULT_ORGNUMMER)
 
         val identifier = organization!!.identifier.single()
         assertEquals("urn:oid:2.16.578.1.12.4.1.4.101", identifier.system?.value)
@@ -41,9 +43,10 @@ class OrganizationServiceTest {
     @Test
     fun `organization declares the no-basis-Organization profile`() = runTest {
         val kontor = legekontor()
-        coEvery { legekontorService.getLegekontor(kontor.id) } returns kontor
+        coEvery { legekontorService.getLegekontor(kontor.id, DEFAULT_ORGNUMMER) } returns kontor
 
-        val organization = organizationService.getOrganization(OrganizationId(kontor.id.value))
+        val organization =
+            organizationService.getOrganization(OrganizationId(kontor.id.value), DEFAULT_ORGNUMMER)
 
         assertTrue(
             organization!!.meta!!.profile.any {

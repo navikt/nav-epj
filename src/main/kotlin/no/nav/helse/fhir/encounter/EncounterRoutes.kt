@@ -8,6 +8,7 @@ import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.logger
 import no.nav.helse.fhir.encounterId
 import no.nav.helse.fhir.patient.PatientInputId
+import no.nav.helse.fhir.security.clinicalOrgnummer
 import no.nav.helse.fhir.security.requireFhirScope
 import no.nav.helse.fhir.security.requirePatientMatch
 import no.nav.helse.smart.security.Interaction
@@ -23,7 +24,7 @@ fun Route.encounterRoutes(
             val id = call.encounterId()
             val principal = call.requireFhirScope("Encounter", Interaction.READ)
 
-            val encounter = encounterService.getEncounterById(id)
+            val encounter = encounterService.getEncounterById(id, principal.clinicalOrgnummer())
             principal.requirePatientMatch(
                 "Encounter",
                 Interaction.READ,
@@ -51,7 +52,8 @@ fun Route.encounterRoutes(
                 patientId.value.toString(),
             )
 
-            val bundle = encounterService.getEncountersByPatient(patientId)
+            val bundle =
+                encounterService.getEncountersByPatient(patientId, principal.clinicalOrgnummer())
             call.respondText(fhirR4Json.encodeToString(bundle), fhirContentType)
         }
     }
