@@ -41,6 +41,12 @@ export const PasientSchema = z.object({
 
 export type Pasient = z.infer<typeof PasientSchema>;
 
+export const PasientListeElementSchema = PasientSchema.extend({
+    selectable: z.boolean(),
+});
+
+export type PasientListeElement = z.infer<typeof PasientListeElementSchema>;
+
 export const OpprettPasientSchema = z.object({
     fornavn: z.string().min(1, "Fornavn er påkrevd"),
     etternavn: z.string().min(1, "Etternavn er påkrevd"),
