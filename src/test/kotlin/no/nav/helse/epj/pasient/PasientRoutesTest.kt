@@ -157,12 +157,13 @@ class PasientRoutesTest {
                 personident = "15068500017",
             )
         coEvery { pasientService.listAtLegekontor("311111116", HelsepersonellHpr("111")) } returns
-            listOf(pasient)
+            listOf(PasientListeElement(pasient, selectable = false))
 
         val response = get("/api/patient")
 
         assertEquals(HttpStatusCode.OK, response.status)
         assertTrue(response.bodyAsText().contains("Nordmann"))
+        assertTrue(response.bodyAsText().contains("\"selectable\" : false"))
     }
 
     @Test
@@ -197,11 +198,24 @@ class PasientRoutesTest {
     }
 
     @Test
+    fun `GET patient by id returns a patient with konsultasjoner at the session org that is no longer listed`() =
+        testApp {
+            val id = PasientId(Uuid.generateV4())
+            coEvery { pasientService.getPasientById(id) } returns
+                Pasient(id, emptyList(), "Kari", "Nordmann", "15068500017")
+            coEvery { pasientService.isListedAt(id, "311111116") } returns false
+            coEvery { pasientService.hasKonsultasjonAt(id, "311111116") } returns true
+
+            assertEquals(HttpStatusCode.OK, get("/api/patient/${id.value}").status)
+        }
+
+    @Test
     fun `GET patient by id returns 404 for a patient not listed at the session org`() = testApp {
         val id = PasientId(Uuid.generateV4())
         coEvery { pasientService.getPasientById(id) } returns
             Pasient(id, emptyList(), "Kari", "Nordmann", "15068500017")
         coEvery { pasientService.isListedAt(id, "311111116") } returns false
+        coEvery { pasientService.hasKonsultasjonAt(id, "311111116") } returns false
 
         assertEquals(HttpStatusCode.NotFound, get("/api/patient/${id.value}").status)
     }

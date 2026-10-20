@@ -1,6 +1,7 @@
 package no.nav.helse.epj.pasient
 
 import java.time.LocalDate
+import java.time.LocalDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
@@ -15,7 +16,10 @@ import no.nav.helse.core.db.LegekontorTable
 import no.nav.helse.core.db.dbQuery
 import no.nav.helse.core.utils.DuplikatPasientException
 import no.nav.helse.core.utils.IngenFastlegelisteException
+import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
+import no.nav.helse.epj.konsultasjon.KonsultasjonRepository
+import no.nav.helse.epj.konsultasjon.OpprettKonsultasjon
 import no.nav.helse.utils.WithPostgresql
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -192,6 +196,18 @@ class PasientRepositoryTest : WithPostgresql() {
         }
     }
 
+    private suspend fun startKonsultasjonAt(pasient: Pasient, orgnummer: String) =
+        KonsultasjonRepository()
+            .insert(
+                OpprettKonsultasjon(
+                    pasient.id,
+                    listOf(HelsepersonellHpr("123")),
+                    LocalDateTime.now(),
+                    KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer,
+                )
+            )
+
     private suspend fun putOnList(pasient: Pasient, listId: Uuid) = dbQuery {
         FastlegelistePasientTable.insert {
             it[fastlegelisteId] = listId
@@ -215,10 +231,34 @@ class PasientRepositoryTest : WithPostgresql() {
 
         val liste = pasientRepository.listAtLegekontor("311111116", HelsepersonellHpr(ownHpr))
 
-        val ids = liste.map { it.id }
+        val ids = liste.map { it.pasient.id }
         assertEquals(listOf(own.id, other.id), ids.filter { it in setOf(own.id, other.id) })
         assertFalse(elsewhere.id in ids)
     }
+
+    @Test
+    fun `a patient with konsultasjoner at the org but no list there is listed as not selectable`() =
+        runTest {
+            ensureOrgs()
+            val ownHpr = "own-${Uuid.generateV4()}"
+            val listed = nyPasient().copy(etternavn = "Zzz")
+            val lapsed = nyPasient().copy(etternavn = "Aaa")
+            val movedAway = nyPasient()
+            listOf(listed, lapsed, movedAway).forEach { pasientRepository.insert(it) }
+            putOnList(listed, listFor(ownHpr, "311111116"))
+            putOnList(movedAway, listFor("abroad-${Uuid.generateV4()}", "311111124"))
+            listOf(lapsed, movedAway).forEach { startKonsultasjonAt(it, "311111116") }
+
+            val liste =
+                pasientRepository.listAtLegekontor("311111116", HelsepersonellHpr(ownHpr)).filter {
+                    it.pasient.id in setOf(listed.id, lapsed.id, movedAway.id)
+                }
+
+            assertEquals(listOf(listed.id, lapsed.id, movedAway.id), liste.map { it.pasient.id })
+            assertEquals(listOf(true, false, false), liste.map { it.selectable })
+            assertTrue(pasientRepository.hasKonsultasjonAt(lapsed.id.value, "311111116"))
+            assertFalse(pasientRepository.hasKonsultasjonAt(lapsed.id.value, "311111124"))
+        }
 
     @Test
     fun `isListedAt is true only at the org whose list holds the patient`() = runTest {

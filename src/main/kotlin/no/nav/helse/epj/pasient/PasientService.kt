@@ -6,12 +6,19 @@ import no.nav.helse.core.utils.PasientCreationException
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 
 class PasientService(private val pasientRepository: PasientRepository) {
-    suspend fun listAtLegekontor(orgnummer: String, ownHpr: HelsepersonellHpr): List<Pasient> {
+    suspend fun listAtLegekontor(
+        orgnummer: String,
+        ownHpr: HelsepersonellHpr,
+    ): List<PasientListeElement> {
         return pasientRepository.listAtLegekontor(orgnummer, ownHpr)
     }
 
     suspend fun isListedAt(id: PasientId, orgnummer: String): Boolean {
         return pasientRepository.isListedAt(id.value, orgnummer)
+    }
+
+    suspend fun hasKonsultasjonAt(id: PasientId, orgnummer: String): Boolean {
+        return pasientRepository.hasKonsultasjonAt(id.value, orgnummer)
     }
 
     suspend fun getPasientById(id: PasientId): Pasient? {

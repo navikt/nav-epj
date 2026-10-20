@@ -1,5 +1,6 @@
 package no.nav.helse.epj.pasient
 
+import com.fasterxml.jackson.annotation.JsonUnwrapped
 import java.time.LocalDate
 import kotlin.uuid.Uuid
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
@@ -16,6 +17,8 @@ data class Pasient(
     val birthDate: LocalDate? = null,
     val gender: AdministrativeGender? = null,
 )
+
+data class PasientListeElement(@JsonUnwrapped val pasient: Pasient, val selectable: Boolean)
 
 enum class PersonidentType {
     FNR,
