@@ -13,7 +13,6 @@ sealed interface SessionOrgResolution {
 
 data class ChoosableOrg(val org: Legekontor, val hasOwnList: Boolean)
 
-/** Where the org of a session comes from when the HPR's lists do not decide it. */
 interface SessionOrgChoiceStore {
     suspend fun get(hpr: String): String?
 
