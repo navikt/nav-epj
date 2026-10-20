@@ -9,6 +9,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.utils.UgyldigPersonidentException
+import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import org.junit.Test
 
 class PasientServiceTest {
@@ -31,16 +32,18 @@ class PasientServiceTest {
                 birthDate = validBirthDate,
                 gender = AdministrativeGender.FEMALE,
             )
-        coEvery { repository.insert(capture(inserted)) } returns Unit
+        coEvery {
+            repository.insertOnList(capture(inserted), HelsepersonellHpr("123"), "311111116")
+        } returns Unit
         coEvery { repository.findByPersonident(request.personident) } answers { inserted.captured }
 
-        val created = service.createPasient(request, "123")
+        val created = service.createPasient(request, "123", "311111116")
 
         assertEquals(request.personident, created.personident)
         assertEquals(request.personidentType, created.personidentType)
         assertEquals(request.birthDate, created.birthDate)
         assertEquals(request.gender, created.gender)
-        coVerify(exactly = 1) { repository.insert(any()) }
+        coVerify(exactly = 1) { repository.insertOnList(any(), any(), any()) }
         coVerify(exactly = 1) { repository.findByPersonident(request.personident) }
     }
 
@@ -56,9 +59,11 @@ class PasientServiceTest {
                 gender = AdministrativeGender.FEMALE,
             )
 
-        assertFailsWith<UgyldigPersonidentException> { service.createPasient(request, "123") }
+        assertFailsWith<UgyldigPersonidentException> {
+            service.createPasient(request, "123", "311111116")
+        }
 
-        coVerify(exactly = 0) { repository.insert(any()) }
+        coVerify(exactly = 0) { repository.insertOnList(any(), any(), any()) }
         coVerify(exactly = 0) { repository.findByPersonident(any()) }
     }
 
@@ -74,9 +79,11 @@ class PasientServiceTest {
                 gender = AdministrativeGender.FEMALE,
             )
 
-        assertFailsWith<UgyldigPersonidentException> { service.createPasient(request, "123") }
+        assertFailsWith<UgyldigPersonidentException> {
+            service.createPasient(request, "123", "311111116")
+        }
 
-        coVerify(exactly = 0) { repository.insert(any()) }
+        coVerify(exactly = 0) { repository.insertOnList(any(), any(), any()) }
         coVerify(exactly = 0) { repository.findByPersonident(any()) }
     }
 }

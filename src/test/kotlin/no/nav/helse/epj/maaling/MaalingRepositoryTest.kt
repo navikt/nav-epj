@@ -15,10 +15,10 @@ import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.konsultasjon.KonsultasjonRepository
 import no.nav.helse.epj.konsultasjon.OpprettKonsultasjon
-import no.nav.helse.epj.legekontor.Legekontor
 import no.nav.helse.epj.pasient.Pasient
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.epj.pasient.PasientRepository
+import no.nav.helse.utils.DEFAULT_ORGNUMMER
 import no.nav.helse.utils.WithPostgresql
 import org.junit.Test
 
@@ -40,7 +40,6 @@ class MaalingRepositoryTest : WithPostgresql() {
         pasientRepository.insert(
             Pasient(
                 id = pasientId,
-                legekontorId = Legekontor.DEFAULT.id,
                 fornavn = "fornavn",
                 etternavn = "etternavn",
                 personident = "personident-${pasientId.value}",
@@ -54,6 +53,7 @@ class MaalingRepositoryTest : WithPostgresql() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
         return pasientId to konsultasjonId
@@ -192,6 +192,7 @@ class MaalingRepositoryTest : WithPostgresql() {
                         emptyList(),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
+                        orgnummer = DEFAULT_ORGNUMMER,
                     )
                 )
 

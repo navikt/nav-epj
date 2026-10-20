@@ -10,7 +10,7 @@ import org.jetbrains.exposed.v1.javatime.datetime
 
 object PasientTable : Table("pasient") {
     val id = uuid("id")
-    val legekontorId = reference("legekontor_id", refColumn = LegekontorTable.id)
+    val legekontorId = reference("legekontor_id", refColumn = LegekontorTable.id).nullable()
     val fornavn = text("fornavn")
     val etternavn = text("etternavn")
     val personident = text("personident")
@@ -109,4 +109,9 @@ object FastlegelisteTable : Table("fastlegeliste") {
     val legekontorId = reference("legekontor_id", refColumn = LegekontorTable.id)
     val created = datetime("created_at")
     val updated = datetime("updated_at")
+}
+
+object FastlegelistePasientTable : Table("fastlegeliste_pasient") {
+    val fastlegelisteId = reference("fastlegeliste_id", refColumn = FastlegelisteTable.id)
+    val pasientId = reference("pasient_id", refColumn = PasientTable.id)
 }

@@ -91,7 +91,6 @@ class ActivePatientRoutesTest : WithValkey() {
     private fun pasient(hprs: List<String> = listOf(HPR)) =
         Pasient(
             id = PasientId(Uuid.generateV4()),
-            legekontorId = LegekontorId(Legekontor.DEFAULT.id.value),
             hprNumbers = hprs.map { HelsepersonellHpr(it) },
             fornavn = "Ola",
             etternavn = "Nordmann",

@@ -18,7 +18,6 @@ import kotlin.test.assertTrue
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
-import no.nav.helse.epj.legekontor.Legekontor
 import no.nav.helse.epj.pasient.AdministrativeGender
 import no.nav.helse.epj.pasient.Pasient
 import no.nav.helse.epj.pasient.PasientId
@@ -47,7 +46,6 @@ class PatientRoutesTest {
     ) =
         Pasient(
             id = id,
-            legekontorId = Legekontor.DEFAULT.id,
             hprNumbers = listOf(HelsepersonellHpr("111")),
             fornavn = "Kari",
             etternavn = "Nordmann",

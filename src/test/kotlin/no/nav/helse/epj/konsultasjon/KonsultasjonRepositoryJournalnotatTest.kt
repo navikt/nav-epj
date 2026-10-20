@@ -10,6 +10,7 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
+import no.nav.helse.utils.DEFAULT_ORGNUMMER
 import org.junit.Test
 
 class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() {
@@ -25,6 +26,7 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
         val id = JournalnotatId(Uuid.generateV4())
@@ -78,6 +80,7 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
+                        orgnummer = DEFAULT_ORGNUMMER,
                     )
                 )
             val annenPasient = opprettPasient(hpr = hpr)
@@ -110,6 +113,7 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
+                        orgnummer = DEFAULT_ORGNUMMER,
                     )
                 )
             val id = JournalnotatId(Uuid.generateV4())
@@ -145,6 +149,7 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
+                        orgnummer = DEFAULT_ORGNUMMER,
                     )
                 )
             val konsultasjonB =
@@ -154,6 +159,7 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
+                        orgnummer = DEFAULT_ORGNUMMER,
                     )
                 )
             konsultasjonRepository.opprettJournalnotat(
@@ -184,6 +190,7 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
+                        orgnummer = DEFAULT_ORGNUMMER,
                     )
                 )
             val konsultasjonB =
@@ -193,6 +200,7 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
+                        orgnummer = DEFAULT_ORGNUMMER,
                     )
                 )
             konsultasjonRepository.opprettJournalnotat(

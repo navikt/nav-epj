@@ -79,6 +79,7 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
     suspend fun getOrCreateKonsultasjon(
         pasientId: PasientId,
         hpr: HelsepersonellHpr,
+        orgnummer: String,
     ): Konsultasjon {
         val aktivKonsultasjon = getAktivKonsultasjon(pasientId, hpr)
         if (aktivKonsultasjon != null) return aktivKonsultasjon
@@ -88,6 +89,7 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
                 hpr = listOf(hpr),
                 startetTidspunkt = LocalDateTime.now(),
                 status = KonsultasjonStatus.PAAGAAENDE,
+                orgnummer = orgnummer,
             )
         return createKonsultasjon(opprettKonsultasjon)
     }

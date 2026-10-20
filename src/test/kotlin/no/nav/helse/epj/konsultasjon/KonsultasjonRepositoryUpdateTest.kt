@@ -9,6 +9,7 @@ import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.UgyldigDiagnoseException
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
+import no.nav.helse.utils.DEFAULT_ORGNUMMER
 import no.nav.tsm.diagnoser.Diagnose
 import no.nav.tsm.diagnoser.DiagnoseType
 import org.junit.Test
@@ -27,6 +28,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
+                        orgnummer = DEFAULT_ORGNUMMER,
                     )
                 )
 
@@ -58,6 +60,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
         val updatedRows =
@@ -98,6 +101,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
 
@@ -143,6 +147,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
 
@@ -183,6 +188,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
 
@@ -231,6 +237,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
 
@@ -256,6 +263,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
 
@@ -281,6 +289,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
+                        orgnummer = DEFAULT_ORGNUMMER,
                     )
                 )
 
@@ -303,6 +312,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
         konsultasjonRepository.update(
@@ -330,6 +340,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
+                        orgnummer = DEFAULT_ORGNUMMER,
                     )
                 )
             val request =
@@ -361,6 +372,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
+                        orgnummer = DEFAULT_ORGNUMMER,
                     )
                 )
 

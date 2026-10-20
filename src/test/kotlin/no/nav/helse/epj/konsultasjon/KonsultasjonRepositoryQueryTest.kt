@@ -14,6 +14,7 @@ import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.legekontor.Legekontor
 import no.nav.helse.epj.pasient.Pasient
 import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.utils.DEFAULT_ORGNUMMER
 import org.junit.Test
 
 class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
@@ -33,7 +34,6 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
         pasientRepository.insert(
             Pasient(
                 id = pasientId,
-                legekontorId = Legekontor.DEFAULT.id,
                 fornavn = "fornavn",
                 etternavn = "etternavn",
                 personident = "personident",
@@ -46,6 +46,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                 hpr = listOf(hpr),
                 startetTidspunkt = LocalDateTime.now(),
                 status = KonsultasjonStatus.PAAGAAENDE,
+                orgnummer = DEFAULT_ORGNUMMER,
             )
         )
         val konsultasjon = konsultasjonRepository.listByPasientId(pasientId)
@@ -63,6 +64,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                 listOf(hpr),
                 LocalDateTime.now(),
                 KonsultasjonStatus.PAAGAAENDE,
+                orgnummer = DEFAULT_ORGNUMMER,
             )
         )
         konsultasjonRepository.insert(
@@ -71,6 +73,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                 listOf(hpr),
                 LocalDateTime.now(),
                 KonsultasjonStatus.PAAGAAENDE,
+                orgnummer = DEFAULT_ORGNUMMER,
             )
         )
 
@@ -87,11 +90,23 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
         val nyest = LocalDateTime.now()
         val eldstId =
             konsultasjonRepository.insert(
-                OpprettKonsultasjon(pasientId, listOf(hpr), eldst, KonsultasjonStatus.FULLFOERT)
+                OpprettKonsultasjon(
+                    pasientId,
+                    listOf(hpr),
+                    eldst,
+                    KonsultasjonStatus.FULLFOERT,
+                    orgnummer = DEFAULT_ORGNUMMER,
+                )
             )
         val nyesteId =
             konsultasjonRepository.insert(
-                OpprettKonsultasjon(pasientId, listOf(hpr), nyest, KonsultasjonStatus.PAAGAAENDE)
+                OpprettKonsultasjon(
+                    pasientId,
+                    listOf(hpr),
+                    nyest,
+                    KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
+                )
             )
 
         val konsultasjoner = konsultasjonRepository.listByPasientId(pasientId)
@@ -111,6 +126,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                 listOf(hprA, hprB),
                 LocalDateTime.now(),
                 KonsultasjonStatus.PAAGAAENDE,
+                orgnummer = DEFAULT_ORGNUMMER,
             )
         )
 
@@ -128,6 +144,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                     emptyList(),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PLANLAGT,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
 
@@ -152,6 +169,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                     listOf(hpr),
                     java.time.LocalDateTime.now(),
                     KonsultasjonStatus.FULLFOERT,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
         konsultasjonRepository.update(
@@ -177,6 +195,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                 listOf(hpr),
                 LocalDateTime.now().minusHours(2),
                 KonsultasjonStatus.PAAGAAENDE,
+                orgnummer = DEFAULT_ORGNUMMER,
             )
         )
         val nyesteId =
@@ -186,6 +205,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
 
@@ -206,6 +226,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
 
@@ -225,6 +246,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                         listOf(legeA),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
+                        orgnummer = DEFAULT_ORGNUMMER,
                     )
                 )
             val konsultasjonB =
@@ -234,6 +256,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                         listOf(legeB),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
+                        orgnummer = DEFAULT_ORGNUMMER,
                     )
                 )
 
@@ -263,6 +286,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
 
@@ -272,7 +296,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
     }
 
     @Test
-    fun `insert derives legekontorId from the konsultasjon's pasient`() = runTest {
+    fun `insert places the konsultasjon at the legekontor with the given orgnummer`() = runTest {
         val pasientId = opprettPasient()
         val konsultasjonId =
             konsultasjonRepository.insert(
@@ -281,6 +305,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                     emptyList(),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
 

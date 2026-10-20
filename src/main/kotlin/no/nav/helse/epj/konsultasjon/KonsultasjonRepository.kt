@@ -6,12 +6,13 @@ import no.nav.helse.core.db.JournalnotatTable
 import no.nav.helse.core.db.KonsultasjonDiagnosekodeTable
 import no.nav.helse.core.db.KonsultasjonHelsepersonell
 import no.nav.helse.core.db.KonsultasjonTable
-import no.nav.helse.core.db.PasientTable
+import no.nav.helse.core.db.LegekontorTable
 import no.nav.helse.core.db.dbQuery
 import no.nav.helse.core.utils.DuplikatJournalnotatException
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.KonsultasjonTilhorerAnnenPasientException
+import no.nav.helse.core.utils.LegekontorNotfoundException
 import no.nav.helse.core.utils.UgyldigDiagnoseException
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
@@ -100,9 +101,11 @@ class KonsultasjonRepository {
 
     suspend fun insert(opprettKonsultasjon: OpprettKonsultasjon) = dbQuery {
         val legekontorId =
-            PasientTable.select(PasientTable.legekontorId)
-                .where { PasientTable.id eq opprettKonsultasjon.pasientId.value }
-                .single()[PasientTable.legekontorId]
+            LegekontorTable.select(LegekontorTable.id)
+                .where { LegekontorTable.orgnummer eq opprettKonsultasjon.orgnummer }
+                .singleOrNull()
+                ?.get(LegekontorTable.id)
+                ?: throw LegekontorNotfoundException(opprettKonsultasjon.orgnummer)
         val konsultasjon =
             KonsultasjonTable.insertReturning {
                     it[pasientId] = opprettKonsultasjon.pasientId.value

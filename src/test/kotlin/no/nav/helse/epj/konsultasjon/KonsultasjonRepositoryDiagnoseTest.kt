@@ -9,6 +9,7 @@ import no.nav.helse.core.db.dbQuery
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.UgyldigDiagnoseException
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
+import no.nav.helse.utils.DEFAULT_ORGNUMMER
 import no.nav.tsm.diagnoser.Diagnose
 import no.nav.tsm.diagnoser.DiagnoseType
 import org.jetbrains.exposed.v1.core.eq
@@ -27,6 +28,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
 
@@ -46,6 +48,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
 
@@ -80,6 +83,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
+                        orgnummer = DEFAULT_ORGNUMMER,
                     )
                 )
             val diagnose = OpprettDiagnoseRequest(kode = "A01", system = DiagnoseType.ICPC2)
@@ -109,6 +113,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
+                        orgnummer = DEFAULT_ORGNUMMER,
                     )
                 )
 
@@ -142,6 +147,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
 
@@ -152,6 +158,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
 
@@ -182,6 +189,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
+                        orgnummer = DEFAULT_ORGNUMMER,
                     )
                 )
             val konsultasjonB =
@@ -191,6 +199,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
+                        orgnummer = DEFAULT_ORGNUMMER,
                     )
                 )
             konsultasjonRepository.updateDiagnose(
@@ -220,6 +229,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
+                        orgnummer = DEFAULT_ORGNUMMER,
                     )
                 )
             val diagnose = OpprettDiagnoseRequest(kode = "A01", system = DiagnoseType.ICPC2)

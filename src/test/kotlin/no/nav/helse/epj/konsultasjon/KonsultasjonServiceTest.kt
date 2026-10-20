@@ -16,6 +16,7 @@ import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.utils.DEFAULT_ORGNUMMER
 import no.nav.tsm.diagnoser.Diagnose
 import no.nav.tsm.diagnoser.DiagnoseType
 import org.junit.Test
@@ -78,7 +79,8 @@ class KonsultasjonServiceTest {
             coEvery { konsultasjonRepository.findActiveByPasientIdAndHpr(pasientId, hpr) } returns
                 aktivKonsultasjon
 
-            val resultat = konsultasjonService.getOrCreateKonsultasjon(pasientId, hpr)
+            val resultat =
+                konsultasjonService.getOrCreateKonsultasjon(pasientId, hpr, DEFAULT_ORGNUMMER)
 
             assertSame(aktivKonsultasjon, resultat)
             coVerify(exactly = 0) { konsultasjonRepository.insert(any()) }
@@ -97,7 +99,8 @@ class KonsultasjonServiceTest {
         coEvery { konsultasjonRepository.findByKonsultasjonId(opprettetId) } returns
             opprettetKonsultasjon
 
-        val resultat = konsultasjonService.getOrCreateKonsultasjon(pasientId, hpr)
+        val resultat =
+            konsultasjonService.getOrCreateKonsultasjon(pasientId, hpr, DEFAULT_ORGNUMMER)
 
         assertSame(opprettetKonsultasjon, resultat)
         coVerify(exactly = 1) { konsultasjonRepository.insert(any()) }
@@ -119,7 +122,12 @@ class KonsultasjonServiceTest {
             coEvery { konsultasjonRepository.findByKonsultasjonId(opprettetId) } returns
                 opprettetKonsultasjon
 
-            val resultat = konsultasjonService.getOrCreateKonsultasjon(pasientId, annenLegeHpr)
+            val resultat =
+                konsultasjonService.getOrCreateKonsultasjon(
+                    pasientId,
+                    annenLegeHpr,
+                    DEFAULT_ORGNUMMER,
+                )
 
             assertSame(opprettetKonsultasjon, resultat)
             coVerify(exactly = 1) { konsultasjonRepository.insert(any()) }
@@ -137,6 +145,7 @@ class KonsultasjonServiceTest {
                     hpr = emptyList(),
                     startetTidspunkt = LocalDateTime.now().minusHours(1),
                     status = KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             coEvery { konsultasjonRepository.insert(opprettKonsultasjon) } returns opprettetId
             coEvery { konsultasjonRepository.findByKonsultasjonId(opprettetId) } returns null

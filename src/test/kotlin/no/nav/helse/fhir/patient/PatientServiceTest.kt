@@ -9,7 +9,6 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
-import no.nav.helse.epj.legekontor.Legekontor
 import no.nav.helse.epj.pasient.AdministrativeGender
 import no.nav.helse.epj.pasient.Pasient
 import no.nav.helse.epj.pasient.PasientId
@@ -38,7 +37,6 @@ class PatientServiceTest {
     ) =
         Pasient(
             id = PasientId(Uuid.generateV4()),
-            legekontorId = Legekontor.DEFAULT.id,
             hprNumbers = listOf(HelsepersonellHpr("111")),
             fornavn = "Kari",
             etternavn = "Nordmann",

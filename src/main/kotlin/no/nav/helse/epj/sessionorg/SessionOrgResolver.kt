@@ -1,5 +1,6 @@
 package no.nav.helse.epj.sessionorg
 
+import no.nav.helse.core.utils.SessionOrgRequiredException
 import no.nav.helse.epj.legekontor.Legekontor
 import no.nav.helse.epj.legekontor.LegekontorRepository
 import no.nav.helse.smart.valkey.ValkeyService
@@ -30,6 +31,13 @@ class ValkeySessionOrgChoiceStore(private val valkeyService: ValkeyService) :
 
     override suspend fun extend(hpr: String) = valkeyService.refreshSessionOrg(hpr)
 }
+
+suspend fun SessionOrgResolver.requireOrgnummer(hpr: String): String =
+    when (val resolution = resolve(hpr)) {
+        is SessionOrgResolution.Resolved ->
+            resolution.org.orgnummer ?: throw SessionOrgRequiredException()
+        SessionOrgResolution.NeedsChoice -> throw SessionOrgRequiredException()
+    }
 
 class SessionOrgResolver(
     private val fastlegelisteRepository: FastlegelisteRepository,

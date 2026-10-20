@@ -70,6 +70,7 @@ class KonsultasjonRoutesTest {
                     konsultasjonRoutes(
                         konsultasjonService,
                         ActivePatientService(pasientService, valkeyService, sessionOrgResolver),
+                        sessionOrgResolver,
                     )
                 }
             }
@@ -85,8 +86,8 @@ class KonsultasjonRoutesTest {
         Konsultasjon(
             id = id,
             pasientId = pasientId,
-            legekontorId = LegekontorId(Uuid.generateV4()),
             hpr = emptyList(),
+            legekontorId = LegekontorId(Uuid.generateV4()),
             journalnotat = emptyList(),
             diagnoser = emptyList(),
             startetTidspunkt = LocalDateTime.now().minusDays(1),
@@ -148,7 +149,6 @@ class KonsultasjonRoutesTest {
     private fun linkedPasient(pasientId: PasientId, hprs: List<String>) =
         Pasient(
             id = pasientId,
-            legekontorId = LegekontorId(Uuid.generateV4()),
             hprNumbers = hprs.map { HelsepersonellHpr(it) },
             fornavn = "Ola",
             etternavn = "Nordmann",
@@ -163,8 +163,9 @@ class KonsultasjonRoutesTest {
             linkedPasient(pasientId, listOf("111"))
         coEvery { valkeyService.getActivePatientWithExpiry("111", "311111116") } returns
             ActivePatient(pasientId.value.toString(), Instant.now().plusSeconds(60))
-        coEvery { konsultasjonService.getOrCreateKonsultasjon(pasientId, any()) } returns
-            konsultasjon(pasientId = pasientId)
+        coEvery {
+            konsultasjonService.getOrCreateKonsultasjon(pasientId, any(), "311111116")
+        } returns konsultasjon(pasientId = pasientId)
 
         val response = post("/api/patients/${pasientId.value}/konsultasjoner")
 
@@ -186,7 +187,9 @@ class KonsultasjonRoutesTest {
 
             assertEquals(HttpStatusCode.NotFound, response.status)
             coVerify(exactly = 0) { valkeyService.setActivePatient(any(), any(), any()) }
-            coVerify(exactly = 0) { konsultasjonService.getOrCreateKonsultasjon(any(), any()) }
+            coVerify(exactly = 0) {
+                konsultasjonService.getOrCreateKonsultasjon(any(), any(), any())
+            }
         }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -199,7 +202,7 @@ class KonsultasjonRoutesTest {
 
         assertEquals(HttpStatusCode.Conflict, response.status)
         coVerify(exactly = 0) { valkeyService.setActivePatient(any(), any(), any()) }
-        coVerify(exactly = 0) { konsultasjonService.getOrCreateKonsultasjon(any(), any()) }
+        coVerify(exactly = 0) { konsultasjonService.getOrCreateKonsultasjon(any(), any(), any()) }
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -212,7 +215,7 @@ class KonsultasjonRoutesTest {
 
         assertEquals(HttpStatusCode.NotFound, response.status)
         coVerify(exactly = 0) { valkeyService.setActivePatient(any(), any(), any()) }
-        coVerify(exactly = 0) { konsultasjonService.getOrCreateKonsultasjon(any(), any()) }
+        coVerify(exactly = 0) { konsultasjonService.getOrCreateKonsultasjon(any(), any(), any()) }
     }
 
     @OptIn(ExperimentalUuidApi::class)

@@ -3,16 +3,27 @@ package no.nav.helse.epj.pasient
 import java.time.LocalDate
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
+import no.nav.helse.core.db.FastlegelistePasientTable
+import no.nav.helse.core.db.FastlegelisteTable
+import no.nav.helse.core.db.LegekontorTable
+import no.nav.helse.core.db.dbQuery
 import no.nav.helse.core.utils.DuplikatPasientException
+import no.nav.helse.core.utils.IngenFastlegelisteException
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
-import no.nav.helse.epj.legekontor.Legekontor
 import no.nav.helse.utils.WithPostgresql
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.insertIgnore
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.Test
 
+@OptIn(ExperimentalUuidApi::class)
 class PasientRepositoryTest : WithPostgresql() {
     init {
         runMigrations(true)
@@ -32,7 +43,6 @@ class PasientRepositoryTest : WithPostgresql() {
     ) =
         Pasient(
             id = id,
-            legekontorId = Legekontor.DEFAULT.id,
             hprNumbers = listOf(hpr),
             fornavn = "fornavn",
             etternavn = "etternavn",
@@ -149,4 +159,99 @@ class PasientRepositoryTest : WithPostgresql() {
             // foreign-key error should have occurred while attempting to link it.
             assertNull(pasientRepository.findById(duplikat.id.value))
         }
+
+    private val fjordvik = Uuid.generateV4()
+    private val lyngdal = Uuid.generateV4()
+
+    private suspend fun ensureOrgs() = dbQuery {
+        listOf(fjordvik to "311111116", lyngdal to "311111124").forEach { (orgId, nr) ->
+            LegekontorTable.insertIgnore {
+                it[LegekontorTable.id] = orgId
+                it[navn] = "Org $nr"
+                it[tlf] = "22000000"
+                it[orgnummer] = nr
+            }
+        }
+    }
+
+    private suspend fun orgId(orgnummer: String) = dbQuery {
+        LegekontorTable.selectAll()
+            .where { LegekontorTable.orgnummer eq orgnummer }
+            .single()[LegekontorTable.id]
+    }
+
+    private suspend fun listFor(hpr: String, orgnummer: String): Uuid {
+        val legekontor = orgId(orgnummer)
+        return dbQuery {
+            FastlegelisteTable.insert {
+                    it[id] = Uuid.generateV4()
+                    it[FastlegelisteTable.hpr] = hpr
+                    it[legekontorId] = legekontor
+                }
+                .let { st -> st[FastlegelisteTable.id] }
+        }
+    }
+
+    private suspend fun putOnList(pasient: Pasient, listId: Uuid) = dbQuery {
+        FastlegelistePasientTable.insert {
+            it[fastlegelisteId] = listId
+            it[pasientId] = pasient.id.value
+        }
+    }
+
+    @Test
+    fun `listAtLegekontor returns all lists at the org with the own list first`() = runTest {
+        ensureOrgs()
+        val ownHpr = "own-${Uuid.generateV4()}"
+        val otherHpr = "other-${Uuid.generateV4()}"
+        val abroad = "abroad-${Uuid.generateV4()}"
+        val own = nyPasient().copy(etternavn = "Zzz", fornavn = "Own")
+        val other = nyPasient().copy(etternavn = "Aaa", fornavn = "Other")
+        val elsewhere = nyPasient().copy(etternavn = "Bbb", fornavn = "Elsewhere")
+        listOf(own, other, elsewhere).forEach { pasientRepository.insert(it) }
+        putOnList(own, listFor(ownHpr, "311111116"))
+        putOnList(other, listFor(otherHpr, "311111116"))
+        putOnList(elsewhere, listFor(abroad, "311111124"))
+
+        val liste = pasientRepository.listAtLegekontor("311111116", HelsepersonellHpr(ownHpr))
+
+        val ids = liste.map { it.id }
+        assertEquals(listOf(own.id, other.id), ids.filter { it in setOf(own.id, other.id) })
+        assertFalse(elsewhere.id in ids)
+    }
+
+    @Test
+    fun `isListedAt is true only at the org whose list holds the patient`() = runTest {
+        ensureOrgs()
+        val pasient = nyPasient()
+        pasientRepository.insert(pasient)
+        putOnList(pasient, listFor("h-${Uuid.generateV4()}", "311111116"))
+
+        assertTrue(pasientRepository.isListedAt(pasient.id.value, "311111116"))
+        assertFalse(pasientRepository.isListedAt(pasient.id.value, "311111124"))
+    }
+
+    @Test
+    fun `insertOnList puts the patient on the own list at the org`() = runTest {
+        ensureOrgs()
+        val hpr = "h-${Uuid.generateV4()}"
+        listFor(hpr, "311111116")
+        val pasient = nyPasient()
+
+        pasientRepository.insertOnList(pasient, HelsepersonellHpr(hpr), "311111116")
+
+        assertTrue(pasientRepository.isListedAt(pasient.id.value, "311111116"))
+    }
+
+    @Test
+    fun `insertOnList without an own list at the org inserts nothing`() = runTest {
+        ensureOrgs()
+        val pasient = nyPasient()
+
+        assertFailsWith<IngenFastlegelisteException> {
+            pasientRepository.insertOnList(pasient, HelsepersonellHpr("no-list"), "311111116")
+        }
+
+        assertNull(pasientRepository.findById(pasient.id.value))
+    }
 }

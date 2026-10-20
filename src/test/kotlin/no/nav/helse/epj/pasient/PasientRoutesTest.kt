@@ -15,8 +15,13 @@ import kotlin.test.assertTrue
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.DuplikatPasientException
+import no.nav.helse.core.utils.IngenFastlegelisteException
 import no.nav.helse.core.utils.UgyldigPersonidentException
+import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.legekontor.Legekontor
+import no.nav.helse.epj.legekontor.LegekontorId
+import no.nav.helse.epj.sessionorg.SessionOrgResolution
+import no.nav.helse.epj.sessionorg.SessionOrgResolver
 import no.nav.helse.helseId.DebugInfo
 import no.nav.helse.helseId.HelseIdPrincipal
 import no.nav.helse.helseId.User
@@ -24,9 +29,18 @@ import no.nav.helse.plugins.configureSerialization
 import no.nav.helse.plugins.configureStatusPages
 import org.junit.Test
 
+@OptIn(ExperimentalUuidApi::class)
 class PasientRoutesTest {
 
     private val pasientService = mockk<PasientService>()
+    private val sessionOrgResolver =
+        mockk<SessionOrgResolver> {
+            coEvery { resolve(any()) } returns
+                SessionOrgResolution.Resolved(
+                    Legekontor(LegekontorId(Uuid.generateV4()), "Fjordvik", "311111116", null),
+                    derived = true,
+                )
+        }
 
     private fun testApp(block: suspend io.ktor.client.HttpClient.() -> Unit) = testApplication {
         application {
@@ -41,7 +55,11 @@ class PasientRoutesTest {
                     }
                 }
             }
-            routing { authenticate("wonderwall-helseid") { pasientRoutes(pasientService) } }
+            routing {
+                authenticate("wonderwall-helseid") {
+                    pasientRoutes(pasientService, sessionOrgResolver)
+                }
+            }
         }
         client.block()
     }
@@ -68,7 +86,6 @@ class PasientRoutesTest {
             val opprettetPasient =
                 Pasient(
                     id = PasientId(Uuid.generateV4()),
-                    legekontorId = Legekontor.DEFAULT.id,
                     hprNumbers = emptyList(),
                     fornavn = "Kari",
                     etternavn = "Nordmann",
@@ -77,7 +94,8 @@ class PasientRoutesTest {
                     birthDate = birthDate,
                     gender = AdministrativeGender.FEMALE,
                 )
-            coEvery { pasientService.createPasient(any(), "111") } returns opprettetPasient
+            coEvery { pasientService.createPasient(any(), "111", "311111116") } returns
+                opprettetPasient
 
             val response =
                 post("/api/patient") {
@@ -93,7 +111,7 @@ class PasientRoutesTest {
     @Test
     fun `POST patient with invalid personident returns 400`() = testApp {
         val personident = "00000000000"
-        coEvery { pasientService.createPasient(any(), any()) } throws
+        coEvery { pasientService.createPasient(any(), any(), any()) } throws
             UgyldigPersonidentException("Personident $personident har ugyldig kontrollsiffer")
 
         val response =
@@ -112,7 +130,8 @@ class PasientRoutesTest {
     @Test
     fun `POST patient with a duplicate personident returns 409`() = testApp {
         val personident = "15068500017"
-        coEvery { pasientService.createPasient(any(), any()) } throws DuplikatPasientException()
+        coEvery { pasientService.createPasient(any(), any(), any()) } throws
+            DuplikatPasientException()
 
         val response =
             post("/api/patient") {
@@ -124,5 +143,46 @@ class PasientRoutesTest {
         val body = response.bodyAsText()
         assertEquals("Pasienten finnes allerede", body)
         assertFalse(body.contains(personident))
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `GET patient lists the patients at the session org`() = testApp {
+        val pasient =
+            Pasient(
+                id = PasientId(Uuid.generateV4()),
+                hprNumbers = emptyList(),
+                fornavn = "Kari",
+                etternavn = "Nordmann",
+                personident = "15068500017",
+            )
+        coEvery { pasientService.listAtLegekontor("311111116", HelsepersonellHpr("111")) } returns
+            listOf(pasient)
+
+        val response = get("/api/patient")
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertTrue(response.bodyAsText().contains("Nordmann"))
+    }
+
+    @Test
+    fun `GET patient without a session org returns 409`() = testApp {
+        coEvery { sessionOrgResolver.resolve("111") } returns SessionOrgResolution.NeedsChoice
+
+        assertEquals(HttpStatusCode.Conflict, get("/api/patient").status)
+    }
+
+    @Test
+    fun `POST patient without an own list at the org returns 403`() = testApp {
+        coEvery { pasientService.createPasient(any(), any(), any()) } throws
+            IngenFastlegelisteException()
+
+        val response =
+            post("/api/patient") {
+                contentType(ContentType.Application.Json)
+                setBody(opprettPasientJson("15068500017", "1985-06-15"))
+            }
+
+        assertEquals(HttpStatusCode.Forbidden, response.status)
     }
 }

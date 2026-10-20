@@ -14,6 +14,7 @@ import no.nav.helse.core.utils.AktivKonsultasjonNotFoundException
 import no.nav.helse.core.utils.DuplikatPasientException
 import no.nav.helse.core.utils.HelsepersonellForPatientNotFoundException
 import no.nav.helse.core.utils.HelsepersonellNotFoundException
+import no.nav.helse.core.utils.IngenFastlegelisteException
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.LegekontorNotfoundException
@@ -57,6 +58,9 @@ fun Application.configureStatusPages() {
                 text = "Legekontor not found: ${cause.message}",
                 status = HttpStatusCode.NotFound,
             )
+        }
+        exception<IngenFastlegelisteException> { call, cause ->
+            call.respondText(text = cause.message.orEmpty(), status = HttpStatusCode.Forbidden)
         }
         exception<SessionOrgRequiredException> { call, cause ->
             call.respondText(

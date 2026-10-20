@@ -11,11 +11,14 @@ import no.nav.helse.epj.konsultasjon.OppdaterKonsultasjonRequest
 import no.nav.helse.epj.konsultasjonId
 import no.nav.helse.epj.pasient.ActivePatientService
 import no.nav.helse.epj.patientId
+import no.nav.helse.epj.sessionorg.SessionOrgResolver
+import no.nav.helse.epj.sessionorg.requireOrgnummer
 import no.nav.helse.helseId.loggedInUser
 
 fun Route.konsultasjonRoutes(
     konsultasjonService: KonsultasjonService,
     activePatientService: ActivePatientService,
+    sessionOrgResolver: SessionOrgResolver,
 ) {
 
     val log = logger()
@@ -31,7 +34,8 @@ fun Route.konsultasjonRoutes(
                 val hpr = HelsepersonellHpr(principal.hpr)
                 activePatientService.claimActivePatient(principal.hpr, pasientId.value)
                     ?: return@post call.respond(HttpStatusCode.NotFound)
-                call.respond(konsultasjonService.getOrCreateKonsultasjon(pasientId, hpr))
+                val orgnummer = sessionOrgResolver.requireOrgnummer(principal.hpr)
+                call.respond(konsultasjonService.getOrCreateKonsultasjon(pasientId, hpr, orgnummer))
             }
             patch {
                 val request = call.receive<OppdaterKonsultasjonRequest>()
