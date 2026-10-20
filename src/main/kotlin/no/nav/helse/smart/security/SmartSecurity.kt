@@ -40,6 +40,7 @@ fun Application.configureSmartSecurity() {
                     scopes = parseScopes(scopes),
                     patient = credentials.payload.getClaim("patient").asString(),
                     encounter = credentials.payload.getClaim("encounter").asString(),
+                    orgnummer = credentials.payload.getClaim("orgnr").asString(),
                 )
             }
         }

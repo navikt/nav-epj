@@ -20,10 +20,11 @@ fun Route.practitionerRoleRoutes(
                         HttpStatusCode.BadRequest,
                         "missing practitioner parameter",
                     )
-            call.requireFhirScope("PractitionerRole", Interaction.SEARCH)
+            val principal = call.requireFhirScope("PractitionerRole", Interaction.SEARCH)
 
             val hpr = practitionerRef.substringAfterLast('/')
-            val bundle = practitionerRoleService.getPractitionerRolesByPractitioner(hpr)
+            val bundle =
+                practitionerRoleService.getPractitionerRolesByPractitioner(hpr, principal.orgnummer)
             call.respondText(fhirR4Json.encodeToString(bundle), fhirContentType)
         }
     }

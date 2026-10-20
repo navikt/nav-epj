@@ -10,13 +10,24 @@ import com.google.fhir.model.r4.Uri
 import no.nav.helse.epj.helsepersonell.Helsepersonell
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.helsepersonell.HelsepersonellService
+import no.nav.helse.epj.legekontor.LegekontorId
+import no.nav.helse.epj.legekontor.LegekontorRepository
 
-class PractitionerRoleService(val helsepersonellService: HelsepersonellService) {
+class PractitionerRoleService(
+    val helsepersonellService: HelsepersonellService,
+    val legekontorRepository: LegekontorRepository,
+) {
 
-    suspend fun getPractitionerRolesByPractitioner(hpr: String): Bundle {
+    suspend fun getPractitionerRolesByPractitioner(
+        hpr: String,
+        sessionOrgnummer: String? = null,
+    ): Bundle {
         val helsepersonell = helsepersonellService.getHelsepersonell(HelsepersonellHpr(hpr))
 
-        val role = helsepersonell.toPractitionerRole()
+        val organizationId =
+            sessionOrgnummer?.let { legekontorRepository.findByOrgnummer(it)?.id }
+                ?: helsepersonell.legekontorId
+        val role = helsepersonell.toPractitionerRole(organizationId)
         return Bundle(
             type = Enumeration(value = Bundle.BundleType.Searchset),
             entry =
@@ -29,7 +40,7 @@ class PractitionerRoleService(val helsepersonellService: HelsepersonellService) 
         )
     }
 
-    private fun Helsepersonell.toPractitionerRole(): PractitionerRole =
+    private fun Helsepersonell.toPractitionerRole(organizationId: LegekontorId?): PractitionerRole =
         PractitionerRole(
             id = this.hpr.value,
             meta =
@@ -48,7 +59,7 @@ class PractitionerRoleService(val helsepersonellService: HelsepersonellService) 
                         com.google.fhir.model.r4.String(value = "Practitioner/${this.hpr.value}")
                 ),
             organization =
-                this.legekontorId?.let {
+                organizationId?.let {
                     Reference(
                         reference =
                             com.google.fhir.model.r4.String(value = "Organization/${it.value}")

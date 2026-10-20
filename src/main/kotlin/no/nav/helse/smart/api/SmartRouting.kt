@@ -384,6 +384,7 @@ fun Application.configureSmartRouting() {
                         ctx.scope,
                         ctx.launch.patientId,
                         ctx.launch.encounterId,
+                        ctx.launch.orgnummer,
                         now,
                         expiresAt,
                         smartKeys,
@@ -518,6 +519,7 @@ private fun buildAccessToken(
     grantedScope: String,
     patientId: String?,
     encounterId: String?,
+    orgnummer: String?,
     now: Date,
     expiresAt: Date,
     smartKeys: SmartKeys,
@@ -537,6 +539,7 @@ private fun buildAccessToken(
         .apply {
             patientId?.let { withClaim("patient", it) }
             encounterId?.let { withClaim("encounter", it) }
+            orgnummer?.let { withClaim("orgnr", it) }
         }
         .sign(smartKeys.algorithm)
 
@@ -636,6 +639,7 @@ private suspend fun RoutingContext.issueClientCredentialsToken(
                     fhirServerUrl,
                     client.clientId,
                     grantedScope,
+                    null,
                     null,
                     null,
                     now,
