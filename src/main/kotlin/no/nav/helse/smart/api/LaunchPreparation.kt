@@ -4,6 +4,8 @@ import io.ktor.http.URLBuilder
 import io.ktor.http.appendPathSegments
 import java.util.UUID
 import kotlin.uuid.Uuid
+import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.pasient.PasientService
 import no.nav.helse.epj.sessionorg.SessionOrgResolution
 import no.nav.helse.epj.sessionorg.SessionOrgResolver
 import no.nav.helse.fhir.encounter.EncounterService
@@ -47,6 +49,7 @@ class LaunchPreparer(
     private val patientService: PatientService,
     private val encounterService: EncounterService,
     private val sessionOrgResolver: SessionOrgResolver,
+    private val pasientService: PasientService,
 ) {
     /**
      * If [expectedPatientId] is set, launch only proceeds when it matches the clinician's active
@@ -63,6 +66,9 @@ class LaunchPreparer(
         val active = Uuid.parse(activePatientId)
         if (expectedPatientId != null && Uuid.parseOrNull(expectedPatientId) != active) {
             return LaunchPreparation.PatientMismatch
+        }
+        if (!pasientService.isListedAt(PasientId(active), orgnummer)) {
+            return LaunchPreparation.NoActivePatient
         }
         return prepareFor(PatientInputId(active), hpr, orgnummer)
     }

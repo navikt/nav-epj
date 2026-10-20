@@ -19,12 +19,10 @@ import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.KonsultasjonStatus
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.konsultasjon.routes.konsultasjonRoutes
 import no.nav.helse.epj.legekontor.Legekontor
 import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.pasient.ActivePatientService
-import no.nav.helse.epj.pasient.Pasient
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.epj.pasient.PasientService
 import no.nav.helse.epj.sessionorg.SessionOrgResolution
@@ -146,21 +144,10 @@ class KonsultasjonRoutesTest {
     }
 
     @OptIn(ExperimentalUuidApi::class)
-    private fun linkedPasient(pasientId: PasientId, hprs: List<String>) =
-        Pasient(
-            id = pasientId,
-            hprNumbers = hprs.map { HelsepersonellHpr(it) },
-            fornavn = "Ola",
-            etternavn = "Nordmann",
-            personident = "01019012345",
-        )
-
-    @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `POST konsultasjoner for a linked patient starts it and makes it active`() = testApp {
+    fun `POST konsultasjoner for a listed patient starts it and makes it active`() = testApp {
         val pasientId = PasientId(Uuid.generateV4())
-        coEvery { pasientService.getPasientById(pasientId) } returns
-            linkedPasient(pasientId, listOf("111"))
+        coEvery { pasientService.isListedAt(pasientId, "311111116") } returns true
         coEvery { valkeyService.getActivePatientWithExpiry("111", "311111116") } returns
             ActivePatient(pasientId.value.toString(), Instant.now().plusSeconds(60))
         coEvery {
@@ -177,11 +164,10 @@ class KonsultasjonRoutesTest {
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `POST konsultasjoner for a patient not linked to the clinician returns 404 and changes nothing`() =
+    fun `POST konsultasjoner for a patient not on a list at the session org returns 404 and changes nothing`() =
         testApp {
             val pasientId = PasientId(Uuid.generateV4())
-            coEvery { pasientService.getPasientById(pasientId) } returns
-                linkedPasient(pasientId, listOf("999"))
+            coEvery { pasientService.isListedAt(pasientId, "311111116") } returns false
 
             val response = post("/api/patients/${pasientId.value}/konsultasjoner")
 
@@ -209,7 +195,7 @@ class KonsultasjonRoutesTest {
     @Test
     fun `POST konsultasjoner for an unknown patient returns 404 and changes nothing`() = testApp {
         val pasientId = PasientId(Uuid.generateV4())
-        coEvery { pasientService.getPasientById(pasientId) } returns null
+        coEvery { pasientService.isListedAt(pasientId, "311111116") } returns false
 
         val response = post("/api/patients/${pasientId.value}/konsultasjoner")
 

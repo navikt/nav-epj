@@ -12,6 +12,7 @@ import io.ktor.server.routing.*
 import java.util.*
 import no.nav.helse.core.Environment
 import no.nav.helse.core.utils.logger
+import no.nav.helse.epj.pasient.PasientService
 import no.nav.helse.epj.sessionorg.SessionOrgResolution
 import no.nav.helse.epj.sessionorg.SessionOrgResolver
 import no.nav.helse.fhir.encounter.EncounterService
@@ -41,6 +42,7 @@ import no.nav.helse.smart.valkey.ValkeyService
 fun Application.configureSmartRouting() {
     val env: Environment by dependencies
     val patientService: PatientService by dependencies
+    val pasientService: PasientService by dependencies
     val encounterService: EncounterService by dependencies
     val valkeyService: ValkeyService by dependencies
     val sessionOrgResolver: SessionOrgResolver by dependencies
@@ -51,7 +53,13 @@ fun Application.configureSmartRouting() {
     val clients = env.smart.clients
     val logger = logger()
     val launchPreparer =
-        LaunchPreparer(valkeyService, patientService, encounterService, sessionOrgResolver)
+        LaunchPreparer(
+            valkeyService,
+            patientService,
+            encounterService,
+            sessionOrgResolver,
+            pasientService,
+        )
 
     routing {
         authenticate("wonderwall-helseid") {

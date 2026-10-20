@@ -28,6 +28,7 @@ import no.nav.helse.core.Environment
 import no.nav.helse.core.EpjConfig
 import no.nav.helse.core.SmartConfig
 import no.nav.helse.core.ValkeyConfig
+import no.nav.helse.epj.pasient.PasientService
 import no.nav.helse.epj.sessionorg.SessionOrgResolver
 import no.nav.helse.fhir.encounter.EncounterService
 import no.nav.helse.fhir.patient.PatientService
@@ -110,6 +111,7 @@ class ClientCredentialsTokenRouteTest {
             provide<ValkeyService> { valkey }
             provide<EncounterService> { mockk(relaxed = true) }
             provide<PatientService> { mockk(relaxed = true) }
+            provide<PasientService> { mockk(relaxed = true) }
             provide<SessionOrgResolver> { mockk(relaxed = true) }
             provide<SmartKeys> { smartKeys }
             provide<ClientAssertionVerifier> {

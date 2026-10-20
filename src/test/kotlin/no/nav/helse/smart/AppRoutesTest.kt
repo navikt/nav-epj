@@ -25,6 +25,8 @@ import no.nav.helse.core.SmartConfig
 import no.nav.helse.core.ValkeyConfig
 import no.nav.helse.epj.legekontor.Legekontor
 import no.nav.helse.epj.legekontor.LegekontorId
+import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.pasient.PasientService
 import no.nav.helse.epj.sessionorg.SessionOrgResolution
 import no.nav.helse.epj.sessionorg.SessionOrgResolver
 import no.nav.helse.fhir.encounter.EncounterService
@@ -89,6 +91,8 @@ class AppRoutesTest : WithValkey() {
     private val patientService = mockk<PatientService>()
     private val encounterService = mockk<EncounterService>()
     private val sessionOrgResolver = mockk<SessionOrgResolver>()
+    private val pasientService =
+        mockk<PasientService> { coEvery { isListedAt(any(), any()) } returns true }
     private val mapper = jacksonObjectMapper()
 
     private fun testApp(
@@ -115,6 +119,7 @@ class AppRoutesTest : WithValkey() {
                 provide<ValkeyService> { valkeyService }
                 provide<EncounterService> { encounterService }
                 provide<PatientService> { patientService }
+                provide<PasientService> { pasientService }
                 provide<SessionOrgResolver> { sessionOrgResolver }
                 provide<ClientAssertionVerifier> { mockk(relaxed = true) }
                 provide<SmartKeys> { SmartKeys(environment.smart.privateKeyJwk) }
@@ -425,6 +430,22 @@ class AppRoutesTest : WithValkey() {
 
             assertEquals(HttpStatusCode.Conflict, response.status)
             assertEquals("NO_ACTIVE_PATIENT", tree(response.bodyAsText())["code"])
+        }
+
+    @Test
+    fun `POST api launch for a patient no longer on a list at the org returns 409 NO_ACTIVE_PATIENT`() =
+        testApp {
+            val id = activePatient()
+            val before = launchKeys()
+            coEvery {
+                pasientService.isListedAt(PasientId(kotlin.uuid.Uuid.parse(id)), ORG)
+            } returns false
+
+            val response = launch("syk-inn")
+
+            assertEquals(HttpStatusCode.Conflict, response.status)
+            assertEquals("NO_ACTIVE_PATIENT", tree(response.bodyAsText())["code"])
+            assertEquals(before, launchKeys())
         }
 
     @Test

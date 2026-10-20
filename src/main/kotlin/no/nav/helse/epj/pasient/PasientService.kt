@@ -10,6 +10,10 @@ class PasientService(private val pasientRepository: PasientRepository) {
         return pasientRepository.listAtLegekontor(orgnummer, ownHpr)
     }
 
+    suspend fun isListedAt(id: PasientId, orgnummer: String): Boolean {
+        return pasientRepository.isListedAt(id.value, orgnummer)
+    }
+
     suspend fun getPasientById(id: PasientId): Pasient? {
         return pasientRepository.findById(id.value)
     }

@@ -33,9 +33,11 @@ fun Route.pasientRoutes(pasientService: PasientService, sessionOrgResolver: Sess
             }
             get("/{patientId}") {
                 val id = call.patientId()
+                val orgnummer = sessionOrgResolver.requireOrgnummer(loggedInUser().hpr)
                 val pasient =
-                    pasientService.getPasientById(id)
-                        ?: return@get call.respond(HttpStatusCode.NotFound, "Pasient not found")
+                    pasientService.getPasientById(id)?.takeIf {
+                        pasientService.isListedAt(id, orgnummer)
+                    } ?: return@get call.respond(HttpStatusCode.NotFound, "Pasient not found")
                 call.respond(pasient)
             }
         }

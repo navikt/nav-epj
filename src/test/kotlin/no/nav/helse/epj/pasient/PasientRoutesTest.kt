@@ -185,4 +185,24 @@ class PasientRoutesTest {
 
         assertEquals(HttpStatusCode.Forbidden, response.status)
     }
+
+    @Test
+    fun `GET patient by id returns a patient listed at the session org`() = testApp {
+        val id = PasientId(Uuid.generateV4())
+        coEvery { pasientService.getPasientById(id) } returns
+            Pasient(id, emptyList(), "Kari", "Nordmann", "15068500017")
+        coEvery { pasientService.isListedAt(id, "311111116") } returns true
+
+        assertEquals(HttpStatusCode.OK, get("/api/patient/${id.value}").status)
+    }
+
+    @Test
+    fun `GET patient by id returns 404 for a patient not listed at the session org`() = testApp {
+        val id = PasientId(Uuid.generateV4())
+        coEvery { pasientService.getPasientById(id) } returns
+            Pasient(id, emptyList(), "Kari", "Nordmann", "15068500017")
+        coEvery { pasientService.isListedAt(id, "311111116") } returns false
+
+        assertEquals(HttpStatusCode.NotFound, get("/api/patient/${id.value}").status)
+    }
 }
