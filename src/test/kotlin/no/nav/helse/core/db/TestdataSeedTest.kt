@@ -40,10 +40,12 @@ class TestdataSeedTest : WithPostgresql() {
     private fun count(table: String) = queryStrings("SELECT count(*) FROM $table").single().single()
 
     private fun applySeedAgain() {
-        val sql =
-            checkNotNull(javaClass.classLoader.getResource("db/testdata/R__testdata.sql"))
-                .readText()
-        withConnection { it.createStatement().use { statement -> statement.execute(sql) } }
+        listOf("db/testdata/R__testdata.sql", "db/testdata/R__hackathon_testdata.sql").forEach {
+            val sql = checkNotNull(javaClass.classLoader.getResource(it)).readText()
+            withConnection { connection ->
+                connection.createStatement().use { statement -> statement.execute(sql) }
+            }
+        }
     }
 
     @Before
@@ -109,7 +111,7 @@ class TestdataSeedTest : WithPostgresql() {
                 "SELECT orgnummer FROM legekontor WHERE orgnummer ~ '^[0-9]{9}$' AND orgnummer LIKE '3%'"
             )
 
-        assertEquals(2, seeded.size)
+        assertEquals(6, seeded.size)
         seeded.forEach { (orgnummer) ->
             val digits = orgnummer!!.map { it - '0' }
             val remainder = digits.take(8).indices.sumOf { digits[it] * weights[it] } % 11
@@ -133,7 +135,14 @@ class TestdataSeedTest : WithPostgresql() {
             )
 
         assertEquals(
-            listOf(listOf("565501872", "311111116", "5"), listOf("900000001", "311111124", "3")),
+            listOf(
+                listOf("565501872", "311111116", "5"),
+                listOf("900000001", "311111124", "3"),
+                listOf("900000101", "312000016", "8"),
+                listOf("900000102", "312000024", "8"),
+                listOf("900000103", "312000032", "8"),
+                listOf("900000104", "312000040", "8"),
+            ),
             lists,
         )
     }
@@ -195,6 +204,75 @@ class TestdataSeedTest : WithPostgresql() {
     }
 
     @Test
+    fun `hackathon patients have valid synthetic personidents on one list each`() {
+        val patients =
+            queryStrings(
+                """
+                SELECT p.personident, p.personident_type, p.birth_date, p.gender
+                FROM pasient p
+                         JOIN fastlegeliste_pasient flp ON flp.pasient_id = p.id
+                         JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
+                WHERE fl.hpr LIKE '9000001%'
+                """
+                    .trimIndent()
+            )
+
+        assertEquals(32, patients.size)
+        assertEquals(32, patients.map { it[0] }.toSet().size)
+        patients.forEach { row ->
+            val personident = row[0]!!
+            PersonidentValidator.validate(
+                personident,
+                PersonidentType.valueOf(row[1]!!),
+                LocalDate.parse(row[2]!!),
+            )
+            assertTrue(PersonidentValidator.isSynthetic(personident), personident)
+            val oddIndividualNumber = personident[8].digitToInt() % 2 == 1
+            assertEquals(if (oddIndividualNumber) "MALE" else "FEMALE", row[3], personident)
+        }
+    }
+
+    @Test
+    fun `every hackathon organisation has both FNR and DNR patients`() {
+        val types =
+            queryStrings(
+                """
+                SELECT lk.orgnummer, string_agg(DISTINCT p.personident_type, ',' ORDER BY p.personident_type)
+                FROM pasient p
+                         JOIN fastlegeliste_pasient flp ON flp.pasient_id = p.id
+                         JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
+                         JOIN legekontor lk ON lk.id = fl.legekontor_id
+                WHERE fl.hpr LIKE '9000001%'
+                GROUP BY lk.orgnummer
+                ORDER BY lk.orgnummer
+                """
+                    .trimIndent()
+            )
+
+        assertEquals(4, types.size)
+        types.forEach { assertEquals("DNR,FNR", it[1], it[0]) }
+    }
+
+    @Test
+    fun `hackathon households are split across organisations`() {
+        val households =
+            queryStrings(
+                """
+                SELECT p.etternavn, count(DISTINCT fl.legekontor_id)
+                FROM pasient p
+                         JOIN fastlegeliste_pasient flp ON flp.pasient_id = p.id
+                         JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
+                WHERE fl.hpr LIKE '9000001%' AND p.etternavn IN ('BERGE', 'STRAND')
+                GROUP BY p.etternavn
+                ORDER BY p.etternavn
+                """
+                    .trimIndent()
+            )
+
+        assertEquals(listOf(listOf("BERGE", "2"), listOf("STRAND", "2")), households)
+    }
+
+    @Test
     fun `seed overwrites demographics and restores removed list membership`() {
         withConnection { connection ->
             connection.createStatement().use {
@@ -209,14 +287,14 @@ class TestdataSeedTest : WithPostgresql() {
             "1",
             queryStrings("SELECT count(*) FROM pasient WHERE fornavn = 'TRYGG'").single().single(),
         )
-        assertEquals("8", count("fastlegeliste_pasient"))
+        assertEquals("40", count("fastlegeliste_pasient"))
     }
 
     @Test
     fun `migrating again with the seed disabled succeeds without clean`() {
         getFlyway(config.postgres).migrate()
 
-        assertEquals("8", count("fastlegeliste_pasient"))
+        assertEquals("40", count("fastlegeliste_pasient"))
     }
 
     @Test
@@ -255,7 +333,7 @@ class TestdataSeedTest : WithPostgresql() {
                     .trimIndent()
             ),
         )
-        assertEquals("2", count("fastlegeliste"))
+        assertEquals("6", count("fastlegeliste"))
     }
 
     @Test

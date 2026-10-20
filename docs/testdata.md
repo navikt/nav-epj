@@ -19,6 +19,15 @@ What the seed does:
   `fastlegeliste_pasient` by hand.
 - Never deletes patients and never touches clinical tables (`konsultasjon`, `maaling`, ...).
 
+## Hackathon data
+
+`src/main/resources/db/testdata/R__hackathon_testdata.sql` seeds four event organisations, each
+with one list owned by a placeholder HPR (900000101 to 900000104) and eight patients (32 in total,
+FNR and DNR in every org, two households split across orgs). Attendees log in with SyntPop
+clinicians whose HPRs are not on any list, so they work as vikar and pick an org after login. The
+data is kept permanently as demo data and follows the same rules as `R__testdata.sql`. To stop
+seeding it, set `database.seedTestdata` to `false` (this also stops `R__testdata.sql`).
+
 Rows are referenced by natural keys (orgnummer, personident, HPR) through subselects, so the seed
 never hard-codes generated ids.
 
