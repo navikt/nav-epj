@@ -165,8 +165,11 @@ class TestdataSeedTest : WithPostgresql() {
                 it.execute(
                     """
                     INSERT INTO konsultasjon (id, pasient_id, legekontor_id, startet_tidspunkt, status)
-                    SELECT '$konsultasjonId', id, legekontor_id, now(), 'planlagt'
-                    FROM pasient WHERE fornavn = 'TRYGG'
+                    SELECT '$konsultasjonId', p.id, fl.legekontor_id, now(), 'planlagt'
+                    FROM pasient p
+                             JOIN fastlegeliste_pasient flp ON flp.pasient_id = p.id
+                             JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
+                    WHERE p.fornavn = 'TRYGG'
                     """
                         .trimIndent()
                 )
@@ -214,22 +217,5 @@ class TestdataSeedTest : WithPostgresql() {
         getFlyway(config.postgres).migrate()
 
         assertEquals("8", count("fastlegeliste_pasient"))
-    }
-
-    @Test
-    fun `every listed patient belongs to the legekontor of its list`() {
-        val mismatched =
-            queryStrings(
-                """
-                SELECT p.personident
-                FROM pasient p
-                         JOIN fastlegeliste_pasient flp ON flp.pasient_id = p.id
-                         JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
-                WHERE p.legekontor_id <> fl.legekontor_id
-                """
-                    .trimIndent()
-            )
-
-        assertEquals(emptyList(), mismatched)
     }
 }

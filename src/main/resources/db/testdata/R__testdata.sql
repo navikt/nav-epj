@@ -10,26 +10,24 @@ UPDATE pasient
 SET personident = '14838510036'
 WHERE id = '279d2ae3-5be5-4f07-a9df-c9b660201e50';
 
-INSERT INTO pasient (legekontor_id, fornavn, etternavn, personident, personident_type, birth_date, gender)
-SELECT (SELECT id FROM legekontor WHERE orgnummer = v.orgnummer),
-       v.fornavn,
+INSERT INTO pasient (fornavn, etternavn, personident, personident_type, birth_date, gender)
+SELECT v.fornavn,
        v.etternavn,
        v.personident,
        v.personident_type,
        v.birth_date::date,
        v.gender
-FROM (VALUES ('311111116', 'MATEMATISK', 'APE', '21914897936', NULL, NULL, NULL),
-             ('311111116', 'FRISK', 'REV', '14838510036', 'FNR', '1985-03-14', 'FEMALE'),
-             ('311111116', 'TRYGG', 'FJORD', '02867910193', 'FNR', '1979-06-02', 'MALE'),
-             ('311111116', 'GLAD', 'FJORD', '30898110431', 'FNR', '1981-09-30', 'FEMALE'),
-             ('311111116', 'MILD', 'VIND', '03920150631', 'FNR', '2001-12-03', 'FEMALE'),
-             ('311111124', 'LITEN', 'FJORD', '17841250397', 'FNR', '2012-04-17', 'MALE'),
-             ('311111124', 'STILLE', 'ELV', '65819210459', 'DNR', '1992-01-25', 'FEMALE'),
-             ('311111124', 'RASK', 'LYNG', '49886810767', 'DNR', '1968-08-09', 'MALE'))
-         AS v (orgnummer, fornavn, etternavn, personident, personident_type, birth_date, gender)
+FROM (VALUES ('MATEMATISK', 'APE', '21914897936', NULL, NULL, NULL),
+             ('FRISK', 'REV', '14838510036', 'FNR', '1985-03-14', 'FEMALE'),
+             ('TRYGG', 'FJORD', '02867910193', 'FNR', '1979-06-02', 'MALE'),
+             ('GLAD', 'FJORD', '30898110431', 'FNR', '1981-09-30', 'FEMALE'),
+             ('MILD', 'VIND', '03920150631', 'FNR', '2001-12-03', 'FEMALE'),
+             ('LITEN', 'FJORD', '17841250397', 'FNR', '2012-04-17', 'MALE'),
+             ('STILLE', 'ELV', '65819210459', 'DNR', '1992-01-25', 'FEMALE'),
+             ('RASK', 'LYNG', '49886810767', 'DNR', '1968-08-09', 'MALE'))
+         AS v (fornavn, etternavn, personident, personident_type, birth_date, gender)
 ON CONFLICT (personident) DO UPDATE
-    SET legekontor_id    = EXCLUDED.legekontor_id,
-        fornavn          = EXCLUDED.fornavn,
+    SET fornavn          = EXCLUDED.fornavn,
         etternavn        = EXCLUDED.etternavn,
         personident_type = EXCLUDED.personident_type,
         birth_date       = EXCLUDED.birth_date,
