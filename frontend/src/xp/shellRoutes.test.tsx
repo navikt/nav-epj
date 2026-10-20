@@ -14,13 +14,19 @@ import { useWorkspaceStore } from "./workspaceStore";
 
 const me = { hpr: "9144889", legekontorId: "k1", navn: "Kari Nordmann", autorisasjon: "Lege" };
 const kontor = { id: "k1", navn: "Storgata legekontor", orgnummer: "123456789", tlf: null };
+const sessionOrg = {
+  org: kontor,
+  needsChoice: false,
+  canChoose: false,
+  choosableOrgs: [{ org: kontor, hasOwnList: true }],
+};
 
 function stubApi(meResponse: () => Promise<unknown>) {
   vi.stubGlobal(
     "fetch",
     vi.fn((url: string) => {
       if (url === "/api/helsepersonell/me") return meResponse();
-      const body = url.startsWith("/api/legekontor/") ? kontor : [];
+      const body = url === "/api/session-org" ? sessionOrg : [];
       return Promise.resolve({ ok: true, status: 200, json: async () => body });
     }),
   );

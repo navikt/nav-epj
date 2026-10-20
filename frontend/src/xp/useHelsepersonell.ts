@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { expireSession } from "./sessionExpiry";
+import { chooseSessionOrg } from "./api";
 import {
   HelsepersonellSchema,
-  LegekontorSchema,
+  SessionOrgSchema,
   type Helsepersonell,
-  type Legekontor,
+  type SessionOrg,
 } from "../utils/mapping/epj";
 
 export type HelsepersonellState =
@@ -13,7 +14,7 @@ export type HelsepersonellState =
   | {
       status: "ready";
       helsepersonell: Helsepersonell;
-      legekontor: Legekontor;
+      sessionOrg: SessionOrg;
     };
 
 async function fetchJson(url: string, signal: AbortSignal) {
@@ -37,13 +38,10 @@ export function useHelsepersonell() {
         const helsepersonell = HelsepersonellSchema.parse(
           await fetchJson("/api/helsepersonell/me", signal),
         );
-        const legekontor = LegekontorSchema.parse(
-          await fetchJson(
-            `/api/legekontor/${encodeURIComponent(helsepersonell.legekontorId)}`,
-            signal,
-          ),
+        const sessionOrg = SessionOrgSchema.parse(
+          await fetchJson("/api/session-org", signal),
         );
-        setState({ status: "ready", helsepersonell, legekontor });
+        setState({ status: "ready", helsepersonell, sessionOrg });
       } catch {
         if (!signal.aborted) setState({ status: "error" });
       }
@@ -56,5 +54,12 @@ export function useHelsepersonell() {
     setAttempt((n) => n + 1);
   }, []);
 
-  return { state, retry };
+  const chooseOrg = useCallback(async (orgnummer: string) => {
+    const sessionOrg = await chooseSessionOrg(orgnummer);
+    setState((current) =>
+      current.status === "ready" ? { ...current, sessionOrg } : current,
+    );
+  }, []);
+
+  return { state, retry, chooseOrg };
 }

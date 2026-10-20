@@ -4,7 +4,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { expectNoSeriousViolations } from "./axeHelper";
 import { copy } from "./copy";
 import { sykInn, validator } from "./appFixtures";
-import { renderApp, setupBrowserStubs, stubApi, testKontor } from "./testApp";
+import {
+  renderApp,
+  setupBrowserStubs,
+  stubApi,
+  testKontor,
+  testSessionOrg,
+} from "./testApp";
 
 const session = {
   idp: "helseid",
@@ -23,8 +29,11 @@ function stubAll() {
     "GET /api/apps": () => ({
       body: [sykInn, { ...validator, launchMode: "tab" }],
     }),
-    "GET /api/legekontor/k1": () => ({
-      body: { ...testKontor, tlf: "22 33 44 55" },
+    "GET /api/session-org": () => ({
+      body: {
+        ...testSessionOrg,
+        org: { ...testKontor, tlf: "22 33 44 55" },
+      },
     }),
     "GET /api/session": () => ({ body: session }),
     "GET /fhir/.well-known/smart-configuration": () => ({

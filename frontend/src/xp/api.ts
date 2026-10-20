@@ -8,6 +8,7 @@ import {
   LaunchResponseSchema,
   MaalingSchema,
   PasientSchema,
+  SessionOrgSchema,
   SessionSchema,
   SmartConfigurationSchema,
   type ActivePatient,
@@ -18,6 +19,7 @@ import {
   type OpprettPasientRequest,
   type Pasient,
   type Session,
+  type SessionOrg,
   type SmartConfiguration,
 } from "../utils/mapping/epj";
 
@@ -68,6 +70,21 @@ function jsonInit(method: string, body: unknown): RequestInit {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   };
+}
+
+export async function fetchSessionOrg(): Promise<SessionOrg> {
+  const response = await request("/api/session-org");
+  return SessionOrgSchema.parse(await response.json());
+}
+
+export async function chooseSessionOrg(
+  orgnummer: string,
+): Promise<SessionOrg> {
+  const response = await request(
+    "/api/session-org",
+    jsonInit("PUT", { orgnummer }),
+  );
+  return SessionOrgSchema.parse(await response.json());
 }
 
 export async function fetchPatients(): Promise<Pasient[]> {
