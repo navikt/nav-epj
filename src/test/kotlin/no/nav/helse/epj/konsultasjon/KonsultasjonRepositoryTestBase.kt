@@ -31,7 +31,6 @@ abstract class KonsultasjonRepositoryTestBase : WithPostgresql() {
                 fornavn = "fornavn",
                 etternavn = "etternavn",
                 personident = "personident-${pasientId.value}",
-                hprNumbers = listOf(hpr),
             )
         )
         return pasientId

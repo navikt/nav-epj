@@ -3,7 +3,6 @@ package no.nav.helse.epj.helsepersonell
 import no.nav.helse.core.db.HelsepersonellTable
 import no.nav.helse.core.db.dbQuery
 import no.nav.helse.core.utils.logger
-import no.nav.helse.epj.legekontor.LegekontorId
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
@@ -33,7 +32,6 @@ class HelsepersonellRepository {
     private fun ResultRow.toHelsepersonell() =
         Helsepersonell(
             hpr = HelsepersonellHpr(this[HelsepersonellTable.hpr]),
-            legekontorId = this[HelsepersonellTable.legekontorId]?.let { LegekontorId(it) },
             navn = this[HelsepersonellTable.navn],
             autorisasjon = this[HelsepersonellTable.autorisasjon],
         )

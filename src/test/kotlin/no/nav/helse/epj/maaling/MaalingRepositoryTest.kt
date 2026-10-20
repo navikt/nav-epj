@@ -46,7 +46,6 @@ class MaalingRepositoryTest : WithPostgresql() {
                 fornavn = "fornavn",
                 etternavn = "etternavn",
                 personident = "personident-${pasientId.value}",
-                hprNumbers = listOf(hpr),
             )
         )
         val konsultasjonId =

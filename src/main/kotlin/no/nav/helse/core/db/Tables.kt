@@ -10,7 +10,6 @@ import org.jetbrains.exposed.v1.javatime.datetime
 
 object PasientTable : Table("pasient") {
     val id = uuid("id")
-    val legekontorId = reference("legekontor_id", refColumn = LegekontorTable.id).nullable()
     val fornavn = text("fornavn")
     val etternavn = text("etternavn")
     val personident = text("personident")
@@ -33,7 +32,6 @@ object LegekontorTable : Table("legekontor") {
 
 object HelsepersonellTable : Table("helsepersonell") {
     val id = uuid("id")
-    val legekontorId = reference("legekontor_id", refColumn = LegekontorTable.id).nullable()
     val hpr = text("hpr")
     val navn = text("navn")
     val autorisasjon = text("autorisasjon")
@@ -79,11 +77,6 @@ object KonsultasjonDiagnosekodeTable : Table("konsultasjon_diagnosekode") {
 
 object KonsultasjonHelsepersonell : Table("konsultasjon_helsepersonell") {
     val konsultasjonId = reference("konsultasjon_id", refColumn = KonsultasjonTable.id)
-    val hpr = text("hpr")
-}
-
-object PasientHelsepersonell : Table("pasient_helsepersonell") {
-    val pasientId = reference("pasient_id", refColumn = PasientTable.id)
     val hpr = text("hpr")
 }
 

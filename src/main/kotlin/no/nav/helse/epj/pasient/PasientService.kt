@@ -44,7 +44,6 @@ class PasientService(private val pasientRepository: PasientRepository) {
         val newPasient =
             Pasient(
                 id = PasientId(Uuid.generateV4()),
-                hprNumbers = listOf(HelsepersonellHpr(hpr)),
                 fornavn = request.fornavn,
                 etternavn = request.etternavn,
                 personident = request.personident,

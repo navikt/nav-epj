@@ -86,7 +86,6 @@ class PasientRoutesTest {
             val opprettetPasient =
                 Pasient(
                     id = PasientId(Uuid.generateV4()),
-                    hprNumbers = emptyList(),
                     fornavn = "Kari",
                     etternavn = "Nordmann",
                     personident = personident,
@@ -151,7 +150,6 @@ class PasientRoutesTest {
         val pasient =
             Pasient(
                 id = PasientId(Uuid.generateV4()),
-                hprNumbers = emptyList(),
                 fornavn = "Kari",
                 etternavn = "Nordmann",
                 personident = "15068500017",
@@ -191,7 +189,7 @@ class PasientRoutesTest {
     fun `GET patient by id returns a patient listed at the session org`() = testApp {
         val id = PasientId(Uuid.generateV4())
         coEvery { pasientService.getPasientById(id) } returns
-            Pasient(id, emptyList(), "Kari", "Nordmann", "15068500017")
+            Pasient(id, "Kari", "Nordmann", "15068500017")
         coEvery { pasientService.isListedAt(id, "311111116") } returns true
 
         assertEquals(HttpStatusCode.OK, get("/api/patient/${id.value}").status)
@@ -202,7 +200,7 @@ class PasientRoutesTest {
         testApp {
             val id = PasientId(Uuid.generateV4())
             coEvery { pasientService.getPasientById(id) } returns
-                Pasient(id, emptyList(), "Kari", "Nordmann", "15068500017")
+                Pasient(id, "Kari", "Nordmann", "15068500017")
             coEvery { pasientService.isListedAt(id, "311111116") } returns false
             coEvery { pasientService.hasKonsultasjonAt(id, "311111116") } returns true
 
@@ -213,7 +211,7 @@ class PasientRoutesTest {
     fun `GET patient by id returns 404 for a patient not listed at the session org`() = testApp {
         val id = PasientId(Uuid.generateV4())
         coEvery { pasientService.getPasientById(id) } returns
-            Pasient(id, emptyList(), "Kari", "Nordmann", "15068500017")
+            Pasient(id, "Kari", "Nordmann", "15068500017")
         coEvery { pasientService.isListedAt(id, "311111116") } returns false
         coEvery { pasientService.hasKonsultasjonAt(id, "311111116") } returns false
 

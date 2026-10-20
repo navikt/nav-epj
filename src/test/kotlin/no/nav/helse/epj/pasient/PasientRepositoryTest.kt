@@ -39,7 +39,6 @@ class PasientRepositoryTest : WithPostgresql() {
     @OptIn(ExperimentalUuidApi::class)
     private fun nyPasient(
         id: PasientId = PasientId(Uuid.generateV4()),
-        hpr: HelsepersonellHpr = HelsepersonellHpr("123"),
         personident: String = "personident-${id.value}",
         personidentType: PersonidentType = PersonidentType.FNR,
         birthDate: LocalDate = LocalDate.of(1980, 1, 2),
@@ -47,7 +46,6 @@ class PasientRepositoryTest : WithPostgresql() {
     ) =
         Pasient(
             id = id,
-            hprNumbers = listOf(hpr),
             fornavn = "fornavn",
             etternavn = "etternavn",
             personident = personident,
@@ -126,17 +124,11 @@ class PasientRepositoryTest : WithPostgresql() {
             pasientRepository.insert(pasient)
 
             assertFailsWith<DuplikatPasientException> {
-                pasientRepository.insert(
-                    pasient.copy(
-                        fornavn = "annet navn",
-                        hprNumbers = listOf(HelsepersonellHpr("999")),
-                    )
-                )
+                pasientRepository.insert(pasient.copy(fornavn = "annet navn"))
             }
 
             val funnet = pasientRepository.findById(pasient.id.value)
             assertEquals("fornavn", funnet?.fornavn)
-            assertEquals(listOf(HelsepersonellHpr("123")), funnet?.hprNumbers)
         }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -146,18 +138,12 @@ class PasientRepositoryTest : WithPostgresql() {
             val original = nyPasient(personident = "15068500017")
             pasientRepository.insert(original)
 
-            val duplikat =
-                nyPasient(
-                    id = PasientId(Uuid.generateV4()),
-                    hpr = HelsepersonellHpr("999"),
-                    personident = "15068500017",
-                )
+            val duplikat = nyPasient(id = PasientId(Uuid.generateV4()), personident = "15068500017")
 
             assertFailsWith<DuplikatPasientException> { pasientRepository.insert(duplikat) }
 
             val funnetOriginal = pasientRepository.findById(original.id.value)
             assertEquals(original.fornavn, funnetOriginal?.fornavn)
-            assertEquals(listOf(HelsepersonellHpr("123")), funnetOriginal?.hprNumbers)
 
             // the never-persisted duplicate id must not exist as a patient or association, and no
             // foreign-key error should have occurred while attempting to link it.

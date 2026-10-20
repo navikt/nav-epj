@@ -90,7 +90,6 @@ class ActivePatientRoutesTest : WithValkey() {
     private fun pasient() =
         Pasient(
             id = PasientId(Uuid.generateV4()),
-            hprNumbers = emptyList(),
             fornavn = "Ola",
             etternavn = "Nordmann",
             personident = "01019012345",

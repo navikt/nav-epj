@@ -3,13 +3,11 @@ package no.nav.helse.epj.pasient
 import com.fasterxml.jackson.annotation.JsonUnwrapped
 import java.time.LocalDate
 import kotlin.uuid.Uuid
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 
 @JvmInline value class PasientId(val value: Uuid)
 
 data class Pasient(
     val id: PasientId,
-    val hprNumbers: List<HelsepersonellHpr>,
     val fornavn: String,
     val etternavn: String,
     val personident: String,

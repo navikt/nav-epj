@@ -30,18 +30,15 @@ class PractitionerRoleServiceTest {
 
     private val sessionOrg =
         Legekontor(LegekontorId(Uuid.generateV4()), "Fjordvik", "311111116", null)
-    private val storedOrgId = LegekontorId(Uuid.generateV4())
 
-    private fun helsepersonell(legekontorId: LegekontorId?) =
-        Helsepersonell(HelsepersonellHpr("565501872"), legekontorId, "Test", "LE")
+    private val helsepersonell = Helsepersonell(HelsepersonellHpr("565501872"), "Test", "LE")
 
     private fun organizationOf(
         orgnummer: String?,
-        legekontorId: LegekontorId?,
         listed: List<LegekontorId> = emptyList(),
     ): String? = runBlocking {
         coEvery { helsepersonellService.getHelsepersonell(HelsepersonellHpr("565501872")) } returns
-            helsepersonell(legekontorId)
+            helsepersonell
         coEvery { fastlegelisteRepository.findLegekontorIdsByHpr("565501872") } returns listed
         coEvery { legekontorRepository.findByOrgnummer("311111116") } returns sessionOrg
         val role =
@@ -54,40 +51,24 @@ class PractitionerRoleServiceTest {
     }
 
     @Test
-    fun `organization comes from the session org rather than the stored legekontor`() {
-        assertEquals(
-            "Organization/${sessionOrg.id.value}",
-            organizationOf("311111116", storedOrgId),
-        )
+    fun `organization comes from the session org`() {
+        assertEquals("Organization/${sessionOrg.id.value}", organizationOf("311111116"))
     }
 
     @Test
-    fun `organization comes from the session org when the clinician has no stored legekontor`() {
-        assertEquals("Organization/${sessionOrg.id.value}", organizationOf("311111116", null))
-    }
-
-    @Test
-    fun `falls back to the stored legekontor without a session org`() {
-        assertEquals("Organization/${storedOrgId.value}", organizationOf(null, storedOrgId))
-    }
-
-    @Test
-    fun `has no organization without a session org or stored legekontor`() {
-        assertNull(organizationOf(null, null))
+    fun `has no organization without a session org or fastlegeliste`() {
+        assertNull(organizationOf(null))
     }
 
     @Test
     fun `uses the single fastlegeliste org without a session org`() {
         val listedId = LegekontorId(Uuid.generateV4())
-        assertEquals(
-            "Organization/${listedId.value}",
-            organizationOf(null, storedOrgId, listOf(listedId)),
-        )
+        assertEquals("Organization/${listedId.value}", organizationOf(null, listOf(listedId)))
     }
 
     @Test
-    fun `ignores several fastlegeliste orgs without a session org`() {
+    fun `has no organization with several fastlegeliste orgs and no session org`() {
         val listed = listOf(LegekontorId(Uuid.generateV4()), LegekontorId(Uuid.generateV4()))
-        assertEquals("Organization/${storedOrgId.value}", organizationOf(null, storedOrgId, listed))
+        assertNull(organizationOf(null, listed))
     }
 }

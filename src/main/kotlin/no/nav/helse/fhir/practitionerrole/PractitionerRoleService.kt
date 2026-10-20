@@ -29,7 +29,6 @@ class PractitionerRoleService(
         val organizationId =
             sessionOrgnummer?.let { legekontorRepository.findByOrgnummer(it)?.id }
                 ?: fastlegelisteRepository.findLegekontorIdsByHpr(hpr).singleOrNull()
-                ?: helsepersonell.legekontorId
         val role = helsepersonell.toPractitionerRole(organizationId)
         return Bundle(
             type = Enumeration(value = Bundle.BundleType.Searchset),

@@ -5,7 +5,6 @@ import no.nav.helse.core.db.FastlegelistePasientTable
 import no.nav.helse.core.db.FastlegelisteTable
 import no.nav.helse.core.db.KonsultasjonTable
 import no.nav.helse.core.db.LegekontorTable
-import no.nav.helse.core.db.PasientHelsepersonell
 import no.nav.helse.core.db.PasientTable
 import no.nav.helse.core.db.dbQuery
 import no.nav.helse.core.db.konsultasjonAtOrg
@@ -17,7 +16,6 @@ import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.inSubQuery
 import org.jetbrains.exposed.v1.core.notInList
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -32,12 +30,7 @@ class PasientRepository {
     suspend fun findById(id: Uuid) = dbQuery {
         logger.info("Looking up pasient by id: $id")
         val patient = PasientTable.selectAll().where { PasientTable.id eq id }.singleOrNull()
-        val hpr =
-            PasientHelsepersonell.select(PasientHelsepersonell.hpr)
-                .where { PasientHelsepersonell.pasientId eq id }
-                .map { row -> HelsepersonellHpr(row[PasientHelsepersonell.hpr]) }
-
-        patient?.toPasient(hpr)
+        patient?.toPasient()
     }
 
     suspend fun findByPersonident(personident: String) = dbQuery {
@@ -46,14 +39,7 @@ class PasientRepository {
             PasientTable.selectAll()
                 .where { PasientTable.personident eq personident }
                 .singleOrNull()
-        val patientId = patient?.get(PasientTable.id) ?: return@dbQuery null
-
-        val hpr =
-            PasientHelsepersonell.select(PasientHelsepersonell.hpr)
-                .where { PasientHelsepersonell.pasientId eq patientId }
-                .map { row -> HelsepersonellHpr(row[PasientHelsepersonell.hpr]) }
-
-        patient.toPasient(hpr)
+        patient?.toPasient()
     }
 
     suspend fun listAtLegekontor(
@@ -92,15 +78,6 @@ class PasientRepository {
                 }
                 .toList()
 
-        val patientIds = listedIds + lapsedRows.map { it[PasientTable.id] }
-        val hprByPatientId =
-            PasientHelsepersonell.select(PasientHelsepersonell.pasientId, PasientHelsepersonell.hpr)
-                .where { PasientHelsepersonell.pasientId inList patientIds }
-                .groupBy(
-                    keySelector = { it[PasientHelsepersonell.pasientId] },
-                    valueTransform = { HelsepersonellHpr(it[PasientHelsepersonell.hpr]) },
-                )
-
         val listed =
             rows
                 .sortedWith(
@@ -108,24 +85,14 @@ class PasientRepository {
                         .thenBy { it[PasientTable.etternavn] }
                         .thenBy { it[PasientTable.fornavn] }
                 )
-                .map {
-                    PasientListeElement(
-                        it.toPasient(hprByPatientId[it[PasientTable.id]].orEmpty()),
-                        selectable = true,
-                    )
-                }
+                .map { PasientListeElement(it.toPasient(), selectable = true) }
         val lapsed =
             lapsedRows
                 .sortedWith(
                     compareBy<ResultRow> { it[PasientTable.etternavn] }
                         .thenBy { it[PasientTable.fornavn] }
                 )
-                .map {
-                    PasientListeElement(
-                        it.toPasient(hprByPatientId[it[PasientTable.id]].orEmpty()),
-                        selectable = false,
-                    )
-                }
+                .map { PasientListeElement(it.toPasient(), selectable = false) }
         listed + lapsed
     }
 
@@ -205,20 +172,11 @@ class PasientRepository {
         if (insertStatement.insertedCount == 0) {
             throw DuplikatPasientException()
         }
-
-        pasient.hprNumbers.forEach { hprNumber ->
-            val value = hprNumber.value
-            PasientHelsepersonell.insert {
-                it[pasientId] = pasient.id.value
-                it[PasientHelsepersonell.hpr] = value
-            }
-        }
     }
 
-    private fun ResultRow.toPasient(hpr: List<HelsepersonellHpr>): Pasient =
+    private fun ResultRow.toPasient(): Pasient =
         Pasient(
             id = PasientId(this[PasientTable.id]),
-            hprNumbers = hpr,
             fornavn = this[PasientTable.fornavn],
             etternavn = this[PasientTable.etternavn],
             personident = this[PasientTable.personident],

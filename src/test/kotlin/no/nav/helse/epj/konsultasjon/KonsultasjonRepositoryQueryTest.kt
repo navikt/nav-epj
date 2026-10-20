@@ -37,7 +37,6 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                 fornavn = "fornavn",
                 etternavn = "etternavn",
                 personident = "personident",
-                hprNumbers = listOf(hpr),
             )
         )
         konsultasjonRepository.insert(
