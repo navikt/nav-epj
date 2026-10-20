@@ -43,6 +43,10 @@ class ValkeyService(private val glideClient: GlideClient) {
             .await()
     }
 
+    suspend fun clearActivePatient(hpr: String) {
+        glideClient.del(arrayOf(activePatientKey(hpr))).await()
+    }
+
     suspend fun getActivePatient(hpr: String): String? =
         glideClient.get(activePatientKey(hpr)).await()
 
