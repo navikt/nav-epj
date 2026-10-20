@@ -6,11 +6,9 @@ import java.time.LocalDate
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import no.nav.helse.core.PostgresConfig
 import no.nav.helse.epj.pasient.PersonidentType
 import no.nav.helse.epj.pasient.PersonidentValidator
 import no.nav.helse.utils.WithPostgresql
-import org.flywaydb.core.Flyway
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -18,13 +16,6 @@ import org.junit.Test
 class TestdataSeedTest : WithPostgresql() {
 
     private val seedConfig = config.postgres.copy(seedTestdata = true)
-
-    private fun flyway(postgres: PostgresConfig) =
-        Flyway.configure()
-            .dataSource(postgres.url, postgres.username, postgres.password)
-            .locations(*flywayLocations(postgres))
-            .cleanDisabled(false)
-            .load()
 
     private fun <T> withConnection(block: (Connection) -> T): T =
         DriverManager.getConnection(
@@ -57,14 +48,14 @@ class TestdataSeedTest : WithPostgresql() {
 
     @Before
     fun migrateWithSeed() {
-        flyway(seedConfig).clean()
-        flyway(seedConfig).migrate()
+        getFlyway(seedConfig).clean()
+        getFlyway(seedConfig).migrate()
     }
 
     @After
     fun restoreSchemaWithoutSeed() {
-        flyway(config.postgres).clean()
-        flyway(config.postgres).migrate()
+        getFlyway(config.postgres).clean()
+        getFlyway(config.postgres).migrate()
     }
 
     @Test
@@ -215,6 +206,13 @@ class TestdataSeedTest : WithPostgresql() {
             "1",
             queryStrings("SELECT count(*) FROM pasient WHERE fornavn = 'TRYGG'").single().single(),
         )
+        assertEquals("8", count("fastlegeliste_pasient"))
+    }
+
+    @Test
+    fun `migrating again with the seed disabled succeeds without clean`() {
+        getFlyway(config.postgres).migrate()
+
         assertEquals("8", count("fastlegeliste_pasient"))
     }
 }

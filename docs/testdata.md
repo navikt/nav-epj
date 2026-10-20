@@ -6,7 +6,8 @@ the current state. Flyway re-applies it whenever its content changes.
 
 The seed is only applied when `database.seedTestdata` is `true`. It is `true` in
 `application-local.yaml` and `application.yaml` (dev), and `false` when the key is absent. Tests
-leave it off unless they opt in (see `TestdataSeedTest`).
+leave it off unless they opt in (see `TestdataSeedTest`). Turning it off on a database that was
+already seeded is safe: the seed is ignored and the seeded rows stay.
 
 What the seed does:
 
