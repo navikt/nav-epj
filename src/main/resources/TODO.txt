@@ -6,4 +6,7 @@ TODO:
   hos nøyaktig én org, ellers vis en org-velger ("vikar" for ukjente HPR-numre, eller leger med
   lister hos flere orger). Lagre valget i Valkey per HPR-nummer med 8 timers TTL
 - Vis legens pasientliste og et søkefelt for å finne testpersoner
+    - Listen er alle fastlegelister hos sesjonens org, med legens egen liste først
+    - Pasienter med konsultasjoner hos orgen som ikke lenger står på noen liste vises som ikke valgbare
+    - Journal og kliniske FHIR-lesinger er begrenset til sesjonens org
 - Senere: les organisasjonen fra et claim i HelseID-tokenet (multi-tenancy), se issue #118

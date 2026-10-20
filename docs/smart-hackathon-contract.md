@@ -42,6 +42,12 @@ Approved scope boundaries for this delivery:
   organisation: "vikar" for an unknown HPR number, or one of several listed organisations. The choice
   is stored in Valkey per HPR number with an 8 hour TTL. Clinical data stays with the organisation
   that created it.
+- The patient list is every fastlegeliste at the session organisation, with the signed-in doctor's
+  own list first. Any doctor at the organisation can select any patient on those lists. A patient
+  with konsultasjoner at the organisation who is on none of its lists is shown as not selectable.
+  Patients are not owned by an organisation, so moving a patient between lists never moves or
+  deletes clinical data. Journal data and FHIR clinical reads are limited to the session
+  organisation (the `orgnr` claim for SMART tokens).
 - Reading the organisation from a HelseID token claim (multi-tenancy) is future work, tracked in
   [#118](https://github.com/navikt/nav-epj/issues/118).
 - Team clients are pre-provisioned from deployment configuration and secrets. There is no dynamic
