@@ -103,7 +103,7 @@ FROM enkeltvis),
      plan AS (
 SELECT d.key, d.prefix, d.seq, d.personident,
        v.virkedag + d.tid::time AS startet,
-       CASE WHEN d.status IN ('AVLYST', 'PLANLAGT', 'PÅGÅENDE') THEN NULL
+       CASE WHEN d.status IN ('PLANLAGT', 'PÅGÅENDE') THEN NULL
             ELSE v.virkedag + d.tid::time + make_interval(mins => d.minutter) END AS avsluttet,
        d.status, d.problemstilling
 FROM dagsplan d
@@ -361,3 +361,8 @@ UPDATE konsultasjon_diagnosekode
 SET diagnosekode = 'A09.9'
 WHERE diagnosesystem = 'ICD10'
   AND diagnosekode = 'A09';
+
+UPDATE konsultasjon
+SET avsluttet_tidspunkt = startet_tidspunkt
+WHERE status = 'AVLYST'
+  AND avsluttet_tidspunkt IS NULL;

@@ -115,7 +115,7 @@ WITH legacy (key, personident, startet, avsluttet, status, problemstilling) AS (
              ('IB3', '03916410017', '2026-07-08 10:00', '2026-07-08 10:30', 'FULLFØRT', 'Diabetes type 2, kontroll'),
              ('IB4', '03916410017', '2026-09-30 10:00', '2026-09-30 10:30', 'FULLFØRT', 'Diabetes type 2, kontroll'),
              ('TL1', '28815510331', '2026-05-12 13:00', '2026-05-12 13:20', 'FULLFØRT', 'Astma, vedlikeholdsbehandling'),
-             ('TL2', '28815510331', '2026-08-01 13:00', NULL, 'AVLYST', 'Astma, kontroll'),
+             ('TL2', '28815510331', '2026-08-01 13:00', '2026-08-01 13:20', 'AVLYST', 'Astma, kontroll'),
              ('ES1', '04845310039', '2026-02-03 11:00', '2026-02-03 11:30', 'FULLFØRT', 'Diabetes type 2, kontroll'),
              ('ES2', '04845310039', '2026-05-26 11:00', '2026-05-26 11:30', 'FULLFØRT', 'Diabetes type 2, kontroll'),
              ('ES3', '04845310039', '2026-10-20 09:00', NULL, 'PÅGÅENDE', 'Diabetes type 2, kontroll'),
@@ -226,7 +226,7 @@ FROM legacy l
 UNION ALL
 SELECT d.key, d.prefix, d.seq, d.personident,
        v.virkedag + d.tid::time,
-       CASE WHEN d.status = 'AVLYST' THEN NULL ELSE v.virkedag + d.tid::time + make_interval(mins => d.minutter) END,
+       v.virkedag + d.tid::time + make_interval(mins => d.minutter),
        d.status, d.problemstilling
 FROM dagsplan d
          CROSS JOIN LATERAL (SELECT d.dag + CASE extract(isodow FROM d.dag) WHEN 6 THEN 2 WHEN 7 THEN 1 ELSE 0 END AS virkedag) v),

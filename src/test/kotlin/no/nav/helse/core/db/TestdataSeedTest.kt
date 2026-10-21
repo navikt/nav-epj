@@ -124,6 +124,52 @@ class TestdataSeedTest : WithPostgresql() {
     }
 
     @Test
+    fun `avlyst and fullfort konsultasjoner have an end time while open ones do not`() {
+        val avsluttetMangler =
+            "SELECT count(*) FROM konsultasjon WHERE status IN ('AVLYST', 'FULLFØRT') " +
+                "AND avsluttet_tidspunkt IS NULL"
+        assertEquals("0", queryStrings(avsluttetMangler).single().single())
+        assertTrue(
+            queryStrings("SELECT count(*) FROM konsultasjon WHERE status = 'AVLYST'")
+                .single()
+                .single()!!
+                .toInt() > 0
+        )
+        assertTrue(
+            queryStrings(
+                    "SELECT count(*) FROM konsultasjon WHERE status IN ('PLANLAGT', 'PÅGÅENDE') " +
+                        "AND avsluttet_tidspunkt IS NULL"
+                )
+                .single()
+                .single()!!
+                .toInt() > 0
+        )
+    }
+
+    @Test
+    fun `existing avlyst konsultasjoner without end time get one when the seed is applied again`() {
+        withConnection { connection ->
+            connection.createStatement().use {
+                it.execute(
+                    "UPDATE konsultasjon SET avsluttet_tidspunkt = NULL WHERE status = 'AVLYST'"
+                )
+            }
+        }
+
+        applySeedAgain()
+
+        assertEquals(
+            "0",
+            queryStrings(
+                    "SELECT count(*) FROM konsultasjon WHERE status = 'AVLYST' " +
+                        "AND avsluttet_tidspunkt IS NULL"
+                )
+                .single()
+                .single(),
+        )
+    }
+
+    @Test
     fun `every seeded patient with demographics has a valid synthetic personident`() {
         val patients =
             queryStrings(
