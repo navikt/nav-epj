@@ -12,7 +12,8 @@ import no.nav.helse.core.utils.logger
 fun Application.configureHelseId() {
     val log = logger()
 
-    if (developmentMode) {
+    val localStub = environment.config.propertyOrNull("auth.localStub")?.getString().toBoolean()
+    if (localStub) {
         log.error(
             "Local development security, if you see this in production, something is very wrong!"
         )

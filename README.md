@@ -26,7 +26,7 @@ Start these with:
 docker-compose up -d
 ```
 
-The frontend and backend must run in separate terminal windows.
+The frontend and backend must run in separate terminal windows. Backend code changes need a restart of `./gradlew runLocal`.
 
 ### Frontend
 
