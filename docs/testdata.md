@@ -17,8 +17,16 @@ What the seed does:
   patient the seed places on a list moves there. Patients created in the app keep their list.
   Removing a patient line from the seed does not remove their membership: delete the row from
   `fastlegeliste_pasient` by hand.
-- Never deletes patients or clinical data. `R__testdata.sql` does not touch clinical tables
-  (`konsultasjon`, `maaling`, ...).
+- Never deletes patients or clinical data. Clinical rows are only inserted, never updated or deleted.
+
+The eight patients on the Fjordvik and Lyngdal lists also get clinical histories from the same
+file: 73 konsultasjoner (40 at Fjordvik, 33 at Lyngdal), 158 diagnoses, 406 measurements and 68
+journal notes at the patient's list office. Every patient has one active konsultasjon (2026-10-20)
+so SMART launches work, and at least one measurement. Six patients have six or more readings of one
+measurement (blood pressure, HbA1c, TSH, weight, FEV1, PHQ-9). Rows have fixed ids derived from a
+key with `md5` and are inserted with `ON CONFLICT DO NOTHING`. Diagnoses, measurements and notes
+are only inserted for konsultasjoner created in the same run, so a re-run never restores rows a
+user deleted. The local login stub doctor (HPR 565501872) sees the Fjordvik data.
 
 ## Hackathon data
 
