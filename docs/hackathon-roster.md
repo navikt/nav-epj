@@ -61,7 +61,7 @@ Solbakken).
 | TUVA MYRE | 14899610025 | FNR | Pregnancy (W78, Z34.8), 6 check-ups from May to October 2026. Earlier health check (A98, Z00.0), migraine (N89, G43.9) and cystitis (U71, N30.0). 9 konsultasjoner 2024 to 2026. Hemoglobin 13.0 to 11.5 g/dL, weight 57.4 to 62.5 kg |
 | ROLF SAND | 69906310147 | DNR | Type 2 diabetes (T90, E11.9). 7 konsultasjoner 2023 to 2026. HbA1c falls 10.0 to 7.5 % over 7 readings |
 | EVA LUNDE | 31857810085 | FNR | Type 2 diabetes (T90, E11.9). 8 konsultasjoner 2023 to 2026, one cancelled. HbA1c rises 7.1 to 8.8 % and weight 84 to 89.8 kg over 7 readings |
-| SAMIR ALI | 49819110351 | DNR | Back pain (L84, M54.5), gastroenteritis (D73, A09) and a cold (R74, J06.9). 6 konsultasjoner 2023 to 2025. Pain score 6 to 3 over 4 readings, blood pressure normal |
+| SAMIR ALI | 49819110351 | DNR | Back pain (L84, M54.5), gastroenteritis (D73, A09.9) and a cold (R74, J06.9). 6 konsultasjoner 2023 to 2025. Pain score 6 to 3 over 4 readings, blood pressure normal |
 | BERIT ODEGAARD | 21865810048 | FNR | Hypothyroidism (T86, E03.9) and knee osteoarthritis (L90, M17.9). 7 konsultasjoner 2023 to 2026. TSH stable between 1.9 and 3.3 mIU/L over 6 readings |
 | LARS KVAM | 13841050147 | FNR | Asthma (R96, J45.9). 7 konsultasjoner 2023 to 2026. FEV1 2.26 to 3.26 L, height 150.6 to 167.6 cm, weight 38.6 to 57.6 kg and BMI over 6 readings |
 
