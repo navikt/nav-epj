@@ -30,11 +30,15 @@ patients and what happens to them are listed in [hackathon-roster.md](hackathon-
 data is kept permanently as demo data and follows the same rules as `R__testdata.sql`. To stop
 seeding it, set `database.seedTestdata` to `false` (this also stops `R__testdata.sql`).
 
-The same file seeds konsultasjoner (active, completed, planned and cancelled), ICPC-2 and ICD-10
-diagnoses, journal notes and LOINC/UCUM measurements at the patient's list org, including trend
-series for blood pressure, HbA1c and weight. Rows get fixed ids derived from a key with `md5`, are
+The same file seeds 231 konsultasjoner (active, completed, planned and cancelled), 534 ICPC-2 and
+ICD-10 diagnoses, 175 journal notes and 1034 LOINC/UCUM measurements at the patient's list org.
+Every event patient has 3 to 10 konsultasjoner over two to four years, and 26 patients have six or
+more readings of one measurement (blood pressure, HbA1c, weight, eGFR, TSH, PHQ-9, FEV1 and more).
+Rows get fixed ids derived from a key with `md5`, are
 inserted with `ON CONFLICT DO NOTHING`, and are never updated or deleted, so re-running the seed
-duplicates nothing and keeps edits made in the app.
+duplicates nothing and keeps edits made in the app. Konsultasjon dates are generated from fixed day
+offsets and measurement values from a linear trend plus a deterministic wobble, so the output is the
+same on every run.
 
 Rows are referenced by natural keys (orgnummer, personident, HPR) through subselects, so the seed
 never hard-codes generated ids.
