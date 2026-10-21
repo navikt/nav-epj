@@ -374,7 +374,7 @@ FROM dagsplan d
            ('TMc', 'ICPC2', 'U71'),
            ('TMc', 'ICD10', 'N30.0'),
            ('SAa', 'ICPC2', 'D73'),
-           ('SAa', 'ICD10', 'A09'),
+           ('SAa', 'ICD10', 'A09.9'),
            ('SAb', 'ICPC2', 'R74'),
            ('SAb', 'ICD10', 'J06.9'),
            ('BOa', 'ICPC2', 'L90'),

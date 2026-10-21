@@ -134,7 +134,7 @@ FROM dagsplan d
            ('MVe', 'ICPC2', 'N89'),
            ('MVe', 'ICD10', 'G43.9'),
            ('APa', 'ICPC2', 'D73'),
-           ('APa', 'ICD10', 'A09'),
+           ('APa', 'ICD10', 'A09.9'),
            ('APb', 'ICPC2', 'R74'),
            ('APb', 'ICD10', 'J06.9'),
            ('APc', 'ICPC2', 'R72'),
@@ -346,3 +346,18 @@ SELECT md5('testdata-maaling-' || m.key || m.loinc_kode)::uuid,
        'FINAL'
 FROM maalinger m
          JOIN inserted k ON k.id = md5('testdata-konsultasjon-' || m.key)::uuid;
+
+DELETE
+FROM konsultasjon_diagnosekode d
+WHERE d.diagnosesystem = 'ICD10'
+  AND d.diagnosekode = 'A09'
+  AND EXISTS (SELECT 1
+              FROM konsultasjon_diagnosekode n
+              WHERE n.konsultasjon_id = d.konsultasjon_id
+                AND n.diagnosesystem = 'ICD10'
+                AND n.diagnosekode = 'A09.9');
+
+UPDATE konsultasjon_diagnosekode
+SET diagnosekode = 'A09.9'
+WHERE diagnosesystem = 'ICD10'
+  AND diagnosekode = 'A09';

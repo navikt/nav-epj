@@ -9,6 +9,7 @@ import kotlin.test.assertTrue
 import no.nav.helse.epj.pasient.PersonidentType
 import no.nav.helse.epj.pasient.PersonidentValidator
 import no.nav.helse.utils.WithPostgresql
+import no.nav.tsm.diagnoser.Diagnose
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -58,6 +59,68 @@ class TestdataSeedTest : WithPostgresql() {
     fun restoreSchemaWithoutSeed() {
         getFlyway(config.postgres).clean()
         getFlyway(config.postgres).migrate()
+    }
+
+    @Test
+    fun `every seeded diagnosis code exists in the diagnosis library`() {
+        val koder =
+            queryStrings(
+                "SELECT DISTINCT diagnosesystem, diagnosekode FROM konsultasjon_diagnosekode"
+            )
+
+        assertTrue(koder.isNotEmpty())
+        koder.forEach { (system, kode) ->
+            assertTrue(Diagnose.from(system!!, kode!!) != null, "$system $kode")
+        }
+    }
+
+    @Test
+    fun `legacy A09 diagnosis rows are rewritten to A09-9 when the seed is applied again`() {
+        val ids =
+            queryStrings(
+                    "SELECT konsultasjon_id FROM konsultasjon_diagnosekode " +
+                        "WHERE diagnosesystem = 'ICD10' AND diagnosekode = 'A09.9'"
+                )
+                .map { it.single() }
+        assertTrue(ids.size >= 2)
+        val (rewritten, duplicated) = ids
+        withConnection { connection ->
+            connection.createStatement().use {
+                it.execute(
+                    "UPDATE konsultasjon_diagnosekode SET diagnosekode = 'A09' " +
+                        "WHERE konsultasjon_id = '$rewritten' AND diagnosekode = 'A09.9'"
+                )
+                it.execute(
+                    "INSERT INTO konsultasjon_diagnosekode VALUES ('$duplicated', 'ICD10', 'A09')"
+                )
+            }
+        }
+
+        applySeedAgain()
+
+        assertEquals(
+            0,
+            queryStrings(
+                    "SELECT count(*) FROM konsultasjon_diagnosekode WHERE diagnosekode = 'A09'"
+                )
+                .single()
+                .single()!!
+                .toInt(),
+        )
+        assertEquals(
+            listOf(listOf("A09.9")),
+            queryStrings(
+                "SELECT diagnosekode FROM konsultasjon_diagnosekode " +
+                    "WHERE konsultasjon_id = '$rewritten' AND diagnosekode LIKE 'A09%'"
+            ),
+        )
+        assertEquals(
+            listOf(listOf("A09.9")),
+            queryStrings(
+                "SELECT diagnosekode FROM konsultasjon_diagnosekode " +
+                    "WHERE konsultasjon_id = '$duplicated' AND diagnosekode LIKE 'A09%'"
+            ),
+        )
     }
 
     @Test
