@@ -367,4 +367,53 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                 }
         }
     }
+
+    @Test
+    fun `findActive ignores avlyst and planlagt konsultasjoner without avsluttet tidspunkt`() =
+        runTest {
+            val hpr = HelsepersonellHpr("123")
+            val pasientId = opprettPasient(hpr = hpr)
+            listOf(KonsultasjonStatus.AVLYST, KonsultasjonStatus.PLANLAGT).forEach {
+                konsultasjonRepository.insert(
+                    OpprettKonsultasjon(
+                        pasientId,
+                        listOf(hpr),
+                        LocalDateTime.now().minusDays(1),
+                        it,
+                        orgnummer = DEFAULT_ORGNUMMER,
+                    )
+                )
+            }
+
+            assertNull(konsultasjonRepository.findActiveByPasientId(pasientId, DEFAULT_ORGNUMMER))
+            assertNull(
+                konsultasjonRepository.findActiveByPasientIdAndHpr(
+                    pasientId,
+                    hpr,
+                    DEFAULT_ORGNUMMER,
+                )
+            )
+
+            val pagaaendeId =
+                konsultasjonRepository.insert(
+                    OpprettKonsultasjon(
+                        pasientId,
+                        listOf(hpr),
+                        LocalDateTime.now().minusDays(2),
+                        KonsultasjonStatus.PAAGAAENDE,
+                        orgnummer = DEFAULT_ORGNUMMER,
+                    )
+                )
+
+            assertEquals(
+                pagaaendeId,
+                konsultasjonRepository
+                    .findActiveByPasientIdAndHpr(pasientId, hpr, DEFAULT_ORGNUMMER)
+                    ?.id,
+            )
+            assertEquals(
+                pagaaendeId,
+                konsultasjonRepository.findActiveByPasientId(pasientId, DEFAULT_ORGNUMMER)?.id,
+            )
+        }
 }

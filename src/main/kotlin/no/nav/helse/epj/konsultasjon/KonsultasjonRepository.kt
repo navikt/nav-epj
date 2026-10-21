@@ -27,7 +27,6 @@ import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.inSubQuery
-import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
@@ -142,7 +141,7 @@ class KonsultasjonRepository {
                 KonsultasjonTable.selectAll()
                     .where {
                         (KonsultasjonTable.pasientId eq pasientUuid) and
-                            KonsultasjonTable.avsluttetTidspunkt.isNull() and
+                            (KonsultasjonTable.status eq KonsultasjonStatus.PAAGAAENDE) and
                             konsultasjonAtOrg(orgnummer)
                     }
                     .orderBy(KonsultasjonTable.startetTidspunkt, SortOrder.DESC)
@@ -164,7 +163,7 @@ class KonsultasjonRepository {
                     .selectAll()
                     .where {
                         (KonsultasjonTable.pasientId eq pasientUuid) and
-                            KonsultasjonTable.avsluttetTidspunkt.isNull() and
+                            (KonsultasjonTable.status eq KonsultasjonStatus.PAAGAAENDE) and
                             (KonsultasjonHelsepersonell.hpr eq hpr.value) and
                             konsultasjonAtOrg(orgnummer)
                     }
