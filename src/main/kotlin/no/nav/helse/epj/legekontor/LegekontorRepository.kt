@@ -5,7 +5,6 @@ import no.nav.helse.core.db.LegekontorTable
 import no.nav.helse.core.db.dbQuery
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.core.neq
 import org.jetbrains.exposed.v1.jdbc.selectAll
 
 class LegekontorRepository {
@@ -27,10 +26,7 @@ class LegekontorRepository {
     }
 
     suspend fun listChoosable(): List<Legekontor> = dbQuery {
-        LegekontorTable.selectAll()
-            .where { LegekontorTable.id neq Legekontor.DEFAULT.id.value }
-            .orderBy(LegekontorTable.navn)
-            .map { it.toLegekontor() }
+        LegekontorTable.selectAll().orderBy(LegekontorTable.navn).map { it.toLegekontor() }
     }
 
     fun ResultRow.toLegekontor(): Legekontor {

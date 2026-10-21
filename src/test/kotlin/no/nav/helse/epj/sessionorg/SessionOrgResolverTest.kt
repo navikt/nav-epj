@@ -123,16 +123,30 @@ class SessionOrgResolverTest : WithPostgresql() {
     }
 
     @Test
-    fun `a stored choice for an org that is not choosable is ignored`() = runTest {
-        store.set("999", "864425208")
+    fun `a stored choice for an unknown org is ignored`() = runTest {
         store.set("998", "000000000")
 
-        assertEquals(SessionOrgResolution.NeedsChoice, resolver.resolve("999"))
         assertEquals(SessionOrgResolution.NeedsChoice, resolver.resolve("998"))
     }
 
     @Test
-    fun `choosable orgs exclude the legacy default org and flag own lists`() = runTest {
+    fun `an hpr listed at the migrated org and another org can choose the migrated org`() =
+        runTest {
+            val migrated = LegekontorRepository().findByOrgnummer("864425208")!!
+            insertList("444", migrated.id.value)
+            insertList("444", fjordvik)
+
+            assertEquals(SessionOrgResolution.NeedsChoice, resolver.resolve("444"))
+            assertTrue(
+                resolver.choosableOrgs("444").any { it.org.id == migrated.id && it.hasOwnList }
+            )
+
+            store.set("444", "864425208")
+            assertEquals(migrated.id, resolver.resolve("444").org().id)
+        }
+
+    @Test
+    fun `choosable orgs include every org and flag own lists`() = runTest {
         insertList("222", fjordvik)
         insertList("222", lyngdal)
         insertList("333", lyngdal)
@@ -141,9 +155,13 @@ class SessionOrgResolverTest : WithPostgresql() {
         val multi = resolver.choosableOrgs("222")
         val single = resolver.choosableOrgs("333")
 
-        assertEquals(listOf("311111116", "311111124"), unknown.map { it.org.orgnummer })
+        val unknownOrgnumre = unknown.map { it.org.orgnummer }
+        assertTrue(listOf("311111116", "311111124", "864425208").all { it in unknownOrgnumre })
         assertTrue(unknown.none { it.hasOwnList })
-        assertTrue(multi.all { it.hasOwnList })
-        assertEquals(listOf(false, true), single.map { it.hasOwnList })
+        assertEquals(
+            setOf("311111116", "311111124"),
+            multi.filter { it.hasOwnList }.map { it.org.orgnummer }.toSet(),
+        )
+        assertEquals(listOf("311111124"), single.filter { it.hasOwnList }.map { it.org.orgnummer })
     }
 }

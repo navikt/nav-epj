@@ -11,7 +11,7 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
-import no.nav.helse.epj.legekontor.Legekontor
+import no.nav.helse.epj.legekontor.LegekontorRepository
 import no.nav.helse.epj.pasient.Pasient
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.utils.DEFAULT_ORGNUMMER
@@ -336,7 +336,10 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
         val konsultasjon =
             konsultasjonRepository.findByKonsultasjonId(konsultasjonId, DEFAULT_ORGNUMMER)
         assertNotNull(konsultasjon)
-        assertEquals(Legekontor.DEFAULT.id, konsultasjon.legekontorId)
+        assertEquals(
+            LegekontorRepository().findByOrgnummer(DEFAULT_ORGNUMMER)?.id,
+            konsultasjon.legekontorId,
+        )
     }
 
     @OptIn(ExperimentalUuidApi::class)
