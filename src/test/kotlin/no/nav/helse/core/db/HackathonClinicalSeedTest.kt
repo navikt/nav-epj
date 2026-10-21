@@ -85,7 +85,7 @@ class HackathonClinicalSeedTest : WithPostgresql() {
         val gunnar = pasientId("23895710156")
 
         val konsultasjoner = konsultasjonRepository.listByPasientId(gunnar, orgWithGunnar)
-        assertEquals(5, konsultasjoner.size)
+        assertEquals(10, konsultasjoner.size)
         assertEquals(1, konsultasjoner.count { it.status == KonsultasjonStatus.PLANLAGT })
         assertEquals(
             setOf("K86", "I10", "T90", "E11.9"),
@@ -98,7 +98,7 @@ class HackathonClinicalSeedTest : WithPostgresql() {
                 it.loincKode == "4548-4"
             }
         assertEquals(
-            listOf("7.9", "7.6", "7.2", "6.9"),
+            listOf("8.7", "8.8", "8.4", "8", "8.1", "7.9", "7.6", "7.2", "6.9"),
             hba1c
                 .sortedBy { it.effektivTidspunkt }
                 .map { it.verdi.stripTrailingZeros().toPlainString() },
@@ -205,5 +205,102 @@ class HackathonClinicalSeedTest : WithPostgresql() {
             0,
             count("SELECT count(*) FROM konsultasjon_diagnosekode WHERE konsultasjon_id = $gf5"),
         )
+    }
+
+    private fun queryInts(query: String): List<Int> =
+        DriverManager.getConnection(
+                config.postgres.url,
+                config.postgres.username,
+                config.postgres.password,
+            )
+            .use { connection ->
+                connection.createStatement().use { statement ->
+                    statement.executeQuery(query).use { rs ->
+                        generateSequence { if (rs.next()) rs.getInt(1) else null }.toList()
+                    }
+                }
+            }
+
+    private val eventPatients =
+        "SELECT flp.pasient_id FROM fastlegeliste_pasient flp " +
+            "JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id WHERE fl.hpr LIKE '9000001%'"
+
+    @Test
+    fun `every event patient has at least three konsultasjoner over two years or more`() {
+        val perPatient =
+            queryInts(
+                "SELECT count(k.id)::int FROM ($eventPatients) e " +
+                    "LEFT JOIN konsultasjon k ON k.pasient_id = e.pasient_id GROUP BY e.pasient_id"
+            )
+        assertEquals(32, perPatient.size)
+        assertTrue(perPatient.all { it >= 3 }, perPatient.toString())
+
+        val spanDays =
+            queryInts(
+                "SELECT (max(k.startet_tidspunkt)::date - min(k.startet_tidspunkt)::date)::int " +
+                    "FROM konsultasjon k WHERE k.pasient_id IN ($eventPatients) " +
+                    "AND k.status <> 'PLANLAGT' GROUP BY k.pasient_id"
+            )
+        assertTrue(spanDays.all { it >= 700 }, spanDays.toString())
+        assertEquals(
+            0,
+            count(
+                "SELECT count(*) FROM konsultasjon WHERE status <> 'PLANLAGT' " +
+                    "AND startet_tidspunkt >= '2026-10-21'::timestamptz"
+            ),
+        )
+    }
+
+    @Test
+    fun `every completed konsultasjon has a diagnosis and most have a journal note`() {
+        assertEquals(
+            0,
+            count(
+                "SELECT count(*) FROM konsultasjon k WHERE k.status = 'FULLFØRT' AND NOT EXISTS " +
+                    "(SELECT 1 FROM konsultasjon_diagnosekode d WHERE d.konsultasjon_id = k.id)"
+            ),
+        )
+        val completed = count("SELECT count(*) FROM konsultasjon WHERE status = 'FULLFØRT'")
+        val withNote =
+            count(
+                "SELECT count(*) FROM konsultasjon k WHERE k.status = 'FULLFØRT' AND EXISTS " +
+                    "(SELECT 1 FROM journalnotat j WHERE j.konsultasjon_id = k.id)"
+            )
+        assertTrue(withNote * 100 >= completed * 75, "$withNote of $completed")
+    }
+
+    @Test
+    fun `at least twelve patients have a series of six readings of one measurement`() {
+        val patients =
+            count(
+                "SELECT count(DISTINCT pasient_id) FROM (SELECT pasient_id, loinc_kode FROM maaling " +
+                    "GROUP BY pasient_id, loinc_kode HAVING count(*) >= 6) series"
+            )
+        assertTrue(patients >= 12, "$patients")
+        assertTrue(count("SELECT count(*) FROM maaling") >= 1000)
+        assertTrue(count("SELECT count(*) FROM konsultasjon") in 200..300)
+    }
+
+    @Test
+    fun `rising and falling series exist for a flagging app`() = runTest {
+        val sigrun = pasientId("09894810030")
+        val egfr =
+            maalingRepository
+                .listByPasientId(sigrun, "312000016")
+                .filter { it.loincKode == "62238-1" }
+                .sortedBy { it.effektivTidspunkt }
+                .map { it.verdi.toInt() }
+        assertEquals(8, egfr.size)
+        assertTrue(egfr.first() > egfr.last())
+
+        val eva = pasientId("31857810085")
+        val hba1c =
+            maalingRepository
+                .listByPasientId(eva, "312000040")
+                .filter { it.loincKode == "4548-4" }
+                .sortedBy { it.effektivTidspunkt }
+                .map { it.verdi }
+        assertTrue(hba1c.first() < hba1c.last())
+        assertTrue(hba1c.last() > java.math.BigDecimal("8.5"))
     }
 }
