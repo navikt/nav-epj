@@ -212,6 +212,168 @@ class TestdataSeedTest : WithPostgresql() {
         )
     }
 
+    private fun clinicalCounts(orgnummer: String): List<String> =
+        queryStrings(
+                """
+                SELECT (SELECT count(*) FROM konsultasjon k WHERE k.legekontor_id = lk.id),
+                       (SELECT count(*) FROM konsultasjon_diagnosekode d
+                                 JOIN konsultasjon k ON k.id = d.konsultasjon_id WHERE k.legekontor_id = lk.id),
+                       (SELECT count(*) FROM maaling m
+                                 JOIN konsultasjon k ON k.id = m.konsultasjon_id WHERE k.legekontor_id = lk.id),
+                       (SELECT count(*) FROM journalnotat j
+                                 JOIN konsultasjon k ON k.id = j.konsultasjon_id WHERE k.legekontor_id = lk.id)
+                FROM legekontor lk
+                WHERE lk.orgnummer = '$orgnummer'
+                """
+                    .trimIndent()
+            )
+            .single()
+            .map { it!! }
+
+    @Test
+    fun `everyday test patients get clinical histories at their list office`() {
+        assertEquals(listOf("40", "76", "193", "38"), clinicalCounts("311111116"))
+        assertEquals(listOf("33", "82", "213", "30"), clinicalCounts("311111124"))
+    }
+
+    @Test
+    fun `every patient on an everyday list has an active konsultasjon at the list office`() {
+        val withoutActive =
+            queryStrings(
+                """
+                SELECT p.fornavn
+                FROM pasient p
+                         JOIN fastlegeliste_pasient flp ON flp.pasient_id = p.id
+                         JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
+                WHERE fl.hpr IN ('565501872', '900000001')
+                  AND NOT EXISTS (SELECT 1
+                                  FROM konsultasjon k
+                                  WHERE k.pasient_id = p.id
+                                    AND k.legekontor_id = fl.legekontor_id
+                                    AND k.status = 'PÅGÅENDE')
+                """
+                    .trimIndent()
+            )
+
+        assertEquals(emptyList(), withoutActive)
+    }
+
+    @Test
+    fun `everyday patients have diagnoses, measurements and a dated history`() {
+        val everyday =
+            """
+            SELECT flp.pasient_id
+            FROM fastlegeliste_pasient flp
+                     JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
+            WHERE fl.hpr IN ('565501872', '900000001')
+            """
+                .trimIndent()
+
+        assertEquals(
+            "0",
+            queryStrings(
+                    "SELECT count(*) FROM konsultasjon k WHERE k.status = 'FULLFØRT' AND NOT EXISTS " +
+                        "(SELECT 1 FROM konsultasjon_diagnosekode d WHERE d.konsultasjon_id = k.id)"
+                )
+                .single()
+                .single(),
+        )
+        assertEquals(
+            "0",
+            queryStrings(
+                    "SELECT count(*) FROM ($everyday) e WHERE NOT EXISTS " +
+                        "(SELECT 1 FROM maaling m WHERE m.pasient_id = e.pasient_id)"
+                )
+                .single()
+                .single(),
+        )
+        assertEquals(
+            "0",
+            queryStrings(
+                    "SELECT count(*) FROM konsultasjon WHERE status = 'PLANLAGT' " +
+                        "AND startet_tidspunkt < '2026-10-21'::timestamptz"
+                )
+                .single()
+                .single(),
+        )
+        val withSeries =
+            queryStrings(
+                    "SELECT count(DISTINCT pasient_id) FROM (SELECT pasient_id FROM maaling " +
+                        "WHERE pasient_id IN ($everyday) GROUP BY pasient_id, loinc_kode " +
+                        "HAVING count(*) >= 6) s"
+                )
+                .single()
+                .single()!!
+                .toInt()
+        assertTrue(withSeries >= 3, "$withSeries")
+    }
+
+    @Test
+    fun `everyday series include abnormal rising values`() {
+        val hba1c =
+            queryStrings(
+                    """
+                    SELECT m.verdi
+                    FROM maaling m
+                             JOIN pasient p ON p.id = m.pasient_id
+                    WHERE p.fornavn = 'RASK' AND m.loinc_kode = '4548-4'
+                    ORDER BY m.effektiv_tidspunkt
+                    """
+                        .trimIndent()
+                )
+                .map { it.single()!!.toBigDecimal() }
+
+        assertTrue(hba1c.size >= 6)
+        assertTrue(hba1c.last() > hba1c.first())
+        assertTrue(hba1c.last() > "7.5".toBigDecimal())
+    }
+
+    @Test
+    fun `applying both seeds again keeps clinical counts and does not restore deleted rows`() {
+        val rask = "md5('testdata-konsultasjon-RL1')::uuid"
+        withConnection { connection ->
+            connection.createStatement().use {
+                it.execute(
+                    "DELETE FROM konsultasjon_diagnosekode WHERE konsultasjon_id = $rask " +
+                        "AND diagnosekode = 'I10'"
+                )
+                it.execute(
+                    "DELETE FROM maaling WHERE konsultasjon_id = $rask AND loinc_kode = '29463-7'"
+                )
+            }
+        }
+        val tables =
+            listOf(
+                "konsultasjon",
+                "konsultasjon_helsepersonell",
+                "konsultasjon_diagnosekode",
+                "journalnotat",
+                "maaling",
+            )
+        val before = tables.map { count(it) }
+
+        applySeedAgain()
+
+        assertEquals(before, tables.map { count(it) })
+        assertEquals(
+            "0",
+            queryStrings(
+                    "SELECT count(*) FROM konsultasjon_diagnosekode WHERE konsultasjon_id = $rask " +
+                        "AND diagnosekode = 'I10'"
+                )
+                .single()
+                .single(),
+        )
+        assertEquals(
+            "0",
+            queryStrings(
+                    "SELECT count(*) FROM maaling WHERE konsultasjon_id = $rask AND loinc_kode = '29463-7'"
+                )
+                .single()
+                .single(),
+        )
+    }
+
     @Test
     fun `hackathon patients have valid synthetic personidents on one list each`() {
         val patients =

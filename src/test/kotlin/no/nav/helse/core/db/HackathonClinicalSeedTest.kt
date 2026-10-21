@@ -277,8 +277,13 @@ class HackathonClinicalSeedTest : WithPostgresql() {
                     "GROUP BY pasient_id, loinc_kode HAVING count(*) >= 6) series"
             )
         assertTrue(patients >= 12, "$patients")
-        assertTrue(count("SELECT count(*) FROM maaling") >= 1000)
-        assertTrue(count("SELECT count(*) FROM konsultasjon") in 200..300)
+        assertTrue(
+            count("SELECT count(*) FROM maaling WHERE pasient_id IN ($eventPatients)") >= 1000
+        )
+        assertTrue(
+            count("SELECT count(*) FROM konsultasjon WHERE pasient_id IN ($eventPatients)") in
+                200..300
+        )
     }
 
     @Test
