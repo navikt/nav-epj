@@ -251,6 +251,7 @@ class ClientCredentialsTokenRouteTest {
         val response = post(tokenRequest(assertion = assertion(aud = "http://other/token")))
 
         assertEquals(HttpStatusCode.Unauthorized, response.status)
+        assertEquals("invalid_client", body(response.bodyAsText())["error"])
     }
 
     @Test
@@ -275,7 +276,9 @@ class ClientCredentialsTokenRouteTest {
         val replayed = assertion()
 
         assertEquals(HttpStatusCode.OK, post(tokenRequest(assertion = replayed)).status)
-        assertEquals(HttpStatusCode.Unauthorized, post(tokenRequest(assertion = replayed)).status)
+        val second = post(tokenRequest(assertion = replayed))
+        assertEquals(HttpStatusCode.Unauthorized, second.status)
+        assertEquals("invalid_client", body(second.bodyAsText())["error"])
     }
 
     @Test

@@ -24,11 +24,12 @@ class SmartIntrospectionRouteTest {
     private fun accessToken(
         expiresAt: Date = Date(System.currentTimeMillis() + 3600_000),
         type: String = "at+jwt",
+        audience: String = simpleTestEnvironment.smart.fhirServerUrl,
     ): String =
         JWT.create()
             .withHeader(mapOf("typ" to type))
             .withIssuer(simpleTestEnvironment.smart.issuerBaseUrl)
-            .withAudience(simpleTestEnvironment.smart.fhirServerUrl)
+            .withAudience(audience)
             .withSubject("111222333")
             .withKeyId(smartKeys.keyId)
             .withIssuedAt(Date())
@@ -74,6 +75,23 @@ class SmartIntrospectionRouteTest {
         val body = jacksonObjectMapper().readValue<IntrospectionResponse>(response.bodyAsText())
         assertFalse(body.active)
     }
+
+    @Test
+    fun `POST oidc introspect reports a token with another audience as inactive`() =
+        testApplication {
+            application { configureTestSmartDependencies() }
+            val response =
+                client.post("/oidc/introspect") {
+                    contentType(ContentType.Application.FormUrlEncoded)
+                    setBody(
+                        "token=${accessToken(audience = "http://other/fhir")}&client_id=test-client-id"
+                    )
+                }
+
+            assertEquals(HttpStatusCode.OK, response.status)
+            val body = jacksonObjectMapper().readValue<IntrospectionResponse>(response.bodyAsText())
+            assertFalse(body.active)
+        }
 
     @Test
     fun `POST oidc introspect reports a token of the wrong type as inactive`() = testApplication {
