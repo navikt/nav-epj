@@ -5,6 +5,7 @@ import { AppError, type Config } from "./config.ts";
 import { escapeHtml, page } from "./http.ts";
 import * as reference from "./reference.ts";
 import { steps, type Steps } from "./steps.ts";
+import type { Context, Tokens, Transaction } from "./types.ts";
 import { configureServer } from "./server.ts";
 
 export async function buildApp(config: Config, referenceMode = false, implementation?: Steps) {
@@ -12,9 +13,9 @@ export async function buildApp(config: Config, referenceMode = false, implementa
   configureServer(app);
   await app.register(cookie);
   const api = implementation ?? (referenceMode ? reference : steps);
-  const transactions = new Map<string, reference.Transaction>();
+  const transactions = new Map<string, Transaction>();
   const sessions = new Map<string, {
-    tokens: reference.Tokens; context: reference.Context; expiresAt: number;
+    tokens: Tokens; context: Context; expiresAt: number;
   }>();
   const random = () => randomBytes(32).toString("base64url");
   const cookieOptions = {

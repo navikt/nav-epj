@@ -7,7 +7,7 @@ import { errors, exportJWK, generateKeyPair, jwtVerify, SignJWT, type JWTPayload
 import { z } from "zod";
 import type { Config } from "../src/config.ts";
 import { variant } from "../src/variant.ts";
-import type { Discovery, Tokens } from "../src/reference.ts";
+import type { Discovery, Tokens } from "../src/types.ts";
 import type { encounterSchema } from "../src/http.ts";
 
 const reference = z.object({ reference: z.string() }).strict();

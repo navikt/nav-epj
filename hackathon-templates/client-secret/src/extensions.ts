@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { AppError, type Config } from "./config.ts";
 import { bundle, fhir, fhirUrl, id, referenceId, request } from "./http.ts";
-import type { Context, Tokens } from "./reference.ts";
+import type { Context, Tokens } from "./types.ts";
 
 const condition = z.object({ resourceType: z.literal("Condition") }).passthrough();
 const observation = z.object({

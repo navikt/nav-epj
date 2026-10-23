@@ -20,7 +20,8 @@ EHR variants. Show the patient's name and age with the ongoing consultation. The
 6. Check state when the callback returns.
 7. Exchange the code server-side with your registered client authentication.
 8. Verify the ID token before reading its claims.
-9. Read patient, encounter and clinician context.
+9. Read patient and encounter from the token response (next to `access_token`), and the clinician from the
+   `fhirUser` claim of the verified ID token.
 10. Fetch the FHIR resources and render the page.
 
 Afterwards, walk a teammate through the redirects in the browser's network tab. Tokens, secrets and

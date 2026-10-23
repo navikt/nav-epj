@@ -7,7 +7,7 @@ export type Steps = Pick<typeof reference,
 
 export const steps: Steps = {
   readLaunch(query, config) {
-    return unfinished(1, "Validate iss and launch against the configured FHIR server");
+    return unfinished(1, "Require a launch ID and an iss that equals FHIR_BASE_URL");
   },
   async discover(config) {
     return unfinished(2, "Fetch and validate SMART discovery; never trust arbitrary endpoint URLs");
@@ -31,7 +31,7 @@ export const steps: Steps = {
     return unfinished(8, "Verify ID-token signature, issuer, audience and expiry before reading fhirUser");
   },
   launchContext(tokens, practitioner) {
-    return unfinished(9, "Extract patient, encounter and verified practitioner context");
+    return unfinished(9, "Read patient and encounter from the token response (beside access_token) and fhirUser from the verified ID token");
   },
   async loadChart(config, tokens, context) {
     return unfinished(10, "Fetch patient and active encounter for rendering; care-team details are optional");

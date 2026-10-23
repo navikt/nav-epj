@@ -19,7 +19,14 @@ examples.
 
 ## Configuration
 
-Set these in your terminal or run configuration. Never commit credentials.
+Configuration lives in a `.env` file in your starter folder. It is ignored by Git, so never
+commit it. `npm start` and `npm run start:reference` read it (Node 22.9 or later). `npm test` does not.
+
+- With a team credential packet: copy the `<variant>.env` file (`public.env`, `client-secret.env`,
+  `private-key-jwt.env` or `backend-services.env`) to `.env` in the matching starter folder. Copy
+  the key file (`launch-key.private.jwk.json` or `backend-key.private.jwk.json`) into `keys/`.
+- Without a packet: `cp .env.example .env` and fill in the values. `.env.example` points at the
+  hosted dev EPJ and lists the local nav-epj values as comments.
 
 | Variable | Applies to | Value |
 |---|---|---|
@@ -33,30 +40,8 @@ Set these in your terminal or run configuration. Never commit credentials.
 | `PRIVATE_JWK_PATH` | `private-key-jwt`, `backend-services` | Path to your private JWK file |
 | `PATIENT_IDENTIFIER` | `backend-services` | Synthetic identifier as `system\|value` |
 
-For a local nav-epj (use the host's real values on the day), shared by every variant:
-
-```sh
-export FHIR_BASE_URL='http://localhost:8080/fhir'
-export AUTH_ISSUER='http://localhost:8080/oidc'
-export CLIENT_ID='your-assigned-client-id'
-```
-
-EHR launch (`public/`, `client-secret/`, `private-key-jwt/`):
-
-```sh
-export SCOPES='openid fhirUser launch patient/Patient.r patient/Encounter.s'
-```
-
-`backend-services/` (no launch; `system|value` is a roster identifier):
-
-```sh
-export SCOPES='system/Patient.rs'
-export PRIVATE_JWK_PATH='keys/private.jwk.json'
-export PATIENT_IDENTIFIER='system|value'
-```
-
-On PowerShell use `$env:CLIENT_ID = '...'`. Enter secrets through your IDE or a non-echoing
-prompt, not shell history.
+To run two starters at once, give the second a different `PORT` and a `REDIRECT_URI` registered
+for that port.
 
 ## Client authentication
 
@@ -71,9 +56,9 @@ All EHR variants keep authorization code and PKCE. Only the token request differ
 
 PKCE protects the code exchange. Client authentication identifies your app. Neither replaces the other.
 
-**Keys.** The reference accepts the RSA 3072 / RS384 private JWK that nav-epj generates, or an
-EC P-384 / ES384 one. The JWK needs a matching `alg`, `use: sig` and a `kid` equal to the
-registered public key. Keep it outside Git (the ignored `keys/` directory works). The host registers
+**Keys.** Packet keys are RSA 3072 / RS384; the reference also accepts an EC P-384 / ES384 JWK.
+The JWK needs a matching `alg`, `use: sig` and a `kid` equal to the registered public key.
+Keep it outside Git (the ignored `keys/` directory works). The host registers
 only the public JWK Set, inline as `jwkSet`, because a deployed nav-epj cannot fetch a JWKS from your
 laptop. The assertion uses `iss = sub = client_id`, the discovered token endpoint as `aud`,
 a short expiry and a fresh `jti`. The key is not a FHIR token: your app still gets an access token
@@ -130,15 +115,28 @@ reference code, not your app and not the event instance.
 The event data has 32 synthetic patients in four organisations. In an EHR launch you only see the
 patients of your session organisation, and changing organisation after launch fails with
 `Launch token was issued for another organisation.` Four patients (one per organisation) have an
-ongoing consultation; for any other, start one first. Ask the host which patients fit your idea,
+ongoing consultation (the EPJ patient list shows "Pågår nå" under "Siste konsultasjon"):
+
+| Patient | Organisation |
+|---|---|
+| BJARNE BERGE | Skogtun Legekontor |
+| ELSE STRAND | Havnegata Legesenter |
+| TOMAS NOVAK | Bjerkely Legepraksis |
+| HELGE BRATT | Solbakken Familielegekontor |
+
+For any other patient, start a consultation first. Ask the host which patients fit your idea,
 for example one with many dated readings. `backend-services/` searches by roster identifier instead.
+`backend-services/.env.example` presets BJARNE BERGE
+(`urn:oid:2.16.578.1.12.4.1.4.1|20856210112`). The FNR system is `urn:oid:2.16.578.1.12.4.1.4.1`
+and the DNR system is `urn:oid:2.16.578.1.12.4.1.4.2`.
 
 ## Troubleshooting
 
 | Symptom | Check |
 |---|---|
 | `TODO n` / HTTP 501 | The step is a stub: implement it or read the reference |
-| Startup configuration error | Set the variables for your variant |
+| Startup configuration error | Fill in `.env` for your variant |
+| `Launch iss ... does not match FHIR_BASE_URL` | `FHIR_BASE_URL` must equal the `iss` shown, exactly |
 | Unknown client or rejected redirect | Client ID, authentication method and URIs match the registration |
 | Missing state or pending launch | Start a fresh launch in the same browser |
 | Missing ID token or patient (EHR) | Scopes must include `openid fhirUser launch` |

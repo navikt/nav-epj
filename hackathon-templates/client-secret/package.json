@@ -5,8 +5,8 @@
   "type": "module",
   "engines": { "node": "22.x" },
   "scripts": {
-    "start": "node --import tsx src/main.ts",
-    "start:reference": "node --import tsx src/main.ts --reference",
+    "start": "node --env-file-if-exists=.env --import tsx src/main.ts",
+    "start:reference": "node --env-file-if-exists=.env --import tsx src/main.ts --reference",
     "test": "node --import tsx --test --test-reporter=spec test/*.test.ts",
     "typecheck": "tsc --noEmit"
   },

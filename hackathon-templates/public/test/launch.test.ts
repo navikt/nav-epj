@@ -19,7 +19,10 @@ import { age } from "../src/http.ts";
     const cases: [string, () => unknown][] = [
       ["trusted launch parameters", () => {
         assert.deepEqual(api.readLaunch(launch, f.config), launch);
-        assert.throws(() => api.readLaunch({ ...launch, iss: "https://untrusted.invalid/fhir" }, f.config));
+        assert.throws(() => api.readLaunch({ ...launch, iss: "https://untrusted.invalid/fhir" }, f.config),
+          (error: Error) => error.message.includes("https://untrusted.invalid/fhir") && error.message.includes(f.config.fhirBase),
+          "The mismatch error must show the received iss and FHIR_BASE_URL");
+        assert.throws(() => api.readLaunch({ iss: launch.iss }, f.config), /launch ID/);
       }],
       ["trust discovery and reject invalid metadata", async () => {
         const original = structuredClone(f.metadata);
