@@ -39,10 +39,10 @@ Set the following in your terminal or IDE's run configuration. Do not commit cre
 ### Using the public/private keys supplied on the day
 
 Choose `private-key-jwt/` for an EHR-launched app with key-pair authentication.
-The reference expects an **ES384 / EC P-384 private JWK**, with `alg: ES384`, `use: sig`
-and a `kid` matching the public key registered by the host. Confirm the supplied key
-format with the host before using the reference; nav-epj also supports RS384, but this
-starter's helper uses ES384.
+The reference accepts the **RSA 3072 / RS384** private JWK that nav-epj generates, and also
+an **EC P-384 / ES384** private JWK. Either way the JWK needs a matching `alg` (`RS384` or
+`ES384`), `use: sig` and a `kid` matching the public key registered by the host. The
+assertion is signed with that algorithm.
 
 Keep the private key on your laptop, for example in the ignored `keys/` directory,
 and set `PRIVATE_JWK_PATH` to its path. The host registers the corresponding **public**

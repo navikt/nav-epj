@@ -9,8 +9,8 @@ with pre-authorized `system/*` scopes.
 
 1. Use Node 22 and run `npm ci`.
 2. Follow [GUIDE.md](./GUIDE.md). The host supplies a dedicated backend client ID,
-   public/private keys and a synthetic patient identifier. The reference expects an ES384
-   private JWK at `PRIVATE_JWK_PATH`.
+   public/private keys and a synthetic patient identifier. The reference accepts the
+   generated RSA 3072 / RS384 key or an EC P-384 / ES384 private JWK at `PRIVATE_JWK_PATH`.
 3. Set `SCOPES` to `system/Patient.rs` and `PATIENT_IDENTIFIER` to the roster's
    `identifier-system|identifier-value`.
 4. Adapt `src/steps.ts`, run `npm start`, and open `http://localhost:3100` to use your app.

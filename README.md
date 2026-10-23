@@ -111,6 +111,9 @@ how to make your SMART on FHIR application work with nav-epj.
 
 Read [the track contract matrix](./docs/smart-hackathon-contract.md) for the mapping between the
 published hackathon track and this repository's endpoints, cohort data, and acceptance tests.
+The hackathon roster contains 32 patients across four organisations
+([docs/hackathon-roster.md](./docs/hackathon-roster.md)).
+Launch and session FHIR data is scoped to the session organisation.
 
 Participant starter drafts are staged in [hackathon-templates](./hackathon-templates/README.md):
 standalone local apps for public, client-secret, private-key-jwt and Backend Services flows,

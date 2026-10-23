@@ -42,7 +42,8 @@ to the app's original verifier. Neither replaces client authentication.
 **Three audiences:** authorization request `aud` = FHIR base;
 ID token `aud` = your client ID; client assertion `aud` = exact token endpoint.
 Decoding a JWT is not verification. The client assertion and ID token use different
-signing keys; the current reference uses ES384 and RS256 respectively.
+signing keys; the reference uses the client's RS384 or ES384 key and nav-epj's RS256 key,
+respectively.
 
 ## What should I read or write?
 
@@ -60,7 +61,11 @@ Paths below are relative to the supplied FHIR base. Build queries with `URLSearc
 | Consultation diagnoses | `GET Condition?subject={patient}&encounter={encounter}` | `patient/Condition.s` | Diagnoses on that consultation |
 | Temperature history | `GET Observation?subject={patient}&code=http://loinc.org|8310-5` | `patient/Observation.s` | Several dated readings in compatible units |
 | Write a measurement | `POST Observation` | `patient/Observation.c`; add `.r` to read back by ID | An active consultation |
-| Write a note | `POST DocumentReference` | `patient/DocumentReference.c`; add `.r` to read back by ID | An active consultation; final event instructions pending |
+| Write a note | `POST DocumentReference` | `patient/DocumentReference.c`; add `.r` to read back by ID | An active consultation; journal display is covered by local acceptance, native browser return is still manual |
+
+Launch and session FHIR data is scoped to the `orgnr` of the session organisation. If it
+changes after launch, nav-epj answers `Launch token was issued for another organisation.`
+The 32 roster patients sit in four organisations ([roster](../docs/hackathon-roster.md)).
 
 `{patient}` and `{encounter}` come from the token response; `{practitioner}` comes
 from the verified `fhirUser`. Select the encounter matching the launch, not the first
@@ -74,8 +79,9 @@ enables those reads together. For scope detective, enable it first, then remove
 
 **Write-back:** submit explicitly, take patient/encounter from the server session,
 and confirm `201`, the assigned ID and `Location`. The current document helper stores
-description text, not uploaded PDF data. Measurements are displayed in nav-epj;
-document display and final payload/viewing links remain pending.
+description text, not uploaded PDF data. Measurements are displayed in nav-epj. Local
+acceptance covers journal display after write-back; native browser return still needs
+manual verification. Check the host's payload and viewing instructions before the event.
 The [syk-inn document example](https://github.com/navikt/syk-inn/blob/main/docs/fhir/document-reference.md)
 is a richer use-case reference, not a drop-in request for this starter.
 
@@ -89,6 +95,6 @@ Use a dedicated key-pair registration, `client_credentials` and `system/Patient.
 to search `Patient?identifier={system|value}` with the supplied synthetic identifier.
 Its token is short-lived and patient-less; system access does not mean unrestricted access.
 
-**Host preparation:** add roster labels for diagnosis-rich and trend-ready patients
-before distributing this sheet. No real event patient IDs or available readings are
-assumed here. This draft stays at template root until reviewed for publication.
+**Host preparation:** add labels for diagnosis-rich and trend-ready patients from the
+[roster](../docs/hackathon-roster.md) before distributing this sheet. This draft stays at
+template root until reviewed for publication.

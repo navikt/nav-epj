@@ -79,7 +79,9 @@ read/search permissions if needed. Observe the `201` response, server-assigned I
 nav-epj's document example stores `description` as a journal note. It accepts a narrow
 DocumentReference shape with `application/pdf` metadata, **not an uploaded PDF**:
 `attachment.data` and `attachment.url` are rejected. The reference helper matches that
-shape. Document display in the EPJ remains outstanding in the track contract.
+shape. Local acceptance shows the description in the journal editor when you return to the
+workspace, and a journal refresh keeps unsaved edits. Native browser-return behavior still
+needs manual verification, so check it yourself and ask a mentor if it differs.
 
 **Asymmetric authentication.** Use the host-supplied key pair with the `private-key-jwt`
 starter. Sign a client assertion with `iss = sub = client_id`, the discovered token

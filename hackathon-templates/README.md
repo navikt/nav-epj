@@ -40,6 +40,11 @@ and publication decisions; it is not yet the final participant handout.
 The accompanying [SMART/FHIR map draft](./SMART-FHIR-MAP.md) summarizes browser/server
 calls, token types, resources, scopes and how to choose a suitable synthetic patient.
 
+The starters run against the 32 synthetic patients in four organisations described in
+[the roster](../docs/hackathon-roster.md). Launch data is scoped to the session organisation.
+Local acceptance covers journal display after write-back; native browser return and event
+acceptance across starters still need manual verification.
+
 The tests protect **our reference implementation, helpers and fixtures**. They do not
 grade participant code, and participants do not need to complete a test suite.
 From a chosen starter, maintainers can run:
