@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { jwtVerify } from "jose";
 import { buildApp } from "../src/app.ts";
 import * as api from "../src/reference.ts";
 import { fixture } from "./fixture.ts";
@@ -54,3 +55,14 @@ test("Reference Backend Services: reject patient-bound, long-lived and over-scop
     await assert.rejects(() => api.backendToken(f.config, f.metadata));
   }
 });
+
+  for (const alg of ["ES384", "RS384"] as const) test(`Reference Backend Services: ${alg} client assertion verifies with the public key`, async t => {
+    const f = await fixture(alg);
+    t.after(f.close);
+    assert.ok(f.issued.has((await api.backendToken(f.config, f.metadata)).access_token));
+    const assertion = f.lastBody().get("client_assertion")!;
+    const { protectedHeader } = await jwtVerify(assertion, f.client.publicKey, {
+      issuer: f.config.clientId, subject: f.config.clientId, audience: f.metadata.token_endpoint, algorithms: [alg],
+    });
+    assert.deepEqual(Object.keys(protectedHeader).sort(), ["alg", "kid", "typ"]);
+  });

@@ -34,14 +34,14 @@ const documentInput = z.object({
   }).strict()).length(1),
 }).strict();
 
-export async function fixture() {
+export async function fixture(clientAlg: "ES384" | "RS384" = "ES384") {
   const server = Fastify();
   const signing = await generateKeyPair("RS256");
-  const client = await generateKeyPair("ES384", { extractable: true });
+  const client = await generateKeyPair(clientAlg, { extractable: true, ...(clientAlg === "RS384" ? { modulusLength: 3072 } : {}) });
   const directory = await mkdtemp(join(tmpdir(), "smart-starter-test-"));
   const keyPath = join(directory, "private.json");
   await writeFile(keyPath, JSON.stringify({
-    ...await exportJWK(client.privateKey), kid: "test-key", alg: "ES384", use: "sig",
+    ...await exportJWK(client.privateKey), kid: "test-key", alg: clientAlg, use: "sig",
   }), { mode: 0o600 });
   const config: Config = {
     variant, port: 3100, fhirBase: "", issuer: "", clientId: "test-team",
@@ -120,7 +120,7 @@ export async function fixture() {
       try {
         const { payload, protectedHeader } = await jwtVerify(lastBody.get("client_assertion") ?? "", client.publicKey, {
           issuer: config.clientId, subject: config.clientId, audience: metadata.token_endpoint,
-          algorithms: ["ES384"], requiredClaims: ["iss", "sub", "aud", "exp", "jti"],
+          algorithms: [clientAlg], requiredClaims: ["iss", "sub", "aud", "exp", "jti"],
         });
         if (protectedHeader.kid !== "test-key" || protectedHeader.typ !== "JWT" ||
             !payload.jti || usedAssertions.has(payload.jti) ||
@@ -237,7 +237,7 @@ export async function fixture() {
     token_endpoint: `${config.issuer}/token`, jwks_uri: `${config.issuer}/jwks`,
   });
   return {
-    config, metadata, patient, encounter, measurements, tokens, client, issued, requests, created, createResponse,
+    config, metadata, patient, encounter, measurements, tokens, client, clientAlg, issued, requests, created, createResponse,
     registerCode: (code: string, challenge: string, scope = config.scopes) =>
       codes.set(code, { challenge, scope: scope.split(/\s+/).filter(s => registeredScopes.includes(s)).join(" ") }),
     tokenCalls: () => tokenCalls, lastBody: () => lastBody, lastAuthorization: () => lastAuthorization,

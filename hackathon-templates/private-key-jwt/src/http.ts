@@ -84,11 +84,14 @@ export function displayName(resource: { name: z.infer<typeof names> }): string {
 export function age(birthDate: string | undefined, today = new Date()): number | null {
   if (!birthDate || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) return null;
   const birth = new Date(`${birthDate}T00:00:00Z`);
-  if (!Number.isFinite(birth.getTime()) || birth.toISOString().slice(0, 10) !== birthDate || birth > today) {
+  const osloToday = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Oslo", year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(today);
+  if (!Number.isFinite(birth.getTime()) || birth.toISOString().slice(0, 10) !== birthDate || birthDate > osloToday) {
     throw new AppError(502, "Patient has an invalid birth date.");
   }
-  const beforeBirthday = today.toISOString().slice(5, 10) < birthDate.slice(5);
-  return today.getUTCFullYear() - birth.getUTCFullYear() - Number(beforeBirthday);
+  const beforeBirthday = osloToday.slice(5) < birthDate.slice(5);
+  return Number(osloToday.slice(0, 4)) - birth.getUTCFullYear() - Number(beforeBirthday);
 }
 
 export function escapeHtml(value: unknown): string {

@@ -4,8 +4,8 @@ import { jwtVerify } from "jose";
 import * as reference from "../src/reference.ts";
 import { fixture } from "./fixture.ts";
 
-test("Reference client authentication: correctly signed, short-lived, fresh assertions", async t => {
-  const f = await fixture();
+for (const alg of ["ES384", "RS384"] as const) test(`Reference client authentication (${alg}): correctly signed, short-lived, fresh assertions`, async t => {
+  const f = await fixture(alg);
   t.after(f.close);
   const transaction = reference.newTransaction({ iss: f.config.fhirBase, launch: "launch" }, f.metadata, reference.pkce());
   const identifiers = new Set();
@@ -17,8 +17,10 @@ test("Reference client authentication: correctly signed, short-lived, fresh asse
     assert.equal(f.lastAuthorization(), undefined);
     assert.equal(f.lastBody().get("client_assertion_type"), "urn:ietf:params:oauth:client-assertion-type:jwt-bearer");
     const { payload, protectedHeader } = await jwtVerify(assertion, f.client.publicKey, {
-      issuer: f.config.clientId, subject: f.config.clientId, audience: f.metadata.token_endpoint, algorithms: ["ES384"],
+      issuer: f.config.clientId, subject: f.config.clientId, audience: f.metadata.token_endpoint, algorithms: [alg],
     });
+    assert.deepEqual(Object.keys(protectedHeader).sort(), ["alg", "kid", "typ"]);
+    assert.equal(protectedHeader.alg, alg);
     assert.equal(protectedHeader.kid, "test-key");
     assert.equal(protectedHeader.typ, "JWT");
     assert.equal(typeof payload.jti, "string");

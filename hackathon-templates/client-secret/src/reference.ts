@@ -35,10 +35,11 @@ export interface Chart {
 
 export function readLaunch(query: unknown, config: Config): Launch {
   const result = z.object({ iss: z.string(), launch: z.string().min(1).max(2048) }).safeParse(query);
-  if (!result.success || result.data.iss !== config.fhirBase) {
-    throw new AppError(400, "Launch requires a launch ID and the exact trusted FHIR issuer.");
+  const iss = result.success ? result.data.iss.replace(/\/$/, "") : "";
+  if (!result.success || iss !== config.fhirBase) {
+    throw new AppError(400, "Launch requires a launch ID and the trusted FHIR issuer.");
   }
-  return result.data;
+  return { iss, launch: result.data.launch };
 }
 
 export async function discover(config: Config): Promise<Discovery> {
@@ -99,13 +100,26 @@ export function validateCallback(query: unknown, transaction: Transaction): stri
 
 export async function clientAssertion(config: Config, tokenEndpoint: string): Promise<string> {
   if (!config.privateJwkPath) throw new AppError(400, "Missing PRIVATE_JWK_PATH.");
-  const jwk = z.object({
-    kty: z.literal("EC"), crv: z.literal("P-384"), x: z.string(), y: z.string(),
-    d: z.string(), kid: z.string().min(1), alg: z.literal("ES384"), use: z.literal("sig"),
-  }).parse(JSON.parse(await readFile(config.privateJwkPath, "utf8")));
-  const key = await importJWK(jwk, "ES384");
+  const base = { kid: z.string().trim().min(1), use: z.literal("sig") };
+  const b64 = (min: number, max: number) => z.string().regex(/^[A-Za-z0-9_-]+$/).min(min).max(max);
+  const jwk = z.discriminatedUnion("kty", [
+    z.object({
+      ...base, kty: z.literal("EC"), crv: z.literal("P-384"), alg: z.literal("ES384"),
+      x: b64(64, 64), y: b64(64, 64), d: b64(64, 64),
+    }),
+    z.object({
+      ...base, kty: z.literal("RSA"), alg: z.literal("RS384"),
+      n: b64(342, 684), e: b64(1, 8), d: b64(342, 684),
+      p: b64(1, 400), q: b64(1, 400), dp: b64(1, 400), dq: b64(1, 400), qi: b64(1, 400),
+    }),
+  ]).parse(JSON.parse(await readFile(config.privateJwkPath, "utf8")));
+  const { kid, alg, ...material } = jwk;
+  if (jwk.kty === "RSA" && Buffer.from(jwk.n, "base64url").length < 384) {
+    throw new AppError(400, "RSA keys must be at least 3072 bits.");
+  }
+  const key = await importJWK({ ...material, alg }, alg);
   return new SignJWT({})
-    .setProtectedHeader({ alg: "ES384", typ: "JWT", kid: jwk.kid })
+    .setProtectedHeader({ alg, typ: "JWT", kid })
     .setIssuer(config.clientId).setSubject(config.clientId).setAudience(tokenEndpoint)
     .setIssuedAt().setExpirationTime("2m").setJti(randomUUID()).sign(key);
 }

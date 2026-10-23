@@ -39,6 +39,8 @@ test("Scaffolding: FHIR URLs cannot leak bearer tokens to another origin or path
 test("Scaffolding: age boundaries and incomplete FHIR data are honest", () => {
   assert.equal(age("1990-06-15", new Date("2026-06-14T12:00:00Z")), 35);
   assert.equal(age("1990-06-15", new Date("2026-06-15T12:00:00Z")), 36);
+  assert.equal(age("1990-06-15", new Date("2026-06-14T22:30:00Z")), 36, "Oslo is already on June 15");
+  assert.equal(age("1990-06-15", new Date("2026-06-14T21:30:00Z")), 35);
   assert.equal(age("1990"), null);
   assert.equal(age(undefined), null);
   assert.throws(() => age("2026-02-30"));

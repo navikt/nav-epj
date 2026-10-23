@@ -19,6 +19,8 @@ import { age } from "../src/http.ts";
     const cases: [string, () => unknown][] = [
       ["trusted launch parameters", () => {
         assert.deepEqual(api.readLaunch(launch, f.config), launch);
+        assert.deepEqual(api.readLaunch({ ...launch, iss: `${launch.iss}/` }, f.config), launch);
+        assert.throws(() => api.readLaunch({ ...launch, iss: `${launch.iss}//` }, f.config));
         assert.throws(() => api.readLaunch({ ...launch, iss: "https://untrusted.invalid/fhir" }, f.config));
       }],
       ["trust discovery and reject invalid metadata", () => checkDiscovery(f)],
@@ -44,6 +46,9 @@ import { age } from "../src/http.ts";
           code_challenge: proof.challenge, code_challenge_method: "S256",
         })) assert.equal(url.searchParams.get(key), value);
         assert.equal(url.searchParams.has("code_verifier"), false);
+        const slashed = api.readLaunch({ ...launch, iss: `${launch.iss}/` }, f.config);
+        const canonical = new URL(api.authorizationUrl(f.config, api.newTransaction(slashed, f.metadata, proof)));
+        assert.equal(canonical.searchParams.get("aud"), f.config.fhirBase);
       }],
       ["callback state", () => {
         assert.equal(api.validateCallback({ code: "code", state: transaction.state }, transaction), "code");
