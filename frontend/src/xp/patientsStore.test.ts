@@ -32,6 +32,13 @@ describe("patientsStore", () => {
     expect(store().patients).toHaveLength(1);
   });
 
+  it("seeds the last konsultasjon per patient from the list response", async () => {
+    const last = { status: "PÅGÅENDE", tidspunkt: "2026-01-02T03:04:05" };
+    stubFetch([{ ...pasient("1"), sisteKonsultasjon: last }, pasient("2")]);
+    await store().load();
+    expect(store().lastKonsultasjon).toEqual({ "1": last });
+  });
+
   it("reports error when the request fails", async () => {
     stubFetch([], false);
     await store().load();

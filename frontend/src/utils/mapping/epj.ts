@@ -41,8 +41,14 @@ export const PasientSchema = z.object({
 
 export type Pasient = z.infer<typeof PasientSchema>;
 
+export const SisteKonsultasjonSchema = z.object({
+    status: z.string(),
+    tidspunkt: z.string(),
+});
+
 export const PasientListeElementSchema = PasientSchema.extend({
     selectable: z.boolean(),
+    sisteKonsultasjon: SisteKonsultasjonSchema.nullish(),
 });
 
 export type PasientListeElement = z.infer<typeof PasientListeElementSchema>;

@@ -9,6 +9,7 @@ import io.ktor.server.testing.*
 import io.mockk.coEvery
 import io.mockk.mockk
 import java.time.LocalDate
+import java.time.LocalDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -16,6 +17,7 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.DuplikatPasientException
 import no.nav.helse.core.utils.IngenFastlegelisteException
+import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.UgyldigPersonidentException
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.legekontor.Legekontor
@@ -155,13 +157,25 @@ class PasientRoutesTest {
                 personident = "15068500017",
             )
         coEvery { pasientService.listAtLegekontor("311111116", HelsepersonellHpr("111")) } returns
-            listOf(PasientListeElement(pasient, selectable = false))
+            listOf(
+                PasientListeElement(
+                    pasient,
+                    selectable = false,
+                    sisteKonsultasjon =
+                        SisteKonsultasjon(
+                            KonsultasjonStatus.PAAGAAENDE,
+                            LocalDateTime.parse("2026-01-02T03:04:05"),
+                        ),
+                )
+            )
 
         val response = get("/api/patient")
 
         assertEquals(HttpStatusCode.OK, response.status)
         assertTrue(response.bodyAsText().contains("Nordmann"))
         assertTrue(response.bodyAsText().contains("\"selectable\" : false"))
+        assertTrue(response.bodyAsText().contains("\"status\" : \"PÅGÅENDE\""))
+        assertTrue(response.bodyAsText().contains("\"tidspunkt\" : \"2026-01-02T03:04:05\""))
     }
 
     @Test
