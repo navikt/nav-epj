@@ -44,10 +44,10 @@ const decodeBasic = (header = "") => {
   return separator < 0 ? undefined : { id, secret };
 };
 
-export async function fixture(clientAlg: "ES384" | "RS384" = "ES384") {
+export async function fixture(clientAlg: "ES384" | "RS384" = "ES384", modulusLength = 3072) {
   const server = Fastify();
   const signing = await generateKeyPair("RS256");
-  const client = await generateKeyPair(clientAlg, { extractable: true, ...(clientAlg === "RS384" ? { modulusLength: 3072 } : {}) });
+  const client = await generateKeyPair(clientAlg, { extractable: true, modulusLength });
   const directory = await mkdtemp(join(tmpdir(), "smart-starter-test-"));
   const keyPath = join(directory, "private.json");
   await writeFile(keyPath, JSON.stringify({

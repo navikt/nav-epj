@@ -4,8 +4,9 @@ import { jwtVerify } from "jose";
 import * as reference from "../src/reference.ts";
 import { fixture } from "./fixture.ts";
 
-for (const alg of ["ES384", "RS384"] as const) test(`Reference client authentication (${alg}): correctly signed, short-lived, fresh assertions`, async t => {
-  const f = await fixture(alg);
+const keys: [alg: "ES384" | "RS384", modulusLength?: number][] = [["ES384"], ["RS384"], ["RS384", 2048]];
+for (const [alg, modulusLength] of keys) test(`Reference client authentication (${alg}${modulusLength ? ` ${modulusLength}` : ""}): correctly signed, short-lived, fresh assertions`, async t => {
+  const f = await fixture(alg, modulusLength);
   t.after(f.close);
   const transaction = reference.newTransaction({ iss: f.config.fhirBase, launch: "launch" }, f.metadata, reference.pkce());
   const identifiers = new Set();
