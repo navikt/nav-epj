@@ -35,11 +35,10 @@ export interface Chart {
 
 export function readLaunch(query: unknown, config: Config): Launch {
   const result = z.object({ iss: z.string(), launch: z.string().min(1).max(2048) }).safeParse(query);
-  const iss = result.success ? result.data.iss.replace(/\/$/, "") : "";
-  if (!result.success || iss !== config.fhirBase) {
+  if (!result.success || result.data.iss !== config.fhirBase) {
     throw new AppError(400, "Launch requires a launch ID and the trusted FHIR issuer.");
   }
-  return { iss, launch: result.data.launch };
+  return result.data;
 }
 
 export async function discover(config: Config): Promise<Discovery> {
