@@ -20,9 +20,15 @@ type Props = {
   user: HeaderUser | null;
   onLogout: () => void;
   onSearchSubmit: () => void;
+  onChangeOrg?: () => void;
 };
 
-export function AppHeader({ user, onLogout, onSearchSubmit }: Props) {
+export function AppHeader({
+  user,
+  onLogout,
+  onSearchSubmit,
+  onChangeOrg,
+}: Props) {
   const { narrow, drawerOpen, setDrawerOpen } = useShell();
   const query = usePatientsStore((s) => s.query);
   const setQuery = usePatientsStore((s) => s.setQuery);
@@ -80,6 +86,15 @@ export function AppHeader({ user, onLogout, onSearchSubmit }: Props) {
         <span className="xp-user xp-hide-narrow">
           {copy["header.user"](user.navn, user.autorisasjon, user.legekontor)}
         </span>
+      )}
+      {onChangeOrg && (
+        <button
+          type="button"
+          className="xp-hbtn xp-hide-narrow"
+          onClick={onChangeOrg}
+        >
+          {copy["header.changeOrg"]}
+        </button>
       )}
       <button
         type="button"

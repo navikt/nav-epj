@@ -12,6 +12,7 @@ const pasient = (id: string, fornavn: string) => ({
   personidentType: "FNR" as const,
   birthDate: null,
   gender: null,
+  selectable: true,
 });
 
 afterEach(() => vi.unstubAllGlobals());

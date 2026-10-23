@@ -26,7 +26,7 @@ Start these with:
 docker-compose up -d
 ```
 
-The frontend and backend must run in separate terminal windows.
+The frontend and backend must run in separate terminal windows. Backend code changes need a restart of `./gradlew runLocal`.
 
 ### Frontend
 
@@ -47,6 +47,12 @@ From the backend directory, start the application using Gradle:
 ```bash
 ./gradlew runLocal
 ```
+
+### Test data
+
+Organisations, mock patients and fastlegelister are seeded by a repeatable Flyway migration. See
+[docs/testdata.md](./docs/testdata.md) for how to add an organisation, a patient, a doctor's list or
+a column.
 
 ### Session information
 

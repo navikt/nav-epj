@@ -15,11 +15,15 @@ object PersonidentValidator {
     private const val CHECKSUM_MODULUS = 11
     private const val INVALID_CHECKSUM = 10
     private const val DNR_DAY_OFFSET = 40
+    private const val SYNTHETIC_MONTH_OFFSET = 80
+    private const val MONTH_START = 2
+    private const val MONTH_END = 4
     private const val FIRST_CHECKSUM_INDEX = 9
     private const val SECOND_CHECKSUM_INDEX = 10
 
     private val digitsOnly = Regex("^\\d{11}$")
     private val dayOfMonthRange = 1..31
+    private val syntheticEncodedMonths = 81..92
     private val k1Weights = intArrayOf(3, 7, 6, 1, 8, 9, 4, 5, 2)
     private val k2Weights = intArrayOf(5, 4, 3, 2, 7, 6, 5, 4, 3, 2)
 
@@ -36,6 +40,10 @@ object PersonidentValidator {
             CenturyRule(century = 1800, individualNumbers = 500..749, twoDigitYears = 54..99),
             CenturyRule(century = 2000, individualNumbers = 500..999, twoDigitYears = 0..39),
         )
+
+    fun isSynthetic(personident: String): Boolean =
+        digitsOnly.matches(personident) &&
+            personident.substring(MONTH_START, MONTH_END).toInt() in syntheticEncodedMonths
 
     /**
      * Validates that [personident] is a well-formed personident of the declared [personidentType],
@@ -54,7 +62,7 @@ object PersonidentValidator {
             parseBirthDate(
                 personidentType = personidentType,
                 encodedDay = personident.substring(0, 2).toInt(),
-                month = personident.substring(2, 4).toInt(),
+                encodedMonth = personident.substring(2, 4).toInt(),
                 twoDigitYear = personident.substring(4, 6).toInt(),
                 individualNumber = personident.substring(6, 9).toInt(),
             )
@@ -67,11 +75,14 @@ object PersonidentValidator {
     private fun parseBirthDate(
         personidentType: PersonidentType,
         encodedDay: Int,
-        month: Int,
+        encodedMonth: Int,
         twoDigitYear: Int,
         individualNumber: Int,
     ): LocalDate {
         val day = dayOfMonth(personidentType, encodedDay)
+        val month =
+            if (encodedMonth in syntheticEncodedMonths) encodedMonth - SYNTHETIC_MONTH_OFFSET
+            else encodedMonth
         val century =
             resolveCentury(individualNumber, twoDigitYear)
                 ?: throw UgyldigPersonidentException(

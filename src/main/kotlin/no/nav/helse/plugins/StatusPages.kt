@@ -14,14 +14,17 @@ import no.nav.helse.core.utils.AktivKonsultasjonNotFoundException
 import no.nav.helse.core.utils.DuplikatPasientException
 import no.nav.helse.core.utils.HelsepersonellForPatientNotFoundException
 import no.nav.helse.core.utils.HelsepersonellNotFoundException
+import no.nav.helse.core.utils.IngenFastlegelisteException
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.LegekontorNotfoundException
 import no.nav.helse.core.utils.PasientCreationException
+import no.nav.helse.core.utils.SessionOrgRequiredException
 import no.nav.helse.core.utils.UgyldigDiagnoseException
 import no.nav.helse.core.utils.UgyldigPersonidentException
 import no.nav.helse.core.utils.logger
 import no.nav.helse.fhir.security.InsufficientScopeException
+import no.nav.helse.fhir.security.OrganizationContextMissingException
 import no.nav.helse.fhir.security.PatientMismatchException
 
 fun Application.configureStatusPages() {
@@ -57,6 +60,15 @@ fun Application.configureStatusPages() {
                 status = HttpStatusCode.NotFound,
             )
         }
+        exception<IngenFastlegelisteException> { call, cause ->
+            call.respondText(text = cause.message.orEmpty(), status = HttpStatusCode.Forbidden)
+        }
+        exception<SessionOrgRequiredException> { call, cause ->
+            call.respondText(
+                text = "Legekontor ikke valgt: ${cause.message}",
+                status = HttpStatusCode.Conflict,
+            )
+        }
         exception<UgyldigDiagnoseException> { call, cause ->
             call.respondText(
                 text = "Ugyldig diagnose: ${cause.message}",
@@ -68,6 +80,13 @@ fun Application.configureStatusPages() {
         }
         exception<DuplikatPasientException> { call, cause ->
             call.respondText(text = "Pasienten finnes allerede", status = HttpStatusCode.Conflict)
+        }
+        exception<OrganizationContextMissingException> { call, cause ->
+            call.respondAuthorizationFailure(
+                status = HttpStatusCode.Forbidden,
+                issueType = OperationOutcome.IssueType.Forbidden,
+                text = cause.message ?: "Forbidden",
+            )
         }
         exception<InsufficientScopeException> { call, cause ->
             call.response.header(

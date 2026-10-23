@@ -18,7 +18,15 @@ class KonsultasjonNotFoundException(konsultasjonId: KonsultasjonId) :
 class AktivKonsultasjonNotFoundException(pasientId: PasientId) :
     RuntimeException("Fant ingen aktiv konsultasjon for pasient med id=${pasientId.value}")
 
-class LegekontorNotfoundException : RuntimeException("Fant ikke Legekontor")
+class SessionOrgRequiredException : RuntimeException("Legekontor er ikke valgt for denne økten")
+
+class IngenFastlegelisteException :
+    RuntimeException("Legen har ingen fastlegeliste hos dette legekontoret")
+
+class LegekontorNotfoundException(orgnummer: String? = null) :
+    RuntimeException(
+        orgnummer?.let { "Fant ikke Legekontor med orgnummer $it" } ?: "Fant ikke Legekontor"
+    )
 
 class KonsultasjonNotFoundForPatientException(pasientId: PasientId) :
     RuntimeException("Fant ikke konsultasjon for pasientId=${pasientId.value}")

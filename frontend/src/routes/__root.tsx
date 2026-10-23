@@ -1,5 +1,5 @@
 import { Outlet, createRootRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppDialogs } from "../xp/AppDialogs";
 import { AppHeader } from "../xp/AppHeader";
 import { AppShell } from "../xp/AppShell";
@@ -10,6 +10,7 @@ import { TaskPane } from "../xp/TaskPane";
 import { CurrentUserContext, type CurrentUser } from "../xp/currentUser";
 import { UserGate } from "../xp/UserGate";
 import { Workspace } from "../xp/Workspace";
+import { useActivePatientStore } from "../xp/activePatientStore";
 import { useAppsStore } from "../xp/appsStore";
 import { guardTabClose } from "../xp/journalGuardStore";
 import { useLaunchModeStore } from "../xp/launchModeStore";
@@ -35,7 +36,9 @@ export const Route = createRootRoute({
 function RootComponent() {
   const navigate = useNavigate();
   const route = useCurrentRoute();
-  const { state, retry } = useHelsepersonell();
+  const { state, retry, chooseOrg } = useHelsepersonell();
+  const [changingOrg, setChangingOrg] = useState(false);
+  const sessionOrg = state.status === "ready" ? state.sessionOrg : null;
   const currentUser = useMemo<CurrentUser | null>(
     () =>
       state.status === "ready"
@@ -43,14 +46,20 @@ function RootComponent() {
             navn: state.helsepersonell.navn,
             hpr: state.helsepersonell.hpr,
             autorisasjon: state.helsepersonell.autorisasjon,
-            legekontor: state.legekontor.navn,
-            orgnummer: state.legekontor.orgnummer ?? undefined,
-            telefon: state.legekontor.tlf ?? undefined,
+            legekontor: state.sessionOrg.org?.navn ?? "",
+            orgnummer: state.sessionOrg.org?.orgnummer ?? undefined,
+            telefon: state.sessionOrg.org?.tlf ?? undefined,
           }
         : null,
     [state],
   );
   const openPatients = () => openPatientsTab((target) => void navigate(target));
+  const onChooseOrg = async (orgnummer: string) => {
+    await chooseOrg(orgnummer);
+    setChangingOrg(false);
+    void useActivePatientStore.getState().refresh();
+    openPatients();
+  };
   const openJournal = () => {
     const target = currentJournalRoute();
     if (!target) return;
@@ -76,6 +85,11 @@ function RootComponent() {
           user={currentUser}
           onLogout={logout}
           onSearchSubmit={() => void submitSearch()}
+          onChangeOrg={
+            sessionOrg?.canChoose && !sessionOrg.needsChoice
+              ? () => setChangingOrg(true)
+              : undefined
+          }
         />
         <TaskPane
           userName={currentUser?.navn}
@@ -85,7 +99,13 @@ function RootComponent() {
           onLogout={logout}
         />
         <Workspace onBeforeCloseTab={guardTabClose}>
-          <UserGate state={state} onRetry={retry}>
+          <UserGate
+            state={state}
+            onRetry={retry}
+            onChooseOrg={onChooseOrg}
+            changingOrg={changingOrg}
+            onCancelChangeOrg={() => setChangingOrg(false)}
+          >
             <Outlet />
           </UserGate>
         </Workspace>

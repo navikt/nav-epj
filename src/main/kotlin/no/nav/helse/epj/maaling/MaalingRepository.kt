@@ -3,6 +3,8 @@ package no.nav.helse.epj.maaling
 import no.nav.helse.core.db.KonsultasjonTable
 import no.nav.helse.core.db.MaalingTable
 import no.nav.helse.core.db.dbQuery
+import no.nav.helse.core.db.konsultasjonAtOrg
+import no.nav.helse.core.db.konsultasjonIdsAtOrg
 import no.nav.helse.core.utils.DuplikatMaalingException
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonTilhorerAnnenPasientException
@@ -12,7 +14,9 @@ import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.pasient.PasientId
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inSubQuery
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -20,10 +24,13 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 class MaalingRepository {
     private val logger = logger()
 
-    suspend fun insert(maaling: Maaling): Unit = dbQuery {
+    suspend fun insert(maaling: Maaling, orgnummer: String): Unit = dbQuery {
         val konsultasjonPasientId =
             KonsultasjonTable.select(KonsultasjonTable.pasientId)
-                .where { KonsultasjonTable.id eq maaling.konsultasjonId.value }
+                .where {
+                    (KonsultasjonTable.id eq maaling.konsultasjonId.value) and
+                        konsultasjonAtOrg(orgnummer)
+                }
                 .singleOrNull()
                 ?.get(KonsultasjonTable.pasientId)
                 ?: throw KonsultasjonNotFoundException(maaling.konsultasjonId)
@@ -58,20 +65,35 @@ class MaalingRepository {
         }
     }
 
-    suspend fun findById(id: MaalingId): Maaling? = dbQuery {
-        MaalingTable.selectAll().where { MaalingTable.id eq id.value }.singleOrNull()?.toMaaling()
+    suspend fun findById(id: MaalingId, orgnummer: String?): Maaling? = dbQuery {
+        MaalingTable.selectAll()
+            .where {
+                (MaalingTable.id eq id.value) and
+                    (MaalingTable.konsultasjonId inSubQuery konsultasjonIdsAtOrg(orgnummer))
+            }
+            .singleOrNull()
+            ?.toMaaling()
     }
 
-    suspend fun listByPasientId(pasientId: PasientId): List<Maaling> = dbQuery {
+    suspend fun listByPasientId(pasientId: PasientId, orgnummer: String?): List<Maaling> = dbQuery {
         MaalingTable.selectAll()
-            .where { MaalingTable.pasientId eq pasientId.value }
+            .where {
+                (MaalingTable.pasientId eq pasientId.value) and
+                    (MaalingTable.konsultasjonId inSubQuery konsultasjonIdsAtOrg(orgnummer))
+            }
             .orderBy(MaalingTable.effektivTidspunkt, SortOrder.ASC)
             .map { it.toMaaling() }
     }
 
-    suspend fun listByKonsultasjonId(konsultasjonId: KonsultasjonId): List<Maaling> = dbQuery {
+    suspend fun listByKonsultasjonId(
+        konsultasjonId: KonsultasjonId,
+        orgnummer: String?,
+    ): List<Maaling> = dbQuery {
         MaalingTable.selectAll()
-            .where { MaalingTable.konsultasjonId eq konsultasjonId.value }
+            .where {
+                (MaalingTable.konsultasjonId eq konsultasjonId.value) and
+                    (MaalingTable.konsultasjonId inSubQuery konsultasjonIdsAtOrg(orgnummer))
+            }
             .orderBy(MaalingTable.effektivTidspunkt, SortOrder.ASC)
             .map { it.toMaaling() }
     }

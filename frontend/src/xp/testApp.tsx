@@ -23,6 +23,13 @@ export const testKontor = {
   tlf: null,
 };
 
+export const testSessionOrg = {
+  org: testKontor,
+  needsChoice: false,
+  canChoose: false,
+  choosableOrgs: [{ org: testKontor, hasOwnList: true }],
+};
+
 type Handler = (init?: RequestInit) => { status?: number; body?: unknown };
 
 const activePatientHandler: Handler = (init) => ({
@@ -36,7 +43,7 @@ export function stubApi(handlers: Record<string, Handler> = {}) {
   const calls: { key: string; init?: RequestInit }[] = [];
   const all: Record<string, Handler> = {
     "GET /api/helsepersonell/me": () => ({ body: testMe }),
-    "GET /api/legekontor/k1": () => ({ body: testKontor }),
+    "GET /api/session-org": () => ({ body: testSessionOrg }),
     "PUT /api/active-patient": activePatientHandler,
     ...handlers,
   };

@@ -44,6 +44,7 @@ data class OpprettKonsultasjon(
     val hpr: List<HelsepersonellHpr>,
     val startetTidspunkt: LocalDateTime,
     val status: KonsultasjonStatus,
+    val orgnummer: String,
 )
 
 data class OppdaterKonsultasjonRequest(

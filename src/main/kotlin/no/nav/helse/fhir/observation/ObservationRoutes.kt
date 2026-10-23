@@ -18,6 +18,8 @@ import no.nav.helse.core.utils.KonsultasjonTilhorerAnnenPasientException
 import no.nav.helse.fhir.encounterReferenceId
 import no.nav.helse.fhir.observationId
 import no.nav.helse.fhir.patientOrSubjectReferenceInputId
+import no.nav.helse.fhir.security.clinicalOrgnummer
+import no.nav.helse.fhir.security.requireClinicalOrgnummer
 import no.nav.helse.fhir.security.requireFhirScope
 import no.nav.helse.fhir.security.requirePatientMatch
 import no.nav.helse.smart.security.Interaction
@@ -36,7 +38,7 @@ fun Route.observationRoutes(
             val principal = call.requireFhirScope("Observation", Interaction.READ)
 
             val observation =
-                observationService.getObservationById(id)
+                observationService.getObservationById(id, principal.clinicalOrgnummer())
                     ?: return@get call.respond(
                         HttpStatusCode.NotFound,
                         "No observation found for $id",
@@ -62,7 +64,13 @@ fun Route.observationRoutes(
             val encounterId = call.parameters["encounter"]?.let { call.encounterReferenceId() }
             val code = call.parameters["code"]?.let(::parseObservationSearchCode)
 
-            val bundle = observationService.searchObservations(patientId, encounterId, code)
+            val bundle =
+                observationService.searchObservations(
+                    patientId,
+                    encounterId,
+                    code,
+                    principal.clinicalOrgnummer(),
+                )
             call.respondText(fhirR4Json.encodeToString(bundle), fhirContentType)
         }
 
@@ -122,7 +130,10 @@ fun Route.observationRoutes(
 
             val created =
                 try {
-                    observationService.createObservation(request)
+                    observationService.createObservation(
+                        request,
+                        principal.requireClinicalOrgnummer(),
+                    )
                 } catch (exception: KonsultasjonNotFoundException) {
                     return@post call.respondOperationOutcome(
                         fhirR4Json,

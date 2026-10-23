@@ -18,7 +18,7 @@ export function useSearchSubmit() {
         status === "ready"
           ? filterPatients(scopePatients(patients, recentIds, view), query)
           : [];
-      if (matches.length === 1) {
+      if (matches.length === 1 && matches[0].selectable) {
         usePatientsStore.getState().setQuery("");
         openJournal(matches[0]);
         return;

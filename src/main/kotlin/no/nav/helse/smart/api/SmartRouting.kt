@@ -12,6 +12,9 @@ import io.ktor.server.routing.*
 import java.util.*
 import no.nav.helse.core.Environment
 import no.nav.helse.core.utils.logger
+import no.nav.helse.epj.pasient.PasientService
+import no.nav.helse.epj.sessionorg.SessionOrgResolution
+import no.nav.helse.epj.sessionorg.SessionOrgResolver
 import no.nav.helse.fhir.encounter.EncounterService
 import no.nav.helse.fhir.patient.PatientService
 import no.nav.helse.helseId.loggedInUser
@@ -39,15 +42,24 @@ import no.nav.helse.smart.valkey.ValkeyService
 fun Application.configureSmartRouting() {
     val env: Environment by dependencies
     val patientService: PatientService by dependencies
+    val pasientService: PasientService by dependencies
     val encounterService: EncounterService by dependencies
     val valkeyService: ValkeyService by dependencies
+    val sessionOrgResolver: SessionOrgResolver by dependencies
     val clientAssertionVerifier: ClientAssertionVerifier by dependencies
     val smartKeys: SmartKeys by dependencies
 
     val issuerUrl = env.smart.issuerBaseUrl
     val clients = env.smart.clients
     val logger = logger()
-    val launchPreparer = LaunchPreparer(valkeyService, patientService, encounterService)
+    val launchPreparer =
+        LaunchPreparer(
+            valkeyService,
+            patientService,
+            encounterService,
+            sessionOrgResolver,
+            pasientService,
+        )
 
     routing {
         authenticate("wonderwall-helseid") {
@@ -230,6 +242,21 @@ fun Application.configureSmartRouting() {
                         )
                     }
 
+                    val sessionOrg =
+                        (sessionOrgResolver.resolve(user.hpr) as? SessionOrgResolution.Resolved)
+                            ?.org
+                            ?.orgnummer
+                    if (launchContext.orgnummer != sessionOrg) {
+                        return@get rejectViaRedirect(
+                            redirectUri = redirectUri,
+                            state = state,
+                            error =
+                                OAuth2Error.INVALID_REQUEST.appendDescription(
+                                    "Launch token was issued for another organisation."
+                                ),
+                        )
+                    }
+
                     /**
                      * The scopes granted may differ from those requested (SMART app-launch:
                      * https://build.fhir.org/ig/HL7/smart-app-launch/scopes-and-launch-context.html)
@@ -365,6 +392,7 @@ fun Application.configureSmartRouting() {
                         ctx.scope,
                         ctx.launch.patientId,
                         ctx.launch.encounterId,
+                        ctx.launch.orgnummer,
                         now,
                         expiresAt,
                         smartKeys,
@@ -499,6 +527,7 @@ private fun buildAccessToken(
     grantedScope: String,
     patientId: String?,
     encounterId: String?,
+    orgnummer: String?,
     now: Date,
     expiresAt: Date,
     smartKeys: SmartKeys,
@@ -518,6 +547,7 @@ private fun buildAccessToken(
         .apply {
             patientId?.let { withClaim("patient", it) }
             encounterId?.let { withClaim("encounter", it) }
+            orgnummer?.let { withClaim("orgnr", it) }
         }
         .sign(smartKeys.algorithm)
 
@@ -617,6 +647,7 @@ private suspend fun RoutingContext.issueClientCredentialsToken(
                     fhirServerUrl,
                     client.clientId,
                     grantedScope,
+                    null,
                     null,
                     null,
                     now,

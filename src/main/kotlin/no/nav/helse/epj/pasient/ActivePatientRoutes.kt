@@ -8,7 +8,6 @@ import java.time.Instant
 import kotlin.uuid.Uuid
 import no.nav.helse.helseId.loggedInUser
 import no.nav.helse.smart.valkey.ActivePatient
-import no.nav.helse.smart.valkey.ValkeyService
 
 data class ActivePatientRequest(val patientId: String)
 
@@ -16,13 +15,10 @@ data class ActivePatientResponse(val patientId: String, val expiresAt: Instant)
 
 private fun ActivePatient.toResponse() = ActivePatientResponse(patientId, expiresAt)
 
-fun Route.activePatientRoutes(
-    activePatientService: ActivePatientService,
-    valkeyService: ValkeyService,
-) {
+fun Route.activePatientRoutes(activePatientService: ActivePatientService) {
     route("/api/active-patient") {
         get {
-            val active = valkeyService.getActivePatientWithExpiry(loggedInUser().hpr)
+            val active = activePatientService.getActivePatient(loggedInUser().hpr)
             if (active == null) call.respond(HttpStatusCode.NoContent)
             else call.respond(active.toResponse())
         }

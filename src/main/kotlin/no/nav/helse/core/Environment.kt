@@ -11,7 +11,12 @@ class Environment(
     val epj: EpjConfig,
 )
 
-data class PostgresConfig(val url: String, val username: String, val password: String)
+data class PostgresConfig(
+    val url: String,
+    val username: String,
+    val password: String,
+    val seedTestdata: Boolean = false,
+)
 
 data class EpjConfig(val baseUrl: String)
 
@@ -37,6 +42,8 @@ fun initEnvironment(config: ApplicationConfig): Environment {
                 url = config.property("database.url").getString(),
                 username = config.property("database.user").getString(),
                 password = config.property("database.password").getString(),
+                seedTestdata =
+                    config.propertyOrNull("database.seedTestdata")?.getString().toBoolean(),
             ),
         smart =
             SmartConfig(

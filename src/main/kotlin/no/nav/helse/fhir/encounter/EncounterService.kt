@@ -24,18 +24,24 @@ import no.nav.helse.fhir.patient.PatientInputId
 
 class EncounterService(val konsultasjonService: KonsultasjonService) {
 
-    suspend fun getEncounterById(encounterId: EncounterId): Encounter {
-        val konsultasjon = konsultasjonService.getKonsultasjon(KonsultasjonId(encounterId.value))
+    suspend fun getEncounterById(encounterId: EncounterId, orgnummer: String?): Encounter {
+        val konsultasjon =
+            konsultasjonService.getKonsultasjon(KonsultasjonId(encounterId.value), orgnummer)
         return konsultasjon.toEncounter()
     }
 
-    suspend fun getActiveEncounterByPatient(patientId: PatientInputId): Encounter? {
-        val konsultasjon = konsultasjonService.getAktivKonsultasjon(PasientId(patientId.value))
+    suspend fun getActiveEncounterByPatient(
+        patientId: PatientInputId,
+        orgnummer: String?,
+    ): Encounter? {
+        val konsultasjon =
+            konsultasjonService.getAktivKonsultasjon(PasientId(patientId.value), orgnummer)
         return konsultasjon?.toEncounter()
     }
 
-    suspend fun getEncountersByPatient(patientId: PatientInputId): Bundle {
-        val konsultasjoner = konsultasjonService.getKonsultasjoner(PasientId(patientId.value))
+    suspend fun getEncountersByPatient(patientId: PatientInputId, orgnummer: String?): Bundle {
+        val konsultasjoner =
+            konsultasjonService.getKonsultasjoner(PasientId(patientId.value), orgnummer)
         if (konsultasjoner.isEmpty()) {
             return Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
         }

@@ -5,10 +5,10 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
-import no.nav.helse.epj.legekontor.Legekontor
 import no.nav.helse.epj.pasient.Pasient
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.epj.pasient.PasientRepository
+import no.nav.helse.utils.DEFAULT_ORGNUMMER
 import no.nav.helse.utils.WithPostgresql
 
 abstract class KonsultasjonRepositoryTestBase : WithPostgresql() {
@@ -28,11 +28,9 @@ abstract class KonsultasjonRepositoryTestBase : WithPostgresql() {
         pasientRepository.insert(
             Pasient(
                 id = pasientId,
-                legekontorId = Legekontor.DEFAULT.id,
                 fornavn = "fornavn",
                 etternavn = "etternavn",
                 personident = "personident-${pasientId.value}",
-                hprNumbers = listOf(hpr),
             )
         )
         return pasientId
@@ -45,6 +43,7 @@ abstract class KonsultasjonRepositoryTestBase : WithPostgresql() {
                 listOf(HelsepersonellHpr("123")),
                 LocalDateTime.now(),
                 KonsultasjonStatus.PAAGAAENDE,
+                orgnummer = DEFAULT_ORGNUMMER,
             )
         )
 }

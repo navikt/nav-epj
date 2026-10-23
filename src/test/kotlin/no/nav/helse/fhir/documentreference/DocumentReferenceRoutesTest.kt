@@ -39,6 +39,7 @@ import no.nav.helse.smart.security.Interaction
 import no.nav.helse.smart.security.ScopeContext
 import no.nav.helse.smart.security.SmartPrincipal
 import no.nav.helse.smart.security.SmartScope
+import no.nav.helse.utils.DEFAULT_ORGNUMMER as ORG
 import org.junit.Test
 
 private const val TYPE_SYSTEM = "urn:oid:2.16.578.1.12.4.1.1.9602"
@@ -111,6 +112,7 @@ class DocumentReferenceRoutesTest {
                                 scopes = scopes,
                                 patient = boundPatient,
                                 encounter = null,
+                                orgnummer = ORG,
                             )
                         )
                     }
@@ -134,7 +136,7 @@ class DocumentReferenceRoutesTest {
     fun `GET DocumentReference by id returns the mapped resource for the launched patient`() {
         val patientId = Uuid.generateV4().toString()
         val documentReferenceId = DocumentReferenceId(Uuid.generateV4())
-        coEvery { documentReferenceService.getDocumentReferences(documentReferenceId) } returns
+        coEvery { documentReferenceService.getDocumentReferences(documentReferenceId, ORG) } returns
             sampleDocumentReference(documentReferenceId.value.toString(), patientId)
 
         testApp(boundPatient = patientId) {
@@ -152,7 +154,8 @@ class DocumentReferenceRoutesTest {
     @Test
     fun `GET DocumentReference by id returns 404 for an unknown documentreference`() {
         val documentReferenceId = DocumentReferenceId(Uuid.generateV4())
-        coEvery { documentReferenceService.getDocumentReferences(documentReferenceId) } returns null
+        coEvery { documentReferenceService.getDocumentReferences(documentReferenceId, ORG) } returns
+            null
 
         testApp(boundPatient = Uuid.generateV4().toString()) {
             val response = get("/fhir/DocumentReference/${documentReferenceId.value}")
@@ -165,7 +168,7 @@ class DocumentReferenceRoutesTest {
     fun `GET DocumentReference by id rejects a token missing the DocumentReference scope`() {
         val patientId = Uuid.generateV4().toString()
         val documentReferenceId = DocumentReferenceId(Uuid.generateV4())
-        coEvery { documentReferenceService.getDocumentReferences(documentReferenceId) } returns
+        coEvery { documentReferenceService.getDocumentReferences(documentReferenceId, ORG) } returns
             sampleDocumentReference(documentReferenceId.value.toString(), patientId)
 
         testApp(scopes = emptySet(), boundPatient = patientId) {
@@ -178,7 +181,7 @@ class DocumentReferenceRoutesTest {
     @Test
     fun `GET DocumentReference by id returns 404 for a token bound to a different patient`() {
         val documentReferenceId = DocumentReferenceId(Uuid.generateV4())
-        coEvery { documentReferenceService.getDocumentReferences(documentReferenceId) } returns
+        coEvery { documentReferenceService.getDocumentReferences(documentReferenceId, ORG) } returns
             sampleDocumentReference(
                 documentReferenceId.value.toString(),
                 Uuid.generateV4().toString(),
@@ -219,7 +222,7 @@ class DocumentReferenceRoutesTest {
     fun `GET DocumentReference search accepts the patient alias parameter`() {
         val patientId = Uuid.generateV4()
         coEvery {
-            documentReferenceService.searchDocumentReferences(PatientInputId(patientId), null)
+            documentReferenceService.searchDocumentReferences(PatientInputId(patientId), null, ORG)
         } returns Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
 
         testApp(boundPatient = patientId.toString()) {
@@ -233,7 +236,7 @@ class DocumentReferenceRoutesTest {
     fun `GET DocumentReference search accepts a system-level scope without launch context`() {
         val patientId = Uuid.generateV4()
         coEvery {
-            documentReferenceService.searchDocumentReferences(PatientInputId(patientId), null)
+            documentReferenceService.searchDocumentReferences(PatientInputId(patientId), null, ORG)
         } returns Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
 
         testApp(
@@ -255,6 +258,7 @@ class DocumentReferenceRoutesTest {
             documentReferenceService.searchDocumentReferences(
                 PatientInputId(patientId),
                 EncounterId(encounterId),
+                ORG,
             )
         } returns Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
 
@@ -270,6 +274,7 @@ class DocumentReferenceRoutesTest {
             documentReferenceService.searchDocumentReferences(
                 PatientInputId(patientId),
                 EncounterId(encounterId),
+                ORG,
             )
         }
     }
@@ -278,7 +283,7 @@ class DocumentReferenceRoutesTest {
     fun `GET DocumentReference search returns an empty searchset bundle`() {
         val patientId = Uuid.generateV4()
         coEvery {
-            documentReferenceService.searchDocumentReferences(PatientInputId(patientId), null)
+            documentReferenceService.searchDocumentReferences(PatientInputId(patientId), null, ORG)
         } returns Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
 
         testApp(boundPatient = patientId.toString()) {
@@ -366,7 +371,7 @@ class DocumentReferenceRoutesTest {
                 encounterId.toString(),
             )
         coEvery {
-            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>())
+            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>(), ORG)
         } returns persisted
 
         testApp(scopes = createScope(), boundPatient = patientId.toString()) {
@@ -392,7 +397,7 @@ class DocumentReferenceRoutesTest {
             assertEquals(false, body.contains("client-chosen-id"))
         }
         coVerify(exactly = 1) {
-            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>())
+            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>(), ORG)
         }
     }
 
@@ -410,7 +415,7 @@ class DocumentReferenceRoutesTest {
             assertEquals(HttpStatusCode.Forbidden, response.status)
         }
         coVerify(exactly = 0) {
-            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>())
+            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>(), ORG)
         }
     }
 
@@ -429,7 +434,7 @@ class DocumentReferenceRoutesTest {
             assertEquals(HttpStatusCode.NotFound, response.status)
         }
         coVerify(exactly = 0) {
-            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>())
+            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>(), ORG)
         }
     }
 
@@ -438,7 +443,7 @@ class DocumentReferenceRoutesTest {
         val patientId = Uuid.generateV4()
         val encounterId = Uuid.generateV4()
         coEvery {
-            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>())
+            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>(), ORG)
         } throws
             KonsultasjonTilhorerAnnenPasientException(
                 KonsultasjonId(encounterId),
@@ -463,7 +468,7 @@ class DocumentReferenceRoutesTest {
         val patientId = Uuid.generateV4()
         val encounterId = Uuid.generateV4()
         coEvery {
-            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>())
+            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>(), ORG)
         } throws KonsultasjonNotFoundException(KonsultasjonId(encounterId))
 
         testApp(scopes = createScope(), boundPatient = patientId.toString()) {
@@ -481,7 +486,7 @@ class DocumentReferenceRoutesTest {
     fun `POST DocumentReference surfaces a duplicate id collision explicitly instead of a fallback success`() {
         val patientId = Uuid.generateV4()
         coEvery {
-            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>())
+            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>(), ORG)
         } throws DuplikatJournalnotatException()
 
         testApp(scopes = createScope(), boundPatient = patientId.toString()) {
@@ -524,7 +529,7 @@ class DocumentReferenceRoutesTest {
             assertEquals(true, body.contains("\"issue\""))
         }
         coVerify(exactly = 0) {
-            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>())
+            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>(), ORG)
         }
     }
 
@@ -544,7 +549,7 @@ class DocumentReferenceRoutesTest {
             assertEquals(true, body.contains("\"OperationOutcome\""))
         }
         coVerify(exactly = 0) {
-            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>())
+            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>(), ORG)
         }
     }
 
@@ -558,7 +563,7 @@ class DocumentReferenceRoutesTest {
         val otherPatientId = Uuid.generateV4().toString()
         val documentReferenceId = Uuid.generateV4().toString()
         coEvery {
-            documentReferenceService.createDocumentReference(any<DocumentReference>())
+            documentReferenceService.createDocumentReference(any<DocumentReference>(), ORG)
         } returns true
 
         testApp(scopes = scopes, boundPatient = boundPatientId) {
@@ -575,7 +580,7 @@ class DocumentReferenceRoutesTest {
             assertEquals(HttpStatusCode.NotFound, response.status)
         }
         coVerify(exactly = 0) {
-            documentReferenceService.createDocumentReference(any<DocumentReference>())
+            documentReferenceService.createDocumentReference(any<DocumentReference>(), ORG)
         }
     }
 
@@ -594,7 +599,7 @@ class DocumentReferenceRoutesTest {
         val patientId = Uuid.generateV4().toString()
         val documentReferenceId = Uuid.generateV4().toString()
         coEvery {
-            documentReferenceService.createDocumentReference(any<DocumentReference>())
+            documentReferenceService.createDocumentReference(any<DocumentReference>(), ORG)
         } returns true
 
         testApp(scopes = crsScope(), boundPatient = patientId) {
@@ -618,7 +623,7 @@ class DocumentReferenceRoutesTest {
             assertEquals(true, body.contains("Patient/$patientId"))
         }
         coVerify(exactly = 1) {
-            documentReferenceService.createDocumentReference(any<DocumentReference>())
+            documentReferenceService.createDocumentReference(any<DocumentReference>(), ORG)
         }
     }
 
@@ -641,7 +646,7 @@ class DocumentReferenceRoutesTest {
             assertEquals(true, response.bodyAsText().contains("\"OperationOutcome\""))
         }
         coVerify(exactly = 0) {
-            documentReferenceService.createDocumentReference(any<DocumentReference>())
+            documentReferenceService.createDocumentReference(any<DocumentReference>(), ORG)
         }
     }
 
@@ -650,7 +655,7 @@ class DocumentReferenceRoutesTest {
         val patientId = Uuid.generateV4().toString()
         val documentReferenceId = Uuid.generateV4().toString()
         coEvery {
-            documentReferenceService.createDocumentReference(any<DocumentReference>())
+            documentReferenceService.createDocumentReference(any<DocumentReference>(), ORG)
         } throws
             KonsultasjonTilhorerAnnenPasientException(
                 KonsultasjonId(Uuid.generateV4()),

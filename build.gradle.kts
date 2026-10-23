@@ -106,7 +106,7 @@ tasks {
     classpath = sourceSets["main"].runtimeClasspath
 
     args("-config=application-local.yaml")
-    jvmArgs("-Dio.ktor.development=true", "-Dlogback.configurationFile=logback-local.xml")
+    jvmArgs("-Dlogback.configurationFile=logback-local.xml")
   }
 
   register<JavaExec>("generateHackathonCredentials") {

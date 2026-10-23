@@ -8,8 +8,14 @@ import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.journalnotatId
 import no.nav.helse.epj.konsultasjon.Journalnotat
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
+import no.nav.helse.epj.sessionorg.SessionOrgResolver
+import no.nav.helse.epj.sessionorg.requireOrgnummer
+import no.nav.helse.helseId.loggedInUser
 
-fun Route.journalnotatRoutes(konsultasjonService: KonsultasjonService) {
+fun Route.journalnotatRoutes(
+    konsultasjonService: KonsultasjonService,
+    sessionOrgResolver: SessionOrgResolver,
+) {
 
     val log = logger()
 
@@ -17,14 +23,17 @@ fun Route.journalnotatRoutes(konsultasjonService: KonsultasjonService) {
         route("/journalnotat") {
             get("/{journalnotatId}") {
                 val id = call.journalnotatId()
+                val orgnummer = sessionOrgResolver.requireOrgnummer(loggedInUser().hpr)
                 val journalnotat =
-                    konsultasjonService.getJournalnotat(id) ?: call.respond(HttpStatusCode.NotFound)
+                    konsultasjonService.getJournalnotat(id, orgnummer)
+                        ?: return@get call.respond(HttpStatusCode.NotFound)
                 log.info("journalnotat: $journalnotat")
                 call.respond(journalnotat)
             }
             post {
                 val request = call.receive<Journalnotat>()
-                if (konsultasjonService.createJournalnotat(request)) {
+                val orgnummer = sessionOrgResolver.requireOrgnummer(loggedInUser().hpr)
+                if (konsultasjonService.createJournalnotat(request, orgnummer)) {
                     call.respond(HttpStatusCode.Created)
                 } else {
                     call.respond(

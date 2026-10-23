@@ -18,7 +18,6 @@ import kotlin.text.substringAfter
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
-import no.nav.helse.epj.helsepersonell.HelsepersonellService
 import no.nav.helse.epj.konsultasjon.Journalnotat
 import no.nav.helse.epj.konsultasjon.JournalnotatId
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
@@ -43,35 +42,50 @@ class InvalidDocumentReferenceException(
     message: kotlin.String,
 ) : RuntimeException(message)
 
-class DocumentReferenceService(
-    val konsultasjonService: KonsultasjonService,
-    val helsepersonellService: HelsepersonellService,
-) {
+class DocumentReferenceService(val konsultasjonService: KonsultasjonService) {
 
     val log = logger()
 
-    suspend fun createDocumentReference(request: OpprettJournalnotatRequest): DocumentReference {
-        val journalnotat = konsultasjonService.opprettJournalnotat(request)
-        val hpr = helsepersonellService.getHelsepersonell(journalnotat.pasientId)
-        return journalnotat.toDocumentReference(hpr)
+    suspend fun createDocumentReference(
+        request: OpprettJournalnotatRequest,
+        orgnummer: kotlin.String,
+    ): DocumentReference {
+        val journalnotat = konsultasjonService.opprettJournalnotat(request, orgnummer)
+        return journalnotat.toDocumentReference(authors(journalnotat.konsultasjonId, orgnummer))
     }
+
+    private suspend fun authors(
+        konsultasjonId: KonsultasjonId,
+        orgnummer: kotlin.String?,
+    ): List<HelsepersonellHpr> =
+        konsultasjonService.getKonsultasjon(konsultasjonId, orgnummer).hpr.map {
+            HelsepersonellHpr(it)
+        }
 
     suspend fun searchDocumentReferences(
         patientId: PatientInputId,
         encounterId: EncounterId?,
+        orgnummer: kotlin.String?,
     ): Bundle {
         val journalnotater =
             konsultasjonService.getJournalnotater(
                 PasientId(patientId.value),
                 encounterId?.let { KonsultasjonId(it.value) },
+                orgnummer,
             )
-        val hpr = helsepersonellService.getHelsepersonell(PasientId(patientId.value))
+        val hprByKonsultasjon =
+            konsultasjonService.getKonsultasjoner(PasientId(patientId.value), orgnummer).associate {
+                it.id to it.hpr.map { hpr -> HelsepersonellHpr(hpr) }
+            }
 
         return Bundle(
             type = Enumeration(value = Bundle.BundleType.Searchset),
             entry =
                 journalnotater.map { journalnotat ->
-                    val documentReference = journalnotat.toDocumentReference(hpr)
+                    val documentReference =
+                        journalnotat.toDocumentReference(
+                            hprByKonsultasjon[journalnotat.konsultasjonId].orEmpty()
+                        )
                     Bundle.Entry(
                         fullUrl = Uri(value = "DocumentReference/${documentReference.id}"),
                         resource = documentReference,
@@ -80,7 +94,10 @@ class DocumentReferenceService(
         )
     }
 
-    suspend fun createDocumentReference(documentReference: DocumentReference): Boolean {
+    suspend fun createDocumentReference(
+        documentReference: DocumentReference,
+        orgnummer: kotlin.String,
+    ): Boolean {
         val konsultasjonId =
             documentReference.context
                 ?.encounter
@@ -120,17 +137,19 @@ class DocumentReferenceService(
                     },
             )
 
-        return konsultasjonService.createJournalnotat(createJournalnotat)
+        return konsultasjonService.createJournalnotat(createJournalnotat, orgnummer)
     }
 
     suspend fun getDocumentReferences(
-        documentReferenceId: DocumentReferenceId
+        documentReferenceId: DocumentReferenceId,
+        orgnummer: kotlin.String?,
     ): DocumentReference? {
         val journalnotat =
-            konsultasjonService.getJournalnotat(JournalnotatId(documentReferenceId.value))
-                ?: return null
-        val hpr = helsepersonellService.getHelsepersonell(journalnotat.pasientId)
-        return journalnotat.toDocumentReference(hpr)
+            konsultasjonService.getJournalnotat(
+                JournalnotatId(documentReferenceId.value),
+                orgnummer,
+            ) ?: return null
+        return journalnotat.toDocumentReference(authors(journalnotat.konsultasjonId, orgnummer))
     }
 
     fun Journalnotat.toDocumentReference(hpr: List<HelsepersonellHpr>): DocumentReference {

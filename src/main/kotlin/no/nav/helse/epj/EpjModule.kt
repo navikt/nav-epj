@@ -26,6 +26,9 @@ import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.epj.pasient.PasientService
 import no.nav.helse.epj.pasient.activePatientRoutes
 import no.nav.helse.epj.pasient.pasientRoutes
+import no.nav.helse.epj.sessionorg.SessionOrgResolver
+import no.nav.helse.epj.sessionorg.SessionOrgService
+import no.nav.helse.epj.sessionorg.sessionOrgRoutes
 import no.nav.helse.helseId.sessionRoutes
 import no.nav.helse.smart.valkey.ValkeyService
 
@@ -36,7 +39,10 @@ fun Application.configureEpjModule() {
     val legekontorService: LegekontorService by dependencies
     val maalingService: MaalingService by dependencies
     val valkeyService: ValkeyService by dependencies
-    val activePatientService = ActivePatientService(pasientService, valkeyService)
+    val sessionOrgResolver: SessionOrgResolver by dependencies
+    val sessionOrgService: SessionOrgService by dependencies
+    val activePatientService =
+        ActivePatientService(pasientService, valkeyService, sessionOrgResolver)
 
     routing {
         authenticate("wonderwall-helseid") {
@@ -46,14 +52,15 @@ fun Application.configureEpjModule() {
                 filesPath = "static"
             }
             sessionRoutes()
-            pasientRoutes(pasientService)
-            activePatientRoutes(activePatientService, valkeyService)
-            helsepersonellRoutes(helsepersonellService, legekontorService)
-            konsultasjonRoutes(konsultasjonService, activePatientService)
-            legekontorRoutes(legekontorService)
-            diagnoseRoutes(konsultasjonService)
-            journalnotatRoutes(konsultasjonService)
-            maalingRoutes(maalingService)
+            sessionOrgRoutes(sessionOrgResolver, sessionOrgService)
+            pasientRoutes(pasientService, sessionOrgResolver)
+            activePatientRoutes(activePatientService)
+            helsepersonellRoutes(helsepersonellService)
+            konsultasjonRoutes(konsultasjonService, activePatientService, sessionOrgResolver)
+            legekontorRoutes(legekontorService, sessionOrgResolver)
+            diagnoseRoutes(konsultasjonService, sessionOrgResolver)
+            journalnotatRoutes(konsultasjonService, sessionOrgResolver)
+            maalingRoutes(maalingService, sessionOrgResolver)
         }
     }
 }

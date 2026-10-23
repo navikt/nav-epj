@@ -4,6 +4,10 @@ import io.ktor.http.URLBuilder
 import io.ktor.http.appendPathSegments
 import java.util.UUID
 import kotlin.uuid.Uuid
+import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.pasient.PasientService
+import no.nav.helse.epj.sessionorg.SessionOrgResolution
+import no.nav.helse.epj.sessionorg.SessionOrgResolver
 import no.nav.helse.fhir.encounter.EncounterService
 import no.nav.helse.fhir.patient.PatientInputId
 import no.nav.helse.fhir.patient.PatientService
@@ -44,6 +48,8 @@ class LaunchPreparer(
     private val valkeyService: ValkeyService,
     private val patientService: PatientService,
     private val encounterService: EncounterService,
+    private val sessionOrgResolver: SessionOrgResolver,
+    private val pasientService: PasientService,
 ) {
     /**
      * If [expectedPatientId] is set, launch only proceeds when it matches the clinician's active
@@ -51,20 +57,31 @@ class LaunchPreparer(
      * window.
      */
     suspend fun prepare(hpr: String, expectedPatientId: String? = null): LaunchPreparation {
+        val orgnummer =
+            (sessionOrgResolver.resolve(hpr) as? SessionOrgResolution.Resolved)?.org?.orgnummer
+                ?: return LaunchPreparation.NoActivePatient
         val activePatientId =
-            valkeyService.getActivePatient(hpr) ?: return LaunchPreparation.NoActivePatient
+            valkeyService.getActivePatient(hpr, orgnummer)
+                ?: return LaunchPreparation.NoActivePatient
         val active = Uuid.parse(activePatientId)
         if (expectedPatientId != null && Uuid.parseOrNull(expectedPatientId) != active) {
             return LaunchPreparation.PatientMismatch
         }
-        return prepareFor(PatientInputId(active), hpr)
+        if (!pasientService.isListedAt(PasientId(active), orgnummer)) {
+            return LaunchPreparation.NoActivePatient
+        }
+        return prepareFor(PatientInputId(active), hpr, orgnummer)
     }
 
-    private suspend fun prepareFor(patientInputId: PatientInputId, hpr: String): LaunchPreparation {
+    private suspend fun prepareFor(
+        patientInputId: PatientInputId,
+        hpr: String,
+        orgnummer: String,
+    ): LaunchPreparation {
         val patient =
             patientService.getPatient(patientInputId) ?: return LaunchPreparation.UnknownPatient
         val encounter =
-            encounterService.getActiveEncounterByPatient(patientInputId)
+            encounterService.getActiveEncounterByPatient(patientInputId, orgnummer)
                 ?: return LaunchPreparation.NoActiveEncounter
         val patientId = patient.id
         val encounterId = encounter.id
@@ -72,7 +89,8 @@ class LaunchPreparer(
         return when {
             patientId == null -> LaunchPreparation.PatientWithoutId
             encounterId == null -> LaunchPreparation.EncounterWithoutId
-            else -> LaunchPreparation.Ready(saveLaunchContext(patientId, encounterId, hpr))
+            else ->
+                LaunchPreparation.Ready(saveLaunchContext(patientId, encounterId, hpr, orgnummer))
         }
     }
 
@@ -80,9 +98,13 @@ class LaunchPreparer(
         patientId: String,
         encounterId: String,
         hpr: String,
+        orgnummer: String,
     ): String {
         val launchId = UUID.randomUUID().toString()
-        valkeyService.saveLaunchContext(launchId, LaunchContext(patientId, encounterId, hpr))
+        valkeyService.saveLaunchContext(
+            launchId,
+            LaunchContext(patientId, encounterId, hpr, orgnummer),
+        )
         return launchId
     }
 }

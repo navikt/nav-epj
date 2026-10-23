@@ -5,6 +5,7 @@ import java.time.LocalDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
@@ -15,11 +16,13 @@ import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.konsultasjon.KonsultasjonRepository
 import no.nav.helse.epj.konsultasjon.OpprettKonsultasjon
-import no.nav.helse.epj.legekontor.Legekontor
 import no.nav.helse.epj.pasient.Pasient
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.epj.pasient.PasientRepository
+import no.nav.helse.utils.DEFAULT_ORGNUMMER
+import no.nav.helse.utils.OTHER_ORGNUMMER
 import no.nav.helse.utils.WithPostgresql
+import no.nav.helse.utils.ensureOrg
 import org.junit.Test
 
 class MaalingRepositoryTest : WithPostgresql() {
@@ -40,11 +43,9 @@ class MaalingRepositoryTest : WithPostgresql() {
         pasientRepository.insert(
             Pasient(
                 id = pasientId,
-                legekontorId = Legekontor.DEFAULT.id,
                 fornavn = "fornavn",
                 etternavn = "etternavn",
                 personident = "personident-${pasientId.value}",
-                hprNumbers = listOf(hpr),
             )
         )
         val konsultasjonId =
@@ -54,6 +55,7 @@ class MaalingRepositoryTest : WithPostgresql() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
         return pasientId to konsultasjonId
@@ -90,7 +92,7 @@ class MaalingRepositoryTest : WithPostgresql() {
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `findById returns null when maaling does not exist`() = runTest {
-        assertNull(maalingRepository.findById(MaalingId(Uuid.generateV4())))
+        assertNull(maalingRepository.findById(MaalingId(Uuid.generateV4()), DEFAULT_ORGNUMMER))
     }
 
     @Test
@@ -98,8 +100,8 @@ class MaalingRepositoryTest : WithPostgresql() {
         val (pasientId, konsultasjonId) = opprettPasientMedKonsultasjon()
         val maaling = nyMaaling(pasientId, konsultasjonId)
 
-        maalingRepository.insert(maaling)
-        val funnet = maalingRepository.findById(maaling.id)
+        maalingRepository.insert(maaling, DEFAULT_ORGNUMMER)
+        val funnet = maalingRepository.findById(maaling.id, DEFAULT_ORGNUMMER)
 
         assertEquals(maaling.id, funnet?.id)
         assertEquals(maaling.pasientId, funnet?.pasientId)
@@ -129,8 +131,8 @@ class MaalingRepositoryTest : WithPostgresql() {
                 status = MaalingStatus.ENTERED_IN_ERROR,
             )
 
-        maalingRepository.insert(maaling)
-        val funnet = maalingRepository.findById(maaling.id)
+        maalingRepository.insert(maaling, DEFAULT_ORGNUMMER)
+        val funnet = maalingRepository.findById(maaling.id, DEFAULT_ORGNUMMER)
 
         assertEquals(0, BigDecimal("5.6789").compareTo(funnet?.verdi))
         assertEquals("mmol/L", funnet?.enhetKode)
@@ -144,8 +146,8 @@ class MaalingRepositoryTest : WithPostgresql() {
         val (pasientId, konsultasjonId) = opprettPasientMedKonsultasjon()
         val maaling = nyMaaling(pasientId, konsultasjonId, hpr = null)
 
-        maalingRepository.insert(maaling)
-        val funnet = maalingRepository.findById(maaling.id)
+        maalingRepository.insert(maaling, DEFAULT_ORGNUMMER)
+        val funnet = maalingRepository.findById(maaling.id, DEFAULT_ORGNUMMER)
 
         assertNull(funnet?.hpr)
     }
@@ -173,10 +175,10 @@ class MaalingRepositoryTest : WithPostgresql() {
             val annenPasientMaaling = nyMaaling(annenPasientId, annenKonsultasjonId)
 
             listOf(nyest, eldst, mellom, annenPasientMaaling).forEach {
-                maalingRepository.insert(it)
+                maalingRepository.insert(it, DEFAULT_ORGNUMMER)
             }
 
-            val maalinger = maalingRepository.listByPasientId(pasientId)
+            val maalinger = maalingRepository.listByPasientId(pasientId, DEFAULT_ORGNUMMER)
 
             assertEquals(listOf(eldst.id, mellom.id, nyest.id), maalinger.map { it.id })
         }
@@ -192,6 +194,7 @@ class MaalingRepositoryTest : WithPostgresql() {
                         emptyList(),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
+                        orgnummer = DEFAULT_ORGNUMMER,
                     )
                 )
 
@@ -205,9 +208,12 @@ class MaalingRepositoryTest : WithPostgresql() {
                 nyMaaling(pasientId, konsultasjonId, effektivTidspunkt = LocalDateTime.now())
             val annenKonsultasjonMaaling = nyMaaling(pasientId, annenKonsultasjonId)
 
-            listOf(nyest, eldst, annenKonsultasjonMaaling).forEach { maalingRepository.insert(it) }
+            listOf(nyest, eldst, annenKonsultasjonMaaling).forEach {
+                maalingRepository.insert(it, DEFAULT_ORGNUMMER)
+            }
 
-            val maalinger = maalingRepository.listByKonsultasjonId(konsultasjonId)
+            val maalinger =
+                maalingRepository.listByKonsultasjonId(konsultasjonId, DEFAULT_ORGNUMMER)
 
             assertEquals(listOf(eldst.id, nyest.id), maalinger.map { it.id })
         }
@@ -218,13 +224,13 @@ class MaalingRepositoryTest : WithPostgresql() {
             val (pasientId, konsultasjonId) = opprettPasientMedKonsultasjon()
             val maaling = nyMaaling(pasientId, konsultasjonId, loincKode = "8310-5")
 
-            maalingRepository.insert(maaling)
+            maalingRepository.insert(maaling, DEFAULT_ORGNUMMER)
 
             assertFailsWith<DuplikatMaalingException> {
-                maalingRepository.insert(maaling.copy(loincKode = "annen-kode"))
+                maalingRepository.insert(maaling.copy(loincKode = "annen-kode"), DEFAULT_ORGNUMMER)
             }
 
-            val funnet = maalingRepository.findById(maaling.id)
+            val funnet = maalingRepository.findById(maaling.id, DEFAULT_ORGNUMMER)
             assertEquals("8310-5", funnet?.loincKode)
         }
 
@@ -235,9 +241,36 @@ class MaalingRepositoryTest : WithPostgresql() {
         val maaling = nyMaaling(annenPasientId, konsultasjonId)
 
         assertFailsWith<KonsultasjonTilhorerAnnenPasientException> {
-            maalingRepository.insert(maaling)
+            maalingRepository.insert(maaling, DEFAULT_ORGNUMMER)
         }
 
-        assertNull(maalingRepository.findById(maaling.id))
+        assertNull(maalingRepository.findById(maaling.id, DEFAULT_ORGNUMMER))
+    }
+
+    @Test
+    fun `maalinger recorded at one org are invisible at another`() = runTest {
+        ensureOrg(OTHER_ORGNUMMER)
+        val (pasientId, konsultasjonId) = opprettPasientMedKonsultasjon()
+        val maaling = nyMaaling(pasientId, konsultasjonId)
+        maalingRepository.insert(maaling, DEFAULT_ORGNUMMER)
+
+        assertNull(maalingRepository.findById(maaling.id, OTHER_ORGNUMMER))
+        assertEquals(0, maalingRepository.listByPasientId(pasientId, OTHER_ORGNUMMER).size)
+        assertEquals(
+            0,
+            maalingRepository.listByKonsultasjonId(konsultasjonId, OTHER_ORGNUMMER).size,
+        )
+        assertEquals(1, maalingRepository.listByPasientId(pasientId, DEFAULT_ORGNUMMER).size)
+        assertEquals(maaling.id, maalingRepository.findById(maaling.id, null)?.id)
+    }
+
+    @Test
+    fun `insert rejects a maaling for a konsultasjon at another org`() = runTest {
+        ensureOrg(OTHER_ORGNUMMER)
+        val (pasientId, konsultasjonId) = opprettPasientMedKonsultasjon()
+        val maaling = nyMaaling(pasientId, konsultasjonId)
+
+        assertTrue(runCatching { maalingRepository.insert(maaling, OTHER_ORGNUMMER) }.isFailure)
+        assertNull(maalingRepository.findById(maaling.id, null))
     }
 }

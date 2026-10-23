@@ -38,6 +38,7 @@ import no.nav.helse.smart.security.Interaction
 import no.nav.helse.smart.security.ScopeContext
 import no.nav.helse.smart.security.SmartPrincipal
 import no.nav.helse.smart.security.SmartScope
+import no.nav.helse.utils.DEFAULT_ORGNUMMER
 import no.nav.helse.utils.simpleTestEnvironment
 import org.junit.Test
 
@@ -134,6 +135,7 @@ class CapabilityStatementContractTest {
                                     ),
                                 patient = null,
                                 encounter = null,
+                                orgnummer = DEFAULT_ORGNUMMER,
                             )
                         )
                     }
@@ -192,15 +194,20 @@ class CapabilityStatementContractTest {
     fun `every advertised search parameter is accepted by its route`() {
         coEvery { patientService.findByIdentifier(any()) } returns null
         coEvery { patientService.searchset(any()) } returns emptySearchset
-        coEvery { encounterService.getEncountersByPatient(any()) } returns emptySearchset
-        coEvery { conditionService.getConditionsByPatientId(any()) } returns emptySearchset
-        coEvery { conditionService.getConditionsByEncounterId(any()) } returns emptySearchset
-        coEvery { observationService.searchObservations(any(), any(), any()) } returns
+        coEvery { encounterService.getEncountersByPatient(any(), DEFAULT_ORGNUMMER) } returns
             emptySearchset
+        coEvery { conditionService.getConditionsByPatientId(any(), DEFAULT_ORGNUMMER) } returns
+            emptySearchset
+        coEvery { conditionService.getConditionsByEncounterId(any(), DEFAULT_ORGNUMMER) } returns
+            emptySearchset
+        coEvery {
+            observationService.searchObservations(any(), any(), any(), DEFAULT_ORGNUMMER)
+        } returns emptySearchset
         coEvery { practitionerRoleService.getPractitionerRolesByPractitioner(any()) } returns
             emptySearchset
-        coEvery { documentReferenceService.searchDocumentReferences(any(), any()) } returns
-            emptySearchset
+        coEvery {
+            documentReferenceService.searchDocumentReferences(any(), any(), DEFAULT_ORGNUMMER)
+        } returns emptySearchset
 
         testApp {
             declaredFhirCapabilities.forEach { resource ->

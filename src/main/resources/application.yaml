@@ -9,6 +9,7 @@ database:
   url: ${DB_JDBC_URL}
   user: ${DB_USERNAME}
   password: ${DB_PASSWORD}
+  seedTestdata: true
 
 epj:
   baseUrl: "http://localhost:8080"

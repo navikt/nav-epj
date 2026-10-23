@@ -29,6 +29,7 @@ import no.nav.helse.smart.security.Interaction
 import no.nav.helse.smart.security.ScopeContext
 import no.nav.helse.smart.security.SmartPrincipal
 import no.nav.helse.smart.security.SmartScope
+import no.nav.helse.utils.DEFAULT_ORGNUMMER
 import no.nav.tsm.diagnoser.Diagnose
 import no.nav.tsm.diagnoser.DiagnoseType
 import org.junit.Test
@@ -60,7 +61,7 @@ class ConditionRoutesTest {
         )
 
     private fun givenPatientHasTwoEncounters() {
-        coEvery { konsultasjonService.getKonsultasjoner(pasientId) } returns
+        coEvery { konsultasjonService.getKonsultasjoner(pasientId, DEFAULT_ORGNUMMER) } returns
             listOf(
                 konsultasjon(encounterA, pasientId, "A01"),
                 konsultasjon(encounterB, pasientId, "B02"),
@@ -90,6 +91,7 @@ class ConditionRoutesTest {
                                     ),
                                 patient = boundPatient,
                                 encounter = null,
+                                orgnummer = DEFAULT_ORGNUMMER,
                             )
                         )
                     }
@@ -208,7 +210,7 @@ class ConditionRoutesTest {
 
     @Test
     fun `GET Condition with encounter only returns that encounter's conditions`() {
-        coEvery { konsultasjonService.getKonsultasjon(encounterA) } returns
+        coEvery { konsultasjonService.getKonsultasjon(encounterA, DEFAULT_ORGNUMMER) } returns
             konsultasjon(encounterA, pasientId, "A01")
 
         testApp {
@@ -221,7 +223,7 @@ class ConditionRoutesTest {
 
     @Test
     fun `GET Condition with encounter only rejects an encounter of another patient`() {
-        coEvery { konsultasjonService.getKonsultasjon(encounterA) } returns
+        coEvery { konsultasjonService.getKonsultasjon(encounterA, DEFAULT_ORGNUMMER) } returns
             konsultasjon(encounterA, PasientId(Uuid.generateV4()), "A01")
 
         testApp {

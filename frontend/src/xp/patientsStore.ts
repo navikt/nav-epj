@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { fetchPatients } from "./api";
-import type { Pasient } from "../utils/mapping/epj";
+import type { PasientListeElement } from "../utils/mapping/epj";
 
 export const PAGE_SIZE = 25;
 const LEGACY_RECENT_KEY = "nav-epj:recent";
@@ -18,7 +18,7 @@ type LoadStatus = "idle" | "loading" | "ready" | "error";
 
 type PatientsState = {
   status: LoadStatus;
-  patients: Pasient[];
+  patients: PasientListeElement[];
   query: string;
   view: PatientsView;
   page: number;
@@ -67,7 +67,7 @@ function removeLegacyRecent() {
 function initialState() {
   return {
     status: "idle" as LoadStatus,
-    patients: [] as Pasient[],
+    patients: [] as PasientListeElement[],
     query: "",
     view: "mine" as PatientsView,
     page: 1,
@@ -116,7 +116,7 @@ export const usePatientsStore = create<PatientsState>((set, get) => ({
 }));
 
 export function scopePatients(
-  patients: Pasient[],
+  patients: PasientListeElement[],
   recentIds: string[],
   view: PatientsView,
 ) {

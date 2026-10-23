@@ -1,4 +1,5 @@
 import { expireSession } from "./sessionExpiry";
+import { notifySessionOrgConflict } from "./sessionOrgConflict";
 import {
   ActivePatientSchema,
   AppSchema,
@@ -7,7 +8,9 @@ import {
   LaunchErrorSchema,
   LaunchResponseSchema,
   MaalingSchema,
+  PasientListeElementSchema,
   PasientSchema,
+  SessionOrgSchema,
   SessionSchema,
   SmartConfigurationSchema,
   type ActivePatient,
@@ -17,7 +20,9 @@ import {
   type Maaling,
   type OpprettPasientRequest,
   type Pasient,
+  type PasientListeElement,
   type Session,
+  type SessionOrg,
   type SmartConfiguration,
 } from "../utils/mapping/epj";
 
@@ -58,6 +63,7 @@ export const callOf = (url: string, init?: RequestInit) =>
 async function request(url: string, init?: RequestInit) {
   const response = await fetch(url, init);
   if (response.status === 401) expireSession(callOf(url, init));
+  if (response.status === 409) notifySessionOrgConflict();
   if (!response.ok) throw new ApiError(response.status);
   return response;
 }
@@ -70,9 +76,24 @@ function jsonInit(method: string, body: unknown): RequestInit {
   };
 }
 
-export async function fetchPatients(): Promise<Pasient[]> {
+export async function fetchSessionOrg(): Promise<SessionOrg> {
+  const response = await request("/api/session-org");
+  return SessionOrgSchema.parse(await response.json());
+}
+
+export async function chooseSessionOrg(
+  orgnummer: string,
+): Promise<SessionOrg> {
+  const response = await request(
+    "/api/session-org",
+    jsonInit("PUT", { orgnummer }),
+  );
+  return SessionOrgSchema.parse(await response.json());
+}
+
+export async function fetchPatients(): Promise<PasientListeElement[]> {
   const response = await request("/api/patient");
-  return PasientSchema.array().parse(await response.json());
+  return PasientListeElementSchema.array().parse(await response.json());
 }
 
 export async function fetchPatient(id: string): Promise<Pasient> {
@@ -176,6 +197,7 @@ export async function launchApp(
   const init = jsonInit("POST", { appId, patientId });
   const response = await fetch("/api/launch", init);
   if (response.status === 401) expireSession(callOf("/api/launch", init));
+  if (response.status === 409) notifySessionOrgConflict();
   if (!response.ok) {
     const error = LaunchErrorSchema.safeParse(
       await response.json().catch(() => null),

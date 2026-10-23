@@ -4,9 +4,9 @@ import { describe, expect, it, vi } from "vitest";
 import { PatientsPage } from "./PatientsPage";
 import { usePatientsStore } from "./patientsStore";
 import { expectNoSeriousViolations } from "./axeHelper";
-import type { Pasient } from "../utils/mapping/epj";
+import type { PasientListeElement } from "../utils/mapping/epj";
 
-const make = (i: number): Pasient => ({
+const make = (i: number): PasientListeElement => ({
   id: String(i),
   fornavn: `Pasient${String(i).padStart(2, "0")}`,
   etternavn: "Ape",
@@ -14,6 +14,7 @@ const make = (i: number): Pasient => ({
   personidentType: "FNR",
   birthDate: "1990-01-01",
   gender: "MALE",
+  selectable: true,
 });
 
 function seed(count: number) {
@@ -77,6 +78,18 @@ describe("PatientsPage", () => {
     const { onOpenJournal } = setup();
     await userEvent.click(screen.getByRole("button", { name: "Åpne journal for Pasient02 Ape" }));
     expect(onOpenJournal).toHaveBeenCalledWith(expect.objectContaining({ id: "2" }));
+  });
+
+  it("shows lapsed patients without an open button", () => {
+    act(() =>
+      usePatientsStore.setState({
+        status: "ready",
+        patients: [{ ...make(1), selectable: false }],
+      }),
+    );
+    setup();
+    expect(screen.getByText("Ikke lenger på en fastlegeliste her")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Åpne journal/ })).toBeNull();
   });
 
   it("shows the pager strings and pages through the list", async () => {

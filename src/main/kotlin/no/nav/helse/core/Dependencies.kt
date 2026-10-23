@@ -14,6 +14,11 @@ import no.nav.helse.epj.maaling.MaalingRepository
 import no.nav.helse.epj.maaling.MaalingService
 import no.nav.helse.epj.pasient.PasientRepository
 import no.nav.helse.epj.pasient.PasientService
+import no.nav.helse.epj.sessionorg.FastlegelisteRepository
+import no.nav.helse.epj.sessionorg.SessionOrgChoiceStore
+import no.nav.helse.epj.sessionorg.SessionOrgResolver
+import no.nav.helse.epj.sessionorg.SessionOrgService
+import no.nav.helse.epj.sessionorg.ValkeySessionOrgChoiceStore
 import no.nav.helse.fhir.condition.ConditionService
 import no.nav.helse.fhir.documentreference.DocumentReferenceService
 import no.nav.helse.fhir.encounter.EncounterService
@@ -44,6 +49,7 @@ fun Application.configureDependencies() {
 
         provide(PasientRepository::class)
         provide(HelsepersonellRepository::class)
+        provide(FastlegelisteRepository::class)
         provide(KonsultasjonRepository::class)
         provide(LegekontorRepository::class)
         provide(MaalingRepository::class)
@@ -53,6 +59,10 @@ fun Application.configureDependencies() {
         provide(PasientService::class)
         provide(LegekontorService::class)
         provide(MaalingService::class)
+
+        provide<SessionOrgChoiceStore> { ValkeySessionOrgChoiceStore(resolve()) }
+        provide(SessionOrgResolver::class)
+        provide(SessionOrgService::class)
 
         provide(ConditionService::class)
         provide(DocumentReferenceService::class)

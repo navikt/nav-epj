@@ -4,14 +4,15 @@ ktor:
       - no.nav.helse.ApplicationKt.module
   deployment:
     port: 8080
-    watch:
-      - classes
-      - resources
+
+auth:
+  localStub: true
 
 database:
   url: "jdbc:postgresql://localhost:5434/nav-epj"
   user: "postgres"
   password: "postgres"
+  seedTestdata: true
 
 epj:
   baseUrl: "http://localhost:8080"

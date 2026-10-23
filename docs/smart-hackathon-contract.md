@@ -30,15 +30,31 @@ Approved scope boundaries for this delivery:
 - Participants build their own apps and launch them in `nav-epj` using registration details
   and public/private keys supplied on the day. Starter tests maintain our reference code;
   they are not participant test targets or completion gates.
-- The event cohort is eight curated SyntPop patients: four with fødselsnummer, four with d-nummer.
+- The event cohort is 32 mock patients in four organisations (see [hackathon-roster.md](hackathon-roster.md)), with both fødselsnummer and d-nummer in every organisation.
+  Their identifiers use Skatteetaten's synthetic format (month + 80, and day + 40 for d-nummer), so
+  they can never belong to a real person. No real patient data is used.
 - The maximum team roster is 10 teams. Teams have a minimum of one person with no upper size
   limit. Credentials are provisioned per team, not per participant, and no participant cap is
   inferred from the 10-team limit. Concurrency acceptance targets the registered participant count
-  plus 25% headroom, while credential generation is capped at 10 team slots.
-- Demographics are imported from Persontjenesten before the event; clinical data is generated from
-  deterministic scenario recipes in `nav-epj`.
-- No Persontjenesten response snapshot is committed and no offline demographic fallback exists. A
-  lost database requires a Persontjenesten re-import to rebuild the cohort.
+  plus 25% headroom (22 attendees registered so far, so a target of about 28), while credential generation is capped at 10 team slots.
+- The only external integration is HelseID login through NAIS Wonderwall. There is no Dolly, PDL
+  or Persontjenesten integration. SyntPop remains the source of clinicians, through HelseID TestIdP.
+- Patients and their clinical data are mocks seeded into the database by the repeatable Flyway
+  migration `R__testdata.sql`. A fastlegeliste (a fastlege's HPR number, the legekontor's
+  organisation number and its patients) is seeded the same way.
+- Each session gets an organisation from `SessionOrgResolver`. It is chosen automatically when the
+  doctor's HPR number has patient lists at exactly one organisation. Otherwise the user picks an
+  organisation: "vikar" for an unknown HPR number, or one of several listed organisations. The choice
+  is stored in Valkey per HPR number with an 8 hour TTL. Clinical data stays with the organisation
+  that created it.
+- The patient list is every fastlegeliste at the session organisation, with the signed-in doctor's
+  own list first. Any doctor at the organisation can select any patient on those lists. A patient
+  with konsultasjoner at the organisation who is on none of its lists is shown as not selectable.
+  Patients are not owned by an organisation, so moving a patient between lists never moves or
+  deletes clinical data. Journal data and FHIR clinical reads are limited to the session
+  organisation (the `orgnr` claim for SMART tokens).
+- Reading the organisation from a HelseID token claim (multi-tenancy) is future work, tracked in
+  [#118](https://github.com/navikt/nav-epj/issues/118).
 - Team clients are pre-provisioned from deployment configuration and secrets. There is no dynamic
   client registration UI or API.
 - Every currently published Bronze, Silver, and Gold exercise is in scope, including Observation
@@ -49,9 +65,9 @@ Approved scope boundaries for this delivery:
 | # | Todo |
 |--:|---|
 | 1 | Freeze the executable track contract (this document) |
-| 2 | Prove Persontjenesten connectivity and contract |
+| 2 | Accept Skatteetaten synthetic FNR/DNR in identifier validation |
 | 3 | Extend the EPJ clinical model (identity type, birth date, gender, measurements) |
-| 4 | Build the idempotent curated-cohort provisioner |
+| 4 | Seed the curated mock cohort and fastlegelister with `R__testdata.sql` and `R__hackathon_testdata.sql` |
 | 5 | Complete and correct the FHIR R4 surface |
 | 6 | Show imported and written data in the EPJ |
 | 7 | Make SMART registration and discovery event-ready |
@@ -84,7 +100,7 @@ Referenced by every exercise row below as "cohort requirement". Owned by todo 4.
 | Track promise | Responsible endpoint/capability | Cohort requirement | Starter variant | Acceptance ID | Current status/gap | Owning todo |
 |---|---|---|---|---|---|---|
 | EPJ with its own SMART authorization server and FHIR R4 API | `GET /fhir/launch`, `GET /oidc/authorize`, `POST /oidc/token`, `GET /fhir/.well-known/smart-configuration`, `GET /fhir/metadata` | n/a | n/a | `PROVIDE-EPJ-01` | EHR launch, PKCE, code exchange, and Backend Services token issuance work. Discovery advertises both implemented grants and the resource-specific system scopes supported by the declared FHIR interactions. It does not claim unimplemented registration, management, or revocation endpoints. `GET /fhir/metadata` is built from one declared capability table and a contract test checks it against the registered routes | 5, 7 |
-| Synthetic Norwegian patient data (FNR/DNR, HPR clinicians, orgnummer organisations, consultations, ICPC-2/ICD-10 diagnoses, measurements) | `GET /fhir/Patient/{id}`, `GET /fhir/Encounter`, `GET /fhir/Condition`, `GET /fhir/Observation`, `GET /fhir/Practitioner/{id}`, `GET /fhir/PractitionerRole?practitioner=`, `GET /fhir/Organization/{id}` | Full minimum cohort above | n/a | `PROVIDE-COHORT-01` | All listed FHIR reads and searches exist. Patient carries FNR/DNR identifier systems, birth date, and gender; diagnoses use ICPC-2/ICD-10; measurements use LOINC/UCUM. The cohort itself is not provisioned: Persontjenesten access is blocked on HelseID credentials and Nais egress | 2, 3, 4, 5 |
+| Mock Norwegian patient data (synthetic FNR/DNR, HPR clinicians, orgnummer organisations, consultations, ICPC-2/ICD-10 diagnoses, measurements) | `GET /fhir/Patient/{id}`, `GET /fhir/Encounter`, `GET /fhir/Condition`, `GET /fhir/Observation`, `GET /fhir/Practitioner/{id}`, `GET /fhir/PractitionerRole?practitioner=`, `GET /fhir/Organization/{id}` | Full minimum cohort above | n/a | `PROVIDE-COHORT-01` | All listed FHIR reads and searches exist. Patient carries FNR/DNR identifier systems, birth date, and gender; diagnoses use ICPC-2/ICD-10; measurements use LOINC/UCUM. The cohort is seeded by `R__testdata.sql` (2 organisations, 8 patients, all with clinical histories) and `R__hackathon_testdata.sql` (4 event organisations, 32 patients, see [hackathon-roster.md](hackathon-roster.md)). Verification against the FHIR reads for every seeded patient is still outstanding | 2, 3, 4, 5 |
 | Starter skeletons, one per client authentication type, with numbered launch `TODO`s | n/a (participant-side) | n/a | `public`, `client-secret`, `private-key-jwt`, `backend-services` | `PROVIDE-STARTER-01` | A teammate owns implementation in a separate starter repository. Delivery and acceptance remain outstanding; coordinated through [Bronze #97](https://github.com/navikt/nav-epj/issues/97), [Silver #99](https://github.com/navikt/nav-epj/issues/99), and [Gold #98](https://github.com/navikt/nav-epj/issues/98) | 10 |
 | Credentials on the day (10 team slots, provisioned per team): `client_id`, secret or key pair, a test clinician, and a patient list | Client registry (`smart.clients` config or secret-backed `smart.clientRegistryJson`), HelseID test-clinician login | Patient list export from the cohort | n/a | `PROVIDE-CREDS-01` | The typed client registry now supports up to 10 pre-provisioned team slots across all three auth variants (with startup validation), and `./gradlew generateHackathonCredentials` generates per-team registrations, keys and packets locally, and can add teams to or rotate a single team in an existing registry (see the [hackathon credential tooling](hackathon-credential-tooling.md)). The clinician logins and roster must still be supplied as separate inputs; supplied inputs are copied unvalidated and packets are marked `INPUTS_SUPPLIED_UNVERIFIED` (operator verification required), or `CREDENTIALS_ONLY` without them | 7, 9 |
 | Mentors circulating throughout the day | n/a (operational) | n/a | n/a | `PROVIDE-MENTOR-01` | Mentor runbook remains outstanding: provisioning, credential issuance, single-team rotation, and launch verification need documented, verified commands | 9 |
@@ -95,7 +111,7 @@ Referenced by every exercise row below as "cohort requirement". Owned by todo 4.
 
 | Item | Responsible endpoint/capability | Cohort requirement | Starter variant / TODO | Acceptance ID | Current status/gap | Owning todo |
 |---|---|---|---|---|---|---|
-| Launch, server-side code exchange, display name/age and active consultation | `GET /fhir/launch` → `GET /oidc/authorize` → `POST /oidc/token` → `GET /fhir/Patient/{id}` → `GET /fhir/Encounter?patient=` | Any of the 8 patients, all with a birth date and an active encounter | All three EHR-launch variants; launch-sequence TODOs 1-10 | `BRONZE-LAUNCH-01` | The starter's default chart reads only Patient and Encounter; clinician, PractitionerRole and Organization reads are opt-in. ID-token verification remains required. The EPJ app picker is implemented. Needs the curated cohort and live acceptance across all three launch variants | 3, 5, 6, 10, 11 |
+| Launch, server-side code exchange, display name/age and active consultation | `GET /fhir/launch` → `GET /oidc/authorize` → `POST /oidc/token` → `GET /fhir/Patient/{id}` → `GET /fhir/Encounter?patient=` | Any of the 32 event patients, all with a birth date and an active encounter | All three EHR-launch variants; launch-sequence TODOs 1-10 | `BRONZE-LAUNCH-01` | The starter's default chart reads only Patient and Encounter; clinician, PractitionerRole and Organization reads are opt-in. ID-token verification remains required. The EPJ app picker is implemented. Needs live acceptance across all three launch variants | 3, 5, 6, 10, 11 |
 
 ## Silver
 
@@ -115,7 +131,7 @@ Referenced by every exercise row below as "cohort requirement". Owned by todo 4.
 |---|---|---|---|---|---|---|
 | Write-back (create a document or measurement) | `POST /fhir/Observation`, `POST /fhir/DocumentReference` | Any patient with an active encounter | Any EHR-launch variant; reference-only, not a numbered launch TODO | `GOLD-WRITEBACK-01` | Both create routes return `201` with a server-generated ID and `Location`. Local real-backend acceptance proves persistence, denied writes, measurement display, and DocumentReference journal display on workspace return without reload. Journal refresh preserves unsaved edits. Native browser-return behavior still needs manual verification; event acceptance across the cohort and starter variants remains outstanding | 5, 6, 11 |
 | Asymmetric client authentication (`private_key_jwt` end to end) | `POST /oidc/token` with a signed client assertion; client's inline JWK Set | Any patient | `private-key-jwt` variant; variant-specific token-exchange TODO | `GOLD-ASYMMETRIC-01` | Implemented for clients with a remote `jwksUri` and for clients with an inline public JWK Set, so a participant app on localhost no longer needs a network-reachable `jwksUri` | 7, 10, 11 |
-| Backend services (system-to-system, no user) | `POST /oidc/token` with `grant_type=client_credentials`; system-scoped `GET /fhir/*` | Cohort must be searchable without a launch context | `backend-services` variant; reuses the asymmetric assertion helper | `GOLD-BACKEND-01` | `client_credentials` issues a short-lived, patient-less token for registered `private_key_jwt` clients. System scopes are limited to supported FHIR interactions and work without launch context when declared search criteria are supplied. Organization reads require `system/Organization.r` | 8, 10, 11 |
+| Backend services (system-to-system, no user) | `POST /oidc/token` with `grant_type=client_credentials`; system-scoped `GET /fhir/*` | Cohort must be searchable without a launch context | `backend-services` variant; reuses the asymmetric assertion helper | `GOLD-BACKEND-01` | `client_credentials` issues a short-lived, patient-less token for registered `private_key_jwt` clients. System scopes are limited to supported FHIR interactions and work without launch context when declared search criteria are supplied. Organization reads require `system/Organization.r`. System tokens are not restricted to an organisation. User and patient tokens only see Encounter, Condition, DocumentReference, Observation and Organization data recorded at the `orgnr` of their launch | 8, 10, 11 |
 | Break it (tamper `state`, replay `code`, wrong `aud`, expired token, out-of-scope resource) | Same `authorize`/`token`/`fhir` endpoints, exercised with adversarial input | Any patient | All variants; security-assertion tests, not a numbered launch TODO | `GOLD-BREAKIT-01` | PKCE, `state`, and replay protection exist for the authorization-code flow; each attack needs an explicit, checked automated test | 10, 11 |
 
 ## Acceptance contract
@@ -134,7 +150,7 @@ respectively. Non-FHIR responses are unchanged.
 | ID | Focus | Machine-checkable assertion |
 |---|---|---|
 | `PROVIDE-EPJ-01` | EPJ SMART discovery and capabilities | `GET /fhir/.well-known/smart-configuration` returns `200 OK` with `token_endpoint_auth_methods_supported` containing `none`, `client_secret_basic`, and `private_key_jwt`, matching registered client methods. It advertises the implemented `authorization_code` and `client_credentials` grants and only implemented scopes and capabilities. `GET /fhir/metadata` advertises only implemented routes. |
-| `PROVIDE-COHORT-01` | Curated SyntPop cohort | Provisioner idempotently populates exactly 8 patients (4 FNR, 4 DNR). `GET /fhir/Patient/{id}`, `GET /fhir/Encounter?patient={id}`, `GET /fhir/Condition?subject={id}`, `GET /fhir/Observation?subject={id}`, `GET /fhir/Practitioner/{id}`, `GET /fhir/PractitionerRole?practitioner={id}`, and `GET /fhir/Organization/{id}` return `200 OK`. `Patient` has `birthDate` and Norwegian identifier system; diagnoses use ICPC-2/ICD-10; observations use LOINC/UCUM; at least 3 patients have 3+ readings of one measurement. |
+| `PROVIDE-COHORT-01` | Seeded mock cohort | With `database.seedTestdata` enabled, `R__testdata.sql` and `R__hackathon_testdata.sql` together leave 40 patients (27 FNR, 12 DNR, 1 without identifier type) in 6 legekontor, all with synthetic identifiers. Re-running both migrations leaves these counts and all clinical row counts unchanged, and does not restore deleted seeded diagnoses or measurements. `GET /fhir/Patient/{id}`, `GET /fhir/Encounter?patient={id}`, `GET /fhir/Condition?subject={id}`, `GET /fhir/Observation?subject={id}`, `GET /fhir/Practitioner/{id}`, `GET /fhir/PractitionerRole?practitioner={id}`, and `GET /fhir/Organization/{id}` return `200 OK`. `Patient` has `birthDate` and Norwegian identifier system; diagnoses use ICPC-2/ICD-10; observations use LOINC/UCUM; at least 3 patients have 3+ readings of one measurement. `R__testdata.sql` adds 73 konsultasjoner, 158 diagnoses, 68 journal notes and 406 measurements (40, 76, 38 and 193 at Fjordvik, 33, 82, 30 and 213 at Lyngdal), with an active konsultasjon for each of its 8 patients and 6 patients having 6+ readings of one measurement. The hackathon cohort adds 231 konsultasjoner, 534 diagnoses, 175 journal notes and 1034 measurements, with 26 patients having 6+ readings of one measurement. |
 | `PROVIDE-STARTER-01` | Starter and reference repositories | Starter variants (`public`, `client-secret`, `private-key-jwt`, `backend-services`) run on Node 22. Maintainer tests of the supplied reference implementations pass without completing participant launch stubs. Participant guidance covers configuring host-supplied credentials/keys and launching the app in `nav-epj`, not satisfying a test suite. |
 | `PROVIDE-CREDS-01` | Team credentials | Generator creates credential packets for up to 10 team slots (provisioned per team, not per participant) with zero key collisions or cross-team credential leakage. Packets contain client IDs, secrets/keys, test clinician credentials, and cohort roster. |
 | `PROVIDE-MENTOR-01` | Mentor runbook | Runbook documents verified operational commands for cohort provisioning, credential generation, single-team rotation, and launch verification. |

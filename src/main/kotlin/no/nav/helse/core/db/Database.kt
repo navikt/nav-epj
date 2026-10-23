@@ -25,6 +25,14 @@ fun Application.configureDatabases() {
 fun getFlyway(postgresConfig: PostgresConfig): Flyway =
     Flyway.configure()
         .dataSource(postgresConfig.url, postgresConfig.username, postgresConfig.password)
-        .locations("db/migration")
+        .locations(*flywayLocations(postgresConfig))
+        .ignoreMigrationPatterns(*ignoredMigrationPatterns(postgresConfig))
         .cleanDisabled(false)
         .load()
+
+fun ignoredMigrationPatterns(postgresConfig: PostgresConfig): Array<String> =
+    if (postgresConfig.seedTestdata) emptyArray() else arrayOf("*:future", "repeatable:missing")
+
+fun flywayLocations(postgresConfig: PostgresConfig): Array<String> =
+    if (postgresConfig.seedTestdata) arrayOf("db/migration", "db/testdata")
+    else arrayOf("db/migration")

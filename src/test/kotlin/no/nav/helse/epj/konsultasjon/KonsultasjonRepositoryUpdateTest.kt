@@ -9,6 +9,7 @@ import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.UgyldigDiagnoseException
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
+import no.nav.helse.utils.DEFAULT_ORGNUMMER
 import no.nav.tsm.diagnoser.Diagnose
 import no.nav.tsm.diagnoser.DiagnoseType
 import org.junit.Test
@@ -27,6 +28,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
+                        orgnummer = DEFAULT_ORGNUMMER,
                     )
                 )
 
@@ -42,6 +44,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                         ferdigstill = true,
                     ),
                     annenPasientId,
+                    DEFAULT_ORGNUMMER,
                 )
 
             assertEquals(0, updatedRows)
@@ -58,6 +61,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
         val updatedRows =
@@ -70,11 +74,13 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                     ferdigstill = true,
                 ),
                 pasientId,
+                DEFAULT_ORGNUMMER,
             )
 
         // 1 for ny diagnose + 1 for nytt journalnotat (insert) + 1 for ferdigstilt konsultasjon
         assertEquals(3, updatedRows)
-        val konsultasjon = konsultasjonRepository.findByKonsultasjonId(konsultasjonId)
+        val konsultasjon =
+            konsultasjonRepository.findByKonsultasjonId(konsultasjonId, DEFAULT_ORGNUMMER)
         assertNotNull(konsultasjon)
         assertEquals(KonsultasjonStatus.FULLFOERT, konsultasjon.status)
         assertNotNull(konsultasjon.avsluttetTidspunkt)
@@ -98,6 +104,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
 
@@ -113,6 +120,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                 ferdigstill = false,
             ),
             pasientId,
+            DEFAULT_ORGNUMMER,
         )
 
         konsultasjonRepository.update(
@@ -124,9 +132,11 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                 ferdigstill = false,
             ),
             pasientId,
+            DEFAULT_ORGNUMMER,
         )
 
-        val konsultasjon = konsultasjonRepository.findByKonsultasjonId(konsultasjonId)
+        val konsultasjon =
+            konsultasjonRepository.findByKonsultasjonId(konsultasjonId, DEFAULT_ORGNUMMER)
         assertNotNull(konsultasjon)
         val gjenvarendeDiagnose = konsultasjon.diagnoser.single()
         assertEquals("A02", gjenvarendeDiagnose.code)
@@ -143,6 +153,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
 
@@ -155,6 +166,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                 ferdigstill = false,
             ),
             pasientId,
+            DEFAULT_ORGNUMMER,
         )
 
         konsultasjonRepository.update(
@@ -165,9 +177,11 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                 ferdigstill = false,
             ),
             pasientId,
+            DEFAULT_ORGNUMMER,
         )
 
-        val konsultasjon = konsultasjonRepository.findByKonsultasjonId(konsultasjonId)
+        val konsultasjon =
+            konsultasjonRepository.findByKonsultasjonId(konsultasjonId, DEFAULT_ORGNUMMER)
         assertNotNull(konsultasjon)
         assertEquals(emptyList(), konsultasjon.diagnoser)
     }
@@ -183,6 +197,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
 
@@ -195,6 +210,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                 ferdigstill = false,
             ),
             pasientId,
+            DEFAULT_ORGNUMMER,
         )
 
         assertFailsWith<UgyldigDiagnoseException> {
@@ -212,10 +228,12 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                     ferdigstill = false,
                 ),
                 pasientId,
+                DEFAULT_ORGNUMMER,
             )
         }
 
-        val konsultasjon = konsultasjonRepository.findByKonsultasjonId(konsultasjonId)
+        val konsultasjon =
+            konsultasjonRepository.findByKonsultasjonId(konsultasjonId, DEFAULT_ORGNUMMER)
         assertNotNull(konsultasjon)
         assertEquals("A01", konsultasjon.diagnoser.single().code)
     }
@@ -231,15 +249,18 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
 
         konsultasjonRepository.update(
             OppdaterKonsultasjonRequest(konsultasjonId, emptyList(), "notat", ferdigstill = false),
             pasientId,
+            DEFAULT_ORGNUMMER,
         )
 
-        val konsultasjon = konsultasjonRepository.findByKonsultasjonId(konsultasjonId)
+        val konsultasjon =
+            konsultasjonRepository.findByKonsultasjonId(konsultasjonId, DEFAULT_ORGNUMMER)
         assertNotNull(konsultasjon)
         assertEquals(KonsultasjonStatus.PAAGAAENDE, konsultasjon.status)
         assertNull(konsultasjon.avsluttetTidspunkt)
@@ -256,13 +277,16 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
 
-        val updatedRows = konsultasjonRepository.avbryt(konsultasjonId, pasientId)
+        val updatedRows =
+            konsultasjonRepository.avbryt(konsultasjonId, pasientId, DEFAULT_ORGNUMMER)
 
         assertEquals(1, updatedRows)
-        val konsultasjon = konsultasjonRepository.findByKonsultasjonId(konsultasjonId)
+        val konsultasjon =
+            konsultasjonRepository.findByKonsultasjonId(konsultasjonId, DEFAULT_ORGNUMMER)
         assertNotNull(konsultasjon)
         assertEquals(KonsultasjonStatus.AVLYST, konsultasjon.status)
         assertNotNull(konsultasjon.avsluttetTidspunkt)
@@ -281,13 +305,16 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
+                        orgnummer = DEFAULT_ORGNUMMER,
                     )
                 )
 
-            val updatedRows = konsultasjonRepository.avbryt(konsultasjonId, annenPasientId)
+            val updatedRows =
+                konsultasjonRepository.avbryt(konsultasjonId, annenPasientId, DEFAULT_ORGNUMMER)
 
             assertEquals(0, updatedRows)
-            val konsultasjon = konsultasjonRepository.findByKonsultasjonId(konsultasjonId)
+            val konsultasjon =
+                konsultasjonRepository.findByKonsultasjonId(konsultasjonId, DEFAULT_ORGNUMMER)
             assertNotNull(konsultasjon)
             assertEquals(KonsultasjonStatus.PAAGAAENDE, konsultasjon.status)
         }
@@ -303,17 +330,21 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
+                    orgnummer = DEFAULT_ORGNUMMER,
                 )
             )
         konsultasjonRepository.update(
             OppdaterKonsultasjonRequest(konsultasjonId, emptyList(), null, ferdigstill = true),
             pasientId,
+            DEFAULT_ORGNUMMER,
         )
 
-        val updatedRows = konsultasjonRepository.avbryt(konsultasjonId, pasientId)
+        val updatedRows =
+            konsultasjonRepository.avbryt(konsultasjonId, pasientId, DEFAULT_ORGNUMMER)
 
         assertEquals(0, updatedRows)
-        val konsultasjon = konsultasjonRepository.findByKonsultasjonId(konsultasjonId)
+        val konsultasjon =
+            konsultasjonRepository.findByKonsultasjonId(konsultasjonId, DEFAULT_ORGNUMMER)
         assertNotNull(konsultasjon)
         assertEquals(KonsultasjonStatus.FULLFOERT, konsultasjon.status)
     }
@@ -330,6 +361,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
+                        orgnummer = DEFAULT_ORGNUMMER,
                     )
                 )
             val request =
@@ -340,10 +372,11 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                     ferdigstill = false,
                 )
 
-            konsultasjonRepository.update(request, pasientId)
-            konsultasjonRepository.update(request, pasientId)
+            konsultasjonRepository.update(request, pasientId, DEFAULT_ORGNUMMER)
+            konsultasjonRepository.update(request, pasientId, DEFAULT_ORGNUMMER)
 
-            val konsultasjon = konsultasjonRepository.findByKonsultasjonId(konsultasjonId)
+            val konsultasjon =
+                konsultasjonRepository.findByKonsultasjonId(konsultasjonId, DEFAULT_ORGNUMMER)
             assertNotNull(konsultasjon)
             assertEquals(1, konsultasjon.journalnotat.size)
             assertEquals("notat", konsultasjon.journalnotat.single().journalnotat)
@@ -361,6 +394,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
+                        orgnummer = DEFAULT_ORGNUMMER,
                     )
                 )
 
@@ -372,6 +406,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                     ferdigstill = false,
                 ),
                 pasientId,
+                DEFAULT_ORGNUMMER,
             )
             konsultasjonRepository.update(
                 OppdaterKonsultasjonRequest(
@@ -381,9 +416,11 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                     ferdigstill = false,
                 ),
                 pasientId,
+                DEFAULT_ORGNUMMER,
             )
 
-            val konsultasjon = konsultasjonRepository.findByKonsultasjonId(konsultasjonId)
+            val konsultasjon =
+                konsultasjonRepository.findByKonsultasjonId(konsultasjonId, DEFAULT_ORGNUMMER)
             assertNotNull(konsultasjon)
             assertEquals(1, konsultasjon.journalnotat.size)
             assertEquals("oppdatert notat", konsultasjon.journalnotat.single().journalnotat)

@@ -15,8 +15,8 @@ import no.nav.helse.epj.legekontor.LegekontorService
 class OrganizationService(val legekontorService: LegekontorService) {
     val log = logger()
 
-    suspend fun getOrganization(id: OrganizationId): Organization? {
-        val legekontor = legekontorService.getLegekontor(LegekontorId(id.value))
+    suspend fun getOrganization(id: OrganizationId, orgnummer: String?): Organization? {
+        val legekontor = legekontorService.getLegekontor(LegekontorId(id.value), orgnummer)
         return legekontor.toOrganization()
     }
 

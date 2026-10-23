@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Button } from "./Button";
+import { OrgPicker } from "./OrgPicker";
 import { copy } from "./copy";
 import { XpIcon } from "./XpIcon";
 import type { HelsepersonellState } from "./useHelsepersonell";
@@ -7,10 +8,20 @@ import type { HelsepersonellState } from "./useHelsepersonell";
 type Props = {
   state: HelsepersonellState;
   onRetry: () => void;
+  onChooseOrg?: (orgnummer: string) => Promise<void>;
+  changingOrg?: boolean;
+  onCancelChangeOrg?: () => void;
   children: ReactNode;
 };
 
-export function UserGate({ state, onRetry, children }: Props) {
+export function UserGate({
+  state,
+  onRetry,
+  onChooseOrg = () => Promise.resolve(),
+  changingOrg = false,
+  onCancelChangeOrg,
+  children,
+}: Props) {
   if (state.status === "loading") {
     return (
       <p role="status" className="xp-notice">
@@ -28,6 +39,15 @@ export function UserGate({ state, onRetry, children }: Props) {
           <Button onClick={onRetry}>{copy["s1.error.retry"]}</Button>
         </div>
       </div>
+    );
+  }
+  if (state.sessionOrg.needsChoice || changingOrg) {
+    return (
+      <OrgPicker
+        sessionOrg={state.sessionOrg}
+        onChoose={onChooseOrg}
+        onCancel={state.sessionOrg.needsChoice ? undefined : onCancelChangeOrg}
+      />
     );
   }
   return <>{children}</>;

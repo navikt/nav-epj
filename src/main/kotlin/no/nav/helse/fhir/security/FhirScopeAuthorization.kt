@@ -13,6 +13,19 @@ class InsufficientScopeException(val resourceType: String, val interaction: Inte
 class PatientMismatchException(val resourceType: String) :
     RuntimeException("Requested $resourceType does not belong to the launched patient")
 
+class OrganizationContextMissingException :
+    RuntimeException("Tokenet mangler legekontor for klinisk tilgang")
+
+fun SmartPrincipal.clinicalOrgnummer(): String? {
+    if (orgnummer != null) return orgnummer
+    val fhirScopes = scopes.filterIsInstance<SmartScope.Fhir>()
+    if (fhirScopes.all { it.context == ScopeContext.SYSTEM }) return null
+    throw OrganizationContextMissingException()
+}
+
+fun SmartPrincipal.requireClinicalOrgnummer(): String =
+    orgnummer ?: throw OrganizationContextMissingException()
+
 private fun SmartPrincipal.matchingScopes(
     resourceType: String,
     interaction: Interaction,

@@ -4,12 +4,21 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.PasientCreationException
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
-import no.nav.helse.epj.legekontor.Legekontor
-import no.nav.helse.epj.legekontor.LegekontorId
 
 class PasientService(private val pasientRepository: PasientRepository) {
-    suspend fun getPasienterByHpr(hpr: HelsepersonellHpr): List<Pasient> {
-        return pasientRepository.listByHpr(hpr)
+    suspend fun listAtLegekontor(
+        orgnummer: String,
+        ownHpr: HelsepersonellHpr,
+    ): List<PasientListeElement> {
+        return pasientRepository.listAtLegekontor(orgnummer, ownHpr)
+    }
+
+    suspend fun isListedAt(id: PasientId, orgnummer: String): Boolean {
+        return pasientRepository.isListedAt(id.value, orgnummer)
+    }
+
+    suspend fun hasKonsultasjonAt(id: PasientId, orgnummer: String): Boolean {
+        return pasientRepository.hasKonsultasjonAt(id.value, orgnummer)
     }
 
     suspend fun getPasientById(id: PasientId): Pasient? {
@@ -21,7 +30,11 @@ class PasientService(private val pasientRepository: PasientRepository) {
     }
 
     @OptIn(ExperimentalUuidApi::class)
-    suspend fun createPasient(request: OpprettPasientRequest, hpr: String): Pasient {
+    suspend fun createPasient(
+        request: OpprettPasientRequest,
+        hpr: String,
+        orgnummer: String,
+    ): Pasient {
         PersonidentValidator.validate(
             personident = request.personident,
             personidentType = request.personidentType,
@@ -31,8 +44,6 @@ class PasientService(private val pasientRepository: PasientRepository) {
         val newPasient =
             Pasient(
                 id = PasientId(Uuid.generateV4()),
-                legekontorId = LegekontorId(Legekontor.DEFAULT.id.value),
-                hprNumbers = listOf(HelsepersonellHpr(hpr)),
                 fornavn = request.fornavn,
                 etternavn = request.etternavn,
                 personident = request.personident,
@@ -40,7 +51,7 @@ class PasientService(private val pasientRepository: PasientRepository) {
                 birthDate = request.birthDate,
                 gender = request.gender,
             )
-        pasientRepository.insert(newPasient)
+        pasientRepository.insertOnList(newPasient, HelsepersonellHpr(hpr), orgnummer)
         return pasientRepository.findByPersonident(request.personident)
             ?: throw PasientCreationException()
     }

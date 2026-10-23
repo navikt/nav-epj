@@ -18,6 +18,7 @@ function renderHeader(
   onLogout = vi.fn(),
   currentUser: typeof user | null = user,
   onSearchSubmit = vi.fn(),
+  onChangeOrg?: () => void,
 ) {
   return {
     onLogout,
@@ -28,6 +29,7 @@ function renderHeader(
           user={currentUser}
           onLogout={onLogout}
           onSearchSubmit={onSearchSubmit}
+          onChangeOrg={onChangeOrg}
         />
       </AppShell>,
     ),
@@ -54,6 +56,22 @@ describe("AppHeader", () => {
         copy["header.user"](user.navn, user.autorisasjon, user.legekontor),
       ),
     ).toBeInTheDocument();
+  });
+
+  it("offers to change org only when a change handler is given", async () => {
+    const onChangeOrg = vi.fn();
+    renderHeader(vi.fn(), user, vi.fn(), onChangeOrg);
+    await userEvent
+      .setup()
+      .click(screen.getByRole("button", { name: copy["header.changeOrg"] }));
+    expect(onChangeOrg).toHaveBeenCalledOnce();
+  });
+
+  it("hides the change org action by default", () => {
+    renderHeader();
+    expect(
+      screen.queryByRole("button", { name: copy["header.changeOrg"] }),
+    ).not.toBeInTheDocument();
   });
 
   it("omits user info while it is not available", () => {

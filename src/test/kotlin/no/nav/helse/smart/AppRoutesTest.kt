@@ -23,6 +23,12 @@ import no.nav.helse.core.Environment
 import no.nav.helse.core.EpjConfig
 import no.nav.helse.core.SmartConfig
 import no.nav.helse.core.ValkeyConfig
+import no.nav.helse.epj.legekontor.Legekontor
+import no.nav.helse.epj.legekontor.LegekontorId
+import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.pasient.PasientService
+import no.nav.helse.epj.sessionorg.SessionOrgResolution
+import no.nav.helse.epj.sessionorg.SessionOrgResolver
 import no.nav.helse.fhir.encounter.EncounterService
 import no.nav.helse.fhir.patient.PatientInputId
 import no.nav.helse.fhir.patient.PatientService
@@ -47,6 +53,7 @@ import tools.jackson.module.kotlin.jacksonObjectMapper
 import tools.jackson.module.kotlin.readValue
 
 private const val HPR = "111"
+private const val ORG = "311111116"
 private const val SECRET = "super-secret-client-value"
 private const val ISS = "http://test/fhir"
 private const val ISS_ENCODED = "http%3A%2F%2Ftest%2Ffhir"
@@ -78,10 +85,14 @@ private val clients =
         ),
     )
 
+@OptIn(kotlin.uuid.ExperimentalUuidApi::class)
 class AppRoutesTest : WithValkey() {
 
     private val patientService = mockk<PatientService>()
     private val encounterService = mockk<EncounterService>()
+    private val sessionOrgResolver = mockk<SessionOrgResolver>()
+    private val pasientService =
+        mockk<PasientService> { coEvery { isListedAt(any(), any()) } returns true }
     private val mapper = jacksonObjectMapper()
 
     private fun testApp(
@@ -108,6 +119,8 @@ class AppRoutesTest : WithValkey() {
                 provide<ValkeyService> { valkeyService }
                 provide<EncounterService> { encounterService }
                 provide<PatientService> { patientService }
+                provide<PasientService> { pasientService }
+                provide<SessionOrgResolver> { sessionOrgResolver }
                 provide<ClientAssertionVerifier> { mockk(relaxed = true) }
                 provide<SmartKeys> { SmartKeys(environment.smart.privateKeyJwk) }
             }
@@ -124,6 +137,20 @@ class AppRoutesTest : WithValkey() {
         }
         redirectClient = createClient { followRedirects = false }
         client.block()
+    }
+
+    private fun sessionOrg(orgnummer: String?) {
+        coEvery { sessionOrgResolver.resolve(HPR) } returns
+            if (orgnummer == null) SessionOrgResolution.NeedsChoice
+            else
+                SessionOrgResolution.Resolved(
+                    Legekontor(LegekontorId(kotlin.uuid.Uuid.generateV4()), "Org", orgnummer, null),
+                    derived = true,
+                )
+    }
+
+    init {
+        sessionOrg(ORG)
     }
 
     private lateinit var redirectClient: HttpClient
@@ -146,7 +173,7 @@ class AppRoutesTest : WithValkey() {
     private fun tree(text: String): Map<String, String> = mapper.readValue(text)
 
     private fun activePatient(id: String = UUID.randomUUID().toString()): String {
-        runBlocking { valkeyService.setActivePatient(HPR, id) }
+        runBlocking { valkeyService.setActivePatient(HPR, ORG, id) }
         currentPatient = id
         return id
     }
@@ -157,7 +184,7 @@ class AppRoutesTest : WithValkey() {
     }
 
     private fun clearActivePatient() {
-        runBlocking { glideClient.del(arrayOf("smart:active-patient:$HPR")).get() }
+        runBlocking { glideClient.del(arrayOf("smart:active-patient:$HPR:$ORG")).get() }
     }
 
     @Test
@@ -236,8 +263,9 @@ class AppRoutesTest : WithValkey() {
             activePatient()
             coEvery { patientService.getPatient(any<PatientInputId>()) } returns
                 patientWithId("patient-1")
-            coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>()) } returns
-                encounterWithId("encounter-1")
+            coEvery {
+                encounterService.getActiveEncounterByPatient(any<PatientInputId>(), ORG)
+            } returns encounterWithId("encounter-1")
 
             val response = launch("syk-inn")
 
@@ -247,18 +275,74 @@ class AppRoutesTest : WithValkey() {
             assertTrue(launchUrl.startsWith(prefix), launchUrl)
             val launchId = launchUrl.removePrefix(prefix)
             assertEquals(
-                LaunchContext("patient-1", "encounter-1", HPR),
+                LaunchContext("patient-1", "encounter-1", HPR, ORG),
                 valkeyService.getAndDeleteLaunchContext(launchId),
             )
             assertNull(valkeyService.getAndDeleteLaunchContext(launchId))
         }
 
     @Test
+    fun `POST api launch without a session org returns 409 NO_ACTIVE_PATIENT`() = testApp {
+        activePatient()
+        sessionOrg(null)
+
+        val response = launch("syk-inn")
+
+        assertEquals(HttpStatusCode.Conflict, response.status)
+        assertEquals("NO_ACTIVE_PATIENT", tree(response.bodyAsText())["code"])
+    }
+
+    @Test
+    fun `POST api launch does not use the active patient of another org`() = testApp {
+        activePatient()
+        sessionOrg("311111132")
+
+        val response = launch("syk-inn")
+
+        assertEquals(HttpStatusCode.Conflict, response.status)
+        assertEquals("NO_ACTIVE_PATIENT", tree(response.bodyAsText())["code"])
+    }
+
+    private suspend fun HttpClient.authorize(launchId: String) =
+        noRedirects().get("/oidc/authorize") {
+            parameter("response_type", "code")
+            parameter("client_id", "syk-inn")
+            parameter("redirect_uri", "https://sykmelding.test/callback")
+            parameter("scope", "openid launch")
+            parameter("state", "s")
+            parameter("aud", ISS)
+            parameter("launch", launchId)
+            parameter("code_challenge", "challenge")
+            parameter("code_challenge_method", "S256")
+        }
+
+    @Test
+    fun `authorize accepts a launch context created for the current org`() = testApp {
+        valkeyService.saveLaunchContext("launch-same-org", LaunchContext("p", "e", HPR, ORG))
+
+        val response = authorize("launch-same-org")
+
+        assertTrue(response.headers[HttpHeaders.Location].orEmpty().contains("code="))
+    }
+
+    @Test
+    fun `authorize rejects a launch context created for another org`() = testApp {
+        valkeyService.saveLaunchContext("launch-other-org", LaunchContext("p", "e", HPR, ORG))
+        sessionOrg("311111132")
+
+        val response = authorize("launch-other-org")
+
+        val location = response.headers[HttpHeaders.Location].orEmpty()
+        assertTrue(location.contains("error=invalid_request"), location)
+        assertTrue(!location.contains("code="), location)
+    }
+
+    @Test
     fun `POST api launch creates a new launch id on every call`() = testApp {
         activePatient()
         coEvery { patientService.getPatient(any<PatientInputId>()) } returns
             patientWithId("patient-1")
-        coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>()) } returns
+        coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>(), ORG) } returns
             encounterWithId("encounter-1")
 
         val first = tree(launch("validator").bodyAsText()).getValue("launchUrl")
@@ -286,8 +370,9 @@ class AppRoutesTest : WithValkey() {
             activePatient()
             coEvery { patientService.getPatient(any<PatientInputId>()) } returns
                 patientWithId("patient-1")
-            coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>()) } returns
-                encounterWithId("encounter-1")
+            coEvery {
+                encounterService.getActiveEncounterByPatient(any<PatientInputId>(), ORG)
+            } returns encounterWithId("encounter-1")
 
             val response = launch("syk-inn", UUID.randomUUID().toString())
 
@@ -302,7 +387,7 @@ class AppRoutesTest : WithValkey() {
         val first = activePatient()
         coEvery { patientService.getPatient(any<PatientInputId>()) } returns
             patientWithId("patient-1")
-        coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>()) } returns
+        coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>(), ORG) } returns
             encounterWithId("encounter-1")
         assertEquals(HttpStatusCode.OK, launch("syk-inn", first).status)
 
@@ -327,14 +412,14 @@ class AppRoutesTest : WithValkey() {
         val active = activePatient()
         coEvery { patientService.getPatient(any<PatientInputId>()) } returns
             patientWithId("patient-1")
-        coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>()) } returns
+        coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>(), ORG) } returns
             encounterWithId("encounter-1")
         val before = launchKeys()
 
         launch("syk-inn", UUID.randomUUID().toString())
 
         assertEquals(before, launchKeys())
-        assertEquals(active, valkeyService.getActivePatient(HPR))
+        assertEquals(active, valkeyService.getActivePatient(HPR, ORG))
     }
 
     @Test
@@ -350,13 +435,30 @@ class AppRoutesTest : WithValkey() {
         }
 
     @Test
+    fun `POST api launch for a patient no longer on a list at the org returns 409 NO_ACTIVE_PATIENT`() =
+        testApp {
+            val id = activePatient()
+            val before = launchKeys()
+            coEvery {
+                pasientService.isListedAt(PasientId(kotlin.uuid.Uuid.parse(id)), ORG)
+            } returns false
+
+            val response = launch("syk-inn")
+
+            assertEquals(HttpStatusCode.Conflict, response.status)
+            assertEquals("NO_ACTIVE_PATIENT", tree(response.bodyAsText())["code"])
+            assertEquals(before, launchKeys())
+        }
+
+    @Test
     fun `POST api launch without an ongoing konsultasjon returns 409 NO_ACTIVE_ENCOUNTER`() =
         testApp {
             activePatient()
             coEvery { patientService.getPatient(any<PatientInputId>()) } returns
                 patientWithId("patient-1")
-            coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>()) } returns
-                null
+            coEvery {
+                encounterService.getActiveEncounterByPatient(any<PatientInputId>(), ORG)
+            } returns null
 
             val response = launch("validator")
 
@@ -383,7 +485,7 @@ class AppRoutesTest : WithValkey() {
         activePatient()
         coEvery { patientService.getPatient(any<PatientInputId>()) } returns
             patientWithId("patient-1")
-        coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>()) } returns
+        coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>(), ORG) } returns
             encounterWithId("encounter-1")
 
         val response =
@@ -420,7 +522,8 @@ class AppRoutesTest : WithValkey() {
 
         coEvery { patientService.getPatient(any<PatientInputId>()) } returns
             patientWithId("patient-1")
-        coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>()) } returns null
+        coEvery { encounterService.getActiveEncounterByPatient(any<PatientInputId>(), ORG) } returns
+            null
         val noEncounter =
             noRedirects().get("/fhir/launch") {
                 parameter("url", "https://sykmelding.test/fhir/launch")

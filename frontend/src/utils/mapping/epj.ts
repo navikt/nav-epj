@@ -9,9 +9,20 @@ export const LegekontorSchema = z.object({
 
 export type Legekontor = z.infer<typeof LegekontorSchema>;
 
+export const SessionOrgSchema = z.object({
+    org: LegekontorSchema.nullable(),
+    needsChoice: z.boolean(),
+    canChoose: z.boolean(),
+    choosableOrgs: z.array(
+        z.object({ org: LegekontorSchema, hasOwnList: z.boolean() }),
+    ),
+});
+
+export type SessionOrg = z.infer<typeof SessionOrgSchema>;
+
 export const HelsepersonellSchema = z.object({
     hpr: z.string(),
-    legekontorId: z.string(),
+    legekontorId: z.string().nullish(),
     navn: z.string(),
     autorisasjon: z.string(),
 });
@@ -29,6 +40,12 @@ export const PasientSchema = z.object({
 });
 
 export type Pasient = z.infer<typeof PasientSchema>;
+
+export const PasientListeElementSchema = PasientSchema.extend({
+    selectable: z.boolean(),
+});
+
+export type PasientListeElement = z.infer<typeof PasientListeElementSchema>;
 
 export const OpprettPasientSchema = z.object({
     fornavn: z.string().min(1, "Fornavn er påkrevd"),
