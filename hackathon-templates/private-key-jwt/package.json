@@ -3,7 +3,9 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "engines": { "node": "22.x" },
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "start": "node --import tsx src/main.ts",
     "start:reference": "node --import tsx src/main.ts --reference",
@@ -12,7 +14,7 @@
   },
   "dependencies": {
     "@fastify/cookie": "11.1.2",
-    "fastify": "5.12.5",
+    "fastify": "5.12.7",
     "jose": "6.2.12",
     "zod": "4.6.5"
   },
