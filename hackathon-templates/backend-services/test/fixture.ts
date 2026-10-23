@@ -248,7 +248,7 @@ export async function fixture(clientAlg: "ES384" | "RS384" = "ES384", modulusLen
     token_endpoint: `${config.issuer}/token`, jwks_uri: `${config.issuer}/jwks`,
   });
   return {
-    config, metadata, patient, encounter, measurements, tokens, client, clientAlg, issued, requests, created, createResponse,
+    config, metadata, patient, encounter, measurements, tokens, client, issued, requests, created, createResponse,
     registerCode: (code: string, challenge: string, scope = config.scopes) =>
       codes.set(code, { challenge, scope: scope.split(/\s+/).filter(s => registeredScopes.includes(s)).join(" ") }),
     tokenCalls: () => tokenCalls, lastBody: () => lastBody, lastAuthorization: () => lastAuthorization,

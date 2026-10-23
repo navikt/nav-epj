@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { createHash } from "node:crypto";
+import { SignJWT } from "jose";
 import { buildApp } from "../src/app.ts";
 import * as api from "../src/reference.ts";
 import type { Steps } from "../src/steps.ts";
 import { fixture } from "./fixture.ts";
-import { checkDiscovery, checkIdentity } from "./contracts.ts";
 import { age } from "../src/http.ts";
 
   test("Reference launch: protocol functions", async t => {
@@ -21,7 +21,27 @@ import { age } from "../src/http.ts";
         assert.deepEqual(api.readLaunch(launch, f.config), launch);
         assert.throws(() => api.readLaunch({ ...launch, iss: "https://untrusted.invalid/fhir" }, f.config));
       }],
-      ["trust discovery and reject invalid metadata", () => checkDiscovery(f)],
+      ["trust discovery and reject invalid metadata", async () => {
+        const original = structuredClone(f.metadata);
+        assert.deepEqual(await api.discover(f.config), original, "Valid discovery must succeed before checking rejection cases");
+        const attacks = [
+          { issuer: "https://wrong.invalid/oidc" },
+          { authorization_endpoint: "https://wrong.invalid/authorize" },
+          { token_endpoint: "https://wrong.invalid/token" },
+          { jwks_uri: "https://wrong.invalid/jwks" },
+          { token_endpoint_auth_methods_supported: [] },
+          { grant_types_supported: [] },
+          { code_challenge_methods_supported: ["plain"] },
+        ];
+        for (const attack of attacks) {
+          Object.assign(f.metadata, original, attack);
+          try {
+            await assert.rejects(() => api.discover(f.config), `Discovery must reject ${Object.keys(attack)[0]}`);
+          } finally {
+            Object.assign(f.metadata, original);
+          }
+        }
+      }],
       ["S256 PKCE", () => {
         const actual = api.pkce();
         assert.match(actual.verifier, /^[A-Za-z0-9_-]{43,128}$/);
@@ -62,7 +82,33 @@ import { age } from "../src/http.ts";
           assert.equal(f.lastBody().has("client_assertion"), false);
         }
       }],
-      ["verify ID-token signature and claims", () => checkIdentity(f)],
+      ["verify ID-token signature and claims", async () => {
+        const claims = {
+          iss: f.config.issuer, aud: f.config.clientId, sub: "h1",
+          iat: Math.floor(Date.now() / 1000), exp: Math.floor(Date.now() / 1000) + 300, fhirUser: "Practitioner/h1",
+        };
+        const signed = { ...tokens, id_token: await f.signIdentity(claims) };
+        assert.equal(await api.verifyIdentity(f.config, f.metadata, signed), "h1", "A valid ID token must succeed");
+        await assert.rejects(() => api.verifyIdentity(f.config, f.metadata, { ...signed, id_token: undefined }),
+          "Missing ID token must be rejected");
+        for (const attack of [
+          { aud: "wrong" }, { iss: "https://wrong.invalid" }, { exp: 1 }, { exp: undefined },
+          { sub: undefined }, { iat: undefined }, { fhirUser: "https://wrong.invalid/Practitioner/h1" },
+          { fhirUser: "Patient/p1" }, { azp: "wrong" },
+        ]) {
+          const invalid = await f.signIdentity({ ...claims, ...attack });
+          await assert.rejects(() => api.verifyIdentity(f.config, f.metadata, { ...signed, id_token: invalid }),
+            `ID-token verification must reject ${Object.keys(attack)[0]}`);
+        }
+        const wrongAlgorithm = await new SignJWT(claims).setProtectedHeader({ alg: "ES384" }).sign(f.client.privateKey);
+        await assert.rejects(() => api.verifyIdentity(f.config, f.metadata, { ...signed, id_token: wrongAlgorithm }));
+        const parts = signed.id_token.split(".");
+        const signature = Buffer.from(parts[2]!, "base64url");
+        signature[0] = signature[0]! ^ 1;
+        parts[2] = signature.toString("base64url");
+        await assert.rejects(() => api.verifyIdentity(f.config, f.metadata, { ...signed, id_token: parts.join(".") }),
+          "Decoding is not verification: a tampered RS256 signature must be rejected");
+      }],
       ["launch context", () => {
         assert.deepEqual(api.launchContext(tokens, "h1"), context);
         assert.throws(() => api.launchContext({ ...tokens, patient: undefined }, "h1"));

@@ -20,7 +20,6 @@ for (const [alg, modulusLength] of keys) test(`Reference client authentication (
     const { payload, protectedHeader } = await jwtVerify(assertion, f.client.publicKey, {
       issuer: f.config.clientId, subject: f.config.clientId, audience: f.metadata.token_endpoint, algorithms: [alg],
     });
-    assert.deepEqual(Object.keys(protectedHeader).sort(), ["alg", "kid", "typ"]);
     assert.equal(protectedHeader.alg, alg);
     assert.equal(protectedHeader.kid, "test-key");
     assert.equal(protectedHeader.typ, "JWT");

@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import * as reference from "../src/reference.ts";
 import { fixture } from "./fixture.ts";
-import { checkIdentity } from "./contracts.ts";
 
 test("Reference authentication: reject code replay, wrong PKCE and a changed redirect URI", async t => {
   const f = await fixture();
@@ -19,7 +18,7 @@ test("Reference authentication: reject code replay, wrong PKCE and a changed red
   assert.equal(f.tokenCalls(), 4, "These attacks must exercise the token server, not merely throw locally");
 });
 
-test("Reference authentication: expired access tokens and invalid ID tokens are not accepted", async t => {
+test("Reference authentication: expired access tokens are not accepted", async t => {
   const f = await fixture();
   t.after(f.close);
   const tokens = await f.tokens();
@@ -28,7 +27,6 @@ test("Reference authentication: expired access tokens and invalid ID tokens are 
   f.issued.get(tokens.access_token)!.expiresAt = 0;
   await assert.rejects(() => reference.loadChart(f.config, tokens, context));
   assert.ok(f.requests.some(r => r.path.startsWith("/fhir/") && r.status === 401));
-  await checkIdentity(f);
 });
 
 test("Reference authentication: state is required even when an authorization error is returned", async t => {

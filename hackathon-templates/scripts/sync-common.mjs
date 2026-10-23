@@ -8,12 +8,11 @@ const common = [
   "package.json", "package-lock.json", "tsconfig.json", ".gitignore", ".npmrc", ".nvmrc",
   "GUIDE.md", "EXERCISES.md", "PROGRESSION.md", "src/config.ts", "src/http.ts", "src/reference.ts",
   "src/extensions.ts", "src/server.ts", "src/main.ts", "test/fixture.ts", "test/helpers.test.ts",
-  "test/contracts.ts", "test/fixture.test.ts", "test/README.md",
+  "test/README.md",
 ];
 const ehr = [
   "src/app.ts", "src/steps.ts", "test/launch.test.ts", "test/clinical.test.ts",
-  "test/scopes.test.ts", "test/auth-errors.test.ts", "test/writeback.ts",
-  "test/observation.test.ts", "test/document.test.ts",
+  "test/scopes.test.ts", "test/auth-errors.test.ts", "test/writeback.test.ts",
 ];
 for (const variant of ["client-secret", "private-key-jwt", "backend-services"]) {
   const files = variant === "backend-services" ? common : [...common, ...ehr];

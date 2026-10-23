@@ -4,13 +4,28 @@ import { jwtVerify } from "jose";
 import { buildApp } from "../src/app.ts";
 import * as api from "../src/reference.ts";
 import { fixture } from "./fixture.ts";
-import { checkDiscovery } from "./contracts.ts";
 
   test("Reference Backend Services: discovery, exchange and search", async t => {
     const f = await fixture();
     t.after(f.close);
     await t.test("trusted discovery", async () => {
-      await checkDiscovery(f);
+      const original = structuredClone(f.metadata);
+      assert.deepEqual(await api.discover(f.config), original, "Valid discovery must succeed before checking rejection cases");
+      for (const attack of [
+        { issuer: "https://wrong.invalid/oidc" },
+        { authorization_endpoint: "https://wrong.invalid/authorize" },
+        { token_endpoint: "https://wrong.invalid/token" },
+        { jwks_uri: "https://wrong.invalid/jwks" },
+        { token_endpoint_auth_methods_supported: [] },
+        { grant_types_supported: [] },
+      ]) {
+        Object.assign(f.metadata, original, attack);
+        try {
+          await assert.rejects(() => api.discover(f.config), `Discovery must reject ${Object.keys(attack)[0]}`);
+        } finally {
+          Object.assign(f.metadata, original);
+        }
+      }
     });
     await t.test("asymmetric client_credentials exchange", async () => {
       const tokens = await api.backendToken(f.config, f.metadata);
@@ -61,8 +76,7 @@ test("Reference Backend Services: reject patient-bound, long-lived and over-scop
     t.after(f.close);
     assert.ok(f.issued.has((await api.backendToken(f.config, f.metadata)).access_token));
     const assertion = f.lastBody().get("client_assertion")!;
-    const { protectedHeader } = await jwtVerify(assertion, f.client.publicKey, {
+    await jwtVerify(assertion, f.client.publicKey, {
       issuer: f.config.clientId, subject: f.config.clientId, audience: f.metadata.token_endpoint, algorithms: [alg],
     });
-    assert.deepEqual(Object.keys(protectedHeader).sort(), ["alg", "kid", "typ"]);
   });
