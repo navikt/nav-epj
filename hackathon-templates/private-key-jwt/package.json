@@ -3,9 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "engines": {
-    "node": "22.x"
-  },
+  "engines": { "node": "22.x" },
   "scripts": {
     "start": "node --import tsx src/main.ts",
     "start:reference": "node --import tsx src/main.ts --reference",
