@@ -1,5 +1,6 @@
 package no.nav.helse.hackathon.credentials
 
+import java.net.URI
 import no.nav.helse.smart.security.RawClientRegistration
 
 internal const val PACKET_SCHEMA_VERSION = 1
@@ -11,6 +12,7 @@ internal const val VERIFICATION_NOTE =
     "Clinician and roster content was copied verbatim and not validated; " +
         "the operator must verify it before this packet is handed out."
 private const val SIGNING_ALGORITHM = "RS384"
+private const val SEEDED_PATIENT_IDENTIFIER = "urn:oid:2.16.578.1.12.4.1.4.1|20856210112"
 
 internal class ExternalInputs(val clinicians: ClinicianInput, val roster: RosterInput)
 
@@ -49,12 +51,75 @@ internal fun writeTeamFiles(
         export.createDirectory(dir)
         export.writeFile("$dir/$LAUNCH_KEY_FILE", keyFile(team.launchKey.privateJwk.value))
         export.writeFile("$dir/$BACKEND_KEY_FILE", keyFile(team.backendKey.privateJwk.value))
+        envFiles(team, configs.getValue(team.teamSlot), manifest).forEach { (name, content) ->
+            export.writeFile("$dir/$name", content.toByteArray())
+        }
         export.writeFile(
             "$dir/packet.json",
             packetJson(team, configs.getValue(team.teamSlot), manifest, inputs),
         )
     }
 }
+
+private fun envFiles(
+    team: TeamCredentials,
+    config: StarterTeamConfig,
+    manifest: StarterManifest,
+): Map<String, String> {
+    val interactive = manifest.interactiveScopes.joinToString(" ")
+    val system = manifest.systemScopes.joinToString(" ")
+    fun ehr(clientId: String, endpoints: ClientEndpoints, vararg extra: Pair<String, String>) =
+        listOf("CLIENT_ID" to clientId, "SCOPES" to interactive) +
+            redirectEntries(endpoints.callbackUri) +
+            extra
+    return mapOf(
+        "public.env" to envText(manifest, ehr(team.publicClientId, config.publicClient)),
+        "client-secret.env" to
+            envText(
+                manifest,
+                ehr(
+                    team.clientSecret.clientId,
+                    config.clientSecretClient,
+                    "CLIENT_SECRET" to team.clientSecret.secret.value,
+                ),
+            ),
+        "private-key-jwt.env" to
+            envText(
+                manifest,
+                ehr(
+                    team.launchKey.clientId,
+                    config.privateKeyJwtClient,
+                    "PRIVATE_JWK_PATH" to "keys/$LAUNCH_KEY_FILE",
+                ),
+            ),
+        "backend-services.env" to
+            envText(
+                manifest,
+                listOf(
+                    "CLIENT_ID" to team.backendKey.clientId,
+                    "SCOPES" to system,
+                    "PRIVATE_JWK_PATH" to "keys/$BACKEND_KEY_FILE",
+                    "PATIENT_IDENTIFIER" to SEEDED_PATIENT_IDENTIFIER,
+                ),
+            ),
+    )
+}
+
+private fun redirectEntries(callbackUri: String): List<Pair<String, String>> {
+    val uri = URI(callbackUri)
+    val loopbackPort =
+        uri.port.takeIf { uri.scheme == "http" && uri.host in LOOPBACK_HOSTS && it != -1 }
+    return listOfNotNull(loopbackPort?.let { "PORT" to it.toString() }) +
+        ("REDIRECT_URI" to callbackUri)
+}
+
+private fun envText(manifest: StarterManifest, entries: List<Pair<String, String>>): String =
+    (listOf("FHIR_BASE_URL" to manifest.fhirBaseUrl, "AUTH_ISSUER" to manifest.authIssuer) +
+            entries)
+        .joinToString("") { (key, value) ->
+            check(value.none { it == '\n' || it == '\r' }) { "env value for $key is multiline" }
+            "$key=$value\n"
+        }
 
 private fun keyFile(jwk: String) = "$jwk\n".toByteArray()
 

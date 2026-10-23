@@ -1,5 +1,6 @@
 package no.nav.helse.hackathon.credentials
 
+import java.net.URI
 import java.nio.file.Path
 import tools.jackson.databind.JsonNode
 
@@ -7,10 +8,16 @@ private const val MAX_FIELDS = 20
 private const val MAX_PATIENTS = 200
 private val FIELD_NAME = Regex("[A-Za-z][A-Za-z0-9_.-]{0,63}")
 
+internal const val DEFAULT_FHIR_BASE_URL = "https://epj.ekstern.dev.nav.no/fhir"
+internal const val DEFAULT_AUTH_ISSUER = "https://epj.ekstern.dev.nav.no/oidc"
+internal val LOOPBACK_HOSTS = setOf("localhost", "127.0.0.1", "[::1]")
+
 internal class StarterManifest(
     val interactiveScopes: List<String>,
     val systemScopes: List<String>,
     val teams: List<StarterTeamConfig>,
+    val fhirBaseUrl: String = DEFAULT_FHIR_BASE_URL,
+    val authIssuer: String = DEFAULT_AUTH_ISSUER,
 )
 
 internal class ClinicianInput(val byTeam: Map<String, Map<String, String>>) {
@@ -26,7 +33,14 @@ internal fun readManifest(path: Path): StarterManifest {
         readJsonInput("manifest", path)
             .requireObject(
                 "manifest",
-                setOf("schemaVersion", "interactiveScopes", "systemScopes", "teams"),
+                setOf(
+                    "schemaVersion",
+                    "interactiveScopes",
+                    "systemScopes",
+                    "teams",
+                    "fhirBaseUrl",
+                    "authIssuer",
+                ),
             )
     root.requireSchemaVersion("manifest")
     val teams =
@@ -40,7 +54,28 @@ internal fun readManifest(path: Path): StarterManifest {
         interactiveScopes = root.requireStringList("manifest", "interactiveScopes"),
         systemScopes = root.requireStringList("manifest", "systemScopes"),
         teams = teams,
+        fhirBaseUrl = root.optionalBaseUrl("fhirBaseUrl", DEFAULT_FHIR_BASE_URL),
+        authIssuer = root.optionalBaseUrl("authIssuer", DEFAULT_AUTH_ISSUER),
     )
+}
+
+private fun JsonNode.optionalBaseUrl(field: String, default: String): String {
+    if (get(field) == null) return default
+    val url = requireString("manifest", field)
+    val uri = runCatching { URI(url) }.getOrNull()
+    ensure(
+        uri != null &&
+            url.none { it.isWhitespace() || it.isISOControl() } &&
+            !url.endsWith("/") &&
+            uri.rawQuery == null &&
+            uri.rawFragment == null &&
+            uri.rawUserInfo == null &&
+            (uri.scheme == "https" && uri.host != null ||
+                uri.scheme == "http" && uri.host in LOOPBACK_HOSTS)
+    ) {
+        "manifest.$field must be an https URL (or http on localhost) without trailing slash"
+    }
+    return url
 }
 
 private fun parseTeam(node: JsonNode, path: String): StarterTeamConfig {
