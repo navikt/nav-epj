@@ -298,6 +298,16 @@ class ClientCredentialsTokenRouteTest {
     }
 
     @Test
+    fun `unknown client error description separates the detail from the default`() = token { post ->
+        val response = post(tokenRequest(assertion = assertion(clientId = "nobody")))
+
+        assertEquals(
+            "Client authentication failed: unknown client",
+            body(response.bodyAsText())["error_description"],
+        )
+    }
+
+    @Test
     fun `assertion signed with another key is rejected`() = token { post ->
         val other = ECKeyGenerator(Curve.P_384).keyID("backend-kid").generate()
         val response = post(tokenRequest(assertion = assertion(signingKey = other)))

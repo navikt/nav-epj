@@ -6,6 +6,7 @@ import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.helse.core.utils.logger
+import no.nav.helse.smart.security.withDetail
 
 private val logger = logger()
 
@@ -46,15 +47,7 @@ suspend fun RoutingContext.rejectMissingViaRedirect(
     redirectUri: String,
     state: String,
     param: String,
-) =
-    rejectViaRedirect(
-        redirectUri,
-        state,
-        OAuth2Error.INVALID_REQUEST.appendDescription("missing $param"),
-    )
+) = rejectViaRedirect(redirectUri, state, OAuth2Error.INVALID_REQUEST.withDetail("missing $param"))
 
 suspend fun RoutingContext.rejectMissingToken(param: String) =
-    rejectToken(
-        HttpStatusCode.BadRequest,
-        OAuth2Error.INVALID_REQUEST.appendDescription("missing $param"),
-    )
+    rejectToken(HttpStatusCode.BadRequest, OAuth2Error.INVALID_REQUEST.withDetail("missing $param"))

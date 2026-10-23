@@ -31,15 +31,14 @@ suspend fun authenticateClient(
 fun verifyClientSecretBasic(request: ApplicationRequest, client: SmartClient): ErrorObject? {
     val clientSecret =
         client.clientSecret ?: return invalidClient("client has no registered secret")
-    val (username, password) =
-        basicCredentials(request) ?: return invalidClient("client authentication failed")
+    val (username, password) = basicCredentials(request) ?: return OAuth2Error.INVALID_CLIENT
     val authenticated =
         username == client.clientId &&
             MessageDigest.isEqual(
                 password.toByteArray(Charsets.UTF_8),
                 clientSecret.toByteArray(Charsets.UTF_8),
             )
-    return if (authenticated) null else invalidClient("client authentication failed")
+    return if (authenticated) null else OAuth2Error.INVALID_CLIENT
 }
 
 private fun basicClientId(request: ApplicationRequest): String? =
@@ -64,4 +63,4 @@ private fun rawBasicCredentials(request: ApplicationRequest): Pair<String, Strin
         ?.let { it.substringBefore(":") to it.substringAfter(":") }
 
 private fun invalidClient(description: String): ErrorObject =
-    OAuth2Error.INVALID_CLIENT.appendDescription(description)
+    OAuth2Error.INVALID_CLIENT.withDetail(description)
