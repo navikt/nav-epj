@@ -172,6 +172,7 @@ private fun registrationsFor(
             scopes = interactiveScopes,
             teamSlot = team.teamSlot,
             grantTypes = listOf("authorization_code"),
+            launchMode = "tab",
         )
     return listOf(
         interactive(ids.publicClient, team.publicClient, "none"),

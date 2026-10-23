@@ -15,6 +15,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import no.nav.helse.smart.security.GrantType
+import no.nav.helse.smart.security.LaunchMode
 import no.nav.helse.smart.security.TokenEndpointAuthMethod
 import no.nav.helse.smart.security.buildRegistry
 import no.nav.helse.smart.security.parseRegisteredScopes
@@ -129,7 +130,9 @@ class StarterCredentialGeneratorTest {
             assertEquals(parseRegisteredScopes(INTERACTIVE), it.allowedScopes)
             assertEquals(1, it.launchUris.size)
             assertEquals(1, it.redirectUris.size)
+            assertEquals(LaunchMode.TAB, it.launchMode)
         }
+        backend.forEach { assertEquals(LaunchMode.IFRAME, it.launchMode) }
         assertEquals(
             listOf("https://team1-p.example.com/launch"),
             fixtureClients.first { it.clientId.startsWith("team1-public-") }.launchUris,
