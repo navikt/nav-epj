@@ -1,7 +1,6 @@
 package no.nav.helse.smart.api
 
 import io.ktor.http.URLBuilder
-import io.ktor.http.appendPathSegments
 import java.util.UUID
 import kotlin.uuid.Uuid
 import no.nav.helse.epj.pasient.PasientId
@@ -33,7 +32,6 @@ sealed interface LaunchPreparation {
 fun buildLaunchUrl(launchUri: String, iss: String, launchId: String): String =
     URLBuilder(launchUri)
         .apply {
-            appendPathSegments("")
             parameters.append("iss", iss)
             parameters.append("launch", launchId)
         }
