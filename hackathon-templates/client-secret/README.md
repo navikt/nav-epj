@@ -12,7 +12,6 @@ Build a SMART app that launches from nav-epj and authenticates its token request
 The host registers `tokenEndpointAuthMethod: client_secret_basic`,
 `grantTypes: [authorization_code]`, launch URL `http://localhost:3100/launch`,
 redirect URL `http://localhost:3100/callback`, `launchMode: tab`, and the matching secret.
-Use URL-safe client IDs/secrets: nav-epj currently does not form-decode Basic credentials.
 `client_secret_post` is not supported.
 
 For the public/private keys supplied on the day, use the `private-key-jwt` variant instead.

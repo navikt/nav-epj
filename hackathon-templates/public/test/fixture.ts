@@ -34,6 +34,16 @@ const documentInput = z.object({
   }).strict()).length(1),
 }).strict();
 
+const decodeBasic = (header = "") => {
+  const [scheme, encoded] = header.split(" ");
+  if (scheme !== "Basic" || !encoded) return undefined;
+  const credentials = Buffer.from(encoded, "base64").toString();
+  const separator = credentials.indexOf(":");
+  const [id, secret] = [credentials.slice(0, separator), credentials.slice(separator + 1)]
+    .map(part => new URLSearchParams(`v=${part}`).get("v"));
+  return separator < 0 ? undefined : { id, secret };
+};
+
 export async function fixture(clientAlg: "ES384" | "RS384" = "ES384") {
   const server = Fastify();
   const signing = await generateKeyPair("RS256");
@@ -112,9 +122,10 @@ export async function fixture(clientAlg: "ES384" | "RS384" = "ES384") {
     const invalidClient = () => reply.code(401).send({ error: "invalid_client" });
     if (lastBody.get("client_id") !== config.clientId) return invalidClient();
     if (config.variant === "public" && (lastAuthorization || lastBody.has("client_assertion") || lastBody.has("client_secret"))) return invalidClient();
-    if (config.variant === "client-secret" &&
-        (lastAuthorization !== `Basic ${Buffer.from(`${config.clientId}:${config.secret}`).toString("base64")}` ||
-         lastBody.has("client_secret"))) return invalidClient();
+    if (config.variant === "client-secret") {
+      const basic = decodeBasic(lastAuthorization);
+      if (basic?.id !== config.clientId || basic.secret !== config.secret || lastBody.has("client_secret")) return invalidClient();
+    }
     if (config.variant === "private-key-jwt" || config.variant === "backend-services") {
       if (lastBody.get("client_assertion_type") !== "urn:ietf:params:oauth:client-assertion-type:jwt-bearer") return invalidClient();
       try {

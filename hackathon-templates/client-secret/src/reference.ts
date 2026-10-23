@@ -129,8 +129,9 @@ export async function tokenRequest(config: Config, discovery: Discovery, body: U
   body.set("client_id", config.clientId);
   if (config.variant === "client-secret") {
     if (!config.secret) throw new AppError(400, "Missing CLIENT_SECRET.");
-    const formEncode = (s: string) => new URLSearchParams({ v: s }).toString().slice(2);
-    headers.Authorization = `Basic ${Buffer.from(`${formEncode(config.clientId)}:${formEncode(config.secret)}`).toString("base64")}`;
+    const encode = (value: string) => new URLSearchParams({ v: value }).toString().slice(2);
+    const credentials = `${encode(config.clientId)}:${encode(config.secret)}`;
+    headers.Authorization = `Basic ${Buffer.from(credentials).toString("base64")}`;
   } else if (config.variant !== "public") {
     body.set("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer");
     body.set("client_assertion", await clientAssertion(config, discovery.token_endpoint));

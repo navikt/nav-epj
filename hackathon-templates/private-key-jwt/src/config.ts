@@ -54,10 +54,6 @@ export function readConfig(env = process.env): Config {
   if (selected === "client-secret" && !values.CLIENT_SECRET) {
     throw new AppError(400, "Set CLIENT_SECRET from your team credential packet.");
   }
-  if (selected === "client-secret" &&
-      [values.CLIENT_ID, values.CLIENT_SECRET!].some(value => !/^[A-Za-z0-9._~-]+$/.test(value))) {
-    throw new AppError(400, "Ask for URL-safe client credentials: nav-epj currently does not form-decode Basic credentials.");
-  }
   if ((selected === "private-key-jwt" || selected === "backend-services") && !values.PRIVATE_JWK_PATH) {
     throw new AppError(400, "Set PRIVATE_JWK_PATH to your team's private JWK file.");
   }

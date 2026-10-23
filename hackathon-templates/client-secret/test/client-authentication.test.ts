@@ -21,3 +21,15 @@ test("Reference client authentication: Basic, PKCE and retry after an invalid se
   assert.ok(f.issued.has((await reference.exchange(f.config, transaction, "retry")).access_token),
     "Invalid client authentication must not consume the code");
 });
+
+test("Reference client authentication: form-encode special characters in Basic credentials", async t => {
+  const f = await fixture();
+  t.after(f.close);
+  f.config.clientId = "team id/!'()~*+:%";
+  f.config.secret = "s3cr:et+/ %!'()~*é";
+  const transaction = reference.newTransaction({ iss: f.config.fhirBase, launch: "launch" }, f.metadata, reference.pkce());
+  f.registerCode("special", transaction.challenge);
+  assert.ok(f.issued.has((await reference.exchange(f.config, transaction, "special")).access_token));
+  const encoded = Buffer.from(f.lastAuthorization()!.replace("Basic ", ""), "base64").toString();
+  assert.equal(encoded, "team+id%2F%21%27%28%29%7E*%2B%3A%25:s3cr%3Aet%2B%2F+%25%21%27%28%29%7E*%C3%A9");
+});

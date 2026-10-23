@@ -19,7 +19,6 @@ test("Scaffolding: host configuration is validated without event access", async 
   assert.throws(() => readConfig({ ...env, FHIR_BASE_URL: "http://insecure.example/fhir" }));
   if (config.variant === "client-secret") {
     assert.throws(() => readConfig({ ...env, CLIENT_SECRET: undefined }));
-    assert.throws(() => readConfig({ ...env, CLIENT_SECRET: "not form decoded" }));
   }
   if (config.variant === "private-key-jwt" || config.variant === "backend-services") {
     assert.throws(() => readConfig({ ...env, PRIVATE_JWK_PATH: undefined }));
