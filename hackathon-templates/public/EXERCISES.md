@@ -1,105 +1,109 @@
 # Ideas for your SMART app
 
 The [published track](https://hl7norway.github.io/Norwegian-FHIR-Hackathon-2026/currentbuild/smart-track.html)
-offers Bronze, Silver and Gold ideas. They describe what you can build, **not tests to pass**.
-Use the host's synthetic patients and credentials, including the public/private keys supplied
-on the day. Choose the client type matching your registration.
+offers Bronze, Silver and Gold ideas. They describe what you can build, not tests to pass. The
+Silver and Gold examples are in `src/extensions.ts`, and you can borrow, adapt or write your own FHIR
+calls. Setup is in [GUIDE.md](./GUIDE.md). Bronze, Silver and most Gold ideas assume an EHR launch
+(`public/`, `client-secret/`, `private-key-jwt/`). `backend-services/` covers only the Backend
+Services idea under Gold.
 
 ## Bronze: it launched
 
-Build an app that launches from nav-epj and shows the patient's name and age together
-with the active consultation. Clinician, roles and organization are an optional addition,
-described in [GUIDE.md](./GUIDE.md#optional-clinician-roles-and-organization).
-Any of the three EHR client types can do this, including the key-pair client.
+EHR variants. Show the patient's name and age with the ongoing consultation. The skeleton in
+`src/steps.ts` follows this sequence:
 
-The skeleton lays out this sequence in `src/steps.ts`:
-
-1. Receive `iss` and `launch` from nav-epj and check the trusted FHIR issuer.
+1. Receive `iss` and `launch`, and check the trusted FHIR issuer.
 2. Discover the authorization and token endpoints.
 3. Generate the PKCE verifier and challenge.
 4. Store state and the launch transaction on the server.
-5. Redirect to authorization with the requested scopes.
+5. Redirect to authorization with your scopes.
 6. Check state when the callback returns.
-7. Exchange the code server-side using your registered client authentication.
-8. Verify the ID token before reading its identity claims.
+7. Exchange the code server-side with your registered client authentication.
+8. Verify the ID token before reading its claims.
 9. Read patient, encounter and clinician context.
-10. Fetch the FHIR resources and render your app.
+10. Fetch the FHIR resources and render the page.
 
-Adapt the scaffold to your app rather than aiming for a prescribed implementation.
-`src/reference.ts` is available whenever you need help. After a successful launch,
-walk someone through the redirects in the browser's network tab. Keep access tokens,
-secrets and private keys on the server.
+Afterwards, walk a teammate through the redirects in the browser's network tab. Tokens, secrets and
+private keys stay on the server.
+
+## Which request needs which scope?
+
+`r` is read by ID, `s` is search and `c` is create. In EHR variants, select the encounter matching the launch (not the
+first search hit). Searches return Bundles, and no data is different from a failed request.
+
+| Feature | FHIR request | Scopes beyond the Bronze set |
+|---|---|---|
+| Name, age, consultation | `GET Patient/{patient}`, `GET Encounter?patient={patient}` | None |
+| Clinician, roles, organisation | Practitioner, `PractitionerRole?practitioner=`, Organization from `serviceProvider` | `patient/PractitionerRole.s patient/Organization.r` |
+| Diagnoses | `GET Condition?subject={patient}&encounter={encounter}` | `patient/Condition.s` |
+| Measurements | `GET Observation?subject={patient}&code=http://loinc.org\|8310-5` | `patient/Observation.s` |
+| Write a measurement | `POST Observation` | `patient/Observation.c` (add `.r` to read back) |
+| Write a note | `POST DocumentReference` | `patient/DocumentReference.c` (add `.r` to read back) |
+| Backend search | `GET Patient?identifier={system\|value}` | `system/Patient.rs` |
 
 ## Silver: useful and honest
 
-Pick something useful to add to your working app.
+EHR variants. Pick one.
 
-**Clinical mini-app.** Read diagnoses and measurements and show a summary, trend or flag.
-Request/register `patient/Condition.s patient/Observation.s` in addition to the launch
-scopes. `clinicalSummary` in `src/extensions.ts` is an example: it reads conditions for
-the active encounter and observations for a selected LOINC code. You can instead show
-the patient's broader history. Label the context, units and missing data honestly; do
-not imply a trend when there are too few readings or mix incompatible units.
+**Clinical mini-app.** Show a summary, trend or flag from diagnoses and measurements. Diagnoses
+carry codes from two systems: ICPC-2 (primary care, for example `K86` hypertension) and ICD-10
+(`I10`). Measurements use LOINC to say what was measured (`8310-5` is body temperature) and UCUM for
+the unit (`Cel`). Show the code system and unit with each value, never mix units in one trend, and
+do not imply a trend from too few readings. `clinicalSummary` in `src/extensions.ts` reads the
+encounter's conditions and observations for a LOINC code.
 
-**Scope detective.** Request fewer scopes and observe what nav-epj grants and refuses.
-For example, first enable the optional care-team reads and their scopes, then remove
-`patient/PractitionerRole.s`, launch again and inspect the denied PractitionerRole search.
-The basic chart no longer makes that search. Compare the requested scopes with `scope` in the token response.
-Inspect tokens only locally and remember that decoding is not verification.
+**Scope detective.** Launch with fewer scopes and compare what you requested with `scope` in the token
+response. Show one allowed read and one refused one, and inspect the refused HTTP status and
+`OperationOutcome`. For example, enable the care-team view, remove `patient/PractitionerRole.s` and
+launch again. Decoding a token is inspection, not verification.
 
-**Confidential client.** If the host supplies a shared-secret registration, adapt a
-working public app to use `client_secret_basic`. Explain what changed at the token
-endpoint. PKCE, state and the browser redirects are still necessary; nav-epj does not
-support `client_secret_post`.
+**Confidential client.** Move a working public app to `client_secret_basic` and explain what changed
+at the token endpoint. A wrong secret returns `401 invalid_client`. PKCE, state and the redirects stay.
 
 ## Gold: write-back or a different flow
 
-Pick an extension that interests your team.
+Pick one. Write-back and Break it use an EHR launch, Backend Services does not.
 
-**Write-back.** Create a measurement or a document from an explicit action in your app.
-`src/extensions.ts` includes server-side examples you can adapt:
+**Write-back.** Create a measurement or a note from an explicit user action, never on page load. The
+examples in `src/extensions.ts` (`createResource`, `temperature`, `journalNote`) are not called
+automatically. Add a POST handler with input validation, a session-bound CSRF token and an Origin check,
+and take patient and encounter from the launch session. Expect `201` with an ID and `Location`, then
+read it back. Measurements appear in the Målinger tab, and the note in the journal editor after you
+return to the workspace. The document is a narrow DocumentReference whose `description` becomes the
+note: `attachment.data` and `attachment.url` are rejected, so it does not upload a PDF. Check native
+browser return yourself and tell a mentor if it differs.
 
-```typescript
-import { createResource, temperature, journalNote } from "./extensions.ts";
+**Asymmetric authentication.** Use `private-key-jwt/` with the supplied key pair. Sign the client
+assertion as described in [GUIDE.md](./GUIDE.md#client-authentication). See `clientAssertion` in
+`src/reference.ts`.
 
-// Example alternatives; invoke only the action the user requested.
-const measurement = await createResource(config, tokens, temperature(context, 37.2));
-const note = await createResource(config, tokens, journalNote(context, "Synthetic hackathon note"));
-```
+**Backend Services.** Use `backend-services/` (`discover`, `backendToken`, `backendSearch`) for a separate system-to-system app with its own
+registration. It gets a token with no patient, no refresh token and a lifetime of at most five minutes,
+and searches Patient by the supplied identifier. System access does not remove the query requirements.
 
-These examples are not called automatically. Add your own POST handler and submit action
-with input validation, a session-bound CSRF token and an Origin check. Use the patient
-and encounter already stored in the launch session, not an arbitrary browser-supplied ID.
-Never write on page load.
+**Break it.** Provoke one rejection at a time and name who should reject it. Compare the exact status
+and error with what you expected, and do not capture credentials or raw tokens.
 
-Ask the host to register `patient/Observation.c` or `patient/DocumentReference.c`, plus
-read/search permissions if needed. Observe the `201` response, server-assigned ID and
-`Location`, then read the resource back and look for the measurement in nav-epj.
+| Rejecter | Provoke | Expect |
+|---|---|---|
+| Your app | Callback with wrong `state`, or a replayed callback | Your app refuses before any token request |
+| Your app | ID token with the wrong audience (must be your client ID) | `verifyIdentity` throws |
+| Authorization server | Reused code: repeat the token exchange itself | `invalid_grant` |
+| Authorization server | Wrong `code_verifier` | `invalid_grant` |
+| Authorization server | Wrong, expired or replayed client assertion (`private-key-jwt/`) | `401 invalid_client` |
+| FHIR server | Resource outside your granted scopes | `403` with an `OperationOutcome` |
+| FHIR server | Access token with the wrong audience (must be the FHIR base) | Rejected |
 
-nav-epj's document example stores `description` as a journal note. It accepts a narrow
-DocumentReference shape with `application/pdf` metadata, **not an uploaded PDF**:
-`attachment.data` and `attachment.url` are rejected. The reference helper matches that
-shape. Local acceptance shows the description in the journal editor when you return to the
-workspace, and a journal refresh keeps unsaved edits. Native browser-return behavior still
-needs manual verification, so check it yourself and ask a mentor if it differs.
+Audiences differ per token: the authorize request's `aud` is the FHIR base URL, the ID token's `aud`
+is your client ID, and the assertion's `aud` is the token endpoint. A replayed callback is stopped by
+your app's consumed transaction, so it proves nothing about the server. To test code reuse, send the
+same code to the token endpoint a second time.
 
-**Asymmetric authentication.** Use the host-supplied key pair with the `private-key-jwt`
-starter. Sign a client assertion with `iss = sub = client_id`, the discovered token
-endpoint as `aud`, a short expiry and a fresh `jti`. The host registers the public JWK Set;
-the private key stays with your app. See `clientAssertion` in `src/reference.ts`.
+## Keep a working launch
 
-**Backend Services.** Build a separate system-to-system app using the `backend-services`
-starter. It uses a dedicated registration, a signed assertion and pre-authorized system
-scopes. There is no clinician, EHR launch or selected patient. The example searches
-Patient by a host-supplied synthetic identifier.
-
-**Break it.** Explore rejection behavior in your own app and the host-authorized test EPJ.
-Try an incorrect state, a reused authorization code, a wrong assertion audience, an expired
-token or a resource outside your scopes. Discuss the responses with a mentor. Do not
-capture credentials or raw tokens in screenshots, and do not attack unrelated systems.
-
-## Keep the working launch
-
-See [PROGRESSION.md](./PROGRESSION.md) for moving between client types without rebuilding
-the whole launch flow. Demonstrate your app in nav-epj and explain what it does; there is
-no participant test suite or required function layout to satisfy.
+EHR variants. Save a working launch in your team repository before trying a new idea. To switch client authentication,
+copy your `src/steps.ts` and helpers into a fresh copy of the target starter, keep its `src/variant.ts`,
+package files and `src/config.ts`, and change only the token request (TODO 7). The supplied
+`tokenRequest` picks the method from the variant. Use the target registration's own credentials, and run a
+fresh launch. Keep `backend-services/` as a separate app: it shares assertions with the key-pair
+variant, not the browser session.
