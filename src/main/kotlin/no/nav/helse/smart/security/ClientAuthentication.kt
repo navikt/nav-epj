@@ -7,6 +7,7 @@ import io.ktor.http.*
 import io.ktor.http.auth.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
+import java.net.URLDecoder
 import java.security.MessageDigest
 import java.util.*
 
@@ -41,9 +42,19 @@ fun verifyClientSecretBasic(request: ApplicationRequest, client: SmartClient): E
     return if (authenticated) null else invalidClient("client authentication failed")
 }
 
-private fun basicClientId(request: ApplicationRequest): String? = basicCredentials(request)?.first
+private fun basicClientId(request: ApplicationRequest): String? =
+    rawBasicCredentials(request)?.first?.let { id ->
+        runCatching { formDecode(id) }.getOrDefault(id)
+    }
 
 private fun basicCredentials(request: ApplicationRequest): Pair<String, String>? =
+    rawBasicCredentials(request)?.let { (id, secret) ->
+        runCatching { formDecode(id) to formDecode(secret) }.getOrNull()
+    }
+
+private fun formDecode(value: String): String = URLDecoder.decode(value, Charsets.UTF_8)
+
+private fun rawBasicCredentials(request: ApplicationRequest): Pair<String, String>? =
     runCatching { request.parseAuthorizationHeader() }
         .getOrNull()
         .let { it as? HttpAuthHeader.Single }

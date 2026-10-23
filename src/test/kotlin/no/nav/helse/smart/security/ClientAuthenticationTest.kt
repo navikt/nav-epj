@@ -135,4 +135,86 @@ class ClientAuthenticationTest {
                 }
             assertEquals("null", response.bodyAsText())
         }
+
+    private fun errorCodeFor(authorization: String, registered: SmartClient): String {
+        var code = ""
+        testApplication {
+            application {
+                routing {
+                    get("/test") {
+                        call.respondText(
+                            verifyClientSecretBasic(call.request, registered)?.code ?: "ok"
+                        )
+                    }
+                }
+            }
+            code =
+                client
+                    .get("/test") { header(HttpHeaders.Authorization, authorization) }
+                    .bodyAsText()
+        }
+        return code
+    }
+
+    private fun rawBasic(credentials: String) =
+        "Basic " + java.util.Base64.getEncoder().encodeToString(credentials.toByteArray())
+
+    @Test
+    fun `form-urlencoded client id and secret are decoded per RFC 6749 2_3_1`() {
+        val special = smartClient.copy(clientId = "my client:id+1/x", clientSecret = "p+ss:w%rd é/")
+        val header = rawBasic("my+client%3Aid%2B1%2Fx:p%2Bss%3Aw%25rd+%C3%A9%2F")
+        assertEquals("ok", errorCodeFor(header, special))
+    }
+
+    @Test
+    fun `undecoded secret containing a literal plus does not match`() {
+        val special = smartClient.copy(clientSecret = "a b")
+        assertEquals("ok", errorCodeFor(rawBasic("basic-client:a+b"), special))
+        assertEquals("invalid_client", errorCodeFor(rawBasic("basic-client:a%2Bb"), special))
+    }
+
+    @Test
+    fun `malformed percent encoding is rejected cleanly`() {
+        assertEquals("invalid_client", errorCodeFor(rawBasic("basic-client:bad%zz"), smartClient))
+        assertEquals("invalid_client", errorCodeFor(rawBasic("bad%:correct-secret"), smartClient))
+    }
+
+    @Test
+    fun `resolveAssertedClientId decodes an encoded client id from the Basic header`() =
+        testApplication {
+            application {
+                routing {
+                    get("/test") {
+                        call.respondText(
+                            resolveAssertedClientId(call.request, Parameters.Empty) ?: "null"
+                        )
+                    }
+                }
+            }
+            val response =
+                client.get("/test") {
+                    header(HttpHeaders.Authorization, rawBasic("a%3Ab+c:secret"))
+                }
+            assertEquals("a:b c", response.bodyAsText())
+        }
+
+    @Test
+    fun `resolveAssertedClientId does not fall back to body client_id for malformed Basic`() =
+        testApplication {
+            application {
+                routing {
+                    get("/test") {
+                        call.respondText(
+                            resolveAssertedClientId(
+                                call.request,
+                                parametersOf("client_id", "body-client"),
+                            ) ?: "null"
+                        )
+                    }
+                }
+            }
+            val response =
+                client.get("/test") { header(HttpHeaders.Authorization, rawBasic("bad%:secret")) }
+            assertEquals("bad%", response.bodyAsText())
+        }
 }
