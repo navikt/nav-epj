@@ -36,6 +36,7 @@ import no.nav.helse.smart.security.parseScope
 import no.nav.helse.smart.security.parseScopes
 import no.nav.helse.smart.security.resolveAssertedClientId
 import no.nav.helse.smart.security.serialize
+import no.nav.helse.smart.security.withDetail
 import no.nav.helse.smart.valkey.AuthCodeContext
 import no.nav.helse.smart.valkey.ValkeyService
 
@@ -191,7 +192,7 @@ fun Application.configureSmartRouting() {
                             redirectUri = redirectUri,
                             state = state,
                             error =
-                                OAuth2Error.UNSUPPORTED_RESPONSE_TYPE.appendDescription(
+                                OAuth2Error.UNSUPPORTED_RESPONSE_TYPE.withDetail(
                                     "Unexpected response type $responseType. Must be fixed value 'code'"
                                 ),
                         )
@@ -202,7 +203,7 @@ fun Application.configureSmartRouting() {
                             redirectUri = redirectUri,
                             state = state,
                             error =
-                                OAuth2Error.INVALID_REQUEST.appendDescription(
+                                OAuth2Error.INVALID_REQUEST.withDetail(
                                     "Unexpected $aud is not permitted"
                                 ),
                         )
@@ -213,7 +214,7 @@ fun Application.configureSmartRouting() {
                             redirectUri = redirectUri,
                             state = state,
                             error =
-                                OAuth2Error.INVALID_REQUEST.appendDescription(
+                                OAuth2Error.INVALID_REQUEST.withDetail(
                                     "Unexpected code $codeChallengeMethod"
                                 ),
                         )
@@ -226,7 +227,7 @@ fun Application.configureSmartRouting() {
                                 redirectUri = redirectUri,
                                 state = state,
                                 error =
-                                    OAuth2Error.INVALID_REQUEST.appendDescription(
+                                    OAuth2Error.INVALID_REQUEST.withDetail(
                                         "Opaque launch token was missing, wrong or already used."
                                     ),
                             )
@@ -236,7 +237,7 @@ fun Application.configureSmartRouting() {
                             redirectUri = redirectUri,
                             state = state,
                             error =
-                                OAuth2Error.INVALID_REQUEST.appendDescription(
+                                OAuth2Error.INVALID_REQUEST.withDetail(
                                     "Launch token was not issued to the authenticated clinician."
                                 ),
                         )
@@ -251,7 +252,7 @@ fun Application.configureSmartRouting() {
                             redirectUri = redirectUri,
                             state = state,
                             error =
-                                OAuth2Error.INVALID_REQUEST.appendDescription(
+                                OAuth2Error.INVALID_REQUEST.withDetail(
                                     "Launch token was issued for another organisation."
                                 ),
                         )
@@ -306,7 +307,7 @@ fun Application.configureSmartRouting() {
                 if (grantType != "authorization_code") {
                     return@post rejectToken(
                         HttpStatusCode.BadRequest,
-                        OAuth2Error.UNSUPPORTED_GRANT_TYPE.appendDescription(
+                        OAuth2Error.UNSUPPORTED_GRANT_TYPE.withDetail(
                             "Unexpected grant_type $grantType. Must be fixed value 'authorization_code'"
                         ),
                     )
@@ -323,7 +324,7 @@ fun Application.configureSmartRouting() {
                     clients.find { it.clientId == assertedClientId }
                         ?: return@post rejectToken(
                             HttpStatusCode.BadRequest,
-                            OAuth2Error.INVALID_CLIENT.appendDescription("unknown client"),
+                            OAuth2Error.INVALID_CLIENT.withDetail("unknown client"),
                         )
                 authenticateClient(call.request, acceptedClient, params, clientAssertionVerifier)
                     ?.let {
@@ -343,23 +344,19 @@ fun Application.configureSmartRouting() {
                     valkeyService.getAndDeleteAuthCode(code)
                         ?: return@post rejectToken(
                             HttpStatusCode.BadRequest,
-                            OAuth2Error.INVALID_GRANT.appendDescription(
-                                "unknown or already used code"
-                            ),
+                            OAuth2Error.INVALID_GRANT.withDetail("unknown or already used code"),
                         )
                 if (ctx.clientId != acceptedClient.clientId) {
                     return@post rejectToken(
                         HttpStatusCode.BadRequest,
-                        OAuth2Error.INVALID_GRANT.appendDescription(
-                            "code was not issued to this client"
-                        ),
+                        OAuth2Error.INVALID_GRANT.withDetail("code was not issued to this client"),
                     )
                 }
 
                 if (codeChallengeS256(codeVerifier) != ctx.codeChallenge) {
                     return@post rejectToken(
                         HttpStatusCode.BadRequest,
-                        OAuth2Error.INVALID_GRANT.appendDescription(
+                        OAuth2Error.INVALID_GRANT.withDetail(
                             "code_verifier does not match code_challenge"
                         ),
                     )
@@ -368,7 +365,7 @@ fun Application.configureSmartRouting() {
                 if (redirectUri != ctx.redirectUrl) {
                     return@post rejectToken(
                         HttpStatusCode.BadRequest,
-                        OAuth2Error.INVALID_GRANT.appendDescription(
+                        OAuth2Error.INVALID_GRANT.withDetail(
                             "redirect_uri does not match the one used in the authorization request"
                         ),
                     )
@@ -439,7 +436,7 @@ fun Application.configureSmartRouting() {
                     clients.find { it.clientId == assertedClientId }
                         ?: return@post rejectToken(
                             HttpStatusCode.BadRequest,
-                            OAuth2Error.INVALID_CLIENT.appendDescription("unknown client"),
+                            OAuth2Error.INVALID_CLIENT.withDetail("unknown client"),
                         )
                 authenticateClient(call.request, acceptedClient, params, clientAssertionVerifier)
                     ?.let {
@@ -567,7 +564,7 @@ private suspend fun RoutingContext.authenticateClientCredentialsClient(
     if (client == null) {
         rejectToken(
             HttpStatusCode.BadRequest,
-            OAuth2Error.INVALID_CLIENT.appendDescription("unknown client"),
+            OAuth2Error.INVALID_CLIENT.withDetail("unknown client"),
         )
         return null
     }
@@ -580,7 +577,7 @@ private suspend fun RoutingContext.authenticateClientCredentialsClient(
     if (GrantType.CLIENT_CREDENTIALS !in client.grantTypes) {
         rejectToken(
             HttpStatusCode.BadRequest,
-            OAuth2Error.UNAUTHORIZED_CLIENT.appendDescription(
+            OAuth2Error.UNAUTHORIZED_CLIENT.withDetail(
                 "client is not registered for grant_type client_credentials"
             ),
         )
@@ -613,7 +610,7 @@ private suspend fun RoutingContext.validatedSystemScopeTokens(
     if (invalidScopeDescription != null) {
         rejectToken(
             HttpStatusCode.BadRequest,
-            OAuth2Error.INVALID_SCOPE.appendDescription(invalidScopeDescription),
+            OAuth2Error.INVALID_SCOPE.withDetail(invalidScopeDescription),
         )
         return null
     }

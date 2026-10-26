@@ -7,6 +7,7 @@ import io.ktor.http.*
 import io.ktor.http.auth.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
+import java.net.URLDecoder
 import java.security.MessageDigest
 import java.util.*
 
@@ -30,20 +31,29 @@ suspend fun authenticateClient(
 fun verifyClientSecretBasic(request: ApplicationRequest, client: SmartClient): ErrorObject? {
     val clientSecret =
         client.clientSecret ?: return invalidClient("client has no registered secret")
-    val (username, password) =
-        basicCredentials(request) ?: return invalidClient("client authentication failed")
+    val (username, password) = basicCredentials(request) ?: return OAuth2Error.INVALID_CLIENT
     val authenticated =
         username == client.clientId &&
             MessageDigest.isEqual(
                 password.toByteArray(Charsets.UTF_8),
                 clientSecret.toByteArray(Charsets.UTF_8),
             )
-    return if (authenticated) null else invalidClient("client authentication failed")
+    return if (authenticated) null else OAuth2Error.INVALID_CLIENT
 }
 
-private fun basicClientId(request: ApplicationRequest): String? = basicCredentials(request)?.first
+private fun basicClientId(request: ApplicationRequest): String? =
+    rawBasicCredentials(request)?.first?.let { id ->
+        runCatching { formDecode(id) }.getOrDefault(id)
+    }
 
 private fun basicCredentials(request: ApplicationRequest): Pair<String, String>? =
+    rawBasicCredentials(request)?.let { (id, secret) ->
+        runCatching { formDecode(id) to formDecode(secret) }.getOrNull()
+    }
+
+private fun formDecode(value: String): String = URLDecoder.decode(value, Charsets.UTF_8)
+
+private fun rawBasicCredentials(request: ApplicationRequest): Pair<String, String>? =
     runCatching { request.parseAuthorizationHeader() }
         .getOrNull()
         .let { it as? HttpAuthHeader.Single }
@@ -53,4 +63,4 @@ private fun basicCredentials(request: ApplicationRequest): Pair<String, String>?
         ?.let { it.substringBefore(":") to it.substringAfter(":") }
 
 private fun invalidClient(description: String): ErrorObject =
-    OAuth2Error.INVALID_CLIENT.appendDescription(description)
+    OAuth2Error.INVALID_CLIENT.withDetail(description)

@@ -17,3 +17,16 @@ updates:
     schedule:
       interval: "daily"
     open-pull-requests-limit: 10
+  - package-ecosystem: "npm"
+    directories:
+      - "/hackathon-templates/public"
+      - "/hackathon-templates/client-secret"
+      - "/hackathon-templates/private-key-jwt"
+      - "/hackathon-templates/backend-services"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+    groups:
+      dependencies:
+        patterns:
+          - "*"

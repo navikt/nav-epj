@@ -1,0 +1,47 @@
+name: Hackathon templates
+on:
+  pull_request:
+    paths:
+      - 'hackathon-templates/**'
+      - .github/workflows/hackathon-templates.yaml
+  push:
+    paths:
+      - 'hackathon-templates/**'
+      - .github/workflows/hackathon-templates.yaml
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.project }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [public, client-secret, private-key-jwt, backend-services]
+    defaults:
+      run:
+        working-directory: hackathon-templates/${{ matrix.project }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: hackathon-templates/${{ matrix.project }}/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck
+
+  sync-drift:
+    name: Common files in sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - run: node hackathon-templates/scripts/sync-common.mjs
+      - name: Fail on drift
+        run: test -z "$(git status --porcelain -- hackathon-templates)"

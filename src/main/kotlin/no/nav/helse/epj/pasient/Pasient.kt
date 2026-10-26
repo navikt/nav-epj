@@ -2,7 +2,9 @@ package no.nav.helse.epj.pasient
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped
 import java.time.LocalDate
+import java.time.LocalDateTime
 import kotlin.uuid.Uuid
+import no.nav.helse.core.utils.KonsultasjonStatus
 
 @JvmInline value class PasientId(val value: Uuid)
 
@@ -16,7 +18,13 @@ data class Pasient(
     val gender: AdministrativeGender? = null,
 )
 
-data class PasientListeElement(@JsonUnwrapped val pasient: Pasient, val selectable: Boolean)
+data class SisteKonsultasjon(val status: KonsultasjonStatus, val tidspunkt: LocalDateTime)
+
+data class PasientListeElement(
+    @JsonUnwrapped val pasient: Pasient,
+    val selectable: Boolean,
+    val sisteKonsultasjon: SisteKonsultasjon? = null,
+)
 
 enum class PersonidentType {
     FNR,

@@ -151,7 +151,7 @@ class ClientAssertionVerifier(
         }
 
     private fun invalidClient(description: String): ErrorObject =
-        OAuth2Error.INVALID_CLIENT.appendDescription(description)
+        OAuth2Error.INVALID_CLIENT.withDetail(description)
 
     private fun Parameters.toNimbudsMultiMap(): Map<String, List<String>> =
         names().associateWith { getAll(it) ?: emptyList() }

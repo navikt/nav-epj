@@ -30,6 +30,8 @@ silent. Only paths are given as properties; no secret is passed on a command lin
   "schemaVersion": 1,
   "interactiveScopes": ["openid", "launch", "patient/Patient.rs"],
   "systemScopes": ["system/Patient.rs"],
+  "fhirBaseUrl": "https://epj.ekstern.dev.nav.no/fhir",
+  "authIssuer": "https://epj.ekstern.dev.nav.no/oidc",
   "teams": [
     {
       "teamSlot": "alpha",
@@ -40,6 +42,10 @@ silent. Only paths are given as properties; no secret is passed on a command lin
   ]
 }
 ```
+
+`fhirBaseUrl` and `authIssuer` are optional and default to the values shown. They must be `https`
+URLs (or `http` on `localhost`/`127.0.0.1`) without a trailing slash; a trailing slash is rejected,
+not normalised. They only feed the `.env` files.
 
 URLs are exact; the tool assumes no callback paths or ports. `teamSlot` is 1-64 letters, digits,
 underscores or hyphens, starting with a letter or digit, and must be unique ignoring case.
@@ -72,7 +78,20 @@ teams. Limits: 20 fields per object, 200 patients, 2048 characters per value, 1 
     packet.json                   mode 600, schemaVersion 1
     launch-key.private.jwk.json   mode 600, private key of the private_key_jwt launch client
     backend-key.private.jwk.json  mode 600, private key of the Backend Services client
+    public.env                    mode 600, starter config for the public client
+    client-secret.env             mode 600, starter config including CLIENT_SECRET
+    private-key-jwt.env           mode 600, starter config for the private_key_jwt client
+    backend-services.env          mode 600, starter config for the Backend Services client
 ```
+
+Each `<variant>.env` is copied to `.env` in the matching starter folder, and the key file to its
+`keys/` folder. It holds `FHIR_BASE_URL`, `AUTH_ISSUER`, `CLIENT_ID` and `SCOPES` (interactive
+scopes, or system scopes for Backend Services). The interactive variants add `REDIRECT_URI` (the
+team's callback URI) and `PORT` (only when the callback is a loopback `http` URL with an explicit
+port). `client-secret.env` adds `CLIENT_SECRET`; the key variants add `PRIVATE_JWK_PATH`
+(`keys/<key file name>`); `backend-services.env` also sets `PATIENT_IDENTIFIER` to the seeded
+synthetic patient. The three interactive clients are registered with the display name
+`<teamSlot> public`, `<teamSlot> client secret` and `<teamSlot> private key JWT` in the app picker.
 
 `registry.json` holds public JWKs and the shared client secrets, never private keys or clinician
 data, and is sensitive. Give a team only its own `teams/<teamSlot>/` directory.

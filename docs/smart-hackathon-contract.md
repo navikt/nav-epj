@@ -20,11 +20,16 @@ Owning todos refer to the delivery plan reproduced below for reference.
 Approved scope boundaries for this delivery:
 
 - Participant starters live in a separate, public GitHub template repository, not in `nav-epj`.
+  Local drafts are temporarily staged in [`hackathon-templates/`](../hackathon-templates/README.md)
+  for review and extraction; this is not the published participant repository.
 - Starters use Node 22, TypeScript, and Fastify with server-rendered pages.
 - The supported participant runtime is local Node 22 only. No Codespaces.
 - Three standalone EHR-launch variants: public (`none`), confidential symmetric
   (`client_secret_basic`), confidential asymmetric (`private_key_jwt`).
 - Reference implementations are visible in the starter repository, not hidden.
+- Participants build their own apps and launch them in `nav-epj` using registration details
+  and public/private keys supplied on the day. Starter tests maintain our reference code;
+  they are not participant test targets or completion gates.
 - The event cohort is 32 mock patients in four organisations (see [hackathon-roster.md](hackathon-roster.md)), with both fødselsnummer and d-nummer in every organisation.
   Their identifiers use Skatteetaten's synthetic format (month + 80, and day + 40 for d-nummer), so
   they can never belong to a real person. No real patient data is used.
@@ -106,7 +111,7 @@ Referenced by every exercise row below as "cohort requirement". Owned by todo 4.
 
 | Item | Responsible endpoint/capability | Cohort requirement | Starter variant / TODO | Acceptance ID | Current status/gap | Owning todo |
 |---|---|---|---|---|---|---|
-| Launch, server-side code exchange, display name/age and active consultation | `GET /fhir/launch` → `GET /oidc/authorize` → `POST /oidc/token` → `GET /fhir/Patient/{id}` → `GET /fhir/Encounter?patient=` → `GET /fhir/Practitioner/{id}`, `GET /fhir/PractitionerRole?practitioner=`, `GET /fhir/Organization/{id}` | Any of the 8 patients, all with a birth date and an active encounter | All three EHR-launch variants; launch-sequence TODOs 1-10 | `BRONZE-LAUNCH-01` | Launch and code exchange work end to end. `Patient` has `birthDate`, and every `Encounter` references its `Organization` through `serviceProvider`. The EPJ app picker is implemented. Needs the seeded cohort, starter references, and acceptance across all three launch variants | 3, 5, 6, 10, 11 |
+| Launch, server-side code exchange, display name/age and active consultation | `GET /fhir/launch` → `GET /oidc/authorize` → `POST /oidc/token` → `GET /fhir/Patient/{id}` → `GET /fhir/Encounter?patient=` | Any of the 32 event patients, all with a birth date. Four (one per organisation) have an ongoing consultation in the seed, and any other patient needs one started in the EPJ first | All three EHR-launch variants; launch-sequence TODOs 1-10 | `BRONZE-LAUNCH-01` | The starter's default chart reads only Patient and Encounter; clinician, PractitionerRole and Organization reads are opt-in. ID-token verification remains required. The EPJ app picker is implemented. Needs live acceptance across all three launch variants | 3, 5, 6, 10, 11 |
 
 ## Silver
 
@@ -131,7 +136,9 @@ Referenced by every exercise row below as "cohort requirement". Owned by todo 4.
 
 ## Acceptance contract
 
-Todo 11 binds these stable acceptance IDs to executable test paths and commands.
+Todo 11 binds these stable acceptance IDs to maintainer/event-rehearsal test paths and
+commands. These are delivery checks for the track infrastructure and references, not tests
+assigned to participants.
 
 Local write-back coverage is in `frontend/e2e/real-backend-observation-writeback.spec.ts`;
 see [frontend testing instructions](../frontend/README.md#testing) for the opt-in command.
@@ -144,10 +151,10 @@ respectively. Non-FHIR responses are unchanged.
 |---|---|---|
 | `PROVIDE-EPJ-01` | EPJ SMART discovery and capabilities | `GET /fhir/.well-known/smart-configuration` returns `200 OK` with `token_endpoint_auth_methods_supported` containing `none`, `client_secret_basic`, and `private_key_jwt`, matching registered client methods. It advertises the implemented `authorization_code` and `client_credentials` grants and only implemented scopes and capabilities. `GET /fhir/metadata` advertises only implemented routes. |
 | `PROVIDE-COHORT-01` | Seeded mock cohort | With `database.seedTestdata` enabled, `R__testdata.sql` and `R__hackathon_testdata.sql` together leave 40 patients (27 FNR, 12 DNR, 1 without identifier type) in 6 legekontor, all with synthetic identifiers. Re-running both migrations leaves these counts and all clinical row counts unchanged, and does not restore deleted seeded diagnoses or measurements. `GET /fhir/Patient/{id}`, `GET /fhir/Encounter?patient={id}`, `GET /fhir/Condition?subject={id}`, `GET /fhir/Observation?subject={id}`, `GET /fhir/Practitioner/{id}`, `GET /fhir/PractitionerRole?practitioner={id}`, and `GET /fhir/Organization/{id}` return `200 OK`. `Patient` has `birthDate` and Norwegian identifier system; diagnoses use ICPC-2/ICD-10; observations use LOINC/UCUM; at least 3 patients have 3+ readings of one measurement. `R__testdata.sql` adds 73 konsultasjoner, 158 diagnoses, 68 journal notes and 406 measurements (40, 76, 38 and 193 at Fjordvik, 33, 82, 30 and 213 at Lyngdal), with an active konsultasjon for each of its 8 patients and 6 patients having 6+ readings of one measurement. The hackathon cohort adds 231 konsultasjoner, 534 diagnoses, 175 journal notes and 1034 measurements, with 26 patients having 6+ readings of one measurement. |
-| `PROVIDE-STARTER-01` | Starter and reference repositories | Starter variants (`public`, `client-secret`, `private-key-jwt`, `backend-services`) run on Node 22. Unimplemented launch TODOs fail with informative test failures; reference implementations pass 100%. |
+| `PROVIDE-STARTER-01` | Starter and reference repositories | Starter variants (`public`, `client-secret`, `private-key-jwt`, `backend-services`) run on Node 22. Maintainer tests of the supplied reference implementations pass without completing participant launch stubs. Participant guidance covers configuring host-supplied credentials/keys and launching the app in `nav-epj`, not satisfying a test suite. |
 | `PROVIDE-CREDS-01` | Team credentials | Generator creates credential packets for up to 10 team slots (provisioned per team, not per participant) with zero key collisions or cross-team credential leakage. Packets contain client IDs, secrets/keys, test clinician credentials, and cohort roster. |
 | `PROVIDE-MENTOR-01` | Mentor runbook | Runbook documents verified operational commands for cohort provisioning, credential generation, single-team rotation, and launch verification. |
-| `BRONZE-LAUNCH-01` | Bronze launch and display | Full launch flow (`GET /fhir/launch` → `GET /oidc/authorize` → `POST /oidc/token` → `GET /fhir/Patient/{id}` → `GET /fhir/Encounter?patient=` → `GET /fhir/Practitioner/{id}`, `GET /fhir/PractitionerRole?practitioner=`, `GET /fhir/Organization/{id}`) succeeds for all 8 cohort patients across all 3 EHR-launch variants. App displays patient name, calculated age, active encounter, clinician, and organisation. |
+| `BRONZE-LAUNCH-01` | Bronze launch and display | Full launch flow (`GET /fhir/launch` → `GET /oidc/authorize` → `POST /oidc/token` → `GET /fhir/Patient/{id}` → `GET /fhir/Encounter?patient=`) succeeds for every patient on the session organisation's lists (8 per organisation, 32 across the four) that has an ongoing consultation (4 in the seed, one per organisation; start one for any other patient) across all 3 EHR-launch variants using `openid fhirUser launch patient/Patient.r patient/Encounter.s`. App verifies the ID token and displays patient name, calculated age and active encounter without care-team reads. Clinician, roles and organisation are optional: when explicitly enabled with suitable scopes, those reads and display must also succeed. Missing optional permissions or serviceProvider must not block the default chart. |
 | `SILVER-CLINICAL-01` | Clinical mini-app | `GET /fhir/Condition?subject={id}&encounter={id}` and `GET /fhir/Condition?subject={id}` return `200 OK` searchset Bundles. Condition resources always reference their patient and source encounter. `GET /fhir/Observation?subject={id}&code={loinc}` returns `200 OK` Bundle with ordered numeric values and UCUM units; app displays trends across 3+ readings. |
 | `SILVER-SCOPE-01` | Scope enforcement | Token endpoint grants requested subset of scopes. In-scope `GET /fhir/*` returns `200 OK`. Out-of-scope request returns `403 Forbidden` with an `OperationOutcome`. |
 | `SILVER-CONFIDENTIAL-01` | Symmetric client auth | `POST /oidc/token` with HTTP Basic credentials returns `200 OK` and access token. Invalid secret returns `401 Unauthorized` with `error=invalid_client` without consuming authorization code. |

@@ -195,6 +195,23 @@ class PasientRepositoryTest : WithPostgresql() {
                 )
             )
 
+    private suspend fun startKonsultasjon(
+        pasient: Pasient,
+        orgnummer: String,
+        startet: LocalDateTime,
+        status: KonsultasjonStatus,
+    ) =
+        KonsultasjonRepository()
+            .insert(
+                OpprettKonsultasjon(
+                    pasient.id,
+                    listOf(HelsepersonellHpr("123")),
+                    startet,
+                    status,
+                    orgnummer,
+                )
+            )
+
     private suspend fun putOnList(pasient: Pasient, listId: Uuid) = dbQuery {
         FastlegelistePasientTable.insert {
             it[fastlegelisteId] = listId
@@ -246,6 +263,53 @@ class PasientRepositoryTest : WithPostgresql() {
             assertTrue(pasientRepository.hasKonsultasjonAt(lapsed.id.value, "311111116"))
             assertFalse(pasientRepository.hasKonsultasjonAt(lapsed.id.value, "311111124"))
         }
+
+    @Test
+    fun `listAtLegekontor includes the latest konsultasjon at the org only`() = runTest {
+        ensureOrgs()
+        val ownHpr = "own-${Uuid.generateV4()}"
+        val ongoing = nyPasient()
+        val completedLast = nyPasient()
+        val none = nyPasient()
+        val otherOrgOnly = nyPasient()
+        val listId = listFor(ownHpr, "311111116")
+        listOf(ongoing, completedLast, none, otherOrgOnly).forEach {
+            pasientRepository.insert(it)
+            putOnList(it, listId)
+        }
+        val now = LocalDateTime.now()
+        startKonsultasjon(ongoing, "311111116", now.minusDays(2), KonsultasjonStatus.FULLFOERT)
+        startKonsultasjon(ongoing, "311111116", now, KonsultasjonStatus.PAAGAAENDE)
+        startKonsultasjon(
+            completedLast,
+            "311111116",
+            now.minusDays(3),
+            KonsultasjonStatus.PAAGAAENDE,
+        )
+        startKonsultasjon(
+            completedLast,
+            "311111116",
+            now.minusDays(1),
+            KonsultasjonStatus.FULLFOERT,
+        )
+        startKonsultasjon(otherOrgOnly, "311111124", now, KonsultasjonStatus.PAAGAAENDE)
+
+        val liste =
+            pasientRepository.listAtLegekontor("311111116", HelsepersonellHpr(ownHpr)).associateBy {
+                it.pasient.id
+            }
+
+        assertEquals(
+            KonsultasjonStatus.PAAGAAENDE,
+            liste.getValue(ongoing.id).sisteKonsultasjon?.status,
+        )
+        assertEquals(
+            KonsultasjonStatus.FULLFOERT,
+            liste.getValue(completedLast.id).sisteKonsultasjon?.status,
+        )
+        assertNull(liste.getValue(none.id).sisteKonsultasjon)
+        assertNull(liste.getValue(otherOrgOnly.id).sisteKonsultasjon)
+    }
 
     @Test
     fun `isListedAt is true only at the org whose list holds the patient`() = runTest {

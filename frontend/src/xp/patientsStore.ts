@@ -83,7 +83,12 @@ export const usePatientsStore = create<PatientsState>((set, get) => ({
     if (get().status === "loading") return;
     set({ status: "loading" });
     try {
-      set({ patients: await fetchPatients(), status: "ready" });
+      const patients = await fetchPatients();
+      const lastKonsultasjon: Record<string, LastKonsultasjon> = {};
+      for (const { id, sisteKonsultasjon } of patients) {
+        if (sisteKonsultasjon) lastKonsultasjon[id] = sisteKonsultasjon;
+      }
+      set({ patients, lastKonsultasjon, status: "ready" });
     } catch {
       set({ status: "error" });
     }

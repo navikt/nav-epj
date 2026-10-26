@@ -163,7 +163,7 @@ private fun registrationsFor(
     launchJwkSet: JWKSet,
     backendJwkSet: JWKSet,
 ): List<RawClientRegistration> {
-    fun interactive(clientId: String, endpoints: ClientEndpoints, method: String) =
+    fun interactive(clientId: String, endpoints: ClientEndpoints, method: String, label: String) =
         RawClientRegistration(
             clientId = clientId,
             launchUris = listOf(endpoints.launchUri),
@@ -172,12 +172,19 @@ private fun registrationsFor(
             scopes = interactiveScopes,
             teamSlot = team.teamSlot,
             grantTypes = listOf("authorization_code"),
+            launchMode = "tab",
+            navn = "${team.teamSlot} $label",
         )
     return listOf(
-        interactive(ids.publicClient, team.publicClient, "none"),
-        interactive(ids.clientSecret, team.clientSecretClient, "client_secret_basic")
+        interactive(ids.publicClient, team.publicClient, "none", "public"),
+        interactive(
+                ids.clientSecret,
+                team.clientSecretClient,
+                "client_secret_basic",
+                "client secret",
+            )
             .copy(clientSecret = clientSecret),
-        interactive(ids.launchKey, team.privateKeyJwtClient, "private_key_jwt")
+        interactive(ids.launchKey, team.privateKeyJwtClient, "private_key_jwt", "private key JWT")
             .copy(jwkSet = launchJwkSet.toString()),
         RawClientRegistration(
             clientId = ids.backend,

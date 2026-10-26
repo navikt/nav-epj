@@ -54,6 +54,8 @@ import tools.jackson.module.kotlin.readValue
 
 private const val BACKEND_CLIENT_ID = "backend-client"
 private const val CODE_CLIENT_ID = "code-client"
+private const val BASIC_CLIENT_ID = "basic client/id:1"
+private const val BASIC_SECRET = "s3+cret:/ é%"
 private const val ISSUER = "http://test/oidc"
 private const val FHIR_URL = "http://test/fhir"
 private const val ASSERTION_TYPE = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
@@ -73,6 +75,15 @@ class ClientCredentialsTokenRouteTest {
                 inlineJwkSet = JWKSet(key.toPublicJWK()),
                 allowedScopes =
                     parseRegisteredScopes(listOf("system/Patient.rs", "system/Observation.read")),
+                grantTypes = setOf(GrantType.CLIENT_CREDENTIALS),
+            ),
+            SmartClient(
+                clientId = BASIC_CLIENT_ID,
+                redirectUris = emptyList(),
+                launchUris = emptyList(),
+                tokenEndpointAuthMethod = TokenEndpointAuthMethod.CLIENT_SECRET_BASIC,
+                clientSecret = BASIC_SECRET,
+                allowedScopes = parseRegisteredScopes(listOf("system/Patient.rs")),
                 grantTypes = setOf(GrantType.CLIENT_CREDENTIALS),
             ),
             SmartClient(
@@ -185,6 +196,22 @@ class ClientCredentialsTokenRouteTest {
             }
         }
 
+    private fun basicToken(
+        credentials: String,
+        params: Parameters,
+        block: suspend (HttpResponse) -> Unit,
+    ) = testApplication {
+        application { testModule() }
+        val authorization = "Basic " + Base64.getEncoder().encodeToString(credentials.toByteArray())
+        block(
+            client.post("/oidc/token") {
+                header(HttpHeaders.Authorization, authorization)
+                contentType(ContentType.Application.FormUrlEncoded)
+                setBody(params.formUrlEncode())
+            }
+        )
+    }
+
     private fun body(text: String): Map<String, Any?> = mapper.readValue(text)
 
     @Test
@@ -216,6 +243,39 @@ class ClientCredentialsTokenRouteTest {
     }
 
     @Test
+    fun `form-urlencoded Basic credentials authenticate`() {
+        val credentials = "basic+client%2Fid%3A1:s3%2Bcret%3A%2F+%C3%A9%25"
+        basicToken(credentials, tokenRequest(assertion = null)) { response ->
+            assertEquals(HttpStatusCode.OK, response.status)
+        }
+    }
+
+    @Test
+    fun `malformed percent in Basic secret is rejected as invalid_client`() {
+        basicToken("basic+client%2Fid%3A1:bad%zz", tokenRequest(assertion = null)) { response ->
+            assertEquals(HttpStatusCode.Unauthorized, response.status)
+            assertEquals("invalid_client", body(response.bodyAsText())["error"])
+        }
+    }
+
+    @Test
+    fun `malformed percent in Basic client id is rejected as invalid_client`() {
+        basicToken("bad%:secret", tokenRequest(assertion = null)) { response ->
+            assertEquals(HttpStatusCode.BadRequest, response.status)
+            assertEquals("invalid_client", body(response.bodyAsText())["error"])
+        }
+    }
+
+    @Test
+    fun `malformed Basic client id does not fall back to body client_id`() {
+        basicToken("bad%:secret", tokenRequest(assertion = null, clientId = BACKEND_CLIENT_ID)) {
+            response ->
+            assertEquals(HttpStatusCode.BadRequest, response.status)
+            assertEquals("invalid_client", body(response.bodyAsText())["error"])
+        }
+    }
+
+    @Test
     fun `client_credentials is handled without authorization code parameters`() = token { post ->
         assertEquals(HttpStatusCode.OK, post(tokenRequest()).status)
     }
@@ -238,6 +298,16 @@ class ClientCredentialsTokenRouteTest {
     }
 
     @Test
+    fun `unknown client error description separates the detail from the default`() = token { post ->
+        val response = post(tokenRequest(assertion = assertion(clientId = "nobody")))
+
+        assertEquals(
+            "Client authentication failed: unknown client",
+            body(response.bodyAsText())["error_description"],
+        )
+    }
+
+    @Test
     fun `assertion signed with another key is rejected`() = token { post ->
         val other = ECKeyGenerator(Curve.P_384).keyID("backend-kid").generate()
         val response = post(tokenRequest(assertion = assertion(signingKey = other)))
@@ -251,6 +321,7 @@ class ClientCredentialsTokenRouteTest {
         val response = post(tokenRequest(assertion = assertion(aud = "http://other/token")))
 
         assertEquals(HttpStatusCode.Unauthorized, response.status)
+        assertEquals("invalid_client", body(response.bodyAsText())["error"])
     }
 
     @Test
@@ -275,7 +346,9 @@ class ClientCredentialsTokenRouteTest {
         val replayed = assertion()
 
         assertEquals(HttpStatusCode.OK, post(tokenRequest(assertion = replayed)).status)
-        assertEquals(HttpStatusCode.Unauthorized, post(tokenRequest(assertion = replayed)).status)
+        val second = post(tokenRequest(assertion = replayed))
+        assertEquals(HttpStatusCode.Unauthorized, second.status)
+        assertEquals("invalid_client", body(second.bodyAsText())["error"])
     }
 
     @Test

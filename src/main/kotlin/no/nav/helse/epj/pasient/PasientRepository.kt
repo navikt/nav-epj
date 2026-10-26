@@ -1,5 +1,6 @@
 package no.nav.helse.epj.pasient
 
+import java.time.LocalDateTime
 import kotlin.uuid.Uuid
 import no.nav.helse.core.db.FastlegelistePasientTable
 import no.nav.helse.core.db.FastlegelisteTable
@@ -14,6 +15,7 @@ import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inSubQuery
@@ -78,6 +80,8 @@ class PasientRepository {
                 }
                 .toList()
 
+        val sisteKonsultasjon = sisteKonsultasjonByPasient(orgnummer)
+
         val listed =
             rows
                 .sortedWith(
@@ -85,16 +89,51 @@ class PasientRepository {
                         .thenBy { it[PasientTable.etternavn] }
                         .thenBy { it[PasientTable.fornavn] }
                 )
-                .map { PasientListeElement(it.toPasient(), selectable = true) }
+                .map {
+                    it.toPasient().let { pasient ->
+                        PasientListeElement(
+                            pasient,
+                            selectable = true,
+                            sisteKonsultasjon = sisteKonsultasjon[pasient.id.value],
+                        )
+                    }
+                }
         val lapsed =
             lapsedRows
                 .sortedWith(
                     compareBy<ResultRow> { it[PasientTable.etternavn] }
                         .thenBy { it[PasientTable.fornavn] }
                 )
-                .map { PasientListeElement(it.toPasient(), selectable = false) }
+                .map {
+                    it.toPasient().let { pasient ->
+                        PasientListeElement(
+                            pasient,
+                            selectable = false,
+                            sisteKonsultasjon = sisteKonsultasjon[pasient.id.value],
+                        )
+                    }
+                }
         listed + lapsed
     }
+
+    private fun sisteKonsultasjonByPasient(orgnummer: String): Map<Uuid, SisteKonsultasjon> =
+        KonsultasjonTable.select(
+                KonsultasjonTable.pasientId,
+                KonsultasjonTable.status,
+                KonsultasjonTable.startetTidspunkt,
+                KonsultasjonTable.avsluttetTidspunkt,
+            )
+            .where { konsultasjonAtOrg(orgnummer) }
+            .orderBy(KonsultasjonTable.startetTidspunkt, SortOrder.DESC)
+            .groupBy { it[KonsultasjonTable.pasientId] }
+            .mapValues { (_, konsultasjoner) ->
+                val siste = konsultasjoner.first()
+                val avsluttet: LocalDateTime? = siste[KonsultasjonTable.avsluttetTidspunkt]
+                SisteKonsultasjon(
+                    status = siste[KonsultasjonTable.status],
+                    tidspunkt = avsluttet ?: siste[KonsultasjonTable.startetTidspunkt],
+                )
+            }
 
     suspend fun hasKonsultasjonAt(pasientId: Uuid, orgnummer: String): Boolean = dbQuery {
         KonsultasjonTable.select(KonsultasjonTable.id)
