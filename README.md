@@ -114,7 +114,7 @@ published hackathon track and this repository's endpoints, cohort data, and acce
 The hackathon roster has 32 patients in four organisations, and launch data is scoped to the session
 organisation ([docs/hackathon-roster.md](./docs/hackathon-roster.md)).
 
-Participant starter drafts are staged in [hackathon-templates](./hackathon-templates/README.md):
+Participant starters live in [navikt/smart-on-fhir-templates](https://github.com/navikt/smart-on-fhir-templates):
 standalone local apps for public, client-secret, private-key-jwt and Backend Services flows,
 with Bronze/Silver/Gold exercises and visible reference solutions.
 

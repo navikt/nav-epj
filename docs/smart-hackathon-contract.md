@@ -19,9 +19,8 @@ Owning todos refer to the delivery plan reproduced below for reference.
 
 Approved scope boundaries for this delivery:
 
-- Participant starters live in a separate, public GitHub template repository, not in `nav-epj`.
-  Local drafts are temporarily staged in [`hackathon-templates/`](../hackathon-templates/README.md)
-  for review and extraction; this is not the published participant repository.
+- Participant starters live in the public GitHub template repository
+  [navikt/smart-on-fhir-templates](https://github.com/navikt/smart-on-fhir-templates), not in `nav-epj`.
 - Starters use Node 22, TypeScript, and Fastify with server-rendered pages.
 - The supported participant runtime is local Node 22 only. No Codespaces.
 - Three standalone EHR-launch variants: public (`none`), confidential symmetric
