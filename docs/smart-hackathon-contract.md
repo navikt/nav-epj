@@ -36,6 +36,11 @@ Approved scope boundaries for this delivery:
   limit. Credentials are provisioned per team, not per participant, and no participant cap is
   inferred from the 10-team limit. Concurrency acceptance targets the registered participant count
   plus 25% headroom (22 attendees registered so far, so a target of about 28), while credential generation is capped at 10 team slots.
+- Every attendee logs in with their own HelseID test clinician (a SyntPop person with an HPR
+  number). The first login creates the clinician, and the session organisation is stored per HPR
+  number, so a shared login leaks organisation choices between people. Attendees may also pick
+  their own `client_id` (and secret or public JWK Set) and give it to the host, who registers it in
+  the dev client registry.
 - The only external integration is HelseID login through NAIS Wonderwall. There is no Dolly, PDL
   or Persontjenesten integration. SyntPop remains the source of clinicians, through HelseID TestIdP.
 - Patients and their clinical data are mocks seeded into the database by the repeatable Flyway
