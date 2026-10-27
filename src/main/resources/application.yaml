@@ -72,6 +72,30 @@ smart:
         - patient/DocumentReference.cruds
         - patient/Binary.cruds
         - patient/QuestionnaireResponse.cruds
+    - clientId: "hackathon-public-client-1"
+      navn: "Hackathon public client 1"
+      beskrivelse: "Hackathon app for team Leo"
+      launchMode: "tab"
+      redirectUris: [ "http://localhost:3100/callback" ]
+      launchUris: [ "http://localhost:3100/launch" ]
+      tokenEndpointAuthMethod: "none"
+      scopes:
+        - openid
+        - fhirUser
+        - launch
+        - launch/patient
+        - offline_access
+        - patient/Patient.rs
+        - patient/Practitioner.rs
+        - patient/PractitionerRole.rs
+        - patient/Organization.rs
+        - patient/Encounter.rs
+        - patient/Condition.rs
+        - patient/Observation.rs
+        - patient/Observation.write
+        - patient/DocumentReference.cruds
+        - patient/Binary.cruds
+        - patient/QuestionnaireResponse.cruds
 
 valkey:
   host: ${VALKEY_HOST_NAV_EPJ}
