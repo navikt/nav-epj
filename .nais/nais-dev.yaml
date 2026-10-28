@@ -58,6 +58,7 @@ spec:
         - id: loki
   ingresses:
     - 'https://epj.ekstern.dev.nav.no'
+    - 'https://epj.dev-gcp.nav.cloud.nais.io'
 
   login:
     provider: openid
