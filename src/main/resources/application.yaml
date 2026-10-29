@@ -82,20 +82,14 @@ smart:
       scopes:
         - openid
         - fhirUser
+        - profile
         - launch
         - launch/patient
+        - launch/encounter
         - offline_access
-        - patient/Patient.rs
-        - patient/Practitioner.rs
-        - patient/PractitionerRole.rs
-        - patient/Organization.rs
-        - patient/Encounter.rs
-        - patient/Condition.rs
-        - patient/Observation.rs
-        - patient/Observation.write
-        - patient/DocumentReference.cruds
-        - patient/Binary.cruds
-        - patient/QuestionnaireResponse.cruds
+        - online_access
+        - patient/*.cruds
+        - user/*.cruds
 
 valkey:
   host: ${VALKEY_HOST_NAV_EPJ}
