@@ -58,7 +58,6 @@ data class SmartClient(
     val inlineJwkSet: JWKSet? = null,
     val allowedScopes: Set<SmartScope>,
     val displayName: String = clientId,
-    val teamSlot: String? = null,
     val beskrivelse: String = "",
     val ikon: String = DEFAULT_APP_ICON,
     val launchMode: LaunchMode = LaunchMode.IFRAME,
@@ -74,7 +73,6 @@ data class SmartClient(
             displayName = displayName,
             tokenEndpointAuthMethod = tokenEndpointAuthMethod,
             launchUris = launchUris,
-            teamSlot = teamSlot,
         )
 }
 
@@ -85,7 +83,6 @@ data class SmartClientDisplay(
     val displayName: String,
     val tokenEndpointAuthMethod: TokenEndpointAuthMethod,
     val launchUris: List<String>,
-    val teamSlot: String?,
 )
 
 data class SmartPrincipal(

@@ -503,12 +503,10 @@ class SmartClientRegistryTest {
                 tokenEndpointAuthMethod = TokenEndpointAuthMethod.CLIENT_SECRET_BASIC,
                 clientSecret = "top-secret-value",
                 allowedScopes = emptySet(),
-                teamSlot = "team-01",
             )
 
         val display = client.toDisplay()
         assertEquals("basic-app", display.clientId)
-        assertEquals("team-01", display.teamSlot)
         assertTrue("top-secret-value" !in display.toString())
     }
 

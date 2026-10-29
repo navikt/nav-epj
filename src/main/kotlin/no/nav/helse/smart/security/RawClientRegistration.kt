@@ -16,7 +16,6 @@ internal data class RawClientRegistration(
     val jwkSet: String? = null,
     val scopes: List<String> = emptyList(),
     val displayName: String? = null,
-    val teamSlot: String? = null,
     val navn: String? = null,
     val beskrivelse: String? = null,
     val ikon: String? = null,
@@ -24,5 +23,5 @@ internal data class RawClientRegistration(
     val grantTypes: List<String>? = null,
 ) {
     override fun toString(): String =
-        "RawClientRegistration(clientId=$clientId, teamSlot=$teamSlot, credentials=redacted)"
+        "RawClientRegistration(clientId=$clientId, credentials=redacted)"
 }
