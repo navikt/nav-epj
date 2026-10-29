@@ -72,9 +72,9 @@ smart:
         - patient/DocumentReference.cruds
         - patient/Binary.cruds
         - patient/QuestionnaireResponse.cruds
-    - clientId: "hackathon-public-client-1"
-      navn: "Hackathon public client 1"
-      beskrivelse: "Hackathon app for team Leo"
+    - clientId: "hackathon-public"
+      navn: "Hackathon starter"
+      beskrivelse: "Delt klient for hackathon-apper som kjører på localhost:3100."
       launchMode: "tab"
       redirectUris: [ "http://localhost:3100/callback" ]
       launchUris: [ "http://localhost:3100/launch" ]
