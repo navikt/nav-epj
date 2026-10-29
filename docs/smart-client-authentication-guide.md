@@ -172,9 +172,11 @@ missing auth material, unsupported auth method/algorithm, insecure or wildcard r
 URIs, and invalid `jwkSet` content all fail startup with an explicit error). Two sources are
 supported, and only one is read per environment:
 
-- `smart.clientRegistryJson`: a secret-backed JSON array of the same registration shape, used in
-  deployed environments. Never commit real values for this; it is sourced from a Kubernetes secret.
-- `smart.clients`: a plain YAML list, used for local development (`application-local.yaml`).
+- `smart.clients`: the YAML list in `application.yaml`, used when deployed, and in
+  `application-local.yaml` for local development. Client secrets in YAML are environment
+  references supplied from Nais secrets; inline JWK Sets contain only public keys.
+- `smart.clientRegistryJson`: an optional secret-backed JSON array of the same registration shape.
+  When configured, it replaces the YAML list rather than adding to it. Never commit its secret values.
 
 Both sources produce the same typed `SmartClient` registry; there is no behavioral difference
 between a client registered via YAML and one registered via the JSON document.

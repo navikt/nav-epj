@@ -26,8 +26,9 @@ Approved scope boundaries for this delivery:
 - Three standalone EHR-launch variants: public (`none`), confidential symmetric
   (`client_secret_basic`), confidential asymmetric (`private_key_jwt`).
 - Reference implementations are visible in the starter repository, not hidden.
-- Participants build their own apps and launch them in `nav-epj` using registration details
-  and public/private keys supplied on the day. Starter tests maintain our reference code;
+- Participants build their own apps and launch them in `nav-epj`. Public-client apps use the
+  shared `hackathon-public` client. Apps using a secret or key pair use registration details
+  and keys registered by the host on request. Starter tests maintain our reference code;
   they are not participant test targets or completion gates.
 - The event cohort is 32 mock patients in four organisations (see [hackathon-roster.md](hackathon-roster.md)), with both fødselsnummer and d-nummer in every organisation.
   Their identifiers use Skatteetaten's synthetic format (month + 80, and day + 40 for d-nummer), so
@@ -37,9 +38,8 @@ Approved scope boundaries for this delivery:
   so there is no per-team or per-participant registration limit.
 - Every attendee logs in with their own HelseID test clinician (a SyntPop person with an HPR
   number). The first login creates the clinician, and the session organisation is stored per HPR
-  number, so a shared login leaks organisation choices between people. Attendees may also pick
-  their own `client_id` (and secret or public JWK Set) and give it to the host, who registers it in
-  the dev client registry.
+  number, so a shared login leaks organisation choices between people. All attendees share the
+  public client `hackathon-public`, so no client IDs are chosen or handed out per attendee.
 - The only external integration is HelseID login through NAIS Wonderwall. There is no Dolly, PDL
   or Persontjenesten integration. SyntPop remains the source of clinicians, through HelseID TestIdP.
 - Patients and their clinical data are mocks seeded into the database by the repeatable Flyway
@@ -58,8 +58,10 @@ Approved scope boundaries for this delivery:
   organisation (the `orgnr` claim for SMART tokens).
 - Reading the organisation from a HelseID token claim (multi-tenancy) is future work, tracked in
   [#118](https://github.com/navikt/nav-epj/issues/118).
-- Team clients are pre-provisioned from deployment configuration and secrets. There is no dynamic
-  client registration UI or API.
+- `hackathon-public` is registered in `application.yaml`. Clients using a client secret, a private
+  key, or SMART Backend Services are registered by the host on request, which needs a deploy (see
+  [Registering other clients](#registering-other-clients)). There is no dynamic client
+  registration UI or API.
 - Every currently published Bronze, Silver, and Gold exercise is in scope, including Observation
   write-back and SMART Backend Services.
 
@@ -104,7 +106,7 @@ Referenced by every exercise row below as "cohort requirement". Owned by todo 4.
 |---|---|---|---|---|---|---|
 | EPJ with its own SMART authorization server and FHIR R4 API | `GET /fhir/launch`, `GET /oidc/authorize`, `POST /oidc/token`, `GET /fhir/.well-known/smart-configuration`, `GET /fhir/metadata` | n/a | n/a | `PROVIDE-EPJ-01` | EHR launch, PKCE, code exchange, and Backend Services token issuance work. Discovery advertises both implemented grants and the resource-specific system scopes supported by the declared FHIR interactions. It does not claim unimplemented registration, management, or revocation endpoints. `GET /fhir/metadata` is built from one declared capability table and a contract test checks it against the registered routes | 5, 7 |
 | Mock Norwegian patient data (synthetic FNR/DNR, HPR clinicians, orgnummer organisations, consultations, ICPC-2/ICD-10 diagnoses, measurements) | `GET /fhir/Patient/{id}`, `GET /fhir/Encounter`, `GET /fhir/Condition`, `GET /fhir/Observation`, `GET /fhir/Practitioner/{id}`, `GET /fhir/PractitionerRole?practitioner=`, `GET /fhir/Organization/{id}` | Full minimum cohort above | n/a | `PROVIDE-COHORT-01` | All listed FHIR reads and searches exist. Patient carries FNR/DNR identifier systems, birth date, and gender; diagnoses use ICPC-2/ICD-10; measurements use LOINC/UCUM. The cohort is seeded by `R__testdata.sql` (2 organisations, 8 patients, all with clinical histories) and `R__hackathon_testdata.sql` (4 event organisations, 32 patients, see [hackathon-roster.md](hackathon-roster.md)). Verification against the FHIR reads for every seeded patient is still outstanding | 2, 3, 4, 5 |
-| Starter skeletons, one per client authentication type, with numbered launch `TODO`s | n/a (participant-side) | n/a | `public`, `client-secret`, `private-key-jwt`, `backend-services` | `PROVIDE-STARTER-01` | A teammate owns implementation in a separate starter repository. Delivery and acceptance remain outstanding; coordinated through [Bronze #97](https://github.com/navikt/nav-epj/issues/97), [Silver #99](https://github.com/navikt/nav-epj/issues/99), and [Gold #98](https://github.com/navikt/nav-epj/issues/98) | 10 |
+| Starter skeletons, one per client authentication type, with numbered launch `TODO`s | n/a (participant-side) | n/a | `public`, `client-secret`, `private-key-jwt`, `backend-services` | `PROVIDE-STARTER-01` | A teammate owns implementation in a separate starter repository. The `public` starter uses `hackathon-public`; the `client-secret`, `private-key-jwt` and `backend-services` starters need a client registered by the host and do not work with `hackathon-public`. Delivery and acceptance remain outstanding; coordinated through [Bronze #97](https://github.com/navikt/nav-epj/issues/97), [Silver #99](https://github.com/navikt/nav-epj/issues/99), and [Gold #98](https://github.com/navikt/nav-epj/issues/98) | 10 |
 | Credentials on the day: the shared public `client_id` `hackathon-public`, a test clinician, and a patient list | `smart.clients` in `application.yaml`, HelseID test-clinician login | Patient list export from the cohort | `public` | `PROVIDE-CREDS-01` | `hackathon-public` is registered as a public client (`none`, launch mode `tab`, `http://localhost:3100/launch` and `/callback`, the validator's scope set). The clinician logins and roster must still be supplied and verified separately | 7, 9 |
 | Mentors circulating throughout the day | n/a (operational) | n/a | n/a | `PROVIDE-MENTOR-01` | Mentor runbook remains outstanding: cohort provisioning and launch verification need documented, verified commands | 9 |
 
@@ -124,7 +126,7 @@ Referenced by every exercise row below as "cohort requirement". Owned by todo 4.
 |---|---|---|---|---|---|---|
 | Clinical mini-app (trend/summary/flag) | `GET /fhir/Condition?subject=&encounter=`, `GET /fhir/Observation?subject=&code=` | At least 3 trend-ready patients; ICPC-2/ICD-10 diagnoses present | Extends TODO 10's fetch/render step; reference-only, not separately numbered | `SILVER-CLINICAL-01` | `Condition` always references its patient and source encounter, and `subject` plus `encounter` filter together. `Observation` search supports `patient`/`subject`, `encounter`, and LOINC `code`. Needs trend-ready cohort data | 3, 4, 5, 11 |
 | Scope detective (request narrower scopes, decode tokens, prove enforcement) | `POST /oidc/token`, any scoped `GET /fhir/*` route | Any patient | Extends TODO 5 (build authorization request with scopes) | `SILVER-SCOPE-01` | Patient/user/system scope enforcement exists. Shared FHIR scope denials return OperationOutcome with HTTP 403. Needs acceptance for the hackathon's exact scope set | 5, 11 |
-| Confidential client (`client_secret_basic`) | `POST /oidc/token` with HTTP Basic credentials | Any patient | `client-secret` variant; variant-specific token-exchange TODO | `SILVER-CONFIDENTIAL-01` | Implemented. Needs coverage in the per-team registry and black-box suite | 7, 10, 11 |
+| Confidential client (`client_secret_basic`) | `POST /oidc/token` with HTTP Basic credentials | Any patient | `client-secret` variant; variant-specific token-exchange TODO | `SILVER-CONFIDENTIAL-01` | Implemented. Clients are registered by the host on request, not by `hackathon-public`. Needs black-box coverage | 7, 10, 11 |
 
 ## Gold
 
@@ -133,8 +135,8 @@ Referenced by every exercise row below as "cohort requirement". Owned by todo 4.
 | Option | Responsible endpoint/capability | Cohort requirement | Starter variant / TODO | Acceptance ID | Current status/gap | Owning todo |
 |---|---|---|---|---|---|---|
 | Write-back (create a document or measurement) | `POST /fhir/Observation`, `POST /fhir/DocumentReference` | Any patient with an active encounter | Any EHR-launch variant; reference-only, not a numbered launch TODO | `GOLD-WRITEBACK-01` | Both create routes return `201` with a server-generated ID and `Location`. Local real-backend acceptance proves persistence, denied writes, measurement display, and DocumentReference journal display on workspace return without reload. Journal refresh preserves unsaved edits. Native browser-return behavior still needs manual verification; event acceptance across the cohort and starter variants remains outstanding | 5, 6, 11 |
-| Asymmetric client authentication (`private_key_jwt` end to end) | `POST /oidc/token` with a signed client assertion; client's inline JWK Set | Any patient | `private-key-jwt` variant; variant-specific token-exchange TODO | `GOLD-ASYMMETRIC-01` | Implemented for clients with a remote `jwksUri` and for clients with an inline public JWK Set, so a participant app on localhost no longer needs a network-reachable `jwksUri` | 7, 10, 11 |
-| Backend services (system-to-system, no user) | `POST /oidc/token` with `grant_type=client_credentials`; system-scoped `GET /fhir/*` | Cohort must be searchable without a launch context | `backend-services` variant; reuses the asymmetric assertion helper | `GOLD-BACKEND-01` | `client_credentials` issues a short-lived, patient-less token for registered `private_key_jwt` clients. System scopes are limited to supported FHIR interactions and work without launch context when declared search criteria are supplied. Organization reads require `system/Organization.r`. System tokens are not restricted to an organisation. User and patient tokens only see Encounter, Condition, DocumentReference, Observation and Organization data recorded at the `orgnr` of their launch | 8, 10, 11 |
+| Asymmetric client authentication (`private_key_jwt` end to end) | `POST /oidc/token` with a signed client assertion; client's inline JWK Set | Any patient | `private-key-jwt` variant; variant-specific token-exchange TODO | `GOLD-ASYMMETRIC-01` | Implemented for clients with a remote `jwksUri` and for clients with an inline public JWK Set, so a participant app on localhost no longer needs a network-reachable `jwksUri`. Registered by the host on request | 7, 10, 11 |
+| Backend services (system-to-system, no user) | `POST /oidc/token` with `grant_type=client_credentials`; system-scoped `GET /fhir/*` | Cohort must be searchable without a launch context | `backend-services` variant; reuses the asymmetric assertion helper | `GOLD-BACKEND-01` | `client_credentials` issues a short-lived, patient-less token for `private_key_jwt` clients registered by the host on request. System scopes are limited to supported FHIR interactions and work without launch context when declared search criteria are supplied. Organization reads require `system/Organization.r`. System tokens are not restricted to an organisation. User and patient tokens only see Encounter, Condition, DocumentReference, Observation and Organization data recorded at the `orgnr` of their launch | 8, 10, 11 |
 | Break it (tamper `state`, replay `code`, wrong `aud`, expired token, out-of-scope resource) | Same `authorize`/`token`/`fhir` endpoints, exercised with adversarial input | Any patient | All variants; security-assertion tests, not a numbered launch TODO | `GOLD-BREAKIT-01` | PKCE, `state`, and replay protection exist for the authorization-code flow; each attack needs an explicit, checked automated test | 10, 11 |
 
 ## Acceptance contract
@@ -165,6 +167,25 @@ respectively. Non-FHIR responses are unchanged.
 | `GOLD-ASYMMETRIC-01` | Asymmetric client auth | `POST /oidc/token` with `private_key_jwt` assertion signed by client key registered via inline JWK Set returns `200 OK` and access token. Assertion with invalid signature, expired timestamp, replayed `jti`, or wrong audience returns `401 Unauthorized` with `error=invalid_client`. |
 | `GOLD-BACKEND-01` | Backend services | A client registered only for `client_credentials`, authenticated with `private_key_jwt` and pre-authorized system scopes, receives `200 OK` from `POST /oidc/token` with a patient-less token, `expires_in <= 300`, and no refresh token. Requested scopes must be a subset of the registration. System scopes authorize only their advertised FHIR interactions without launch context; searches still require supported criteria. A system token without `system/Organization.r` cannot read an Organization, and non-system scopes cannot be registered for a backend client. |
 | `GOLD-BREAKIT-01` | Negative security tests | Adversarial attacks fail with expected HTTP status and OAuth/FHIR error code: tampered/missing state returns `302` with `error=invalid_request` or `400 Bad Request`; replayed authorization code returns `400 Bad Request` with `error=invalid_grant`; wrong audience or unknown key returns `401 Unauthorized` with `error=invalid_client`; expired token returns `401 Unauthorized`; out-of-scope resource access returns `403 Forbidden` with `OperationOutcome`. |
+
+## Registering other clients
+
+`hackathon-public` is a hackathon simplification for apps that cannot protect a secret. It is not
+production guidance: SMART App Launch 2.2 recommends confidential clients when an app can protect a
+secret, and `private_key_jwt` over shared secrets when feasible.
+
+A participant who needs a client secret, `private_key_jwt` or Backend Services (`client_credentials`)
+sends the host:
+
+- the `client_id` they want and the auth method
+- for `private_key_jwt`: a public JWK Set (inline) or a `jwksUri`; the participant keeps the private key
+- for `client_secret_basic`: no secret in chat or Git. The host generates it and puts it in the Nais
+  secret `nav-epj-client-config`, referenced from `application.yaml` as `${...}`
+- redirect and launch URIs (not for Backend Services) and the scopes needed
+
+The host adds the entry to `smart.clients` in `application.yaml` and deploys. Startup validation
+rejects invalid registrations. The registration shape is described in the
+[SMART client authentication guide](./smart-client-authentication-guide.md).
 
 ## Related documentation
 
