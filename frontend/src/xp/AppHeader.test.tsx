@@ -39,11 +39,10 @@ function renderHeader(
 describe("AppHeader", () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it("shows brand, subtitle and the TEST marker", () => {
+  it("shows brand and the TEST marker", () => {
     renderHeader();
     const header = screen.getByRole("banner");
     expect(within(header).getByText(copy["app.name"])).toBeInTheDocument();
-    expect(within(header).getByText(copy["app.subtitle"])).toBeInTheDocument();
     expect(
       within(header).getByTitle(copy["app.testTooltip"]),
     ).toHaveTextContent(copy["app.test"]);

@@ -58,7 +58,6 @@ export function AppHeader({
       <div className="xp-brand">
         <XpIcon name="app" size={32} />
         <b>{copy["app.name"]}</b>
-        <span className="sub xp-hide-narrow">{copy["app.subtitle"]}</span>
       </div>
       <div className="xp-hsearch" role="search">
         <label htmlFor={SEARCH_INPUT_ID} className="sr-only">

@@ -1,6 +1,5 @@
 export const copy = {
   "app.name": "nav-epj",
-  "app.subtitle": "Test-EPJ",
   "app.test": "TEST",
   "app.testTooltip": "Testmiljø – kun syntetiske data",
   "header.search.label": "Søk etter pasient",
