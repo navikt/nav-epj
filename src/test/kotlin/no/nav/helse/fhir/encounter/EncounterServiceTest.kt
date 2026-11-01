@@ -13,6 +13,7 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.utils.KonsultasjonStatus
+import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.konsultasjon.Konsultasjon
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
@@ -30,6 +31,7 @@ class EncounterServiceTest {
 
     private val konsultasjonService = mockk<KonsultasjonService>()
     private val encounterService = EncounterService(konsultasjonService)
+    private val hpr = HelsepersonellHpr("9144889")
 
     @OptIn(ExperimentalUuidApi::class)
     private fun konsultasjon(
@@ -186,12 +188,13 @@ class EncounterServiceTest {
         runTest {
             val pasientId = PasientId(Uuid.generateV4())
             coEvery {
-                konsultasjonService.getAktivKonsultasjon(pasientId, DEFAULT_ORGNUMMER)
+                konsultasjonService.getAktivKonsultasjon(pasientId, hpr, DEFAULT_ORGNUMMER)
             } returns null
 
             val encounter =
                 encounterService.getActiveEncounterByPatient(
                     PatientInputId(pasientId.value),
+                    hpr,
                     DEFAULT_ORGNUMMER,
                 )
 
@@ -203,16 +206,19 @@ class EncounterServiceTest {
     fun `getActiveEncounterByPatient maps the active konsultasjon`() = runTest {
         val pasientId = PasientId(Uuid.generateV4())
         val konsultasjonId = KonsultasjonId(Uuid.generateV4())
-        coEvery { konsultasjonService.getAktivKonsultasjon(pasientId, DEFAULT_ORGNUMMER) } returns
-            konsultasjon(id = konsultasjonId, pasientId = pasientId)
+        coEvery {
+            konsultasjonService.getAktivKonsultasjon(pasientId, hpr, DEFAULT_ORGNUMMER)
+        } returns konsultasjon(id = konsultasjonId, pasientId = pasientId, hpr = listOf(hpr.value))
 
         val encounter =
             encounterService.getActiveEncounterByPatient(
                 PatientInputId(pasientId.value),
+                hpr,
                 DEFAULT_ORGNUMMER,
             )
 
         assertNotNull(encounter)
+        assertEquals(konsultasjonId.value.toString(), encounter.id)
         assertEquals("Patient/${pasientId.value}", encounter.subject?.reference?.value)
     }
 }
