@@ -39,7 +39,7 @@ export function OrgPicker({ sessionOrg, onChoose, onCancel }: Props) {
       {sessionOrg.choosableOrgs.length === 0 ? (
         <p>{copy["org.pick.empty"]}</p>
       ) : (
-        <ul aria-labelledby="org-pick-title">
+        <ul className="xp-orgpick" aria-labelledby="org-pick-title">
           {sessionOrg.choosableOrgs.map(({ org, hasOwnList }) => (
             <li key={org.id}>
               <Button
@@ -48,7 +48,7 @@ export function OrgPicker({ sessionOrg, onChoose, onCancel }: Props) {
               >
                 {org.navn}
                 {org.orgnummer && ` · ${copy["org.pick.orgnr"](org.orgnummer)}`}
-              </Button>{" "}
+              </Button>
               {hasOwnList && <Badge tone="info">{copy["org.pick.ownList"]}</Badge>}
             </li>
           ))}
