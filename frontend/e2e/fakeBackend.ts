@@ -10,7 +10,10 @@ const patients = [
   personident: `0101901234${p.id.slice(1)}`,
   personidentType: "FNR",
   gender: "MALE",
+  selectable: true,
 }));
+
+const legekontor = { id: "k1", navn: "Storgata legekontor", orgnummer: "123456789", tlf: null };
 
 const app = {
   clientId: "syk-inn",
@@ -53,8 +56,9 @@ export function fakeBackend({ withHistory = false, ongoing = true } = {}) {
       if (key === "GET /api/helsepersonell/me") {
         return json(route, { hpr: "9144889", legekontorId: "k1", navn: "Kari Lege", autorisasjon: "Lege" });
       }
-      if (key === "GET /api/legekontor/k1") {
-        return json(route, { id: "k1", navn: "Storgata legekontor", orgnummer: "123456789", tlf: null });
+      if (key === "GET /api/legekontor/k1") return json(route, legekontor);
+      if (key === "GET /api/session-org") {
+        return json(route, { org: legekontor, needsChoice: false, canChoose: false, choosableOrgs: [] });
       }
       if (key === "GET /api/patient") return json(route, patients);
       if (key === "GET /api/apps") return json(route, [app, validator]);
