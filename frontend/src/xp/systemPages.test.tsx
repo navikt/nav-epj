@@ -8,7 +8,7 @@ import {
   renderApp,
   setupBrowserStubs,
   stubApi,
-  testKontor,
+  testClinic,
   testSessionOrg,
 } from "./testApp";
 
@@ -32,7 +32,7 @@ function stubAll() {
     "GET /api/session-org": () => ({
       body: {
         ...testSessionOrg,
-        org: { ...testKontor, tlf: "22 33 44 55" },
+        org: { ...testClinic, phone: "22 33 44 55" },
       },
     }),
     "GET /api/session": () => ({ body: session }),

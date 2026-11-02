@@ -7,7 +7,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.helse.fhir.encounterReferenceId
 import no.nav.helse.fhir.patientReferenceInputId
-import no.nav.helse.fhir.security.clinicalOrgnummer
+import no.nav.helse.fhir.security.clinicalOrgNumber
 import no.nav.helse.fhir.security.requireFhirScope
 import no.nav.helse.fhir.security.requirePatientMatch
 import no.nav.helse.smart.security.Interaction
@@ -37,12 +37,12 @@ fun Route.conditionRoutes(
                             conditionService.getConditionsByPatientIdAndEncounterId(
                                 id,
                                 call.encounterReferenceId(),
-                                principal.clinicalOrgnummer(),
+                                principal.clinicalOrgNumber(),
                             )
                         } else {
                             conditionService.getConditionsByPatientId(
                                 id,
-                                principal.clinicalOrgnummer(),
+                                principal.clinicalOrgNumber(),
                             )
                         }
                     }
@@ -50,7 +50,7 @@ fun Route.conditionRoutes(
                         val bundle =
                             conditionService.getConditionsByEncounterId(
                                 call.encounterReferenceId(),
-                                principal.clinicalOrgnummer(),
+                                principal.clinicalOrgNumber(),
                             )
                         bundle.entry.forEach { entry ->
                             val subject = (entry.resource as? Condition)?.subject?.reference?.value

@@ -13,14 +13,14 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.utils.KonsultasjonStatus
+import no.nav.helse.epj.clinic.ClinicId
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.konsultasjon.Konsultasjon
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
-import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.fhir.patient.PatientInputId
-import no.nav.helse.utils.DEFAULT_ORGNUMMER
+import no.nav.helse.utils.DEFAULT_ORG_NUMBER
 import no.nav.tsm.diagnoser.Diagnose
 import no.nav.tsm.diagnoser.DiagnoseType
 import no.nav.tsm.diagnoser.ICD10
@@ -37,7 +37,7 @@ class EncounterServiceTest {
     private fun konsultasjon(
         id: KonsultasjonId = KonsultasjonId(Uuid.generateV4()),
         pasientId: PasientId = PasientId(Uuid.generateV4()),
-        legekontorId: LegekontorId = LegekontorId(Uuid.generateV4()),
+        clinicId: ClinicId = ClinicId(Uuid.generateV4()),
         hpr: List<String> = emptyList(),
         diagnoser: List<Diagnose> = emptyList(),
         status: KonsultasjonStatus = KonsultasjonStatus.PAAGAAENDE,
@@ -47,7 +47,7 @@ class EncounterServiceTest {
         Konsultasjon(
             id = id,
             pasientId = pasientId,
-            legekontorId = legekontorId,
+            clinicId = clinicId,
             hpr = hpr,
             journalnotat = emptyList(),
             diagnoser = diagnoser,
@@ -64,7 +64,7 @@ class EncounterServiceTest {
         val konsultasjonId = KonsultasjonId(Uuid.generateV4())
         val start = LocalDateTime.of(2026, 9, 1, 9, 30, 15, 120_000_000)
         val end = LocalDateTime.of(2026, 9, 1, 10, 5, 40)
-        coEvery { konsultasjonService.getKonsultasjon(konsultasjonId, DEFAULT_ORGNUMMER) } returns
+        coEvery { konsultasjonService.getKonsultasjon(konsultasjonId, DEFAULT_ORG_NUMBER) } returns
             konsultasjon(
                 id = konsultasjonId,
                 pasientId = pasientId,
@@ -75,7 +75,7 @@ class EncounterServiceTest {
             )
 
         val encounter =
-            encounterService.getEncounterById(EncounterId(konsultasjonId.value), DEFAULT_ORGNUMMER)
+            encounterService.getEncounterById(EncounterId(konsultasjonId.value), DEFAULT_ORG_NUMBER)
 
         assertEquals("Patient/${pasientId.value}", encounter.subject?.reference?.value)
         assertEquals(
@@ -93,13 +93,13 @@ class EncounterServiceTest {
         runTest {
             val konsultasjonId = KonsultasjonId(Uuid.generateV4())
             coEvery {
-                konsultasjonService.getKonsultasjon(konsultasjonId, DEFAULT_ORGNUMMER)
+                konsultasjonService.getKonsultasjon(konsultasjonId, DEFAULT_ORG_NUMBER)
             } returns konsultasjon(id = konsultasjonId)
 
             val encounter =
                 encounterService.getEncounterById(
                     EncounterId(konsultasjonId.value),
-                    DEFAULT_ORGNUMMER,
+                    DEFAULT_ORG_NUMBER,
                 )
 
             assertNotNull(encounter.serviceProvider)
@@ -109,17 +109,14 @@ class EncounterServiceTest {
     @Test
     fun `getEncounterById maps serviceProvider to the konsultasjon's organization`() = runTest {
         val konsultasjonId = KonsultasjonId(Uuid.generateV4())
-        val legekontorId = LegekontorId(Uuid.generateV4())
-        coEvery { konsultasjonService.getKonsultasjon(konsultasjonId, DEFAULT_ORGNUMMER) } returns
-            konsultasjon(id = konsultasjonId, legekontorId = legekontorId)
+        val clinicId = ClinicId(Uuid.generateV4())
+        coEvery { konsultasjonService.getKonsultasjon(konsultasjonId, DEFAULT_ORG_NUMBER) } returns
+            konsultasjon(id = konsultasjonId, clinicId = clinicId)
 
         val encounter =
-            encounterService.getEncounterById(EncounterId(konsultasjonId.value), DEFAULT_ORGNUMMER)
+            encounterService.getEncounterById(EncounterId(konsultasjonId.value), DEFAULT_ORG_NUMBER)
 
-        assertEquals(
-            "Organization/${legekontorId.value}",
-            encounter.serviceProvider?.reference?.value,
-        )
+        assertEquals("Organization/${clinicId.value}", encounter.serviceProvider?.reference?.value)
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -133,13 +130,13 @@ class EncounterServiceTest {
                     Diagnose(system = DiagnoseType.ICD10, code = "A00", text = "Diagnose A00"),
                 )
             coEvery {
-                konsultasjonService.getKonsultasjon(konsultasjonId, DEFAULT_ORGNUMMER)
+                konsultasjonService.getKonsultasjon(konsultasjonId, DEFAULT_ORG_NUMBER)
             } returns konsultasjon(id = konsultasjonId, diagnoser = diagnoser)
 
             val encounter =
                 encounterService.getEncounterById(
                     EncounterId(konsultasjonId.value),
-                    DEFAULT_ORGNUMMER,
+                    DEFAULT_ORG_NUMBER,
                 )
 
             val systems = encounter.reasonCode.map { it.coding.single().system?.value }
@@ -151,13 +148,13 @@ class EncounterServiceTest {
     fun `getEncountersByPatient returns a searchset bundle with one entry per konsultasjon`() =
         runTest {
             val pasientId = PasientId(Uuid.generateV4())
-            coEvery { konsultasjonService.getKonsultasjoner(pasientId, DEFAULT_ORGNUMMER) } returns
+            coEvery { konsultasjonService.getKonsultasjoner(pasientId, DEFAULT_ORG_NUMBER) } returns
                 listOf(konsultasjon(pasientId = pasientId), konsultasjon(pasientId = pasientId))
 
             val bundle =
                 encounterService.getEncountersByPatient(
                     PatientInputId(pasientId.value),
-                    DEFAULT_ORGNUMMER,
+                    DEFAULT_ORG_NUMBER,
                 )
 
             assertEquals(Bundle.BundleType.Searchset, bundle.type.value)
@@ -169,13 +166,13 @@ class EncounterServiceTest {
     fun `getEncountersByPatient returns a valid empty searchset bundle when the patient has no konsultasjoner`() =
         runTest {
             val pasientId = PasientId(Uuid.generateV4())
-            coEvery { konsultasjonService.getKonsultasjoner(pasientId, DEFAULT_ORGNUMMER) } returns
+            coEvery { konsultasjonService.getKonsultasjoner(pasientId, DEFAULT_ORG_NUMBER) } returns
                 emptyList()
 
             val bundle =
                 encounterService.getEncountersByPatient(
                     PatientInputId(pasientId.value),
-                    DEFAULT_ORGNUMMER,
+                    DEFAULT_ORG_NUMBER,
                 )
 
             assertEquals(Bundle.BundleType.Searchset, bundle.type.value)
@@ -188,14 +185,14 @@ class EncounterServiceTest {
         runTest {
             val pasientId = PasientId(Uuid.generateV4())
             coEvery {
-                konsultasjonService.getAktivKonsultasjon(pasientId, hpr, DEFAULT_ORGNUMMER)
+                konsultasjonService.getAktivKonsultasjon(pasientId, hpr, DEFAULT_ORG_NUMBER)
             } returns null
 
             val encounter =
                 encounterService.getActiveEncounterByPatient(
                     PatientInputId(pasientId.value),
                     hpr,
-                    DEFAULT_ORGNUMMER,
+                    DEFAULT_ORG_NUMBER,
                 )
 
             assertNull(encounter)
@@ -207,14 +204,14 @@ class EncounterServiceTest {
         val pasientId = PasientId(Uuid.generateV4())
         val konsultasjonId = KonsultasjonId(Uuid.generateV4())
         coEvery {
-            konsultasjonService.getAktivKonsultasjon(pasientId, hpr, DEFAULT_ORGNUMMER)
+            konsultasjonService.getAktivKonsultasjon(pasientId, hpr, DEFAULT_ORG_NUMBER)
         } returns konsultasjon(id = konsultasjonId, pasientId = pasientId, hpr = listOf(hpr.value))
 
         val encounter =
             encounterService.getActiveEncounterByPatient(
                 PatientInputId(pasientId.value),
                 hpr,
-                DEFAULT_ORGNUMMER,
+                DEFAULT_ORG_NUMBER,
             )
 
         assertNotNull(encounter)

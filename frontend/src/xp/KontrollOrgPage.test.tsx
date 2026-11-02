@@ -9,9 +9,9 @@ const user: CurrentUser = {
   navn: "Kari Nordmann",
   hpr: "9144889",
   autorisasjon: "Lege",
-  legekontor: "Storgata legekontor",
-  orgnummer: "123456789",
-  telefon: "22 33 44 55",
+  clinic: "Storgata legekontor",
+  orgNumber: "123456789",
+  phone: "22 33 44 55",
 };
 
 function renderPage(value: CurrentUser | null = user) {
@@ -27,14 +27,14 @@ function card(name: string) {
 }
 
 describe("KontrollOrgPage", () => {
-  it("shows the legekontor as read-only facts", () => {
+  it("shows the clinic as read-only facts", () => {
     renderPage();
     const office = card(copy["s9.org.office"]);
     expect(
       office.getByText(copy["s9.org.name"]).nextElementSibling,
     ).toHaveTextContent("Storgata legekontor");
     expect(
-      office.getByText(copy["s9.org.orgnr"]).nextElementSibling,
+      office.getByText(copy["s9.org.orgNumber"]).nextElementSibling,
     ).toHaveTextContent("123456789");
     expect(
       office.getByText(copy["s9.org.phone"]).nextElementSibling,
@@ -60,10 +60,10 @@ describe("KontrollOrgPage", () => {
   });
 
   it("shows a dash for a missing org number or phone", () => {
-    renderPage({ ...user, orgnummer: undefined, telefon: undefined });
+    renderPage({ ...user, orgNumber: undefined, phone: undefined });
     const office = card(copy["s9.org.office"]);
     expect(
-      office.getByText(copy["s9.org.orgnr"]).nextElementSibling,
+      office.getByText(copy["s9.org.orgNumber"]).nextElementSibling,
     ).toHaveTextContent(copy["s4.empty.value"]);
     expect(
       office.getByText(copy["s9.org.phone"]).nextElementSibling,

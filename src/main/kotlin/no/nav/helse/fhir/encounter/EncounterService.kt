@@ -25,25 +25,25 @@ import no.nav.helse.fhir.patient.PatientInputId
 
 class EncounterService(val konsultasjonService: KonsultasjonService) {
 
-    suspend fun getEncounterById(encounterId: EncounterId, orgnummer: String?): Encounter {
+    suspend fun getEncounterById(encounterId: EncounterId, orgNumber: String?): Encounter {
         val konsultasjon =
-            konsultasjonService.getKonsultasjon(KonsultasjonId(encounterId.value), orgnummer)
+            konsultasjonService.getKonsultasjon(KonsultasjonId(encounterId.value), orgNumber)
         return konsultasjon.toEncounter()
     }
 
     suspend fun getActiveEncounterByPatient(
         patientId: PatientInputId,
         hpr: HelsepersonellHpr,
-        orgnummer: String?,
+        orgNumber: String?,
     ): Encounter? {
         val konsultasjon =
-            konsultasjonService.getAktivKonsultasjon(PasientId(patientId.value), hpr, orgnummer)
+            konsultasjonService.getAktivKonsultasjon(PasientId(patientId.value), hpr, orgNumber)
         return konsultasjon?.toEncounter()
     }
 
-    suspend fun getEncountersByPatient(patientId: PatientInputId, orgnummer: String?): Bundle {
+    suspend fun getEncountersByPatient(patientId: PatientInputId, orgNumber: String?): Bundle {
         val konsultasjoner =
-            konsultasjonService.getKonsultasjoner(PasientId(patientId.value), orgnummer)
+            konsultasjonService.getKonsultasjoner(PasientId(patientId.value), orgNumber)
         if (konsultasjoner.isEmpty()) {
             return Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
         }
@@ -141,7 +141,7 @@ class EncounterService(val konsultasjonService: KonsultasjonService) {
                 Reference(
                     reference =
                         com.google.fhir.model.r4.String(
-                            value = "Organization/${this.legekontorId.value}"
+                            value = "Organization/${this.clinicId.value}"
                         )
                 ),
         )

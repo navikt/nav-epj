@@ -32,7 +32,7 @@ class PractitionerRoleRoutesTest {
                                 scopes = parseScopes("user/PractitionerRole.rs"),
                                 patient = null,
                                 encounter = null,
-                                orgnummer = "311111116",
+                                orgNumber = "311111116",
                             )
                         )
                     }

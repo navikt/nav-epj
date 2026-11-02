@@ -1,20 +1,20 @@
 import * as z from "zod";
 
-export const LegekontorSchema = z.object({
+export const ClinicSchema = z.object({
     id: z.string(),
-    navn: z.string(),
-    orgnummer: z.string().nullish(),
-    tlf: z.string().nullish(),
+    name: z.string(),
+    orgNumber: z.string().nullish(),
+    phone: z.string().nullish(),
 });
 
-export type Legekontor = z.infer<typeof LegekontorSchema>;
+export type Clinic = z.infer<typeof ClinicSchema>;
 
 export const SessionOrgSchema = z.object({
-    org: LegekontorSchema.nullable(),
+    org: ClinicSchema.nullable(),
     needsChoice: z.boolean(),
     canChoose: z.boolean(),
     choosableOrgs: z.array(
-        z.object({ org: LegekontorSchema, hasOwnList: z.boolean() }),
+        z.object({ org: ClinicSchema, hasOwnList: z.boolean() }),
     ),
 });
 
@@ -22,7 +22,7 @@ export type SessionOrg = z.infer<typeof SessionOrgSchema>;
 
 export const HelsepersonellSchema = z.object({
     hpr: z.string(),
-    legekontorId: z.string().nullish(),
+    clinicId: z.string().nullish(),
     navn: z.string(),
     autorisasjon: z.string(),
 });

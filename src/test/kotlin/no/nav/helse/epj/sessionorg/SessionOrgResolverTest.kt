@@ -7,10 +7,10 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
+import no.nav.helse.core.db.ClinicTable
 import no.nav.helse.core.db.FastlegelisteTable
-import no.nav.helse.core.db.LegekontorTable
 import no.nav.helse.core.db.dbQuery
-import no.nav.helse.epj.legekontor.LegekontorRepository
+import no.nav.helse.epj.clinic.ClinicRepository
 import no.nav.helse.utils.WithPostgresql
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.junit.Before
@@ -21,8 +21,8 @@ private class InMemoryChoiceStore : SessionOrgChoiceStore {
 
     override suspend fun get(hpr: String) = choices[hpr]
 
-    override suspend fun set(hpr: String, orgnummer: String) {
-        choices[hpr] = orgnummer
+    override suspend fun set(hpr: String, orgNumber: String) {
+        choices[hpr] = orgNumber
     }
 
     val extended = mutableListOf<String>()
@@ -38,8 +38,7 @@ class SessionOrgResolverTest : WithPostgresql() {
     }
 
     private val store = InMemoryChoiceStore()
-    private val resolver =
-        SessionOrgResolver(FastlegelisteRepository(), LegekontorRepository(), store)
+    private val resolver = SessionOrgResolver(FastlegelisteRepository(), ClinicRepository(), store)
 
     private val fjordvik = Uuid.generateV4()
     private val lyngdal = Uuid.generateV4()
@@ -53,12 +52,12 @@ class SessionOrgResolverTest : WithPostgresql() {
         }
     }
 
-    private suspend fun insertOrg(id: Uuid, navn: String, orgnummer: String) = dbQuery {
-        LegekontorTable.insert {
-            it[LegekontorTable.id] = id
-            it[LegekontorTable.navn] = navn
-            it[tlf] = "22000000"
-            it[LegekontorTable.orgnummer] = orgnummer
+    private suspend fun insertOrg(id: Uuid, name: String, orgNumber: String) = dbQuery {
+        ClinicTable.insert {
+            it[ClinicTable.id] = id
+            it[ClinicTable.name] = name
+            it[phone] = "22000000"
+            it[ClinicTable.orgNumber] = orgNumber
         }
     }
 
@@ -66,7 +65,7 @@ class SessionOrgResolverTest : WithPostgresql() {
         FastlegelisteTable.insert {
             it[id] = Uuid.generateV4()
             it[FastlegelisteTable.hpr] = hpr
-            it[legekontorId] = orgId
+            it[clinicId] = orgId
         }
     }
 
@@ -132,7 +131,7 @@ class SessionOrgResolverTest : WithPostgresql() {
     @Test
     fun `an hpr listed at the migrated org and another org can choose the migrated org`() =
         runTest {
-            val migrated = LegekontorRepository().findByOrgnummer("864425208")!!
+            val migrated = ClinicRepository().findByOrgNumber("864425208")!!
             insertList("444", migrated.id.value)
             insertList("444", fjordvik)
 
@@ -155,13 +154,13 @@ class SessionOrgResolverTest : WithPostgresql() {
         val multi = resolver.choosableOrgs("222")
         val single = resolver.choosableOrgs("333")
 
-        val unknownOrgnumre = unknown.map { it.org.orgnummer }
+        val unknownOrgnumre = unknown.map { it.org.orgNumber }
         assertTrue(listOf("311111116", "311111124", "864425208").all { it in unknownOrgnumre })
         assertTrue(unknown.none { it.hasOwnList })
         assertEquals(
             setOf("311111116", "311111124"),
-            multi.filter { it.hasOwnList }.map { it.org.orgnummer }.toSet(),
+            multi.filter { it.hasOwnList }.map { it.org.orgNumber }.toSet(),
         )
-        assertEquals(listOf("311111124"), single.filter { it.hasOwnList }.map { it.org.orgnummer })
+        assertEquals(listOf("311111124"), single.filter { it.hasOwnList }.map { it.org.orgNumber })
     }
 }

@@ -210,7 +210,7 @@ class TestdataSeedTest : WithPostgresql() {
     }
 
     @Test
-    fun `seeded organisations have valid mod11 orgnummer`() {
+    fun `seeded organisations have valid mod11 org number`() {
         val weights = intArrayOf(3, 2, 7, 6, 5, 4, 3, 2)
         val seeded =
             queryStrings(
@@ -218,10 +218,10 @@ class TestdataSeedTest : WithPostgresql() {
             )
 
         assertEquals(6, seeded.size)
-        seeded.forEach { (orgnummer) ->
-            val digits = orgnummer!!.map { it - '0' }
+        seeded.forEach { (orgNumber) ->
+            val digits = orgNumber!!.map { it - '0' }
             val remainder = digits.take(8).indices.sumOf { digits[it] * weights[it] } % 11
-            assertEquals((11 - remainder) % 11, digits[8], orgnummer)
+            assertEquals((11 - remainder) % 11, digits[8], orgNumber)
         }
     }
 
@@ -306,7 +306,7 @@ class TestdataSeedTest : WithPostgresql() {
         )
     }
 
-    private fun clinicalCounts(orgnummer: String): List<String> =
+    private fun clinicalCounts(orgNumber: String): List<String> =
         queryStrings(
                 """
                 SELECT (SELECT count(*) FROM consultation k WHERE k.clinic_id = lk.id),
@@ -317,7 +317,7 @@ class TestdataSeedTest : WithPostgresql() {
                        (SELECT count(*) FROM clinical_note j
                                  JOIN consultation k ON k.id = j.consultation_id WHERE k.clinic_id = lk.id)
                 FROM clinic lk
-                WHERE lk.org_number = '$orgnummer'
+                WHERE lk.org_number = '$orgNumber'
                 """
                     .trimIndent()
             )

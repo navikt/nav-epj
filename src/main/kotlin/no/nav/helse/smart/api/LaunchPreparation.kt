@@ -56,26 +56,26 @@ class LaunchPreparer(
      * window.
      */
     suspend fun prepare(hpr: String, expectedPatientId: String? = null): LaunchPreparation {
-        val orgnummer =
-            (sessionOrgResolver.resolve(hpr) as? SessionOrgResolution.Resolved)?.org?.orgnummer
+        val orgNumber =
+            (sessionOrgResolver.resolve(hpr) as? SessionOrgResolution.Resolved)?.org?.orgNumber
                 ?: return LaunchPreparation.NoActivePatient
         val activePatientId =
-            valkeyService.getActivePatient(hpr, orgnummer)
+            valkeyService.getActivePatient(hpr, orgNumber)
                 ?: return LaunchPreparation.NoActivePatient
         val active = Uuid.parse(activePatientId)
         if (expectedPatientId != null && Uuid.parseOrNull(expectedPatientId) != active) {
             return LaunchPreparation.PatientMismatch
         }
-        if (!pasientService.isListedAt(PasientId(active), orgnummer)) {
+        if (!pasientService.isListedAt(PasientId(active), orgNumber)) {
             return LaunchPreparation.NoActivePatient
         }
-        return prepareFor(PatientInputId(active), hpr, orgnummer)
+        return prepareFor(PatientInputId(active), hpr, orgNumber)
     }
 
     private suspend fun prepareFor(
         patientInputId: PatientInputId,
         hpr: String,
-        orgnummer: String,
+        orgNumber: String,
     ): LaunchPreparation {
         val patient =
             patientService.getPatient(patientInputId) ?: return LaunchPreparation.UnknownPatient
@@ -83,7 +83,7 @@ class LaunchPreparer(
             encounterService.getActiveEncounterByPatient(
                 patientInputId,
                 HelsepersonellHpr(hpr),
-                orgnummer,
+                orgNumber,
             ) ?: return LaunchPreparation.NoActiveEncounter
         val patientId = patient.id
         val encounterId = encounter.id
@@ -92,7 +92,7 @@ class LaunchPreparer(
             patientId == null -> LaunchPreparation.PatientWithoutId
             encounterId == null -> LaunchPreparation.EncounterWithoutId
             else ->
-                LaunchPreparation.Ready(saveLaunchContext(patientId, encounterId, hpr, orgnummer))
+                LaunchPreparation.Ready(saveLaunchContext(patientId, encounterId, hpr, orgNumber))
         }
     }
 
@@ -100,12 +100,12 @@ class LaunchPreparer(
         patientId: String,
         encounterId: String,
         hpr: String,
-        orgnummer: String,
+        orgNumber: String,
     ): String {
         val launchId = UUID.randomUUID().toString()
         valkeyService.saveLaunchContext(
             launchId,
-            LaunchContext(patientId, encounterId, hpr, orgnummer),
+            LaunchContext(patientId, encounterId, hpr, orgNumber),
         )
         return launchId
     }

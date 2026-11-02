@@ -5,15 +5,13 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inSubQuery
 import org.jetbrains.exposed.v1.jdbc.select
 
-fun konsultasjonAtOrg(orgnummer: String?): Op<Boolean> =
-    if (orgnummer == null) {
+fun konsultasjonAtOrg(orgNumber: String?): Op<Boolean> =
+    if (orgNumber == null) {
         Op.TRUE
     } else {
-        KonsultasjonTable.legekontorId inSubQuery
-            LegekontorTable.select(LegekontorTable.id).where {
-                LegekontorTable.orgnummer eq orgnummer
-            }
+        KonsultasjonTable.clinicId inSubQuery
+            ClinicTable.select(ClinicTable.id).where { ClinicTable.orgNumber eq orgNumber }
     }
 
-fun konsultasjonIdsAtOrg(orgnummer: String?) =
-    KonsultasjonTable.select(KonsultasjonTable.id).where { konsultasjonAtOrg(orgnummer) }
+fun konsultasjonIdsAtOrg(orgNumber: String?) =
+    KonsultasjonTable.select(KonsultasjonTable.id).where { konsultasjonAtOrg(orgNumber) }

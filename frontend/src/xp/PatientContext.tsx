@@ -83,12 +83,12 @@ export function PatientContext({ pasient, compact, stale }: Props) {
           <>
             <div className="kv">
               <dt>{copy["context.office"]}</dt>
-              <dd>{user.legekontor}</dd>
+              <dd>{user.clinic}</dd>
             </div>
-            {user.orgnummer && (
+            {user.orgNumber && (
               <div className="kv">
-                <dt>{copy["context.orgnr"]}</dt>
-                <dd>{user.orgnummer}</dd>
+                <dt>{copy["context.orgNumber"]}</dt>
+                <dd>{user.orgNumber}</dd>
               </div>
             )}
           </>

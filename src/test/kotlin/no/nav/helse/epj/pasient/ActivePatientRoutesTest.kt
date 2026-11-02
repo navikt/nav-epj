@@ -17,8 +17,8 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.runBlocking
-import no.nav.helse.epj.legekontor.Legekontor
-import no.nav.helse.epj.legekontor.LegekontorId
+import no.nav.helse.epj.clinic.Clinic
+import no.nav.helse.epj.clinic.ClinicId
 import no.nav.helse.epj.sessionorg.SessionOrgResolution
 import no.nav.helse.epj.sessionorg.SessionOrgResolver
 import no.nav.helse.helseId.DebugInfo
@@ -57,9 +57,9 @@ class ActivePatientRoutesTest : WithValkey() {
         coEvery { sessionOrgResolver.resolve(HPR) } returns resolvedIn(ORG)
     }
 
-    private fun resolvedIn(orgnummer: String) =
+    private fun resolvedIn(orgNumber: String) =
         SessionOrgResolution.Resolved(
-            Legekontor(LegekontorId(Uuid.generateV4()), "Org", orgnummer, null),
+            Clinic(ClinicId(Uuid.generateV4()), "Org", orgNumber, null),
             derived = true,
         )
 

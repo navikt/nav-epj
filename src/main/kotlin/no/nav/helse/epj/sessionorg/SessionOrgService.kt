@@ -18,26 +18,26 @@ class SessionOrgService(
 ) {
     private val log = logger()
 
-    suspend fun choose(hpr: String, orgnummer: String): ChooseOrgResult {
+    suspend fun choose(hpr: String, orgNumber: String): ChooseOrgResult {
         val current = resolver.resolve(hpr)
         if (current is SessionOrgResolution.Resolved && current.derived) {
             return ChooseOrgResult.DerivedFromList
         }
         val chosen =
-            resolver.choosableOrgs(hpr).firstOrNull { it.org.orgnummer == orgnummer }
+            resolver.choosableOrgs(hpr).firstOrNull { it.org.orgNumber == orgNumber }
                 ?: return ChooseOrgResult.UnknownOrg
 
-        choiceStore.set(hpr, orgnummer)
-        (current as? SessionOrgResolution.Resolved)?.org?.orgnummer?.let {
+        choiceStore.set(hpr, orgNumber)
+        (current as? SessionOrgResolution.Resolved)?.org?.orgNumber?.let {
             valkeyService.clearActivePatient(hpr, it)
         }
-        valkeyService.clearActivePatient(hpr, orgnummer)
+        valkeyService.clearActivePatient(hpr, orgNumber)
         log.atInfo()
             .setMessage("Session org chosen: hpr={} orgnr={}")
             .addArgument(hpr)
-            .addArgument(orgnummer)
+            .addArgument(orgNumber)
             .addKeyValue("hpr", hpr)
-            .addKeyValue("orgnr", orgnummer)
+            .addKeyValue("orgnr", orgNumber)
             .log()
         return ChooseOrgResult.Chosen(chosen)
     }

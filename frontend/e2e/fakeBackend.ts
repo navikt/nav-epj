@@ -13,7 +13,7 @@ const patients = [
   selectable: true,
 }));
 
-const legekontor = { id: "k1", navn: "Storgata legekontor", orgnummer: "123456789", tlf: null };
+const clinic = { id: "k1", name: "Storgata legekontor", orgNumber: "123456789", phone: null };
 
 const app = {
   clientId: "syk-inn",
@@ -54,11 +54,11 @@ export function fakeBackend({ withHistory = false, ongoing = true } = {}) {
       const patientId = pathname.match(/^\/api\/patients?\/([^/]+)/)?.[1];
       const known = patients.find((p) => p.id === patientId);
       if (key === "GET /api/helsepersonell/me") {
-        return json(route, { hpr: "9144889", legekontorId: "k1", navn: "Kari Lege", autorisasjon: "Lege" });
+        return json(route, { hpr: "9144889", clinicId: "k1", navn: "Kari Lege", autorisasjon: "Lege" });
       }
-      if (key === "GET /api/legekontor/k1") return json(route, legekontor);
+      if (key === "GET /api/clinics/k1") return json(route, clinic);
       if (key === "GET /api/session-org") {
-        return json(route, { org: legekontor, needsChoice: false, canChoose: false, choosableOrgs: [] });
+        return json(route, { org: clinic, needsChoice: false, canChoose: false, choosableOrgs: [] });
       }
       if (key === "GET /api/patient") return json(route, patients);
       if (key === "GET /api/apps") return json(route, [app, validator]);

@@ -4,7 +4,7 @@ data class LaunchContext(
     val patientId: String,
     val encounterId: String,
     val hpr: String,
-    val orgnummer: String,
+    val orgNumber: String,
 )
 
 data class AuthCodeContext(

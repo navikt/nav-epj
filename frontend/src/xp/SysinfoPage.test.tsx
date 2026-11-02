@@ -73,7 +73,7 @@ function renderPage() {
         navn: "Bjarte Legesen",
         hpr: "111222333",
         autorisasjon: "Lege",
-        legekontor: "Kontor",
+        clinic: "Kontor",
       }}
     >
       <SysinfoPage />

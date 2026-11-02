@@ -15,9 +15,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.runBlocking
-import no.nav.helse.epj.legekontor.Legekontor
-import no.nav.helse.epj.legekontor.LegekontorId
-import no.nav.helse.epj.legekontor.LegekontorRepository
+import no.nav.helse.epj.clinic.Clinic
+import no.nav.helse.epj.clinic.ClinicId
+import no.nav.helse.epj.clinic.ClinicRepository
 import no.nav.helse.helseId.DebugInfo
 import no.nav.helse.helseId.HelseIdPrincipal
 import no.nav.helse.helseId.User
@@ -34,14 +34,14 @@ private const val HPR = "111"
 class SessionOrgRoutesTest : WithValkey() {
 
     private val fastlegelisteRepository = mockk<FastlegelisteRepository>()
-    private val legekontorRepository = mockk<LegekontorRepository>()
+    private val clinicRepository = mockk<ClinicRepository>()
     private val mapper = jacksonObjectMapper()
 
     private val fjordvik = org("Fjordvik Legekontor", "311111116")
     private val lyngdal = org("Lyngdal Legesenter", "311111124")
 
-    private fun org(navn: String, orgnummer: String) =
-        Legekontor(LegekontorId(Uuid.generateV4()), navn, orgnummer, "22000000")
+    private fun org(name: String, orgNumber: String) =
+        Clinic(ClinicId(Uuid.generateV4()), name, orgNumber, "22000000")
 
     @Before
     fun setUp() {
@@ -56,16 +56,16 @@ class SessionOrgRoutesTest : WithValkey() {
                 )
                 .get()
         }
-        coEvery { legekontorRepository.listChoosable() } returns listOf(fjordvik, lyngdal)
-        coEvery { legekontorRepository.findByLegekontorId(fjordvik.id.value) } returns fjordvik
-        coEvery { fastlegelisteRepository.findLegekontorIdsByHpr(HPR) } returns emptyList()
+        coEvery { clinicRepository.listChoosable() } returns listOf(fjordvik, lyngdal)
+        coEvery { clinicRepository.findByClinicId(fjordvik.id.value) } returns fjordvik
+        coEvery { fastlegelisteRepository.findClinicIdsByHpr(HPR) } returns emptyList()
     }
 
     private fun testApp(block: suspend HttpClient.() -> Unit) = testApplication {
         val resolver =
             SessionOrgResolver(
                 fastlegelisteRepository,
-                legekontorRepository,
+                clinicRepository,
                 ValkeySessionOrgChoiceStore(valkeyService),
             )
         application {
@@ -96,10 +96,10 @@ class SessionOrgRoutesTest : WithValkey() {
         client.block()
     }
 
-    private suspend fun HttpClient.choose(orgnummer: String) =
+    private suspend fun HttpClient.choose(orgNumber: String) =
         put("/api/session-org") {
             contentType(ContentType.Application.Json)
-            setBody("""{"orgnummer":"$orgnummer"}""")
+            setBody("""{"orgNumber":"$orgNumber"}""")
         }
 
     private fun json(text: String): SessionOrgResponse = mapper.readValue(text)
@@ -111,18 +111,18 @@ class SessionOrgRoutesTest : WithValkey() {
         assertEquals(true, body.needsChoice)
         assertEquals(true, body.canChoose)
         assertNull(body.org)
-        assertEquals(listOf("311111116", "311111124"), body.choosableOrgs.map { it.org.orgnummer })
+        assertEquals(listOf("311111116", "311111124"), body.choosableOrgs.map { it.org.orgNumber })
     }
 
     @Test
     fun `GET for a doctor with one list returns the org and no choice`() = testApp {
-        coEvery { fastlegelisteRepository.findLegekontorIdsByHpr(HPR) } returns listOf(fjordvik.id)
+        coEvery { fastlegelisteRepository.findClinicIdsByHpr(HPR) } returns listOf(fjordvik.id)
 
         val body = json(get("/api/session-org").bodyAsText())
 
         assertEquals(false, body.needsChoice)
         assertEquals(false, body.canChoose)
-        assertEquals("311111116", body.org?.orgnummer)
+        assertEquals("311111116", body.org?.orgNumber)
         assertEquals(listOf(true, false), body.choosableOrgs.map { it.hasOwnList })
     }
 
@@ -133,12 +133,12 @@ class SessionOrgRoutesTest : WithValkey() {
         assertEquals(HttpStatusCode.OK, response.status)
         assertEquals("311111124", valkeyService.getSessionOrg(HPR))
         val body = json(get("/api/session-org").bodyAsText())
-        assertEquals("311111124", body.org?.orgnummer)
+        assertEquals("311111124", body.org?.orgNumber)
         assertEquals(false, body.needsChoice)
     }
 
     @Test
-    fun `PUT with an unknown orgnr returns 400 and stores nothing`() = testApp {
+    fun `PUT with an unknown org number returns 400 and stores nothing`() = testApp {
         val response = choose("999999999")
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
@@ -147,7 +147,7 @@ class SessionOrgRoutesTest : WithValkey() {
 
     @Test
     fun `PUT is rejected when the org is derived from a single list`() = testApp {
-        coEvery { fastlegelisteRepository.findLegekontorIdsByHpr(HPR) } returns listOf(fjordvik.id)
+        coEvery { fastlegelisteRepository.findClinicIdsByHpr(HPR) } returns listOf(fjordvik.id)
 
         val response = choose("311111124")
 

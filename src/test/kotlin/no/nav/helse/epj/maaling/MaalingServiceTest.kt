@@ -13,7 +13,7 @@ import kotlinx.coroutines.test.runTest
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.pasient.PasientId
-import no.nav.helse.utils.DEFAULT_ORGNUMMER
+import no.nav.helse.utils.DEFAULT_ORG_NUMBER
 import org.junit.Test
 
 class MaalingServiceTest {
@@ -43,16 +43,16 @@ class MaalingServiceTest {
     fun `opprettMaaling persists a maaling with a generated id`() = runTest {
         val inserted = slot<Maaling>()
         val opprettRequest = request()
-        coEvery { repository.insert(capture(inserted), DEFAULT_ORGNUMMER) } returns Unit
+        coEvery { repository.insert(capture(inserted), DEFAULT_ORG_NUMBER) } returns Unit
 
-        val opprettet = service.opprettMaaling(opprettRequest, DEFAULT_ORGNUMMER)
+        val opprettet = service.opprettMaaling(opprettRequest, DEFAULT_ORG_NUMBER)
 
         assertEquals(opprettRequest.pasientId, opprettet.pasientId)
         assertEquals(opprettRequest.konsultasjonId, opprettet.konsultasjonId)
         assertEquals(opprettRequest.loincKode, opprettet.loincKode)
         assertEquals(opprettRequest.verdi, opprettet.verdi)
         assertEquals(opprettet, inserted.captured)
-        coVerify(exactly = 1) { repository.insert(any(), DEFAULT_ORGNUMMER) }
+        coVerify(exactly = 1) { repository.insert(any(), DEFAULT_ORG_NUMBER) }
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -74,9 +74,9 @@ class MaalingServiceTest {
                 effektivTidspunkt = opprettRequest.effektivTidspunkt,
                 status = opprettRequest.status,
             )
-        coEvery { repository.findById(id, DEFAULT_ORGNUMMER) } returns maaling
+        coEvery { repository.findById(id, DEFAULT_ORG_NUMBER) } returns maaling
 
-        val resultat = service.getMaaling(id, DEFAULT_ORGNUMMER)
+        val resultat = service.getMaaling(id, DEFAULT_ORG_NUMBER)
 
         assertEquals(maaling, resultat)
     }
@@ -100,9 +100,10 @@ class MaalingServiceTest {
                 effektivTidspunkt = opprettRequest.effektivTidspunkt,
                 status = opprettRequest.status,
             )
-        coEvery { repository.listByPasientId(pasientId, DEFAULT_ORGNUMMER) } returns listOf(maaling)
+        coEvery { repository.listByPasientId(pasientId, DEFAULT_ORG_NUMBER) } returns
+            listOf(maaling)
 
-        val resultat = service.getMaalingerForPasient(pasientId, DEFAULT_ORGNUMMER)
+        val resultat = service.getMaalingerForPasient(pasientId, DEFAULT_ORG_NUMBER)
 
         assertEquals(listOf(maaling), resultat)
     }
@@ -126,10 +127,10 @@ class MaalingServiceTest {
                 effektivTidspunkt = opprettRequest.effektivTidspunkt,
                 status = opprettRequest.status,
             )
-        coEvery { repository.listByKonsultasjonId(konsultasjonId, DEFAULT_ORGNUMMER) } returns
+        coEvery { repository.listByKonsultasjonId(konsultasjonId, DEFAULT_ORG_NUMBER) } returns
             listOf(maaling)
 
-        val resultat = service.getMaalingerForKonsultasjon(konsultasjonId, DEFAULT_ORGNUMMER)
+        val resultat = service.getMaalingerForKonsultasjon(konsultasjonId, DEFAULT_ORG_NUMBER)
 
         assertEquals(listOf(maaling), resultat)
     }

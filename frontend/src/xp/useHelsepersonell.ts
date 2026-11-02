@@ -69,8 +69,8 @@ export function useHelsepersonell() {
     setAttempt((n) => n + 1);
   }, []);
 
-  const chooseOrg = useCallback(async (orgnummer: string) => {
-    const sessionOrg = await chooseSessionOrg(orgnummer);
+  const chooseOrg = useCallback(async (orgNumber: string) => {
+    const sessionOrg = await chooseSessionOrg(orgNumber);
     setState((current) =>
       current.status === "ready" ? { ...current, sessionOrg } : current,
     );

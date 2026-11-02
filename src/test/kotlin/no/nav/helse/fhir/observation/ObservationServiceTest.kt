@@ -27,7 +27,7 @@ import no.nav.helse.epj.maaling.OpprettMaalingRequest
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
-import no.nav.helse.utils.DEFAULT_ORGNUMMER
+import no.nav.helse.utils.DEFAULT_ORG_NUMBER
 import org.junit.Test
 
 class ObservationServiceTest {
@@ -93,12 +93,12 @@ class ObservationServiceTest {
                     effektivTidspunkt = request.effektivTidspunkt,
                     status = request.status,
                 )
-            coEvery { maalingService.opprettMaaling(request, DEFAULT_ORGNUMMER) } returns persisted
+            coEvery { maalingService.opprettMaaling(request, DEFAULT_ORG_NUMBER) } returns persisted
 
-            val observation = observationService.createObservation(request, DEFAULT_ORGNUMMER)
+            val observation = observationService.createObservation(request, DEFAULT_ORG_NUMBER)
 
             assertEquals(persisted.id.value.toString(), observation.id)
-            coVerify(exactly = 1) { maalingService.opprettMaaling(request, DEFAULT_ORGNUMMER) }
+            coVerify(exactly = 1) { maalingService.opprettMaaling(request, DEFAULT_ORG_NUMBER) }
         }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -118,11 +118,11 @@ class ObservationServiceTest {
                     effektivTidspunkt = LocalDateTime.of(2025, 1, 15, 10, 30),
                     status = MaalingStatus.FINAL,
                 )
-            coEvery { maalingService.opprettMaaling(request, DEFAULT_ORGNUMMER) } throws
+            coEvery { maalingService.opprettMaaling(request, DEFAULT_ORG_NUMBER) } throws
                 KonsultasjonNotFoundException(request.konsultasjonId)
 
             assertFailsWith<KonsultasjonNotFoundException> {
-                observationService.createObservation(request, DEFAULT_ORGNUMMER)
+                observationService.createObservation(request, DEFAULT_ORG_NUMBER)
             }
         }
 
@@ -130,9 +130,9 @@ class ObservationServiceTest {
     @Test
     fun `getObservationById returns null when the maaling does not exist`() = runTest {
         val id = ObservationId(Uuid.generateV4())
-        coEvery { maalingService.getMaaling(MaalingId(id.value), DEFAULT_ORGNUMMER) } returns null
+        coEvery { maalingService.getMaaling(MaalingId(id.value), DEFAULT_ORG_NUMBER) } returns null
 
-        assertNull(observationService.getObservationById(id, DEFAULT_ORGNUMMER))
+        assertNull(observationService.getObservationById(id, DEFAULT_ORG_NUMBER))
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -141,10 +141,13 @@ class ObservationServiceTest {
         val pasientId = PasientId(Uuid.generateV4())
         val konsultasjonId = KonsultasjonId(Uuid.generateV4())
         val target = maaling(pasientId = pasientId, konsultasjonId = konsultasjonId)
-        coEvery { maalingService.getMaaling(target.id, DEFAULT_ORGNUMMER) } returns target
+        coEvery { maalingService.getMaaling(target.id, DEFAULT_ORG_NUMBER) } returns target
 
         val observation =
-            observationService.getObservationById(ObservationId(target.id.value), DEFAULT_ORGNUMMER)
+            observationService.getObservationById(
+                ObservationId(target.id.value),
+                DEFAULT_ORG_NUMBER,
+            )
 
         requireNotNull(observation)
         assertEquals(target.id.value.toString(), observation.id)
@@ -166,10 +169,13 @@ class ObservationServiceTest {
     @Test
     fun `getObservationById maps performer when hpr is present`() = runTest {
         val target = maaling(hpr = HelsepersonellHpr("999"))
-        coEvery { maalingService.getMaaling(target.id, DEFAULT_ORGNUMMER) } returns target
+        coEvery { maalingService.getMaaling(target.id, DEFAULT_ORG_NUMBER) } returns target
 
         val observation =
-            observationService.getObservationById(ObservationId(target.id.value), DEFAULT_ORGNUMMER)
+            observationService.getObservationById(
+                ObservationId(target.id.value),
+                DEFAULT_ORG_NUMBER,
+            )
 
         requireNotNull(observation)
         assertEquals("Practitioner/999", observation.performer.single().reference?.value)
@@ -179,10 +185,13 @@ class ObservationServiceTest {
     @Test
     fun `getObservationById omits performer when hpr is absent`() = runTest {
         val target = maaling(hpr = null)
-        coEvery { maalingService.getMaaling(target.id, DEFAULT_ORGNUMMER) } returns target
+        coEvery { maalingService.getMaaling(target.id, DEFAULT_ORG_NUMBER) } returns target
 
         val observation =
-            observationService.getObservationById(ObservationId(target.id.value), DEFAULT_ORGNUMMER)
+            observationService.getObservationById(
+                ObservationId(target.id.value),
+                DEFAULT_ORG_NUMBER,
+            )
 
         requireNotNull(observation)
         assertTrue(observation.performer.isEmpty())
@@ -193,10 +202,13 @@ class ObservationServiceTest {
     fun `getObservationById maps effektivTidspunkt as the effective dateTime`() = runTest {
         val tidspunkt = LocalDateTime.of(2025, 3, 4, 9, 15)
         val target = maaling(effektivTidspunkt = tidspunkt)
-        coEvery { maalingService.getMaaling(target.id, DEFAULT_ORGNUMMER) } returns target
+        coEvery { maalingService.getMaaling(target.id, DEFAULT_ORG_NUMBER) } returns target
 
         val observation =
-            observationService.getObservationById(ObservationId(target.id.value), DEFAULT_ORGNUMMER)
+            observationService.getObservationById(
+                ObservationId(target.id.value),
+                DEFAULT_ORG_NUMBER,
+            )
 
         requireNotNull(observation)
         val effective = observation.effective as Observation.Effective.DateTime
@@ -210,10 +222,13 @@ class ObservationServiceTest {
     @Test
     fun `getObservationById preserves decimal precision of the measured value`() = runTest {
         val target = maaling(verdi = BigDecimal("5.6789"))
-        coEvery { maalingService.getMaaling(target.id, DEFAULT_ORGNUMMER) } returns target
+        coEvery { maalingService.getMaaling(target.id, DEFAULT_ORG_NUMBER) } returns target
 
         val observation =
-            observationService.getObservationById(ObservationId(target.id.value), DEFAULT_ORGNUMMER)
+            observationService.getObservationById(
+                ObservationId(target.id.value),
+                DEFAULT_ORG_NUMBER,
+            )
 
         requireNotNull(observation)
         val quantity = (observation.value as Observation.Value.Quantity).value
@@ -239,12 +254,12 @@ class ObservationServiceTest {
 
         expected.forEach { (status, expectedCode) ->
             val target = maaling(status = status)
-            coEvery { maalingService.getMaaling(target.id, DEFAULT_ORGNUMMER) } returns target
+            coEvery { maalingService.getMaaling(target.id, DEFAULT_ORG_NUMBER) } returns target
 
             val observation =
                 observationService.getObservationById(
                     ObservationId(target.id.value),
-                    DEFAULT_ORGNUMMER,
+                    DEFAULT_ORG_NUMBER,
                 )
 
             requireNotNull(observation)
@@ -257,7 +272,7 @@ class ObservationServiceTest {
     fun `searchObservations returns an empty searchset bundle when the patient has no maalinger`() =
         runTest {
             val pasientId = PasientId(Uuid.generateV4())
-            coEvery { maalingService.getMaalingerForPasient(pasientId, DEFAULT_ORGNUMMER) } returns
+            coEvery { maalingService.getMaalingerForPasient(pasientId, DEFAULT_ORG_NUMBER) } returns
                 emptyList()
 
             val bundle =
@@ -265,7 +280,7 @@ class ObservationServiceTest {
                     patientId = PatientInputId(pasientId.value),
                     encounterId = null,
                     code = null,
-                    DEFAULT_ORGNUMMER,
+                    DEFAULT_ORG_NUMBER,
                 )
 
             assertEquals(com.google.fhir.model.r4.Bundle.BundleType.Searchset, bundle.type.value)
@@ -278,7 +293,7 @@ class ObservationServiceTest {
         val pasientId = PasientId(Uuid.generateV4())
         val forste = maaling(pasientId = pasientId)
         val andre = maaling(pasientId = pasientId)
-        coEvery { maalingService.getMaalingerForPasient(pasientId, DEFAULT_ORGNUMMER) } returns
+        coEvery { maalingService.getMaalingerForPasient(pasientId, DEFAULT_ORG_NUMBER) } returns
             listOf(forste, andre)
 
         val bundle =
@@ -286,7 +301,7 @@ class ObservationServiceTest {
                 patientId = PatientInputId(pasientId.value),
                 encounterId = null,
                 code = null,
-                DEFAULT_ORGNUMMER,
+                DEFAULT_ORG_NUMBER,
             )
 
         assertEquals(
@@ -303,7 +318,7 @@ class ObservationServiceTest {
         val konsultasjonB = KonsultasjonId(Uuid.generateV4())
         val maalingA = maaling(pasientId = pasientId, konsultasjonId = konsultasjonA)
         val maalingB = maaling(pasientId = pasientId, konsultasjonId = konsultasjonB)
-        coEvery { maalingService.getMaalingerForPasient(pasientId, DEFAULT_ORGNUMMER) } returns
+        coEvery { maalingService.getMaalingerForPasient(pasientId, DEFAULT_ORG_NUMBER) } returns
             listOf(maalingA, maalingB)
 
         val bundle =
@@ -311,7 +326,7 @@ class ObservationServiceTest {
                 patientId = PatientInputId(pasientId.value),
                 encounterId = EncounterId(konsultasjonA.value),
                 code = null,
-                DEFAULT_ORGNUMMER,
+                DEFAULT_ORG_NUMBER,
             )
 
         assertEquals(
@@ -326,7 +341,7 @@ class ObservationServiceTest {
         val pasientId = PasientId(Uuid.generateV4())
         val temperatur = maaling(pasientId = pasientId, loincKode = "8310-5")
         val glukose = maaling(pasientId = pasientId, loincKode = "2339-0")
-        coEvery { maalingService.getMaalingerForPasient(pasientId, DEFAULT_ORGNUMMER) } returns
+        coEvery { maalingService.getMaalingerForPasient(pasientId, DEFAULT_ORG_NUMBER) } returns
             listOf(temperatur, glukose)
 
         val bundle =
@@ -334,7 +349,7 @@ class ObservationServiceTest {
                 patientId = PatientInputId(pasientId.value),
                 encounterId = null,
                 code = "2339-0",
-                DEFAULT_ORGNUMMER,
+                DEFAULT_ORG_NUMBER,
             )
 
         assertEquals(
@@ -355,7 +370,7 @@ class ObservationServiceTest {
             maaling(pasientId = pasientId, konsultasjonId = konsultasjonB, loincKode = "8310-5")
         val wrongCode =
             maaling(pasientId = pasientId, konsultasjonId = konsultasjonA, loincKode = "2339-0")
-        coEvery { maalingService.getMaalingerForPasient(pasientId, DEFAULT_ORGNUMMER) } returns
+        coEvery { maalingService.getMaalingerForPasient(pasientId, DEFAULT_ORG_NUMBER) } returns
             listOf(match, wrongEncounter, wrongCode)
 
         val bundle =
@@ -363,7 +378,7 @@ class ObservationServiceTest {
                 patientId = PatientInputId(pasientId.value),
                 encounterId = EncounterId(konsultasjonA.value),
                 code = "8310-5",
-                DEFAULT_ORGNUMMER,
+                DEFAULT_ORG_NUMBER,
             )
 
         assertEquals(match.id.value.toString(), (bundle.entry.single().resource as Observation).id)

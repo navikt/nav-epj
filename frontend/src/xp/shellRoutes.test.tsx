@@ -12,13 +12,13 @@ import { copy } from "./copy";
 import { expectNoSeriousViolations } from "./axeHelper";
 import { useWorkspaceStore } from "./workspaceStore";
 
-const me = { hpr: "9144889", legekontorId: "k1", navn: "Kari Nordmann", autorisasjon: "Lege" };
-const kontor = { id: "k1", navn: "Storgata legekontor", orgnummer: "123456789", tlf: null };
+const me = { hpr: "9144889", clinicId: "k1", navn: "Kari Nordmann", autorisasjon: "Lege" };
+const clinic = { id: "k1", name: "Storgata legekontor", orgNumber: "123456789", phone: null };
 const sessionOrg = {
-  org: kontor,
+  org: clinic,
   needsChoice: false,
   canChoose: false,
-  choosableOrgs: [{ org: kontor, hasOwnList: true }],
+  choosableOrgs: [{ org: clinic, hasOwnList: true }],
 };
 
 function stubApi(meResponse: () => Promise<unknown>) {
@@ -87,7 +87,7 @@ describe("root route shell", () => {
     const user = userEvent.setup();
     stubApi(okMe);
     const { router } = renderApp("/");
-    await screen.findByText(copy["header.user"](me.navn, me.autorisasjon, kontor.navn));
+    await screen.findByText(copy["header.user"](me.navn, me.autorisasjon, clinic.name));
     await user.click(
       within(screen.getByRole("navigation", { name: copy["nav.label"] })).getByText(
         copy["pane.system.patients"],
@@ -109,7 +109,7 @@ describe("root route shell", () => {
     const user = userEvent.setup();
     stubApi(okMe);
     const { router } = renderApp("/");
-    await screen.findByText(copy["header.user"](me.navn, me.autorisasjon, kontor.navn));
+    await screen.findByText(copy["header.user"](me.navn, me.autorisasjon, clinic.name));
     await user.type(screen.getByLabelText(copy["header.search.label"]), "Kari{Enter}");
     await waitFor(() => expect(router.state.location.pathname).toBe("/patients"));
     expect(
@@ -123,7 +123,7 @@ describe("root route shell", () => {
     renderApp("/");
     expect(await screen.findByText(copy["s1.loading"])).toBeInTheDocument();
     resolve({ ok: true, status: 200, json: async () => me });
-    expect(await screen.findByText(copy["header.user"](me.navn, me.autorisasjon, kontor.navn))).toBeInTheDocument();
+    expect(await screen.findByText(copy["header.user"](me.navn, me.autorisasjon, clinic.name))).toBeInTheDocument();
     expect(screen.queryByText(copy["s1.loading"])).not.toBeInTheDocument();
   });
 
@@ -140,7 +140,7 @@ describe("root route shell", () => {
   it("has no serious accessibility violations", async () => {
     stubApi(okMe);
     const { container } = renderApp("/");
-    await screen.findByText(copy["header.user"](me.navn, me.autorisasjon, kontor.navn));
+    await screen.findByText(copy["header.user"](me.navn, me.autorisasjon, clinic.name));
     await expectNoSeriousViolations(container);
   });
 });

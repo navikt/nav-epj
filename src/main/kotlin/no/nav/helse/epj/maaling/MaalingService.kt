@@ -8,7 +8,7 @@ import no.nav.helse.epj.pasient.PasientId
 class MaalingService(private val maalingRepository: MaalingRepository) {
 
     @OptIn(ExperimentalUuidApi::class)
-    suspend fun opprettMaaling(request: OpprettMaalingRequest, orgnummer: String): Maaling {
+    suspend fun opprettMaaling(request: OpprettMaalingRequest, orgNumber: String): Maaling {
         val nyMaaling =
             Maaling(
                 id = MaalingId(Uuid.generateV4()),
@@ -24,22 +24,22 @@ class MaalingService(private val maalingRepository: MaalingRepository) {
                 status = request.status,
             )
 
-        maalingRepository.insert(nyMaaling, orgnummer)
+        maalingRepository.insert(nyMaaling, orgNumber)
         return nyMaaling
     }
 
-    suspend fun getMaaling(id: MaalingId, orgnummer: String?): Maaling? {
-        return maalingRepository.findById(id, orgnummer)
+    suspend fun getMaaling(id: MaalingId, orgNumber: String?): Maaling? {
+        return maalingRepository.findById(id, orgNumber)
     }
 
-    suspend fun getMaalingerForPasient(pasientId: PasientId, orgnummer: String?): List<Maaling> {
-        return maalingRepository.listByPasientId(pasientId, orgnummer)
+    suspend fun getMaalingerForPasient(pasientId: PasientId, orgNumber: String?): List<Maaling> {
+        return maalingRepository.listByPasientId(pasientId, orgNumber)
     }
 
     suspend fun getMaalingerForKonsultasjon(
         konsultasjonId: KonsultasjonId,
-        orgnummer: String?,
+        orgNumber: String?,
     ): List<Maaling> {
-        return maalingRepository.listByKonsultasjonId(konsultasjonId, orgnummer)
+        return maalingRepository.listByKonsultasjonId(konsultasjonId, orgNumber)
     }
 }

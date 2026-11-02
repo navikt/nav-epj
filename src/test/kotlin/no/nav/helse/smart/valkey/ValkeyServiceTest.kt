@@ -17,7 +17,7 @@ class ValkeyServiceTest : WithValkey() {
                 patientId = "patient-1",
                 encounterId = "encounter-1",
                 hpr = "hpr-1",
-                orgnummer = "311111116",
+                orgNumber = "311111116",
             )
 
         valkeyService.saveLaunchContext(key, context)
@@ -34,7 +34,7 @@ class ValkeyServiceTest : WithValkey() {
                 patientId = "patient-1",
                 encounterId = "encounter-1",
                 hpr = "hpr-1",
-                orgnummer = "311111116",
+                orgNumber = "311111116",
             )
 
         valkeyService.saveLaunchContext(key, context)
@@ -62,7 +62,7 @@ class ValkeyServiceTest : WithValkey() {
                         patientId = "patient-1",
                         encounterId = "encounter-1",
                         hpr = "hpr-1",
-                        orgnummer = "311111116",
+                        orgNumber = "311111116",
                     ),
                 subject = "111",
                 scope = "openid launch",
@@ -94,7 +94,7 @@ class ValkeyServiceTest : WithValkey() {
                         patientId = "patient-2",
                         encounterId = "encounter-2",
                         hpr = "hpr-2",
-                        orgnummer = "311111116",
+                        orgNumber = "311111116",
                     ),
                 subject = "222",
                 scope = "openid",
@@ -154,7 +154,7 @@ class ValkeyServiceTest : WithValkey() {
                         patientId = "patient-3",
                         encounterId = "encounter-3",
                         hpr = "hpr-3",
-                        orgnummer = "311111116",
+                        orgNumber = "311111116",
                     ),
                 subject = "333",
                 scope = "openid",
@@ -166,7 +166,7 @@ class ValkeyServiceTest : WithValkey() {
                 patientId = "patient-4",
                 encounterId = "encounter-4",
                 hpr = "hpr-4",
-                orgnummer = "311111116",
+                orgNumber = "311111116",
             )
 
         valkeyService.saveAuthCode(sameId, authCode)

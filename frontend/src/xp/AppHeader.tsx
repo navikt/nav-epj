@@ -13,7 +13,7 @@ import {
 export type HeaderUser = {
   navn: string;
   autorisasjon: string;
-  legekontor: string;
+  clinic: string;
 };
 
 type Props = {
@@ -83,7 +83,7 @@ export function AppHeader({
       <TestMarker />
       {user && (
         <span className="xp-user xp-hide-narrow">
-          {copy["header.user"](user.navn, user.autorisasjon, user.legekontor)}
+          {copy["header.user"](user.navn, user.autorisasjon, user.clinic)}
         </span>
       )}
       {onChangeOrg && (

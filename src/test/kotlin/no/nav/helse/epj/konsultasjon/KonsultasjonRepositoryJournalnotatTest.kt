@@ -10,7 +10,7 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
-import no.nav.helse.utils.DEFAULT_ORGNUMMER
+import no.nav.helse.utils.DEFAULT_ORG_NUMBER
 import org.junit.Test
 
 class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() {
@@ -26,7 +26,7 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
-                    orgnummer = DEFAULT_ORGNUMMER,
+                    orgNumber = DEFAULT_ORG_NUMBER,
                 )
             )
         val id = JournalnotatId(Uuid.generateV4())
@@ -37,13 +37,13 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
                 journalnotat = "notat",
             )
 
-        val opprettet = konsultasjonRepository.opprettJournalnotat(id, request, DEFAULT_ORGNUMMER)
+        val opprettet = konsultasjonRepository.opprettJournalnotat(id, request, DEFAULT_ORG_NUMBER)
 
         assertEquals(id, opprettet.id)
         assertEquals(pasientId, opprettet.pasientId)
         assertEquals(konsultasjonId, opprettet.konsultasjonId)
         assertEquals("notat", opprettet.journalnotat)
-        val lagret = konsultasjonRepository.findJournalnotat(id, DEFAULT_ORGNUMMER)
+        val lagret = konsultasjonRepository.findJournalnotat(id, DEFAULT_ORG_NUMBER)
         assertEquals("notat", lagret?.journalnotat)
     }
 
@@ -63,7 +63,7 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
                 konsultasjonRepository.opprettJournalnotat(
                     JournalnotatId(Uuid.generateV4()),
                     request,
-                    DEFAULT_ORGNUMMER,
+                    DEFAULT_ORG_NUMBER,
                 )
             }
         }
@@ -81,7 +81,7 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
-                        orgnummer = DEFAULT_ORGNUMMER,
+                        orgNumber = DEFAULT_ORG_NUMBER,
                     )
                 )
             val annenPasient = opprettPasient(hpr = hpr)
@@ -96,13 +96,13 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
                 konsultasjonRepository.opprettJournalnotat(
                     JournalnotatId(Uuid.generateV4()),
                     request,
-                    DEFAULT_ORGNUMMER,
+                    DEFAULT_ORG_NUMBER,
                 )
             }
             assertNull(
                 konsultasjonRepository.findJournalnotat(
                     JournalnotatId(Uuid.generateV4()),
-                    DEFAULT_ORGNUMMER,
+                    DEFAULT_ORG_NUMBER,
                 )
             )
         }
@@ -120,7 +120,7 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
-                        orgnummer = DEFAULT_ORGNUMMER,
+                        orgNumber = DEFAULT_ORG_NUMBER,
                     )
                 )
             val id = JournalnotatId(Uuid.generateV4())
@@ -130,19 +130,19 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
                     konsultasjonId = konsultasjonId,
                     journalnotat = "original",
                 )
-            konsultasjonRepository.opprettJournalnotat(id, request, DEFAULT_ORGNUMMER)
+            konsultasjonRepository.opprettJournalnotat(id, request, DEFAULT_ORG_NUMBER)
 
             assertFailsWith<no.nav.helse.core.utils.DuplikatJournalnotatException> {
                 konsultasjonRepository.opprettJournalnotat(
                     id,
                     request.copy(journalnotat = "endret"),
-                    DEFAULT_ORGNUMMER,
+                    DEFAULT_ORG_NUMBER,
                 )
             }
 
             assertEquals(
                 "original",
-                konsultasjonRepository.findJournalnotat(id, DEFAULT_ORGNUMMER)?.journalnotat,
+                konsultasjonRepository.findJournalnotat(id, DEFAULT_ORG_NUMBER)?.journalnotat,
             )
         }
 
@@ -160,7 +160,7 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
-                        orgnummer = DEFAULT_ORGNUMMER,
+                        orgNumber = DEFAULT_ORG_NUMBER,
                     )
                 )
             val konsultasjonB =
@@ -170,22 +170,22 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
-                        orgnummer = DEFAULT_ORGNUMMER,
+                        orgNumber = DEFAULT_ORG_NUMBER,
                     )
                 )
             konsultasjonRepository.opprettJournalnotat(
                 JournalnotatId(Uuid.generateV4()),
                 OpprettJournalnotatRequest(pasientA, konsultasjonA, "for A"),
-                DEFAULT_ORGNUMMER,
+                DEFAULT_ORG_NUMBER,
             )
             konsultasjonRepository.opprettJournalnotat(
                 JournalnotatId(Uuid.generateV4()),
                 OpprettJournalnotatRequest(pasientB, konsultasjonB, "for B"),
-                DEFAULT_ORGNUMMER,
+                DEFAULT_ORG_NUMBER,
             )
 
             val notaterForA =
-                konsultasjonRepository.listJournalnotat(pasientA, null, DEFAULT_ORGNUMMER)
+                konsultasjonRepository.listJournalnotat(pasientA, null, DEFAULT_ORG_NUMBER)
 
             assertEquals(1, notaterForA.size)
             assertEquals("for A", notaterForA.single().journalnotat)
@@ -204,7 +204,7 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
-                        orgnummer = DEFAULT_ORGNUMMER,
+                        orgNumber = DEFAULT_ORG_NUMBER,
                     )
                 )
             val konsultasjonB =
@@ -214,22 +214,26 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
-                        orgnummer = DEFAULT_ORGNUMMER,
+                        orgNumber = DEFAULT_ORG_NUMBER,
                     )
                 )
             konsultasjonRepository.opprettJournalnotat(
                 JournalnotatId(Uuid.generateV4()),
                 OpprettJournalnotatRequest(pasientId, konsultasjonA, "for A"),
-                DEFAULT_ORGNUMMER,
+                DEFAULT_ORG_NUMBER,
             )
             konsultasjonRepository.opprettJournalnotat(
                 JournalnotatId(Uuid.generateV4()),
                 OpprettJournalnotatRequest(pasientId, konsultasjonB, "for B"),
-                DEFAULT_ORGNUMMER,
+                DEFAULT_ORG_NUMBER,
             )
 
             val notater =
-                konsultasjonRepository.listJournalnotat(pasientId, konsultasjonA, DEFAULT_ORGNUMMER)
+                konsultasjonRepository.listJournalnotat(
+                    pasientId,
+                    konsultasjonA,
+                    DEFAULT_ORG_NUMBER,
+                )
 
             assertEquals(1, notater.size)
             assertEquals("for A", notater.single().journalnotat)
@@ -242,7 +246,7 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
             val pasientId = opprettPasient()
 
             val notater =
-                konsultasjonRepository.listJournalnotat(pasientId, null, DEFAULT_ORGNUMMER)
+                konsultasjonRepository.listJournalnotat(pasientId, null, DEFAULT_ORG_NUMBER)
 
             assertTrue(notater.isEmpty())
         }
@@ -258,10 +262,10 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
         assertFailsWith<no.nav.helse.core.utils.KonsultasjonTilhorerAnnenPasientException> {
             konsultasjonRepository.insertJournalnotat(
                 Journalnotat(id, konsultasjonId, annenPasient, "notat"),
-                DEFAULT_ORGNUMMER,
+                DEFAULT_ORG_NUMBER,
             )
         }
-        assertNull(konsultasjonRepository.findJournalnotat(id, DEFAULT_ORGNUMMER))
+        assertNull(konsultasjonRepository.findJournalnotat(id, DEFAULT_ORG_NUMBER))
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -273,7 +277,7 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
             val id = JournalnotatId(Uuid.generateV4())
             konsultasjonRepository.insertJournalnotat(
                 Journalnotat(id, eierKonsultasjon, eier, "original"),
-                DEFAULT_ORGNUMMER,
+                DEFAULT_ORG_NUMBER,
             )
             val angriper = opprettPasient()
             val angriperKonsultasjon = opprettKonsultasjon(angriper)
@@ -281,11 +285,11 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
             val rows =
                 konsultasjonRepository.insertJournalnotat(
                     Journalnotat(id, angriperKonsultasjon, angriper, "overskrevet"),
-                    DEFAULT_ORGNUMMER,
+                    DEFAULT_ORG_NUMBER,
                 )
 
             assertEquals(0, rows)
-            val lagret = konsultasjonRepository.findJournalnotat(id, DEFAULT_ORGNUMMER)
+            val lagret = konsultasjonRepository.findJournalnotat(id, DEFAULT_ORG_NUMBER)
             assertEquals("original", lagret?.journalnotat)
             assertEquals(eier, lagret?.pasientId)
             assertEquals(eierKonsultasjon, lagret?.konsultasjonId)
@@ -300,19 +304,19 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
             val id = JournalnotatId(Uuid.generateV4())
             konsultasjonRepository.insertJournalnotat(
                 Journalnotat(id, konsultasjonId, pasientId, "første"),
-                DEFAULT_ORGNUMMER,
+                DEFAULT_ORG_NUMBER,
             )
 
             val rows =
                 konsultasjonRepository.insertJournalnotat(
                     Journalnotat(id, konsultasjonId, pasientId, "andre"),
-                    DEFAULT_ORGNUMMER,
+                    DEFAULT_ORG_NUMBER,
                 )
 
             assertEquals(1, rows)
             assertEquals(
                 "andre",
-                konsultasjonRepository.findJournalnotat(id, DEFAULT_ORGNUMMER)?.journalnotat,
+                konsultasjonRepository.findJournalnotat(id, DEFAULT_ORG_NUMBER)?.journalnotat,
             )
         }
 }

@@ -33,7 +33,7 @@ function setup() {
         navn: "Lege Legesen",
         hpr: "9144889",
         autorisasjon: "Lege",
-        legekontor: "Kontor",
+        clinic: "Kontor",
       }}
     >
       <NewPatientDialog onClose={onClose} />

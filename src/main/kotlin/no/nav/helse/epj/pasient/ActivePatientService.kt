@@ -15,19 +15,19 @@ class ActivePatientService(
     private val sessionOrgResolver: SessionOrgResolver,
 ) {
     suspend fun getActivePatient(hpr: String): ActivePatient? {
-        val orgnummer = resolveOrgnummer(hpr) ?: return null
-        return valkeyService.getActivePatientWithExpiry(hpr, orgnummer)
+        val orgNumber = resolveOrgNumber(hpr) ?: return null
+        return valkeyService.getActivePatientWithExpiry(hpr, orgNumber)
     }
 
     suspend fun claimActivePatient(hpr: String, patientId: Uuid): ActivePatient? {
-        val orgnummer = resolveOrgnummer(hpr) ?: throw SessionOrgRequiredException()
-        if (!pasientService.isListedAt(PasientId(patientId), orgnummer)) return null
-        valkeyService.setActivePatient(hpr, orgnummer, patientId.toString())
-        return checkNotNull(valkeyService.getActivePatientWithExpiry(hpr, orgnummer)) {
+        val orgNumber = resolveOrgNumber(hpr) ?: throw SessionOrgRequiredException()
+        if (!pasientService.isListedAt(PasientId(patientId), orgNumber)) return null
+        valkeyService.setActivePatient(hpr, orgNumber, patientId.toString())
+        return checkNotNull(valkeyService.getActivePatientWithExpiry(hpr, orgNumber)) {
             "Active patient missing right after it was set"
         }
     }
 
-    private suspend fun resolveOrgnummer(hpr: String): String? =
-        (sessionOrgResolver.resolve(hpr) as? SessionOrgResolution.Resolved)?.org?.orgnummer
+    private suspend fun resolveOrgNumber(hpr: String): String? =
+        (sessionOrgResolver.resolve(hpr) as? SessionOrgResolution.Resolved)?.org?.orgNumber
 }

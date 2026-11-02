@@ -8,7 +8,7 @@ import type { HelsepersonellState } from "./useHelsepersonell";
 type Props = {
   state: HelsepersonellState;
   onRetry: () => void;
-  onChooseOrg?: (orgnummer: string) => Promise<void>;
+  onChooseOrg?: (orgNumber: string) => Promise<void>;
   changingOrg?: boolean;
   onCancelChangeOrg?: () => void;
   children: ReactNode;

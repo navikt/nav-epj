@@ -10,12 +10,12 @@ const ready: HelsepersonellState = {
   status: "ready",
   helsepersonell: {
     hpr: "1",
-    legekontorId: null,
+    clinicId: null,
     navn: "Kari",
     autorisasjon: "Lege",
   },
   sessionOrg: {
-    org: { id: "k", navn: "Kontor" },
+    org: { id: "k", name: "Kontor" },
     needsChoice: false,
     canChoose: true,
     choosableOrgs: [],
@@ -29,8 +29,8 @@ const unresolved: HelsepersonellState = {
     needsChoice: true,
     canChoose: true,
     choosableOrgs: [
-      { org: { id: "a", navn: "Fjordvik Legekontor", orgnummer: "311111116" }, hasOwnList: false },
-      { org: { id: "b", navn: "Lyngdal Legesenter", orgnummer: "311111124" }, hasOwnList: true },
+      { org: { id: "a", name: "Fjordvik Legekontor", orgNumber: "311111116" }, hasOwnList: false },
+      { org: { id: "b", name: "Lyngdal Legesenter", orgNumber: "311111124" }, hasOwnList: true },
     ],
   },
 };
@@ -117,7 +117,7 @@ describe("UserGate", () => {
   it("lets the user re-select the current org", async () => {
     const user = userEvent.setup();
     const onChooseOrg = vi.fn().mockResolvedValue(undefined);
-    const org = { id: "k", navn: "Kontor", orgnummer: "311111116" };
+    const org = { id: "k", name: "Kontor", orgNumber: "311111116" };
     render(
       <UserGate
         state={{

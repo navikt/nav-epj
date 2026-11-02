@@ -19,8 +19,8 @@ import no.nav.helse.core.utils.logger
 import no.nav.helse.fhir.documentReferenceId
 import no.nav.helse.fhir.encounterReferenceId
 import no.nav.helse.fhir.patientOrSubjectReferenceInputId
-import no.nav.helse.fhir.security.clinicalOrgnummer
-import no.nav.helse.fhir.security.requireClinicalOrgnummer
+import no.nav.helse.fhir.security.clinicalOrgNumber
+import no.nav.helse.fhir.security.requireClinicalOrgNumber
 import no.nav.helse.fhir.security.requireFhirScope
 import no.nav.helse.fhir.security.requirePatientMatch
 import no.nav.helse.smart.security.Interaction
@@ -38,7 +38,7 @@ fun Route.documentReferenceRoutes(
             val principal = call.requireFhirScope("DocumentReference", Interaction.READ)
 
             val documentReference =
-                documentReferenceService.getDocumentReferences(id, principal.clinicalOrgnummer())
+                documentReferenceService.getDocumentReferences(id, principal.clinicalOrgNumber())
                     ?: return@get call.respond(
                         HttpStatusCode.NotFound,
                         "No documentReference found for $id",
@@ -67,7 +67,7 @@ fun Route.documentReferenceRoutes(
                 documentReferenceService.searchDocumentReferences(
                     patientId,
                     encounterId,
-                    principal.clinicalOrgnummer(),
+                    principal.clinicalOrgNumber(),
                 )
             val json = fhirjson.encodeToString(bundle).replace("\"no-NO\"", "\"NO-nb\"")
             call.respondText(json, fhirContentType)
@@ -131,7 +131,7 @@ fun Route.documentReferenceRoutes(
                 try {
                     documentReferenceService.createDocumentReference(
                         request,
-                        principal.requireClinicalOrgnummer(),
+                        principal.requireClinicalOrgNumber(),
                     )
                 } catch (exception: KonsultasjonNotFoundException) {
                     return@post call.respondOperationOutcome(
@@ -195,7 +195,7 @@ fun Route.documentReferenceRoutes(
                 try {
                     documentReferenceService.createDocumentReference(
                         documentReference,
-                        principal.requireClinicalOrgnummer(),
+                        principal.requireClinicalOrgNumber(),
                     )
                 } catch (exception: KonsultasjonNotFoundException) {
                     return@put call.respondOperationOutcome(

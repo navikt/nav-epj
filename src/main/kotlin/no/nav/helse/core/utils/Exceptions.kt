@@ -23,9 +23,9 @@ class SessionOrgRequiredException : RuntimeException("Legekontor er ikke valgt f
 class IngenFastlegelisteException :
     RuntimeException("Legen har ingen fastlegeliste hos dette legekontoret")
 
-class LegekontorNotfoundException(orgnummer: String? = null) :
+class ClinicNotFoundException(orgNumber: String? = null) :
     RuntimeException(
-        orgnummer?.let { "Fant ikke Legekontor med orgnummer $it" } ?: "Fant ikke Legekontor"
+        orgNumber?.let { "Fant ikke Legekontor med orgnummer $it" } ?: "Fant ikke Legekontor"
     )
 
 class KonsultasjonNotFoundForPatientException(pasientId: PasientId) :

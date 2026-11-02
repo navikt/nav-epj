@@ -19,25 +19,25 @@ import no.nav.tsm.diagnoser.Diagnose
 
 class ConditionService(val konsultasjonService: KonsultasjonService) {
 
-    suspend fun getConditionsByPatientId(patientId: PatientInputId, orgnummer: String?): Bundle {
+    suspend fun getConditionsByPatientId(patientId: PatientInputId, orgNumber: String?): Bundle {
         val konsultasjoner =
-            konsultasjonService.getKonsultasjoner(PasientId(patientId.value), orgnummer)
+            konsultasjonService.getKonsultasjoner(PasientId(patientId.value), orgNumber)
         return toBundle(konsultasjoner)
     }
 
-    suspend fun getConditionsByEncounterId(encounterId: EncounterId, orgnummer: String?): Bundle {
+    suspend fun getConditionsByEncounterId(encounterId: EncounterId, orgNumber: String?): Bundle {
         val konsultasjon =
-            konsultasjonService.getKonsultasjon(KonsultasjonId(encounterId.value), orgnummer)
+            konsultasjonService.getKonsultasjon(KonsultasjonId(encounterId.value), orgNumber)
         return toBundle(listOf(konsultasjon))
     }
 
     suspend fun getConditionsByPatientIdAndEncounterId(
         patientId: PatientInputId,
         encounterId: EncounterId,
-        orgnummer: String?,
+        orgNumber: String?,
     ): Bundle {
         val konsultasjoner =
-            konsultasjonService.getKonsultasjoner(PasientId(patientId.value), orgnummer).filter {
+            konsultasjonService.getKonsultasjoner(PasientId(patientId.value), orgNumber).filter {
                 it.id.value == encounterId.value
             }
         return toBundle(konsultasjoner)

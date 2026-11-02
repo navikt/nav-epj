@@ -8,22 +8,22 @@ import com.google.fhir.model.r4.Meta
 import com.google.fhir.model.r4.Organization
 import com.google.fhir.model.r4.Uri
 import no.nav.helse.core.utils.logger
-import no.nav.helse.epj.legekontor.Legekontor
-import no.nav.helse.epj.legekontor.LegekontorId
-import no.nav.helse.epj.legekontor.LegekontorService
+import no.nav.helse.epj.clinic.Clinic
+import no.nav.helse.epj.clinic.ClinicId
+import no.nav.helse.epj.clinic.ClinicService
 
-class OrganizationService(val legekontorService: LegekontorService) {
+class OrganizationService(val clinicService: ClinicService) {
     val log = logger()
 
-    suspend fun getOrganization(id: OrganizationId, orgnummer: String?): Organization? {
-        val legekontor = legekontorService.getLegekontor(LegekontorId(id.value), orgnummer)
-        return legekontor.toOrganization()
+    suspend fun getOrganization(id: OrganizationId, orgNumber: String?): Organization? {
+        val clinic = clinicService.getClinic(ClinicId(id.value), orgNumber)
+        return clinic.toOrganization()
     }
 
-    fun Legekontor.toOrganization(): Organization {
+    fun Clinic.toOrganization(): Organization {
         return Organization(
             id = this.id.value.toString(),
-            name = com.google.fhir.model.r4.String(value = this.navn),
+            name = com.google.fhir.model.r4.String(value = this.name),
             meta =
                 Meta(
                     profile =
@@ -38,14 +38,14 @@ class OrganizationService(val legekontorService: LegekontorService) {
                 listOf(
                     Identifier(
                         system = Uri(value = "urn:oid:2.16.578.1.12.4.1.4.101"),
-                        value = com.google.fhir.model.r4.String(value = this.orgnummer),
+                        value = com.google.fhir.model.r4.String(value = this.orgNumber),
                     )
                 ),
             telecom =
                 listOf(
                     ContactPoint(
                         system = Enumeration(value = ContactPoint.ContactPointSystem.Phone),
-                        value = com.google.fhir.model.r4.String(value = this.tlf),
+                        value = com.google.fhir.model.r4.String(value = this.phone),
                     )
                 ),
         )

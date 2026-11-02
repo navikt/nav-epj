@@ -11,13 +11,13 @@ import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.path
 import io.ktor.server.response.*
 import no.nav.helse.core.utils.AktivKonsultasjonNotFoundException
+import no.nav.helse.core.utils.ClinicNotFoundException
 import no.nav.helse.core.utils.DuplikatPasientException
 import no.nav.helse.core.utils.HelsepersonellForPatientNotFoundException
 import no.nav.helse.core.utils.HelsepersonellNotFoundException
 import no.nav.helse.core.utils.IngenFastlegelisteException
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
-import no.nav.helse.core.utils.LegekontorNotfoundException
 import no.nav.helse.core.utils.PasientCreationException
 import no.nav.helse.core.utils.SessionOrgRequiredException
 import no.nav.helse.core.utils.UgyldigDiagnoseException
@@ -54,7 +54,7 @@ fun Application.configureStatusPages() {
                 status = HttpStatusCode.NotFound,
             )
         }
-        exception<LegekontorNotfoundException> { call, cause ->
+        exception<ClinicNotFoundException> { call, cause ->
             call.respondText(
                 text = "Legekontor not found: ${cause.message}",
                 status = HttpStatusCode.NotFound,

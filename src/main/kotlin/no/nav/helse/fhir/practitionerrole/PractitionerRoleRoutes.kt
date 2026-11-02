@@ -26,7 +26,7 @@ fun Route.practitionerRoleRoutes(
             val bundle =
                 practitionerRoleService.getPractitionerRolesByPractitioner(
                     hpr,
-                    principal.orgnummer.takeIf { hpr == principal.subject },
+                    principal.orgNumber.takeIf { hpr == principal.subject },
                 )
             call.respondText(fhirR4Json.encodeToString(bundle), fhirContentType)
         }

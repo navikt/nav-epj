@@ -9,7 +9,7 @@ import no.nav.helse.core.db.dbQuery
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.UgyldigDiagnoseException
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
-import no.nav.helse.utils.DEFAULT_ORGNUMMER
+import no.nav.helse.utils.DEFAULT_ORG_NUMBER
 import no.nav.tsm.diagnoser.Diagnose
 import no.nav.tsm.diagnoser.DiagnoseType
 import org.jetbrains.exposed.v1.core.eq
@@ -28,12 +28,12 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
-                    orgnummer = DEFAULT_ORGNUMMER,
+                    orgNumber = DEFAULT_ORG_NUMBER,
                 )
             )
 
         val konsultasjon =
-            konsultasjonRepository.findByKonsultasjonId(konsultasjonId, DEFAULT_ORGNUMMER)
+            konsultasjonRepository.findByKonsultasjonId(konsultasjonId, DEFAULT_ORG_NUMBER)
 
         assertEquals(emptyList(), konsultasjon?.diagnoser)
     }
@@ -49,7 +49,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
-                    orgnummer = DEFAULT_ORGNUMMER,
+                    orgNumber = DEFAULT_ORG_NUMBER,
                 )
             )
 
@@ -68,7 +68,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
                     ferdigstill = false,
                 ),
                 pasientId,
-                DEFAULT_ORGNUMMER,
+                DEFAULT_ORG_NUMBER,
             )
         }
     }
@@ -85,7 +85,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
-                        orgnummer = DEFAULT_ORGNUMMER,
+                        orgNumber = DEFAULT_ORG_NUMBER,
                     )
                 )
             val diagnose = OpprettDiagnoseRequest(kode = "A01", system = DiagnoseType.ICPC2)
@@ -115,7 +115,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
-                        orgnummer = DEFAULT_ORGNUMMER,
+                        orgNumber = DEFAULT_ORG_NUMBER,
                     )
                 )
 
@@ -133,7 +133,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
             assertEquals(1, utenPunktum)
             assertEquals(0, medPunktum)
             val lagredeDiagnoser =
-                konsultasjonRepository.listDiagnoser(konsultasjonId, DEFAULT_ORGNUMMER)
+                konsultasjonRepository.listDiagnoser(konsultasjonId, DEFAULT_ORG_NUMBER)
             assertEquals(1, lagredeDiagnoser.size)
             assertEquals("A00.0", lagredeDiagnoser.single().code)
         }
@@ -150,7 +150,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
-                    orgnummer = DEFAULT_ORGNUMMER,
+                    orgNumber = DEFAULT_ORG_NUMBER,
                 )
             )
 
@@ -161,7 +161,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
-                    orgnummer = DEFAULT_ORGNUMMER,
+                    orgNumber = DEFAULT_ORG_NUMBER,
                 )
             )
 
@@ -174,7 +174,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
         assertEquals(1, firstInsert)
         assertEquals(1, secondInsert)
 
-        val lagredeDiagnoser = konsultasjonRepository.listDiagnoser(pasientId, DEFAULT_ORGNUMMER)
+        val lagredeDiagnoser = konsultasjonRepository.listDiagnoser(pasientId, DEFAULT_ORG_NUMBER)
 
         assertEquals(2, lagredeDiagnoser.size)
     }
@@ -192,7 +192,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
-                        orgnummer = DEFAULT_ORGNUMMER,
+                        orgNumber = DEFAULT_ORG_NUMBER,
                     )
                 )
             val konsultasjonB =
@@ -202,7 +202,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
-                        orgnummer = DEFAULT_ORGNUMMER,
+                        orgNumber = DEFAULT_ORG_NUMBER,
                     )
                 )
             konsultasjonRepository.updateDiagnose(
@@ -214,7 +214,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
                 konsultasjonB.value,
             )
 
-            val diagnoserForA = konsultasjonRepository.listDiagnoser(pasientA, DEFAULT_ORGNUMMER)
+            val diagnoserForA = konsultasjonRepository.listDiagnoser(pasientA, DEFAULT_ORG_NUMBER)
 
             assertEquals(1, diagnoserForA.size)
             assertEquals("A01", diagnoserForA.single().code)
@@ -232,7 +232,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
-                        orgnummer = DEFAULT_ORGNUMMER,
+                        orgNumber = DEFAULT_ORG_NUMBER,
                     )
                 )
             val diagnose = OpprettDiagnoseRequest(kode = "A01", system = DiagnoseType.ICPC2)
@@ -241,9 +241,9 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
 
             val forventetTekst = Diagnose.from(DiagnoseType.ICPC2, "A01")!!.text
             val diagnoserByPasient =
-                konsultasjonRepository.listDiagnoser(pasientId, DEFAULT_ORGNUMMER)
+                konsultasjonRepository.listDiagnoser(pasientId, DEFAULT_ORG_NUMBER)
             val diagnoserByKonsultasjon =
-                konsultasjonRepository.listDiagnoser(konsultasjonId, DEFAULT_ORGNUMMER)
+                konsultasjonRepository.listDiagnoser(konsultasjonId, DEFAULT_ORG_NUMBER)
 
             assertEquals(forventetTekst, diagnoserByPasient.single().text)
             assertEquals(forventetTekst, diagnoserByKonsultasjon.single().text)

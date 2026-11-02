@@ -46,16 +46,16 @@ function RootComponent() {
             navn: state.helsepersonell.navn,
             hpr: state.helsepersonell.hpr,
             autorisasjon: state.helsepersonell.autorisasjon,
-            legekontor: state.sessionOrg.org?.navn ?? "",
-            orgnummer: state.sessionOrg.org?.orgnummer ?? undefined,
-            telefon: state.sessionOrg.org?.tlf ?? undefined,
+            clinic: state.sessionOrg.org?.name ?? "",
+            orgNumber: state.sessionOrg.org?.orgNumber ?? undefined,
+            phone: state.sessionOrg.org?.phone ?? undefined,
           }
         : null,
     [state],
   );
   const openPatients = () => openPatientsTab((target) => void navigate(target));
-  const onChooseOrg = async (orgnummer: string) => {
-    await chooseOrg(orgnummer);
+  const onChooseOrg = async (orgNumber: string) => {
+    await chooseOrg(orgNumber);
     setChangingOrg(false);
     void useActivePatientStore.getState().refresh();
     openPatients();
