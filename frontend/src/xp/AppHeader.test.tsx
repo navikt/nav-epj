@@ -9,8 +9,8 @@ import { expectNoSeriousViolations } from "./axeHelper";
 import { copy } from "./copy";
 
 const user = {
-  navn: "Ola Nordmann",
-  autorisasjon: "Lege",
+  name: "Ola Nordmann",
+  qualification: "Lege",
   clinic: "Legekontoret",
 };
 
@@ -52,7 +52,7 @@ describe("AppHeader", () => {
     renderHeader();
     expect(
       screen.getByText(
-        copy["header.user"](user.navn, user.autorisasjon, user.clinic),
+        copy["header.user"](user.name, user.qualification, user.clinic),
       ),
     ).toBeInTheDocument();
   });

@@ -6,14 +6,14 @@ import io.ktor.server.application.*
 import io.ktor.server.plugins.di.*
 import no.nav.helse.epj.clinic.ClinicRepository
 import no.nav.helse.epj.clinic.ClinicService
-import no.nav.helse.epj.helsepersonell.HelsepersonellRepository
-import no.nav.helse.epj.helsepersonell.HelsepersonellService
 import no.nav.helse.epj.konsultasjon.KonsultasjonRepository
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
 import no.nav.helse.epj.maaling.MaalingRepository
 import no.nav.helse.epj.maaling.MaalingService
 import no.nav.helse.epj.pasient.PasientRepository
 import no.nav.helse.epj.pasient.PasientService
+import no.nav.helse.epj.practitioner.PractitionerRepository
+import no.nav.helse.epj.practitioner.PractitionerService as EpjPractitionerService
 import no.nav.helse.epj.sessionorg.FastlegelisteRepository
 import no.nav.helse.epj.sessionorg.SessionOrgChoiceStore
 import no.nav.helse.epj.sessionorg.SessionOrgResolver
@@ -48,13 +48,13 @@ fun Application.configureDependencies() {
         provide<SmartKeys> { SmartKeys(resolve<Environment>().smart.privateKeyJwk) }
 
         provide(PasientRepository::class)
-        provide(HelsepersonellRepository::class)
+        provide(PractitionerRepository::class)
         provide(FastlegelisteRepository::class)
         provide(KonsultasjonRepository::class)
         provide(ClinicRepository::class)
         provide(MaalingRepository::class)
 
-        provide(HelsepersonellService::class)
+        provide(EpjPractitionerService::class)
         provide(KonsultasjonService::class)
         provide(PasientService::class)
         provide(ClinicService::class)

@@ -3,10 +3,10 @@ import { Button } from "./Button";
 import { OrgPicker } from "./OrgPicker";
 import { copy } from "./copy";
 import { XpIcon } from "./XpIcon";
-import type { HelsepersonellState } from "./useHelsepersonell";
+import type { PractitionerState } from "./usePractitioner";
 
 type Props = {
-  state: HelsepersonellState;
+  state: PractitionerState;
   onRetry: () => void;
   onChooseOrg?: (orgNumber: string) => Promise<void>;
   changingOrg?: boolean;

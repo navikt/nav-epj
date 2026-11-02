@@ -12,7 +12,7 @@ import no.nav.helse.core.db.konsultasjonAtOrg
 import no.nav.helse.core.utils.DuplikatPasientException
 import no.nav.helse.core.utils.IngenFastlegelisteException
 import no.nav.helse.core.utils.logger
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
+import no.nav.helse.epj.practitioner.PractitionerHpr
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -46,7 +46,7 @@ class PasientRepository {
 
     suspend fun listAtClinic(
         orgNumber: String,
-        ownHpr: HelsepersonellHpr,
+        ownHpr: PractitionerHpr,
     ): List<PasientListeElement> = dbQuery {
         val rows =
             FastlegelistePasientTable.join(
@@ -155,33 +155,30 @@ class PasientRepository {
             .any()
     }
 
-    suspend fun insertOnList(
-        pasient: Pasient,
-        listHpr: HelsepersonellHpr,
-        orgNumber: String,
-    ): Unit = dbQuery {
-        val listId =
-            FastlegelisteTable.join(
-                    ClinicTable,
-                    JoinType.INNER,
-                    FastlegelisteTable.clinicId,
-                    ClinicTable.id,
-                )
-                .select(FastlegelisteTable.id)
-                .where {
-                    (FastlegelisteTable.hpr eq listHpr.value) and
-                        (ClinicTable.orgNumber eq orgNumber)
-                }
-                .singleOrNull()
-                ?.get(FastlegelisteTable.id) ?: throw IngenFastlegelisteException()
+    suspend fun insertOnList(pasient: Pasient, listHpr: PractitionerHpr, orgNumber: String): Unit =
+        dbQuery {
+            val listId =
+                FastlegelisteTable.join(
+                        ClinicTable,
+                        JoinType.INNER,
+                        FastlegelisteTable.clinicId,
+                        ClinicTable.id,
+                    )
+                    .select(FastlegelisteTable.id)
+                    .where {
+                        (FastlegelisteTable.hpr eq listHpr.value) and
+                            (ClinicTable.orgNumber eq orgNumber)
+                    }
+                    .singleOrNull()
+                    ?.get(FastlegelisteTable.id) ?: throw IngenFastlegelisteException()
 
-        insertPasient(pasient)
-        FastlegelistePasientTable.insert {
-            it[fastlegelisteId] = listId
-            it[pasientId] = pasient.id.value
+            insertPasient(pasient)
+            FastlegelistePasientTable.insert {
+                it[fastlegelisteId] = listId
+                it[pasientId] = pasient.id.value
+            }
+            Unit
         }
-        Unit
-    }
 
     suspend fun insert(pasient: Pasient) = dbQuery { insertPasient(pasient) }
 

@@ -3,18 +3,18 @@ import { expireSession } from "./sessionExpiry";
 import { chooseSessionOrg, fetchSessionOrg } from "./api";
 import { onSessionOrgConflict } from "./sessionOrgConflict";
 import {
-  HelsepersonellSchema,
+  PractitionerSchema,
   SessionOrgSchema,
-  type Helsepersonell,
+  type Practitioner,
   type SessionOrg,
 } from "../utils/mapping/epj";
 
-export type HelsepersonellState =
+export type PractitionerState =
   | { status: "loading" }
   | { status: "error" }
   | {
       status: "ready";
-      helsepersonell: Helsepersonell;
+      practitioner: Practitioner;
       sessionOrg: SessionOrg;
     };
 
@@ -25,8 +25,8 @@ async function fetchJson(url: string, signal: AbortSignal) {
   return response.json();
 }
 
-export function useHelsepersonell() {
-  const [state, setState] = useState<HelsepersonellState>({
+export function usePractitioner() {
+  const [state, setState] = useState<PractitionerState>({
     status: "loading",
   });
   const [attempt, setAttempt] = useState(0);
@@ -36,13 +36,13 @@ export function useHelsepersonell() {
     const { signal } = controller;
     (async () => {
       try {
-        const helsepersonell = HelsepersonellSchema.parse(
-          await fetchJson("/api/helsepersonell/me", signal),
+        const practitioner = PractitionerSchema.parse(
+          await fetchJson("/api/practitioners/me", signal),
         );
         const sessionOrg = SessionOrgSchema.parse(
           await fetchJson("/api/session-org", signal),
         );
-        setState({ status: "ready", helsepersonell, sessionOrg });
+        setState({ status: "ready", practitioner, sessionOrg });
       } catch {
         if (!signal.aborted) setState({ status: "error" });
       }

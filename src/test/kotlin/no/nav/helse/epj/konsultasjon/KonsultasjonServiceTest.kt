@@ -14,8 +14,8 @@ import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.clinic.ClinicId
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.utils.DEFAULT_ORG_NUMBER
 import no.nav.tsm.diagnoser.Diagnose
 import no.nav.tsm.diagnoser.DiagnoseType
@@ -78,7 +78,7 @@ class KonsultasjonServiceTest {
     fun `getOrCreateKonsultasjon returns the same doctor's active konsultasjon without creating a new one`() =
         runTest {
             val pasientId = PasientId(Uuid.generateV4())
-            val hpr = HelsepersonellHpr("123")
+            val hpr = PractitionerHpr("123")
             val aktivKonsultasjon = konsultasjon(pasientId = pasientId)
             coEvery {
                 konsultasjonRepository.findActiveByPasientIdAndHpr(
@@ -99,7 +99,7 @@ class KonsultasjonServiceTest {
     @Test
     fun `getOrCreateKonsultasjon creates a new konsultasjon when none is active`() = runTest {
         val pasientId = PasientId(Uuid.generateV4())
-        val hpr = HelsepersonellHpr("123")
+        val hpr = PractitionerHpr("123")
         val opprettetId = KonsultasjonId(Uuid.generateV4())
         val opprettetKonsultasjon = konsultasjon(id = opprettetId, pasientId = pasientId)
 
@@ -123,7 +123,7 @@ class KonsultasjonServiceTest {
     fun `getOrCreateKonsultasjon creates a new konsultasjon for a different doctor even when one is active`() =
         runTest {
             val pasientId = PasientId(Uuid.generateV4())
-            val annenLegeHpr = HelsepersonellHpr("456")
+            val annenLegeHpr = PractitionerHpr("456")
             val opprettetId = KonsultasjonId(Uuid.generateV4())
             val opprettetKonsultasjon = konsultasjon(id = opprettetId, pasientId = pasientId)
 

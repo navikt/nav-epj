@@ -12,13 +12,13 @@ import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.utils.DuplikatMaalingException
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.KonsultasjonTilhorerAnnenPasientException
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.konsultasjon.KonsultasjonRepository
 import no.nav.helse.epj.konsultasjon.OpprettKonsultasjon
 import no.nav.helse.epj.pasient.Pasient
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.epj.pasient.PasientRepository
+import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.utils.DEFAULT_ORG_NUMBER
 import no.nav.helse.utils.OTHER_ORG_NUMBER
 import no.nav.helse.utils.WithPostgresql
@@ -37,7 +37,7 @@ class MaalingRepositoryTest : WithPostgresql() {
 
     @OptIn(ExperimentalUuidApi::class)
     private suspend fun opprettPasientMedKonsultasjon(
-        hpr: HelsepersonellHpr = HelsepersonellHpr("123")
+        hpr: PractitionerHpr = PractitionerHpr("123")
     ): Pair<PasientId, KonsultasjonId> {
         val pasientId = PasientId(Uuid.generateV4())
         pasientRepository.insert(
@@ -66,7 +66,7 @@ class MaalingRepositoryTest : WithPostgresql() {
         pasientId: PasientId,
         konsultasjonId: KonsultasjonId,
         id: MaalingId = MaalingId(Uuid.generateV4()),
-        hpr: HelsepersonellHpr? = HelsepersonellHpr("123"),
+        hpr: PractitionerHpr? = PractitionerHpr("123"),
         loincKode: String = "8310-5",
         loincVisningsnavn: String = "Body temperature",
         verdi: BigDecimal = BigDecimal("37.2000"),

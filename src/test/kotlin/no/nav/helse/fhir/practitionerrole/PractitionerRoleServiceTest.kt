@@ -12,27 +12,26 @@ import kotlinx.coroutines.runBlocking
 import no.nav.helse.epj.clinic.Clinic
 import no.nav.helse.epj.clinic.ClinicId
 import no.nav.helse.epj.clinic.ClinicRepository
-import no.nav.helse.epj.helsepersonell.Helsepersonell
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
-import no.nav.helse.epj.helsepersonell.HelsepersonellService
+import no.nav.helse.epj.practitioner.Practitioner
+import no.nav.helse.epj.practitioner.PractitionerHpr
+import no.nav.helse.epj.practitioner.PractitionerService
 import no.nav.helse.epj.sessionorg.FastlegelisteRepository
 
 class PractitionerRoleServiceTest {
-    private val helsepersonellService = mockk<HelsepersonellService>()
+    private val practitionerService = mockk<PractitionerService>()
     private val clinicRepository = mockk<ClinicRepository>()
     private val fastlegelisteRepository = mockk<FastlegelisteRepository>()
     private val service =
-        PractitionerRoleService(helsepersonellService, clinicRepository, fastlegelisteRepository)
+        PractitionerRoleService(practitionerService, clinicRepository, fastlegelisteRepository)
 
     private val sessionOrg = Clinic(ClinicId(Uuid.generateV4()), "Fjordvik", "311111116", null)
 
-    private val helsepersonell = Helsepersonell(HelsepersonellHpr("565501872"), "Test", "LE")
+    private val practitioner = Practitioner(PractitionerHpr("565501872"), "Test", "LE")
 
     private fun organizationOf(orgNumber: String?, listed: List<ClinicId> = emptyList()): String? =
         runBlocking {
-            coEvery {
-                helsepersonellService.getHelsepersonell(HelsepersonellHpr("565501872"))
-            } returns helsepersonell
+            coEvery { practitionerService.getPractitioner(PractitionerHpr("565501872")) } returns
+                practitioner
             coEvery { fastlegelisteRepository.findClinicIdsByHpr("565501872") } returns listed
             coEvery { clinicRepository.findByOrgNumber("311111116") } returns sessionOrg
             val role =

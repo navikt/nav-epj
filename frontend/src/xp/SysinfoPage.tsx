@@ -29,7 +29,7 @@ export function SysinfoPage() {
   const fhirId = useId();
   const fhirBase =
     smart.state.status === "ready" ? fhirBaseOf(smart.state.data) : null;
-  const sessionUser = user ? { navn: user.navn, hpr: user.hpr } : null;
+  const sessionUser = user ? { name: user.name, hpr: user.hpr } : null;
 
   function copySummary() {
     const sections = [

@@ -3,9 +3,9 @@ package no.nav.helse.epj.maaling
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import kotlin.uuid.Uuid
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.practitioner.PractitionerHpr
 
 @JvmInline value class MaalingId(val value: Uuid)
 
@@ -13,7 +13,7 @@ data class Maaling(
     val id: MaalingId,
     val pasientId: PasientId,
     val konsultasjonId: KonsultasjonId,
-    val hpr: HelsepersonellHpr?,
+    val hpr: PractitionerHpr?,
     val loincKode: String,
     val loincVisningsnavn: String,
     val verdi: BigDecimal,
@@ -26,7 +26,7 @@ data class Maaling(
 data class OpprettMaalingRequest(
     val pasientId: PasientId,
     val konsultasjonId: KonsultasjonId,
-    val hpr: HelsepersonellHpr?,
+    val hpr: PractitionerHpr?,
     val loincKode: String,
     val loincVisningsnavn: String,
     val verdi: BigDecimal,

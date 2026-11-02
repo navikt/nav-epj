@@ -11,9 +11,9 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.clinic.ClinicRepository
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.pasient.Pasient
 import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.utils.DEFAULT_ORG_NUMBER
 import org.junit.Test
 
@@ -30,7 +30,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
     @Test
     fun `finds one konsultasjon`() = runTest {
         val pasientId = PasientId(Uuid.generateV4())
-        val hpr = HelsepersonellHpr("123")
+        val hpr = PractitionerHpr("123")
         pasientRepository.insert(
             Pasient(
                 id = pasientId,
@@ -54,7 +54,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
 
     @Test
     fun `listByPasientId returns only konsultasjoner for the correct patient`() = runTest {
-        val hpr = HelsepersonellHpr("123")
+        val hpr = PractitionerHpr("123")
         val pasientA = opprettPasient(hpr = hpr)
         val pasientB = opprettPasient(hpr = hpr)
         konsultasjonRepository.insert(
@@ -83,7 +83,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
 
     @Test
     fun `listByPasientId sorts konsultasjoner descending by startetTidspunkt`() = runTest {
-        val hpr = HelsepersonellHpr("123")
+        val hpr = PractitionerHpr("123")
         val pasientId = opprettPasient(hpr = hpr)
         val eldst = LocalDateTime.now().minusHours(2)
         val nyest = LocalDateTime.now()
@@ -116,8 +116,8 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
 
     @Test
     fun `insert stores multiple hpr for a konsultasjon`() = runTest {
-        val hprA = HelsepersonellHpr("123")
-        val hprB = HelsepersonellHpr("456")
+        val hprA = PractitionerHpr("123")
+        val hprB = PractitionerHpr("456")
         val pasientId = opprettPasient(hpr = hprA)
         konsultasjonRepository.insert(
             OpprettKonsultasjon(
@@ -161,7 +161,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
 
     @Test
     fun `findActiveByPasientId ignores completed konsultasjoner`() = runTest {
-        val hpr = HelsepersonellHpr("123")
+        val hpr = PractitionerHpr("123")
         val pasientId = opprettPasient(hpr = hpr)
         val oppdaterKonsultasjonRequest =
             konsultasjonRepository.insert(
@@ -189,7 +189,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
 
     @Test
     fun `findActiveByPasientId returns the newest active konsultasjon`() = runTest {
-        val hpr = HelsepersonellHpr("123")
+        val hpr = PractitionerHpr("123")
         val pasientId = opprettPasient(hpr = hpr)
         konsultasjonRepository.insert(
             OpprettKonsultasjon(
@@ -219,8 +219,8 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
     @Test
     fun `findActiveByPasientIdAndHpr returns null when the doctor has no active konsultasjon`() =
         runTest {
-            val hpr = HelsepersonellHpr("123")
-            val annenHpr = HelsepersonellHpr("456")
+            val hpr = PractitionerHpr("123")
+            val annenHpr = PractitionerHpr("456")
             val pasientId = opprettPasient(hpr = hpr)
             konsultasjonRepository.insert(
                 OpprettKonsultasjon(
@@ -244,8 +244,8 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
     @Test
     fun `findActiveByPasientIdAndHpr lets two different doctors have simultaneous active konsultasjoner for the same patient`() =
         runTest {
-            val legeA = HelsepersonellHpr("123")
-            val legeB = HelsepersonellHpr("456")
+            val legeA = PractitionerHpr("123")
+            val legeB = PractitionerHpr("456")
             val pasientId = opprettPasient(hpr = legeA)
             val konsultasjonA =
                 konsultasjonRepository.insert(
@@ -300,7 +300,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
 
     @Test
     fun `findByKonsultasjonId returns the konsultasjon for a known id`() = runTest {
-        val hpr = HelsepersonellHpr("123")
+        val hpr = PractitionerHpr("123")
         val pasientId = opprettPasient(hpr = hpr)
         val konsultasjonId =
             konsultasjonRepository.insert(
@@ -371,7 +371,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
     @Test
     fun `findActive ignores avlyst and planlagt konsultasjoner without avsluttet tidspunkt`() =
         runTest {
-            val hpr = HelsepersonellHpr("123")
+            val hpr = PractitionerHpr("123")
             val pasientId = opprettPasient(hpr = hpr)
             listOf(KonsultasjonStatus.AVLYST, KonsultasjonStatus.PLANLAGT).forEach {
                 konsultasjonRepository.insert(

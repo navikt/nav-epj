@@ -15,11 +15,11 @@ import kotlinx.datetime.UtcOffset
 import kotlinx.datetime.toKotlinLocalDateTime
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.oid
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.konsultasjon.Konsultasjon
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
 import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.fhir.condition.conditionFhirId
 import no.nav.helse.fhir.patient.PatientInputId
 
@@ -33,7 +33,7 @@ class EncounterService(val konsultasjonService: KonsultasjonService) {
 
     suspend fun getActiveEncounterByPatient(
         patientId: PatientInputId,
-        hpr: HelsepersonellHpr,
+        hpr: PractitionerHpr,
         orgNumber: String?,
     ): Encounter? {
         val konsultasjon =

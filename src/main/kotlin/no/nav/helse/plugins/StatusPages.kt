@@ -13,12 +13,12 @@ import io.ktor.server.response.*
 import no.nav.helse.core.utils.AktivKonsultasjonNotFoundException
 import no.nav.helse.core.utils.ClinicNotFoundException
 import no.nav.helse.core.utils.DuplikatPasientException
-import no.nav.helse.core.utils.HelsepersonellForPatientNotFoundException
-import no.nav.helse.core.utils.HelsepersonellNotFoundException
 import no.nav.helse.core.utils.IngenFastlegelisteException
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.PasientCreationException
+import no.nav.helse.core.utils.PractitionerForPatientNotFoundException
+import no.nav.helse.core.utils.PractitionerNotFoundException
 import no.nav.helse.core.utils.SessionOrgRequiredException
 import no.nav.helse.core.utils.UgyldigDiagnoseException
 import no.nav.helse.core.utils.UgyldigPersonidentException
@@ -48,7 +48,7 @@ fun Application.configureStatusPages() {
                 status = HttpStatusCode.NotFound,
             )
         }
-        exception<HelsepersonellNotFoundException> { call, cause ->
+        exception<PractitionerNotFoundException> { call, cause ->
             call.respondText(
                 text = "Helsepersonell not found: ${cause.message}",
                 status = HttpStatusCode.NotFound,
@@ -119,7 +119,7 @@ fun Application.configureStatusPages() {
                 status = HttpStatusCode.InternalServerError,
             )
         }
-        exception<HelsepersonellForPatientNotFoundException> { call, cause ->
+        exception<PractitionerForPatientNotFoundException> { call, cause ->
             log.error("Uventet feil i helsepersonell-API", cause)
             call.respondText(
                 text = "En uventet feil oppstod",

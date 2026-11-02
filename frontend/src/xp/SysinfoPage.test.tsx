@@ -70,9 +70,9 @@ function renderPage() {
   return render(
     <CurrentUserContext.Provider
       value={{
-        navn: "Bjarte Legesen",
+        name: "Bjarte Legesen",
         hpr: "111222333",
-        autorisasjon: "Lege",
+        qualification: "Lege",
         clinic: "Kontor",
       }}
     >

@@ -30,9 +30,9 @@ function setup() {
   const view = render(
     <CurrentUserContext.Provider
       value={{
-        navn: "Lege Legesen",
+        name: "Lege Legesen",
         hpr: "9144889",
-        autorisasjon: "Lege",
+        qualification: "Lege",
         clinic: "Kontor",
       }}
     >

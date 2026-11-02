@@ -4,15 +4,15 @@ import { describe, expect, it, vi } from "vitest";
 import { UserGate } from "./UserGate";
 import { expectNoSeriousViolations } from "./axeHelper";
 import { copy } from "./copy";
-import type { HelsepersonellState } from "./useHelsepersonell";
+import type { PractitionerState } from "./usePractitioner";
 
-const ready: HelsepersonellState = {
+const ready: PractitionerState = {
   status: "ready",
-  helsepersonell: {
+  practitioner: {
     hpr: "1",
     clinicId: null,
-    navn: "Kari",
-    autorisasjon: "Lege",
+    name: "Kari",
+    qualification: "Lege",
   },
   sessionOrg: {
     org: { id: "k", name: "Kontor" },
@@ -22,7 +22,7 @@ const ready: HelsepersonellState = {
   },
 };
 
-const unresolved: HelsepersonellState = {
+const unresolved: PractitionerState = {
   ...ready,
   sessionOrg: {
     org: null,

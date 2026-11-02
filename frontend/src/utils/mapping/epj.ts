@@ -20,14 +20,14 @@ export const SessionOrgSchema = z.object({
 
 export type SessionOrg = z.infer<typeof SessionOrgSchema>;
 
-export const HelsepersonellSchema = z.object({
+export const PractitionerSchema = z.object({
     hpr: z.string(),
     clinicId: z.string().nullish(),
-    navn: z.string(),
-    autorisasjon: z.string(),
+    name: z.string(),
+    qualification: z.string(),
 });
 
-export type Helsepersonell = z.infer<typeof HelsepersonellSchema>;
+export type Practitioner = z.infer<typeof PractitionerSchema>;
 
 export const PasientSchema = z.object({
     id: z.string(),

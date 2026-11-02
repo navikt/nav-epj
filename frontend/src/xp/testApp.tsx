@@ -12,8 +12,8 @@ import { mockMatchMedia } from "./matchMediaMock";
 export const testMe = {
   hpr: "9144889",
   clinicId: "k1",
-  navn: "Kari Nordmann",
-  autorisasjon: "Lege",
+  name: "Kari Nordmann",
+  qualification: "Lege",
 };
 
 export const testClinic = {
@@ -42,7 +42,7 @@ const activePatientHandler: Handler = (init) => ({
 export function stubApi(handlers: Record<string, Handler> = {}) {
   const calls: { key: string; init?: RequestInit }[] = [];
   const all: Record<string, Handler> = {
-    "GET /api/helsepersonell/me": () => ({ body: testMe }),
+    "GET /api/practitioners/me": () => ({ body: testMe }),
     "GET /api/session-org": () => ({ body: testSessionOrg }),
     "PUT /api/active-patient": activePatientHandler,
     ...handlers,

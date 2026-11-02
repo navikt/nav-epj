@@ -17,13 +17,13 @@ import com.google.fhir.model.r4.terminologies.DocumentReferenceStatus
 import kotlin.text.substringAfter
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.logger
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.konsultasjon.Journalnotat
 import no.nav.helse.epj.konsultasjon.JournalnotatId
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
 import no.nav.helse.epj.konsultasjon.OpprettJournalnotatRequest
 import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
 
@@ -57,9 +57,9 @@ class DocumentReferenceService(val konsultasjonService: KonsultasjonService) {
     private suspend fun authors(
         konsultasjonId: KonsultasjonId,
         orgNumber: kotlin.String?,
-    ): List<HelsepersonellHpr> =
+    ): List<PractitionerHpr> =
         konsultasjonService.getKonsultasjon(konsultasjonId, orgNumber).hpr.map {
-            HelsepersonellHpr(it)
+            PractitionerHpr(it)
         }
 
     suspend fun searchDocumentReferences(
@@ -75,7 +75,7 @@ class DocumentReferenceService(val konsultasjonService: KonsultasjonService) {
             )
         val hprByKonsultasjon =
             konsultasjonService.getKonsultasjoner(PasientId(patientId.value), orgNumber).associate {
-                it.id to it.hpr.map { hpr -> HelsepersonellHpr(hpr) }
+                it.id to it.hpr.map { hpr -> PractitionerHpr(hpr) }
             }
 
         return Bundle(
@@ -152,7 +152,7 @@ class DocumentReferenceService(val konsultasjonService: KonsultasjonService) {
         return journalnotat.toDocumentReference(authors(journalnotat.konsultasjonId, orgNumber))
     }
 
-    fun Journalnotat.toDocumentReference(hpr: List<HelsepersonellHpr>): DocumentReference {
+    fun Journalnotat.toDocumentReference(hpr: List<PractitionerHpr>): DocumentReference {
         return DocumentReference(
             id = this.id.value.toString(),
             description = String(value = this.journalnotat),

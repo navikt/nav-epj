@@ -14,11 +14,11 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.clinic.ClinicId
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.konsultasjon.Konsultasjon
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
 import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.fhir.patient.PatientInputId
 import no.nav.helse.utils.DEFAULT_ORG_NUMBER
 import no.nav.tsm.diagnoser.Diagnose
@@ -31,7 +31,7 @@ class EncounterServiceTest {
 
     private val konsultasjonService = mockk<KonsultasjonService>()
     private val encounterService = EncounterService(konsultasjonService)
-    private val hpr = HelsepersonellHpr("9144889")
+    private val hpr = PractitionerHpr("9144889")
 
     @OptIn(ExperimentalUuidApi::class)
     private fun konsultasjon(

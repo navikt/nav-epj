@@ -4,8 +4,8 @@ import java.time.LocalDateTime
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.clinic.ClinicId
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.tsm.diagnoser.Diagnose
 import no.nav.tsm.diagnoser.DiagnoseType
 
@@ -41,7 +41,7 @@ data class OpprettJournalnotatRequest(
 
 data class OpprettKonsultasjon(
     val pasientId: PasientId,
-    val hpr: List<HelsepersonellHpr>,
+    val hpr: List<PractitionerHpr>,
     val startetTidspunkt: LocalDateTime,
     val status: KonsultasjonStatus,
     val orgNumber: String,

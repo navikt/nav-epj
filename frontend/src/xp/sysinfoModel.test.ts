@@ -26,7 +26,7 @@ const real: Session = {
 
 const local: Session = { idp: "local-stub", claims: { sub: "local-dev" } };
 
-const user = { navn: "Bjarte Legesen", hpr: "111222333" };
+const user = { name: "Bjarte Legesen", hpr: "111222333" };
 
 const smart: SmartConfiguration = {
   issuer: "http://localhost:8080/oidc",

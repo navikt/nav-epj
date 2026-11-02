@@ -10,9 +10,9 @@ import kotlin.test.assertEquals
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.utils.DEFAULT_ORG_NUMBER
 import org.junit.Test
 
@@ -28,7 +28,7 @@ class MaalingServiceTest {
         OpprettMaalingRequest(
             pasientId = pasientId,
             konsultasjonId = konsultasjonId,
-            hpr = HelsepersonellHpr("123"),
+            hpr = PractitionerHpr("123"),
             loincKode = "8310-5",
             loincVisningsnavn = "Body temperature",
             verdi = BigDecimal("37.2000"),

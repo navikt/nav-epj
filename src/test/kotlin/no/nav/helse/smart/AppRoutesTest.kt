@@ -27,12 +27,12 @@ import no.nav.helse.core.ValkeyConfig
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.clinic.Clinic
 import no.nav.helse.epj.clinic.ClinicId
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.konsultasjon.Konsultasjon
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.epj.pasient.PasientService
+import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.epj.sessionorg.SessionOrgResolution
 import no.nav.helse.epj.sessionorg.SessionOrgResolver
 import no.nav.helse.fhir.encounter.EncounterService
@@ -195,14 +195,14 @@ class AppRoutesTest : WithValkey() {
         coEvery {
             encounterService.getActiveEncounterByPatient(
                 any<PatientInputId>(),
-                any<HelsepersonellHpr>(),
+                any<PractitionerHpr>(),
                 any<String>(),
             )
         } coAnswers
             {
                 real.getActiveEncounterByPatient(
                     PatientInputId(arg<kotlin.uuid.Uuid>(0)),
-                    HelsepersonellHpr(arg<String>(1)),
+                    PractitionerHpr(arg<String>(1)),
                     arg<String>(2),
                 )
             }
@@ -304,7 +304,7 @@ class AppRoutesTest : WithValkey() {
             coEvery {
                 encounterService.getActiveEncounterByPatient(
                     any<PatientInputId>(),
-                    HelsepersonellHpr(HPR),
+                    PractitionerHpr(HPR),
                     ORG,
                 )
             } returns encounterWithId("encounter-1")
@@ -387,7 +387,7 @@ class AppRoutesTest : WithValkey() {
         coEvery {
             encounterService.getActiveEncounterByPatient(
                 any<PatientInputId>(),
-                HelsepersonellHpr(HPR),
+                PractitionerHpr(HPR),
                 ORG,
             )
         } returns encounterWithId("encounter-1")
@@ -420,7 +420,7 @@ class AppRoutesTest : WithValkey() {
             coEvery {
                 encounterService.getActiveEncounterByPatient(
                     any<PatientInputId>(),
-                    HelsepersonellHpr(HPR),
+                    PractitionerHpr(HPR),
                     ORG,
                 )
             } returns encounterWithId("encounter-1")
@@ -441,7 +441,7 @@ class AppRoutesTest : WithValkey() {
         coEvery {
             encounterService.getActiveEncounterByPatient(
                 any<PatientInputId>(),
-                HelsepersonellHpr(HPR),
+                PractitionerHpr(HPR),
                 ORG,
             )
         } returns encounterWithId("encounter-1")
@@ -471,7 +471,7 @@ class AppRoutesTest : WithValkey() {
         coEvery {
             encounterService.getActiveEncounterByPatient(
                 any<PatientInputId>(),
-                HelsepersonellHpr(HPR),
+                PractitionerHpr(HPR),
                 ORG,
             )
         } returns encounterWithId("encounter-1")
@@ -522,7 +522,7 @@ class AppRoutesTest : WithValkey() {
             useRealEncounterService(
                 mockk {
                     coEvery { getAktivKonsultasjon(patientId, ORG) } returns other
-                    coEvery { getAktivKonsultasjon(patientId, HelsepersonellHpr(HPR), ORG) } returns
+                    coEvery { getAktivKonsultasjon(patientId, PractitionerHpr(HPR), ORG) } returns
                         own
                 }
             )
@@ -548,7 +548,7 @@ class AppRoutesTest : WithValkey() {
                 mockk {
                     coEvery { getAktivKonsultasjon(patientId, ORG) } returns
                         konsultasjon(patientId, "222")
-                    coEvery { getAktivKonsultasjon(patientId, HelsepersonellHpr(HPR), ORG) } returns
+                    coEvery { getAktivKonsultasjon(patientId, PractitionerHpr(HPR), ORG) } returns
                         null
                 }
             )
@@ -583,7 +583,7 @@ class AppRoutesTest : WithValkey() {
         coEvery {
             encounterService.getActiveEncounterByPatient(
                 any<PatientInputId>(),
-                HelsepersonellHpr(HPR),
+                PractitionerHpr(HPR),
                 ORG,
             )
         } returns encounterWithId("encounter-1")
@@ -625,7 +625,7 @@ class AppRoutesTest : WithValkey() {
         coEvery {
             encounterService.getActiveEncounterByPatient(
                 any<PatientInputId>(),
-                HelsepersonellHpr(HPR),
+                PractitionerHpr(HPR),
                 ORG,
             )
         } returns null

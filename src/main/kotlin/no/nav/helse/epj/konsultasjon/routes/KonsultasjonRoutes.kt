@@ -5,12 +5,12 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.helse.core.utils.logger
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
 import no.nav.helse.epj.konsultasjon.OppdaterKonsultasjonRequest
 import no.nav.helse.epj.konsultasjonId
 import no.nav.helse.epj.pasient.ActivePatientService
 import no.nav.helse.epj.patientId
+import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.epj.sessionorg.SessionOrgResolver
 import no.nav.helse.epj.sessionorg.requireOrgNumber
 import no.nav.helse.helseId.loggedInUser
@@ -32,7 +32,7 @@ fun Route.konsultasjonRoutes(
             post {
                 val pasientId = call.patientId()
                 val principal = loggedInUser()
-                val hpr = HelsepersonellHpr(principal.hpr)
+                val hpr = PractitionerHpr(principal.hpr)
                 activePatientService.claimActivePatient(principal.hpr, pasientId.value)
                     ?: return@post call.respond(HttpStatusCode.NotFound)
                 val orgNumber = sessionOrgResolver.requireOrgNumber(principal.hpr)

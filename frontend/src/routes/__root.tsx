@@ -21,7 +21,7 @@ import { useAccessExpiry } from "../xp/useAccessExpiry";
 import { useAppSync } from "../xp/useAppSync";
 import { useCurrentRoute } from "../xp/useCurrentRoute";
 import { logout } from "../xp/logout";
-import { useHelsepersonell } from "../xp/useHelsepersonell";
+import { usePractitioner } from "../xp/usePractitioner";
 import { useRouteTabSync } from "../xp/useRouteTabSync";
 import { useSearchSubmit } from "../xp/useSearchSubmit";
 import {
@@ -36,16 +36,16 @@ export const Route = createRootRoute({
 function RootComponent() {
   const navigate = useNavigate();
   const route = useCurrentRoute();
-  const { state, retry, chooseOrg } = useHelsepersonell();
+  const { state, retry, chooseOrg } = usePractitioner();
   const [changingOrg, setChangingOrg] = useState(false);
   const sessionOrg = state.status === "ready" ? state.sessionOrg : null;
   const currentUser = useMemo<CurrentUser | null>(
     () =>
       state.status === "ready"
         ? {
-            navn: state.helsepersonell.navn,
-            hpr: state.helsepersonell.hpr,
-            autorisasjon: state.helsepersonell.autorisasjon,
+            name: state.practitioner.name,
+            hpr: state.practitioner.hpr,
+            qualification: state.practitioner.qualification,
             clinic: state.sessionOrg.org?.name ?? "",
             orgNumber: state.sessionOrg.org?.orgNumber ?? undefined,
             phone: state.sessionOrg.org?.phone ?? undefined,
@@ -66,7 +66,7 @@ function RootComponent() {
     useWorkspaceStore.getState().setCurrent(JOURNAL_TAB_ID);
     void navigate(target);
   };
-  const hpr = state.status === "ready" ? state.helsepersonell.hpr : null;
+  const hpr = state.status === "ready" ? state.practitioner.hpr : null;
   useEffect(() => usePatientsStore.getState().setOwner(hpr), [hpr]);
   useEffect(() => useLaunchModeStore.getState().setOwner(hpr), [hpr]);
   useEffect(() => {
@@ -92,7 +92,7 @@ function RootComponent() {
           }
         />
         <TaskPane
-          userName={currentUser?.navn}
+          userName={currentUser?.name}
           patientsCurrent={route.kind === "patients"}
           onOpenPatients={openPatients}
           onOpenJournal={openJournal}

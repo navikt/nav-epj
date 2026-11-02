@@ -3,9 +3,9 @@ package no.nav.helse.smart.api
 import io.ktor.http.URLBuilder
 import java.util.UUID
 import kotlin.uuid.Uuid
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.epj.pasient.PasientService
+import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.epj.sessionorg.SessionOrgResolution
 import no.nav.helse.epj.sessionorg.SessionOrgResolver
 import no.nav.helse.fhir.encounter.EncounterService
@@ -82,7 +82,7 @@ class LaunchPreparer(
         val encounter =
             encounterService.getActiveEncounterByPatient(
                 patientInputId,
-                HelsepersonellHpr(hpr),
+                PractitionerHpr(hpr),
                 orgNumber,
             ) ?: return LaunchPreparation.NoActiveEncounter
         val patientId = patient.id

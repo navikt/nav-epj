@@ -129,7 +129,7 @@ export function OngoingKonsultasjon({ patient, konsultasjon }: Props) {
             <dt>{copy["s4.info.duration"]}</dt>
             <dd>{copy["s4.info.minutes"](minutes)}</dd>
             <dt>{copy["s4.info.doctor"]}</dt>
-            <dd>{user?.navn ?? copy["s4.empty.value"]}</dd>
+            <dd>{user?.name ?? copy["s4.empty.value"]}</dd>
           </dl>
         </Card>
       </div>

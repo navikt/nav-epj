@@ -9,9 +9,9 @@ import no.nav.helse.core.utils.DuplikatMaalingException
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonTilhorerAnnenPasientException
 import no.nav.helse.core.utils.logger
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.practitioner.PractitionerHpr
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
@@ -103,7 +103,7 @@ class MaalingRepository {
             id = MaalingId(this[MaalingTable.id]),
             pasientId = PasientId(this[MaalingTable.pasientId]),
             konsultasjonId = KonsultasjonId(this[MaalingTable.konsultasjonId]),
-            hpr = this[MaalingTable.hpr]?.let { HelsepersonellHpr(it) },
+            hpr = this[MaalingTable.hpr]?.let { PractitionerHpr(it) },
             loincKode = this[MaalingTable.loincKode],
             loincVisningsnavn = this[MaalingTable.loincVisningsnavn],
             verdi = this[MaalingTable.verdi],
