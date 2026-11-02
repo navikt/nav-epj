@@ -65,7 +65,7 @@ class TestdataSeedTest : WithPostgresql() {
     fun `every seeded diagnosis code exists in the diagnosis library`() {
         val koder =
             queryStrings(
-                "SELECT DISTINCT diagnosesystem, diagnosekode FROM konsultasjon_diagnosekode"
+                "SELECT DISTINCT diagnosis_system, diagnosis_code FROM consultation_diagnosis_code"
             )
 
         assertTrue(koder.isNotEmpty())
@@ -78,8 +78,8 @@ class TestdataSeedTest : WithPostgresql() {
     fun `legacy A09 diagnosis rows are rewritten to A09-9 when the seed is applied again`() {
         val ids =
             queryStrings(
-                    "SELECT konsultasjon_id FROM konsultasjon_diagnosekode " +
-                        "WHERE diagnosesystem = 'ICD10' AND diagnosekode = 'A09.9'"
+                    "SELECT consultation_id FROM consultation_diagnosis_code " +
+                        "WHERE diagnosis_system = 'ICD10' AND diagnosis_code = 'A09.9'"
                 )
                 .map { it.single() }
         assertTrue(ids.size >= 2)
@@ -87,11 +87,11 @@ class TestdataSeedTest : WithPostgresql() {
         withConnection { connection ->
             connection.createStatement().use {
                 it.execute(
-                    "UPDATE konsultasjon_diagnosekode SET diagnosekode = 'A09' " +
-                        "WHERE konsultasjon_id = '$rewritten' AND diagnosekode = 'A09.9'"
+                    "UPDATE consultation_diagnosis_code SET diagnosis_code = 'A09' " +
+                        "WHERE consultation_id = '$rewritten' AND diagnosis_code = 'A09.9'"
                 )
                 it.execute(
-                    "INSERT INTO konsultasjon_diagnosekode VALUES ('$duplicated', 'ICD10', 'A09')"
+                    "INSERT INTO consultation_diagnosis_code VALUES ('$duplicated', 'ICD10', 'A09')"
                 )
             }
         }
@@ -101,7 +101,7 @@ class TestdataSeedTest : WithPostgresql() {
         assertEquals(
             0,
             queryStrings(
-                    "SELECT count(*) FROM konsultasjon_diagnosekode WHERE diagnosekode = 'A09'"
+                    "SELECT count(*) FROM consultation_diagnosis_code WHERE diagnosis_code = 'A09'"
                 )
                 .single()
                 .single()!!
@@ -110,15 +110,15 @@ class TestdataSeedTest : WithPostgresql() {
         assertEquals(
             listOf(listOf("A09.9")),
             queryStrings(
-                "SELECT diagnosekode FROM konsultasjon_diagnosekode " +
-                    "WHERE konsultasjon_id = '$rewritten' AND diagnosekode LIKE 'A09%'"
+                "SELECT diagnosis_code FROM consultation_diagnosis_code " +
+                    "WHERE consultation_id = '$rewritten' AND diagnosis_code LIKE 'A09%'"
             ),
         )
         assertEquals(
             listOf(listOf("A09.9")),
             queryStrings(
-                "SELECT diagnosekode FROM konsultasjon_diagnosekode " +
-                    "WHERE konsultasjon_id = '$duplicated' AND diagnosekode LIKE 'A09%'"
+                "SELECT diagnosis_code FROM consultation_diagnosis_code " +
+                    "WHERE consultation_id = '$duplicated' AND diagnosis_code LIKE 'A09%'"
             ),
         )
     }
@@ -126,19 +126,19 @@ class TestdataSeedTest : WithPostgresql() {
     @Test
     fun `avlyst and fullfort konsultasjoner have an end time while open ones do not`() {
         val avsluttetMangler =
-            "SELECT count(*) FROM konsultasjon WHERE status IN ('AVLYST', 'FULLFØRT') " +
-                "AND avsluttet_tidspunkt IS NULL"
+            "SELECT count(*) FROM consultation WHERE status IN ('AVLYST', 'FULLFØRT') " +
+                "AND ended_at IS NULL"
         assertEquals("0", queryStrings(avsluttetMangler).single().single())
         assertTrue(
-            queryStrings("SELECT count(*) FROM konsultasjon WHERE status = 'AVLYST'")
+            queryStrings("SELECT count(*) FROM consultation WHERE status = 'AVLYST'")
                 .single()
                 .single()!!
                 .toInt() > 0
         )
         assertTrue(
             queryStrings(
-                    "SELECT count(*) FROM konsultasjon WHERE status IN ('PLANLAGT', 'PÅGÅENDE') " +
-                        "AND avsluttet_tidspunkt IS NULL"
+                    "SELECT count(*) FROM consultation WHERE status IN ('PLANLAGT', 'PÅGÅENDE') " +
+                        "AND ended_at IS NULL"
                 )
                 .single()
                 .single()!!
@@ -150,9 +150,7 @@ class TestdataSeedTest : WithPostgresql() {
     fun `existing avlyst konsultasjoner without end time get one when the seed is applied again`() {
         withConnection { connection ->
             connection.createStatement().use {
-                it.execute(
-                    "UPDATE konsultasjon SET avsluttet_tidspunkt = NULL WHERE status = 'AVLYST'"
-                )
+                it.execute("UPDATE consultation SET ended_at = NULL WHERE status = 'AVLYST'")
             }
         }
 
@@ -161,8 +159,8 @@ class TestdataSeedTest : WithPostgresql() {
         assertEquals(
             "0",
             queryStrings(
-                    "SELECT count(*) FROM konsultasjon WHERE status = 'AVLYST' " +
-                        "AND avsluttet_tidspunkt IS NULL"
+                    "SELECT count(*) FROM consultation WHERE status = 'AVLYST' " +
+                        "AND ended_at IS NULL"
                 )
                 .single()
                 .single(),
@@ -173,7 +171,7 @@ class TestdataSeedTest : WithPostgresql() {
     fun `every seeded patient with demographics has a valid synthetic personident`() {
         val patients =
             queryStrings(
-                "SELECT personident, personident_type, birth_date FROM pasient WHERE birth_date IS NOT NULL"
+                "SELECT personident, personident_type, birth_date FROM patient WHERE birth_date IS NOT NULL"
             )
 
         assertTrue(patients.size >= 6)
@@ -192,7 +190,7 @@ class TestdataSeedTest : WithPostgresql() {
         val row =
             queryStrings(
                     "SELECT personident, personident_type, birth_date, gender " +
-                        "FROM pasient WHERE fornavn = 'MATEMATISK'"
+                        "FROM patient WHERE given_name = 'MATEMATISK'"
                 )
                 .single()
 
@@ -201,15 +199,14 @@ class TestdataSeedTest : WithPostgresql() {
     }
 
     @Test
-    fun `V7 patient is moved to a synthetic personident without a duplicate`() {
+    fun `patient with complete demographics is seeded once with a synthetic personident`() {
         val rows =
             queryStrings(
-                "SELECT id, personident FROM pasient WHERE fornavn = 'FRISK' AND etternavn = 'REV'"
+                "SELECT personident FROM patient WHERE given_name = 'FRISK' AND family_name = 'REV'"
             )
 
         assertEquals(1, rows.size)
-        assertEquals("279d2ae3-5be5-4f07-a9df-c9b660201e50", rows.single()[0])
-        assertTrue(PersonidentValidator.isSynthetic(rows.single()[1]!!))
+        assertTrue(PersonidentValidator.isSynthetic(rows.single().single()!!))
     }
 
     @Test
@@ -217,7 +214,7 @@ class TestdataSeedTest : WithPostgresql() {
         val weights = intArrayOf(3, 2, 7, 6, 5, 4, 3, 2)
         val seeded =
             queryStrings(
-                "SELECT orgnummer FROM legekontor WHERE orgnummer ~ '^[0-9]{9}$' AND orgnummer LIKE '3%'"
+                "SELECT org_number FROM clinic WHERE org_number ~ '^[0-9]{9}$' AND org_number LIKE '3%'"
             )
 
         assertEquals(6, seeded.size)
@@ -233,11 +230,11 @@ class TestdataSeedTest : WithPostgresql() {
         val lists =
             queryStrings(
                 """
-                SELECT fl.hpr, lk.orgnummer, count(flp.pasient_id)
+                SELECT fl.hpr, lk.org_number, count(flp.patient_id)
                 FROM fastlegeliste fl
-                         JOIN legekontor lk ON lk.id = fl.legekontor_id
-                         LEFT JOIN fastlegeliste_pasient flp ON flp.fastlegeliste_id = fl.id
-                GROUP BY fl.hpr, lk.orgnummer
+                         JOIN clinic lk ON lk.id = fl.clinic_id
+                         LEFT JOIN fastlegeliste_patient flp ON flp.fastlegeliste_id = fl.id
+                GROUP BY fl.hpr, lk.org_number
                 ORDER BY fl.hpr
                 """
                     .trimIndent()
@@ -261,13 +258,13 @@ class TestdataSeedTest : WithPostgresql() {
         val offices =
             queryStrings(
                 """
-                SELECT DISTINCT lk.orgnummer
-                FROM pasient p
-                         JOIN fastlegeliste_pasient flp ON flp.pasient_id = p.id
+                SELECT DISTINCT lk.org_number
+                FROM patient p
+                         JOIN fastlegeliste_patient flp ON flp.patient_id = p.id
                          JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
-                         JOIN legekontor lk ON lk.id = fl.legekontor_id
-                WHERE p.etternavn = 'FJORD'
-                ORDER BY lk.orgnummer
+                         JOIN clinic lk ON lk.id = fl.clinic_id
+                WHERE p.family_name = 'FJORD'
+                ORDER BY lk.org_number
                 """
                     .trimIndent()
             )
@@ -282,57 +279,45 @@ class TestdataSeedTest : WithPostgresql() {
             connection.createStatement().use {
                 it.execute(
                     """
-                    INSERT INTO konsultasjon (id, pasient_id, legekontor_id, startet_tidspunkt, status)
-                    SELECT '$konsultasjonId', p.id, fl.legekontor_id, now(), 'planlagt'
-                    FROM pasient p
-                             JOIN fastlegeliste_pasient flp ON flp.pasient_id = p.id
+                    INSERT INTO consultation (id, patient_id, clinic_id, started_at, status)
+                    SELECT '$konsultasjonId', p.id, fl.clinic_id, now(), 'planlagt'
+                    FROM patient p
+                             JOIN fastlegeliste_patient flp ON flp.patient_id = p.id
                              JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
-                    WHERE p.fornavn = 'TRYGG'
+                    WHERE p.given_name = 'TRYGG'
                     """
                         .trimIndent()
                 )
             }
         }
         val before =
-            listOf(
-                    "legekontor",
-                    "pasient",
-                    "fastlegeliste",
-                    "fastlegeliste_pasient",
-                    "konsultasjon",
-                )
+            listOf("clinic", "patient", "fastlegeliste", "fastlegeliste_patient", "consultation")
                 .map { count(it) }
 
         applySeedAgain()
 
         val after =
-            listOf(
-                    "legekontor",
-                    "pasient",
-                    "fastlegeliste",
-                    "fastlegeliste_pasient",
-                    "konsultasjon",
-                )
+            listOf("clinic", "patient", "fastlegeliste", "fastlegeliste_patient", "consultation")
                 .map { count(it) }
         assertEquals(before, after)
         assertEquals(
             listOf(listOf(konsultasjonId.toString())),
-            queryStrings("SELECT id FROM konsultasjon WHERE id = '$konsultasjonId'"),
+            queryStrings("SELECT id FROM consultation WHERE id = '$konsultasjonId'"),
         )
     }
 
     private fun clinicalCounts(orgnummer: String): List<String> =
         queryStrings(
                 """
-                SELECT (SELECT count(*) FROM konsultasjon k WHERE k.legekontor_id = lk.id),
-                       (SELECT count(*) FROM konsultasjon_diagnosekode d
-                                 JOIN konsultasjon k ON k.id = d.konsultasjon_id WHERE k.legekontor_id = lk.id),
-                       (SELECT count(*) FROM maaling m
-                                 JOIN konsultasjon k ON k.id = m.konsultasjon_id WHERE k.legekontor_id = lk.id),
-                       (SELECT count(*) FROM journalnotat j
-                                 JOIN konsultasjon k ON k.id = j.konsultasjon_id WHERE k.legekontor_id = lk.id)
-                FROM legekontor lk
-                WHERE lk.orgnummer = '$orgnummer'
+                SELECT (SELECT count(*) FROM consultation k WHERE k.clinic_id = lk.id),
+                       (SELECT count(*) FROM consultation_diagnosis_code d
+                                 JOIN consultation k ON k.id = d.consultation_id WHERE k.clinic_id = lk.id),
+                       (SELECT count(*) FROM measurement m
+                                 JOIN consultation k ON k.id = m.consultation_id WHERE k.clinic_id = lk.id),
+                       (SELECT count(*) FROM clinical_note j
+                                 JOIN consultation k ON k.id = j.consultation_id WHERE k.clinic_id = lk.id)
+                FROM clinic lk
+                WHERE lk.org_number = '$orgnummer'
                 """
                     .trimIndent()
             )
@@ -350,15 +335,15 @@ class TestdataSeedTest : WithPostgresql() {
         val withoutActive =
             queryStrings(
                 """
-                SELECT p.fornavn
-                FROM pasient p
-                         JOIN fastlegeliste_pasient flp ON flp.pasient_id = p.id
+                SELECT p.given_name
+                FROM patient p
+                         JOIN fastlegeliste_patient flp ON flp.patient_id = p.id
                          JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
                 WHERE fl.hpr IN ('565501872', '900000001')
                   AND NOT EXISTS (SELECT 1
-                                  FROM konsultasjon k
-                                  WHERE k.pasient_id = p.id
-                                    AND k.legekontor_id = fl.legekontor_id
+                                  FROM consultation k
+                                  WHERE k.patient_id = p.id
+                                    AND k.clinic_id = fl.clinic_id
                                     AND k.status = 'PÅGÅENDE')
                 """
                     .trimIndent()
@@ -371,8 +356,8 @@ class TestdataSeedTest : WithPostgresql() {
     fun `everyday patients have diagnoses, measurements and a dated history`() {
         val everyday =
             """
-            SELECT flp.pasient_id
-            FROM fastlegeliste_pasient flp
+            SELECT flp.patient_id
+            FROM fastlegeliste_patient flp
                      JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
             WHERE fl.hpr IN ('565501872', '900000001')
             """
@@ -381,8 +366,8 @@ class TestdataSeedTest : WithPostgresql() {
         assertEquals(
             "0",
             queryStrings(
-                    "SELECT count(*) FROM konsultasjon k WHERE k.status = 'FULLFØRT' AND NOT EXISTS " +
-                        "(SELECT 1 FROM konsultasjon_diagnosekode d WHERE d.konsultasjon_id = k.id)"
+                    "SELECT count(*) FROM consultation k WHERE k.status = 'FULLFØRT' AND NOT EXISTS " +
+                        "(SELECT 1 FROM consultation_diagnosis_code d WHERE d.consultation_id = k.id)"
                 )
                 .single()
                 .single(),
@@ -391,7 +376,7 @@ class TestdataSeedTest : WithPostgresql() {
             "0",
             queryStrings(
                     "SELECT count(*) FROM ($everyday) e WHERE NOT EXISTS " +
-                        "(SELECT 1 FROM maaling m WHERE m.pasient_id = e.pasient_id)"
+                        "(SELECT 1 FROM measurement m WHERE m.patient_id = e.patient_id)"
                 )
                 .single()
                 .single(),
@@ -399,16 +384,16 @@ class TestdataSeedTest : WithPostgresql() {
         assertEquals(
             "0",
             queryStrings(
-                    "SELECT count(*) FROM konsultasjon WHERE status = 'PLANLAGT' " +
-                        "AND startet_tidspunkt < '2026-10-21'::timestamptz"
+                    "SELECT count(*) FROM consultation WHERE status = 'PLANLAGT' " +
+                        "AND started_at < '2026-10-21'::timestamptz"
                 )
                 .single()
                 .single(),
         )
         val withSeries =
             queryStrings(
-                    "SELECT count(DISTINCT pasient_id) FROM (SELECT pasient_id FROM maaling " +
-                        "WHERE pasient_id IN ($everyday) GROUP BY pasient_id, loinc_kode " +
+                    "SELECT count(DISTINCT patient_id) FROM (SELECT patient_id FROM measurement " +
+                        "WHERE patient_id IN ($everyday) GROUP BY patient_id, loinc_code " +
                         "HAVING count(*) >= 6) s"
                 )
                 .single()
@@ -422,11 +407,11 @@ class TestdataSeedTest : WithPostgresql() {
         val hba1c =
             queryStrings(
                     """
-                    SELECT m.verdi
-                    FROM maaling m
-                             JOIN pasient p ON p.id = m.pasient_id
-                    WHERE p.fornavn = 'RASK' AND m.loinc_kode = '4548-4'
-                    ORDER BY m.effektiv_tidspunkt
+                    SELECT m.value
+                    FROM measurement m
+                             JOIN patient p ON p.id = m.patient_id
+                    WHERE p.given_name = 'RASK' AND m.loinc_code = '4548-4'
+                    ORDER BY m.effective_at
                     """
                         .trimIndent()
                 )
@@ -443,21 +428,21 @@ class TestdataSeedTest : WithPostgresql() {
         withConnection { connection ->
             connection.createStatement().use {
                 it.execute(
-                    "DELETE FROM konsultasjon_diagnosekode WHERE konsultasjon_id = $rask " +
-                        "AND diagnosekode = 'I10'"
+                    "DELETE FROM consultation_diagnosis_code WHERE consultation_id = $rask " +
+                        "AND diagnosis_code = 'I10'"
                 )
                 it.execute(
-                    "DELETE FROM maaling WHERE konsultasjon_id = $rask AND loinc_kode = '29463-7'"
+                    "DELETE FROM measurement WHERE consultation_id = $rask AND loinc_code = '29463-7'"
                 )
             }
         }
         val tables =
             listOf(
-                "konsultasjon",
-                "konsultasjon_helsepersonell",
-                "konsultasjon_diagnosekode",
-                "journalnotat",
-                "maaling",
+                "consultation",
+                "consultation_practitioner",
+                "consultation_diagnosis_code",
+                "clinical_note",
+                "measurement",
             )
         val before = tables.map { count(it) }
 
@@ -467,8 +452,8 @@ class TestdataSeedTest : WithPostgresql() {
         assertEquals(
             "0",
             queryStrings(
-                    "SELECT count(*) FROM konsultasjon_diagnosekode WHERE konsultasjon_id = $rask " +
-                        "AND diagnosekode = 'I10'"
+                    "SELECT count(*) FROM consultation_diagnosis_code WHERE consultation_id = $rask " +
+                        "AND diagnosis_code = 'I10'"
                 )
                 .single()
                 .single(),
@@ -476,7 +461,7 @@ class TestdataSeedTest : WithPostgresql() {
         assertEquals(
             "0",
             queryStrings(
-                    "SELECT count(*) FROM maaling WHERE konsultasjon_id = $rask AND loinc_kode = '29463-7'"
+                    "SELECT count(*) FROM measurement WHERE consultation_id = $rask AND loinc_code = '29463-7'"
                 )
                 .single()
                 .single(),
@@ -489,8 +474,8 @@ class TestdataSeedTest : WithPostgresql() {
             queryStrings(
                 """
                 SELECT p.personident, p.personident_type, p.birth_date, p.gender
-                FROM pasient p
-                         JOIN fastlegeliste_pasient flp ON flp.pasient_id = p.id
+                FROM patient p
+                         JOIN fastlegeliste_patient flp ON flp.patient_id = p.id
                          JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
                 WHERE fl.hpr LIKE '9000001%'
                 """
@@ -517,14 +502,14 @@ class TestdataSeedTest : WithPostgresql() {
         val types =
             queryStrings(
                 """
-                SELECT lk.orgnummer, string_agg(DISTINCT p.personident_type, ',' ORDER BY p.personident_type)
-                FROM pasient p
-                         JOIN fastlegeliste_pasient flp ON flp.pasient_id = p.id
+                SELECT lk.org_number, string_agg(DISTINCT p.personident_type, ',' ORDER BY p.personident_type)
+                FROM patient p
+                         JOIN fastlegeliste_patient flp ON flp.patient_id = p.id
                          JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
-                         JOIN legekontor lk ON lk.id = fl.legekontor_id
+                         JOIN clinic lk ON lk.id = fl.clinic_id
                 WHERE fl.hpr LIKE '9000001%'
-                GROUP BY lk.orgnummer
-                ORDER BY lk.orgnummer
+                GROUP BY lk.org_number
+                ORDER BY lk.org_number
                 """
                     .trimIndent()
             )
@@ -538,13 +523,13 @@ class TestdataSeedTest : WithPostgresql() {
         val households =
             queryStrings(
                 """
-                SELECT p.etternavn, count(DISTINCT fl.legekontor_id)
-                FROM pasient p
-                         JOIN fastlegeliste_pasient flp ON flp.pasient_id = p.id
+                SELECT p.family_name, count(DISTINCT fl.clinic_id)
+                FROM patient p
+                         JOIN fastlegeliste_patient flp ON flp.patient_id = p.id
                          JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
-                WHERE fl.hpr LIKE '9000001%' AND p.etternavn IN ('BERGE', 'STRAND')
-                GROUP BY p.etternavn
-                ORDER BY p.etternavn
+                WHERE fl.hpr LIKE '9000001%' AND p.family_name IN ('BERGE', 'STRAND')
+                GROUP BY p.family_name
+                ORDER BY p.family_name
                 """
                     .trimIndent()
             )
@@ -556,8 +541,8 @@ class TestdataSeedTest : WithPostgresql() {
     fun `seed overwrites demographics and restores removed list membership`() {
         withConnection { connection ->
             connection.createStatement().use {
-                it.execute("UPDATE pasient SET fornavn = 'ENDRET' WHERE fornavn = 'TRYGG'")
-                it.execute("DELETE FROM fastlegeliste_pasient")
+                it.execute("UPDATE patient SET given_name = 'ENDRET' WHERE given_name = 'TRYGG'")
+                it.execute("DELETE FROM fastlegeliste_patient")
             }
         }
 
@@ -565,16 +550,18 @@ class TestdataSeedTest : WithPostgresql() {
 
         assertEquals(
             "1",
-            queryStrings("SELECT count(*) FROM pasient WHERE fornavn = 'TRYGG'").single().single(),
+            queryStrings("SELECT count(*) FROM patient WHERE given_name = 'TRYGG'")
+                .single()
+                .single(),
         )
-        assertEquals("40", count("fastlegeliste_pasient"))
+        assertEquals("40", count("fastlegeliste_patient"))
     }
 
     @Test
     fun `migrating again with the seed disabled succeeds without clean`() {
         getFlyway(config.postgres).migrate()
 
-        assertEquals("40", count("fastlegeliste_pasient"))
+        assertEquals("40", count("fastlegeliste_patient"))
     }
 
     @Test
@@ -584,14 +571,14 @@ class TestdataSeedTest : WithPostgresql() {
             connection.createStatement().use {
                 it.execute(
                     """
-                    INSERT INTO pasient (id, fornavn, etternavn, personident)
+                    INSERT INTO patient (id, given_name, family_name, personident)
                     VALUES ('$pasientId', 'APP', 'OPPRETTET', 'app-created-1')
                     """
                         .trimIndent()
                 )
                 it.execute(
                     """
-                    INSERT INTO fastlegeliste_pasient (fastlegeliste_id, pasient_id)
+                    INSERT INTO fastlegeliste_patient (fastlegeliste_id, patient_id)
                     SELECT id, '$pasientId' FROM fastlegeliste WHERE hpr = '565501872'
                     """
                         .trimIndent()
@@ -606,9 +593,9 @@ class TestdataSeedTest : WithPostgresql() {
             queryStrings(
                 """
                 SELECT fl.hpr
-                FROM fastlegeliste_pasient flp
+                FROM fastlegeliste_patient flp
                          JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
-                WHERE flp.pasient_id = '$pasientId'
+                WHERE flp.patient_id = '$pasientId'
                 """
                     .trimIndent()
             ),
@@ -622,9 +609,9 @@ class TestdataSeedTest : WithPostgresql() {
             connection.createStatement().use {
                 it.execute(
                     """
-                    UPDATE fastlegeliste_pasient
+                    UPDATE fastlegeliste_patient
                     SET fastlegeliste_id = (SELECT id FROM fastlegeliste WHERE hpr = '900000001')
-                    WHERE pasient_id = (SELECT id FROM pasient WHERE fornavn = 'TRYGG')
+                    WHERE patient_id = (SELECT id FROM patient WHERE given_name = 'TRYGG')
                     """
                         .trimIndent()
                 )
@@ -638,10 +625,10 @@ class TestdataSeedTest : WithPostgresql() {
             queryStrings(
                 """
                 SELECT fl.hpr
-                FROM fastlegeliste_pasient flp
+                FROM fastlegeliste_patient flp
                          JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
-                         JOIN pasient p ON p.id = flp.pasient_id
-                WHERE p.fornavn = 'TRYGG'
+                         JOIN patient p ON p.id = flp.patient_id
+                WHERE p.given_name = 'TRYGG'
                 """
                     .trimIndent()
             ),

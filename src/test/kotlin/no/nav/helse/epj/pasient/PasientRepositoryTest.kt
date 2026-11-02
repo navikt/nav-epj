@@ -110,6 +110,15 @@ class PasientRepositoryTest : WithPostgresql() {
 
     @Test
     fun `legacy patient remains readable without invented demographics`() = runTest {
+        pasientRepository.insert(
+            Pasient(
+                id = PasientId(Uuid.generateV4()),
+                fornavn = "fornavn",
+                etternavn = "etternavn",
+                personident = "21914897936",
+            )
+        )
+
         val legacyPatient = pasientRepository.findByPersonident("21914897936")
 
         assertEquals("21914897936", legacyPatient?.personident)
