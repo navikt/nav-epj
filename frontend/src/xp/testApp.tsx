@@ -11,23 +11,23 @@ import { mockMatchMedia } from "./matchMediaMock";
 
 export const testMe = {
   hpr: "9144889",
-  legekontorId: "k1",
+  clinicId: "k1",
   navn: "Kari Nordmann",
   autorisasjon: "Lege",
 };
 
-export const testKontor = {
+export const testClinic = {
   id: "k1",
-  navn: "Storgata legekontor",
-  orgnummer: "123456789",
-  tlf: null,
+  name: "Storgata legekontor",
+  orgNumber: "123456789",
+  phone: null,
 };
 
 export const testSessionOrg = {
-  org: testKontor,
+  org: testClinic,
   needsChoice: false,
   canChoose: false,
-  choosableOrgs: [{ org: testKontor, hasOwnList: true }],
+  choosableOrgs: [{ org: testClinic, hasOwnList: true }],
 };
 
 type Handler = (init?: RequestInit) => { status?: number; body?: unknown };

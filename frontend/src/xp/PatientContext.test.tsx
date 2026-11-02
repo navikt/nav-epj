@@ -21,8 +21,8 @@ const user = {
   navn: "Lege Legesen",
   hpr: "9144889",
   autorisasjon: "Lege",
-  legekontor: "Testlegekontoret",
-  orgnummer: "999888777",
+  clinic: "Testlegekontoret",
+  orgNumber: "999888777",
 };
 
 function setup(props: Partial<Parameters<typeof PatientContext>[0]> = {}) {

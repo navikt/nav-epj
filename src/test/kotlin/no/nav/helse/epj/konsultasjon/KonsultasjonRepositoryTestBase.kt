@@ -8,7 +8,7 @@ import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.pasient.Pasient
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.epj.pasient.PasientRepository
-import no.nav.helse.utils.DEFAULT_ORGNUMMER
+import no.nav.helse.utils.DEFAULT_ORG_NUMBER
 import no.nav.helse.utils.WithPostgresql
 
 abstract class KonsultasjonRepositoryTestBase : WithPostgresql() {
@@ -43,7 +43,7 @@ abstract class KonsultasjonRepositoryTestBase : WithPostgresql() {
                 listOf(HelsepersonellHpr("123")),
                 LocalDateTime.now(),
                 KonsultasjonStatus.PAAGAAENDE,
-                orgnummer = DEFAULT_ORGNUMMER,
+                orgNumber = DEFAULT_ORG_NUMBER,
             )
         )
 }

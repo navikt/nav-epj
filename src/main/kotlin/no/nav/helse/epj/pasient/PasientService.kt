@@ -6,19 +6,19 @@ import no.nav.helse.core.utils.PasientCreationException
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 
 class PasientService(private val pasientRepository: PasientRepository) {
-    suspend fun listAtLegekontor(
-        orgnummer: String,
+    suspend fun listAtClinic(
+        orgNumber: String,
         ownHpr: HelsepersonellHpr,
     ): List<PasientListeElement> {
-        return pasientRepository.listAtLegekontor(orgnummer, ownHpr)
+        return pasientRepository.listAtClinic(orgNumber, ownHpr)
     }
 
-    suspend fun isListedAt(id: PasientId, orgnummer: String): Boolean {
-        return pasientRepository.isListedAt(id.value, orgnummer)
+    suspend fun isListedAt(id: PasientId, orgNumber: String): Boolean {
+        return pasientRepository.isListedAt(id.value, orgNumber)
     }
 
-    suspend fun hasKonsultasjonAt(id: PasientId, orgnummer: String): Boolean {
-        return pasientRepository.hasKonsultasjonAt(id.value, orgnummer)
+    suspend fun hasKonsultasjonAt(id: PasientId, orgNumber: String): Boolean {
+        return pasientRepository.hasKonsultasjonAt(id.value, orgNumber)
     }
 
     suspend fun getPasientById(id: PasientId): Pasient? {
@@ -33,7 +33,7 @@ class PasientService(private val pasientRepository: PasientRepository) {
     suspend fun createPasient(
         request: OpprettPasientRequest,
         hpr: String,
-        orgnummer: String,
+        orgNumber: String,
     ): Pasient {
         PersonidentValidator.validate(
             personident = request.personident,
@@ -51,7 +51,7 @@ class PasientService(private val pasientRepository: PasientRepository) {
                 birthDate = request.birthDate,
                 gender = request.gender,
             )
-        pasientRepository.insertOnList(newPasient, HelsepersonellHpr(hpr), orgnummer)
+        pasientRepository.insertOnList(newPasient, HelsepersonellHpr(hpr), orgNumber)
         return pasientRepository.findByPersonident(request.personident)
             ?: throw PasientCreationException()
     }

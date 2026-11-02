@@ -8,7 +8,7 @@ import type { SessionOrg } from "../utils/mapping/epj";
 
 type Props = {
   sessionOrg: SessionOrg;
-  onChoose: (orgnummer: string) => Promise<void>;
+  onChoose: (orgNumber: string) => Promise<void>;
   onCancel?: () => void;
 };
 
@@ -16,11 +16,11 @@ export function OrgPicker({ sessionOrg, onChoose, onCancel }: Props) {
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
 
-  async function choose(orgnummer: string) {
+  async function choose(orgNumber: string) {
     setPending(true);
     setFailed(false);
     try {
-      await onChoose(orgnummer);
+      await onChoose(orgNumber);
     } catch {
       setFailed(true);
       setPending(false);
@@ -44,10 +44,10 @@ export function OrgPicker({ sessionOrg, onChoose, onCancel }: Props) {
             <li key={org.id}>
               <Button
                 disabled={pending}
-                onClick={() => org.orgnummer && void choose(org.orgnummer)}
+                onClick={() => org.orgNumber && void choose(org.orgNumber)}
               >
-                {org.navn}
-                {org.orgnummer && ` · ${copy["org.pick.orgnr"](org.orgnummer)}`}
+                {org.name}
+                {org.orgNumber && ` · ${copy["org.pick.orgNumber"](org.orgNumber)}`}
               </Button>
               {hasOwnList && <Badge tone="info">{copy["org.pick.ownList"]}</Badge>}
             </li>

@@ -39,7 +39,7 @@ import no.nav.helse.smart.security.Interaction
 import no.nav.helse.smart.security.ScopeContext
 import no.nav.helse.smart.security.SmartPrincipal
 import no.nav.helse.smart.security.SmartScope
-import no.nav.helse.utils.DEFAULT_ORGNUMMER as ORG
+import no.nav.helse.utils.DEFAULT_ORG_NUMBER as ORG
 import org.junit.Test
 
 private const val TYPE_SYSTEM = "urn:oid:2.16.578.1.12.4.1.1.9602"
@@ -112,7 +112,7 @@ class DocumentReferenceRoutesTest {
                                 scopes = scopes,
                                 patient = boundPatient,
                                 encounter = null,
-                                orgnummer = ORG,
+                                orgNumber = ORG,
                             )
                         )
                     }

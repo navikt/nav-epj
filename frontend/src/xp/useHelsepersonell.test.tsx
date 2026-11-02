@@ -3,13 +3,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { notifySessionOrgConflict } from "./sessionOrgConflict";
 import { useHelsepersonell } from "./useHelsepersonell";
 
-const me = { hpr: "9144889", legekontorId: null, navn: "Kari", autorisasjon: "Lege" };
-const kontor = { id: "k1", navn: "Storgata legekontor", orgnummer: "123456789", tlf: null };
+const me = { hpr: "9144889", clinicId: null, navn: "Kari", autorisasjon: "Lege" };
+const clinic = { id: "k1", name: "Storgata legekontor", orgNumber: "123456789", phone: null };
 const sessionOrg = {
-  org: kontor,
+  org: clinic,
   needsChoice: false,
   canChoose: true,
-  choosableOrgs: [{ org: kontor, hasOwnList: false }],
+  choosableOrgs: [{ org: clinic, hasOwnList: false }],
 };
 const needsChoice = { ...sessionOrg, org: null, needsChoice: true };
 
@@ -96,7 +96,7 @@ describe("useHelsepersonell", () => {
       "/api/session-org",
       expect.objectContaining({
         method: "PUT",
-        body: JSON.stringify({ orgnummer: "123456789" }),
+        body: JSON.stringify({ orgNumber: "123456789" }),
       }),
     );
     expect(result.current.state).toMatchObject({ sessionOrg });

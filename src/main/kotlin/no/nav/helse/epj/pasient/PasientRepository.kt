@@ -2,10 +2,10 @@ package no.nav.helse.epj.pasient
 
 import java.time.LocalDateTime
 import kotlin.uuid.Uuid
+import no.nav.helse.core.db.ClinicTable
 import no.nav.helse.core.db.FastlegelistePasientTable
 import no.nav.helse.core.db.FastlegelisteTable
 import no.nav.helse.core.db.KonsultasjonTable
-import no.nav.helse.core.db.LegekontorTable
 import no.nav.helse.core.db.PasientTable
 import no.nav.helse.core.db.dbQuery
 import no.nav.helse.core.db.konsultasjonAtOrg
@@ -44,8 +44,8 @@ class PasientRepository {
         patient?.toPasient()
     }
 
-    suspend fun listAtLegekontor(
-        orgnummer: String,
+    suspend fun listAtClinic(
+        orgNumber: String,
         ownHpr: HelsepersonellHpr,
     ): List<PasientListeElement> = dbQuery {
         val rows =
@@ -55,12 +55,7 @@ class PasientRepository {
                     FastlegelistePasientTable.fastlegelisteId,
                     FastlegelisteTable.id,
                 )
-                .join(
-                    LegekontorTable,
-                    JoinType.INNER,
-                    FastlegelisteTable.legekontorId,
-                    LegekontorTable.id,
-                )
+                .join(ClinicTable, JoinType.INNER, FastlegelisteTable.clinicId, ClinicTable.id)
                 .join(
                     PasientTable,
                     JoinType.INNER,
@@ -68,19 +63,19 @@ class PasientRepository {
                     PasientTable.id,
                 )
                 .selectAll()
-                .where { LegekontorTable.orgnummer eq orgnummer }
+                .where { ClinicTable.orgNumber eq orgNumber }
                 .toList()
 
         val listedIds = rows.map { it[PasientTable.id] }
         val lapsedRows =
             PasientTable.selectAll()
                 .where {
-                    (PasientTable.id inSubQuery konsultasjonPasientIdsAtOrg(orgnummer)) and
+                    (PasientTable.id inSubQuery konsultasjonPasientIdsAtOrg(orgNumber)) and
                         (PasientTable.id notInList listedIds)
                 }
                 .toList()
 
-        val sisteKonsultasjon = sisteKonsultasjonByPasient(orgnummer)
+        val sisteKonsultasjon = sisteKonsultasjonByPasient(orgNumber)
 
         val listed =
             rows
@@ -116,14 +111,14 @@ class PasientRepository {
         listed + lapsed
     }
 
-    private fun sisteKonsultasjonByPasient(orgnummer: String): Map<Uuid, SisteKonsultasjon> =
+    private fun sisteKonsultasjonByPasient(orgNumber: String): Map<Uuid, SisteKonsultasjon> =
         KonsultasjonTable.select(
                 KonsultasjonTable.pasientId,
                 KonsultasjonTable.status,
                 KonsultasjonTable.startetTidspunkt,
                 KonsultasjonTable.avsluttetTidspunkt,
             )
-            .where { konsultasjonAtOrg(orgnummer) }
+            .where { konsultasjonAtOrg(orgNumber) }
             .orderBy(KonsultasjonTable.startetTidspunkt, SortOrder.DESC)
             .groupBy { it[KonsultasjonTable.pasientId] }
             .mapValues { (_, konsultasjoner) ->
@@ -135,32 +130,27 @@ class PasientRepository {
                 )
             }
 
-    suspend fun hasKonsultasjonAt(pasientId: Uuid, orgnummer: String): Boolean = dbQuery {
+    suspend fun hasKonsultasjonAt(pasientId: Uuid, orgNumber: String): Boolean = dbQuery {
         KonsultasjonTable.select(KonsultasjonTable.id)
-            .where { (KonsultasjonTable.pasientId eq pasientId) and konsultasjonAtOrg(orgnummer) }
+            .where { (KonsultasjonTable.pasientId eq pasientId) and konsultasjonAtOrg(orgNumber) }
             .any()
     }
 
-    private fun konsultasjonPasientIdsAtOrg(orgnummer: String) =
-        KonsultasjonTable.select(KonsultasjonTable.pasientId).where { konsultasjonAtOrg(orgnummer) }
+    private fun konsultasjonPasientIdsAtOrg(orgNumber: String) =
+        KonsultasjonTable.select(KonsultasjonTable.pasientId).where { konsultasjonAtOrg(orgNumber) }
 
-    suspend fun isListedAt(pasientId: Uuid, orgnummer: String): Boolean = dbQuery {
+    suspend fun isListedAt(pasientId: Uuid, orgNumber: String): Boolean = dbQuery {
         FastlegelistePasientTable.join(
                 FastlegelisteTable,
                 JoinType.INNER,
                 FastlegelistePasientTable.fastlegelisteId,
                 FastlegelisteTable.id,
             )
-            .join(
-                LegekontorTable,
-                JoinType.INNER,
-                FastlegelisteTable.legekontorId,
-                LegekontorTable.id,
-            )
+            .join(ClinicTable, JoinType.INNER, FastlegelisteTable.clinicId, ClinicTable.id)
             .select(FastlegelistePasientTable.pasientId)
             .where {
                 (FastlegelistePasientTable.pasientId eq pasientId) and
-                    (LegekontorTable.orgnummer eq orgnummer)
+                    (ClinicTable.orgNumber eq orgNumber)
             }
             .any()
     }
@@ -168,19 +158,19 @@ class PasientRepository {
     suspend fun insertOnList(
         pasient: Pasient,
         listHpr: HelsepersonellHpr,
-        orgnummer: String,
+        orgNumber: String,
     ): Unit = dbQuery {
         val listId =
             FastlegelisteTable.join(
-                    LegekontorTable,
+                    ClinicTable,
                     JoinType.INNER,
-                    FastlegelisteTable.legekontorId,
-                    LegekontorTable.id,
+                    FastlegelisteTable.clinicId,
+                    ClinicTable.id,
                 )
                 .select(FastlegelisteTable.id)
                 .where {
                     (FastlegelisteTable.hpr eq listHpr.value) and
-                        (LegekontorTable.orgnummer eq orgnummer)
+                        (ClinicTable.orgNumber eq orgNumber)
                 }
                 .singleOrNull()
                 ?.get(FastlegelisteTable.id) ?: throw IngenFastlegelisteException()

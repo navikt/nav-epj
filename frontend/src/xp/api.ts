@@ -82,11 +82,11 @@ export async function fetchSessionOrg(): Promise<SessionOrg> {
 }
 
 export async function chooseSessionOrg(
-  orgnummer: string,
+  orgNumber: string,
 ): Promise<SessionOrg> {
   const response = await request(
     "/api/session-org",
-    jsonInit("PUT", { orgnummer }),
+    jsonInit("PUT", { orgNumber }),
   );
   return SessionOrgSchema.parse(await response.json());
 }

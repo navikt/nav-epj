@@ -4,10 +4,15 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.helse.epj.legekontor.Legekontor
+import no.nav.helse.epj.clinic.Clinic
 import no.nav.helse.helseId.loggedInUser
 
-data class SessionOrgDto(val id: String, val navn: String, val orgnummer: String, val tlf: String?)
+data class SessionOrgDto(
+    val id: String,
+    val name: String,
+    val orgNumber: String,
+    val phone: String?,
+)
 
 data class ChoosableOrgDto(val org: SessionOrgDto, val hasOwnList: Boolean)
 
@@ -18,10 +23,10 @@ data class SessionOrgResponse(
     val choosableOrgs: List<ChoosableOrgDto>,
 )
 
-data class ChooseOrgRequest(val orgnummer: String)
+data class ChooseOrgRequest(val orgNumber: String)
 
-private fun Legekontor.toDto() =
-    SessionOrgDto(id.value.toString(), navn, checkNotNull(orgnummer), tlf)
+private fun Clinic.toDto() =
+    SessionOrgDto(id.value.toString(), name, checkNotNull(orgNumber), phone)
 
 fun Route.sessionOrgRoutes(
     sessionOrgResolver: SessionOrgResolver,
@@ -47,7 +52,7 @@ fun Route.sessionOrgRoutes(
         put {
             val hpr = loggedInUser().hpr
             val request = call.receive<ChooseOrgRequest>()
-            when (sessionOrgService.choose(hpr, request.orgnummer)) {
+            when (sessionOrgService.choose(hpr, request.orgNumber)) {
                 is ChooseOrgResult.Chosen -> call.respond(response(hpr))
                 ChooseOrgResult.UnknownOrg ->
                     call.respond(HttpStatusCode.BadRequest, "Ukjent legekontor")

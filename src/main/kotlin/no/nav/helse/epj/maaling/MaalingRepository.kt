@@ -24,12 +24,12 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 class MaalingRepository {
     private val logger = logger()
 
-    suspend fun insert(maaling: Maaling, orgnummer: String): Unit = dbQuery {
+    suspend fun insert(maaling: Maaling, orgNumber: String): Unit = dbQuery {
         val konsultasjonPasientId =
             KonsultasjonTable.select(KonsultasjonTable.pasientId)
                 .where {
                     (KonsultasjonTable.id eq maaling.konsultasjonId.value) and
-                        konsultasjonAtOrg(orgnummer)
+                        konsultasjonAtOrg(orgNumber)
                 }
                 .singleOrNull()
                 ?.get(KonsultasjonTable.pasientId)
@@ -65,21 +65,21 @@ class MaalingRepository {
         }
     }
 
-    suspend fun findById(id: MaalingId, orgnummer: String?): Maaling? = dbQuery {
+    suspend fun findById(id: MaalingId, orgNumber: String?): Maaling? = dbQuery {
         MaalingTable.selectAll()
             .where {
                 (MaalingTable.id eq id.value) and
-                    (MaalingTable.konsultasjonId inSubQuery konsultasjonIdsAtOrg(orgnummer))
+                    (MaalingTable.konsultasjonId inSubQuery konsultasjonIdsAtOrg(orgNumber))
             }
             .singleOrNull()
             ?.toMaaling()
     }
 
-    suspend fun listByPasientId(pasientId: PasientId, orgnummer: String?): List<Maaling> = dbQuery {
+    suspend fun listByPasientId(pasientId: PasientId, orgNumber: String?): List<Maaling> = dbQuery {
         MaalingTable.selectAll()
             .where {
                 (MaalingTable.pasientId eq pasientId.value) and
-                    (MaalingTable.konsultasjonId inSubQuery konsultasjonIdsAtOrg(orgnummer))
+                    (MaalingTable.konsultasjonId inSubQuery konsultasjonIdsAtOrg(orgNumber))
             }
             .orderBy(MaalingTable.effektivTidspunkt, SortOrder.ASC)
             .map { it.toMaaling() }
@@ -87,12 +87,12 @@ class MaalingRepository {
 
     suspend fun listByKonsultasjonId(
         konsultasjonId: KonsultasjonId,
-        orgnummer: String?,
+        orgNumber: String?,
     ): List<Maaling> = dbQuery {
         MaalingTable.selectAll()
             .where {
                 (MaalingTable.konsultasjonId eq konsultasjonId.value) and
-                    (MaalingTable.konsultasjonId inSubQuery konsultasjonIdsAtOrg(orgnummer))
+                    (MaalingTable.konsultasjonId inSubQuery konsultasjonIdsAtOrg(orgNumber))
             }
             .orderBy(MaalingTable.effektivTidspunkt, SortOrder.ASC)
             .map { it.toMaaling() }

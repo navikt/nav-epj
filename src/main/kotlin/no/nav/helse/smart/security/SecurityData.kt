@@ -90,5 +90,5 @@ data class SmartPrincipal(
     val scopes: Set<SmartScope>,
     val patient: String?,
     val encounter: String?,
-    val orgnummer: String? = null,
+    val orgNumber: String? = null,
 )

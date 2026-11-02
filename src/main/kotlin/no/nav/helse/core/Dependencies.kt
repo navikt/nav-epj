@@ -4,12 +4,12 @@ import glide.api.GlideClient
 import glide.api.models.configuration.GlideClientConfiguration
 import io.ktor.server.application.*
 import io.ktor.server.plugins.di.*
+import no.nav.helse.epj.clinic.ClinicRepository
+import no.nav.helse.epj.clinic.ClinicService
 import no.nav.helse.epj.helsepersonell.HelsepersonellRepository
 import no.nav.helse.epj.helsepersonell.HelsepersonellService
 import no.nav.helse.epj.konsultasjon.KonsultasjonRepository
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
-import no.nav.helse.epj.legekontor.LegekontorRepository
-import no.nav.helse.epj.legekontor.LegekontorService
 import no.nav.helse.epj.maaling.MaalingRepository
 import no.nav.helse.epj.maaling.MaalingService
 import no.nav.helse.epj.pasient.PasientRepository
@@ -51,13 +51,13 @@ fun Application.configureDependencies() {
         provide(HelsepersonellRepository::class)
         provide(FastlegelisteRepository::class)
         provide(KonsultasjonRepository::class)
-        provide(LegekontorRepository::class)
+        provide(ClinicRepository::class)
         provide(MaalingRepository::class)
 
         provide(HelsepersonellService::class)
         provide(KonsultasjonService::class)
         provide(PasientService::class)
-        provide(LegekontorService::class)
+        provide(ClinicService::class)
         provide(MaalingService::class)
 
         provide<SessionOrgChoiceStore> { ValkeySessionOrgChoiceStore(resolve()) }

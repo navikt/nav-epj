@@ -16,15 +16,15 @@ class PatientMismatchException(val resourceType: String) :
 class OrganizationContextMissingException :
     RuntimeException("Tokenet mangler legekontor for klinisk tilgang")
 
-fun SmartPrincipal.clinicalOrgnummer(): String? {
-    if (orgnummer != null) return orgnummer
+fun SmartPrincipal.clinicalOrgNumber(): String? {
+    if (orgNumber != null) return orgNumber
     val fhirScopes = scopes.filterIsInstance<SmartScope.Fhir>()
     if (fhirScopes.all { it.context == ScopeContext.SYSTEM }) return null
     throw OrganizationContextMissingException()
 }
 
-fun SmartPrincipal.requireClinicalOrgnummer(): String =
-    orgnummer ?: throw OrganizationContextMissingException()
+fun SmartPrincipal.requireClinicalOrgNumber(): String =
+    orgNumber ?: throw OrganizationContextMissingException()
 
 private fun SmartPrincipal.matchingScopes(
     resourceType: String,

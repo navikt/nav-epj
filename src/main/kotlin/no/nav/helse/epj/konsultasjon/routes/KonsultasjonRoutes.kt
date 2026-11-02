@@ -12,7 +12,7 @@ import no.nav.helse.epj.konsultasjonId
 import no.nav.helse.epj.pasient.ActivePatientService
 import no.nav.helse.epj.patientId
 import no.nav.helse.epj.sessionorg.SessionOrgResolver
-import no.nav.helse.epj.sessionorg.requireOrgnummer
+import no.nav.helse.epj.sessionorg.requireOrgNumber
 import no.nav.helse.helseId.loggedInUser
 
 fun Route.konsultasjonRoutes(
@@ -26,8 +26,8 @@ fun Route.konsultasjonRoutes(
         route("/patients/{patientId}/konsultasjoner") {
             get {
                 val pasientId = call.patientId()
-                val orgnummer = sessionOrgResolver.requireOrgnummer(loggedInUser().hpr)
-                call.respond(konsultasjonService.getKonsultasjoner(pasientId, orgnummer))
+                val orgNumber = sessionOrgResolver.requireOrgNumber(loggedInUser().hpr)
+                call.respond(konsultasjonService.getKonsultasjoner(pasientId, orgNumber))
             }
             post {
                 val pasientId = call.patientId()
@@ -35,28 +35,28 @@ fun Route.konsultasjonRoutes(
                 val hpr = HelsepersonellHpr(principal.hpr)
                 activePatientService.claimActivePatient(principal.hpr, pasientId.value)
                     ?: return@post call.respond(HttpStatusCode.NotFound)
-                val orgnummer = sessionOrgResolver.requireOrgnummer(principal.hpr)
-                call.respond(konsultasjonService.getOrCreateKonsultasjon(pasientId, hpr, orgnummer))
+                val orgNumber = sessionOrgResolver.requireOrgNumber(principal.hpr)
+                call.respond(konsultasjonService.getOrCreateKonsultasjon(pasientId, hpr, orgNumber))
             }
             patch {
                 val request = call.receive<OppdaterKonsultasjonRequest>()
                 val pasientId = call.patientId()
-                val orgnummer = sessionOrgResolver.requireOrgnummer(loggedInUser().hpr)
-                konsultasjonService.updateKonsultasjon(request, pasientId, orgnummer)
+                val orgNumber = sessionOrgResolver.requireOrgNumber(loggedInUser().hpr)
+                konsultasjonService.updateKonsultasjon(request, pasientId, orgNumber)
                 call.respond(HttpStatusCode.OK)
             }
             post("/{konsultasjonId}/avbryt") {
                 val pasientId = call.patientId()
                 val konsultasjonId = call.konsultasjonId()
-                val orgnummer = sessionOrgResolver.requireOrgnummer(loggedInUser().hpr)
-                konsultasjonService.cancelKonsultasjon(konsultasjonId, pasientId, orgnummer)
+                val orgNumber = sessionOrgResolver.requireOrgNumber(loggedInUser().hpr)
+                konsultasjonService.cancelKonsultasjon(konsultasjonId, pasientId, orgNumber)
                 call.respond(HttpStatusCode.OK)
             }
             get("/active") {
                 val pasientId = call.patientId()
-                val orgnummer = sessionOrgResolver.requireOrgnummer(loggedInUser().hpr)
+                val orgNumber = sessionOrgResolver.requireOrgNumber(loggedInUser().hpr)
                 val konsultasjoner =
-                    konsultasjonService.getAktivKonsultasjon(pasientId, orgnummer)
+                    konsultasjonService.getAktivKonsultasjon(pasientId, orgNumber)
                         ?: return@get call.respond(HttpStatusCode.NotFound)
                 call.respond(konsultasjoner)
             }
@@ -64,8 +64,8 @@ fun Route.konsultasjonRoutes(
         route("/konsultasjon/{konsultasjonId}") {
             get {
                 val konsultasjonId = call.konsultasjonId()
-                val orgnummer = sessionOrgResolver.requireOrgnummer(loggedInUser().hpr)
-                val konsultasjon = konsultasjonService.getKonsultasjon(konsultasjonId, orgnummer)
+                val orgNumber = sessionOrgResolver.requireOrgNumber(loggedInUser().hpr)
+                val konsultasjon = konsultasjonService.getKonsultasjon(konsultasjonId, orgNumber)
                 call.respond(konsultasjon)
             }
         }

@@ -21,11 +21,11 @@ object PasientTable : Table("patient") {
     val updated = datetime("updated_at")
 }
 
-object LegekontorTable : Table("clinic") {
+object ClinicTable : Table("clinic") {
     val id = uuid("id")
-    val navn = text("name")
-    val tlf = text("phone")
-    val orgnummer = text("org_number")
+    val name = text("name")
+    val phone = text("phone")
+    val orgNumber = text("org_number")
     val created = datetime("created_at")
     val updated = datetime("updated_at")
 }
@@ -42,7 +42,7 @@ object HelsepersonellTable : Table("practitioner") {
 object KonsultasjonTable : Table("consultation") {
     val id = uuid("id")
     val pasientId = reference("patient_id", refColumn = PasientTable.id)
-    val legekontorId = reference("clinic_id", refColumn = LegekontorTable.id)
+    val clinicId = reference("clinic_id", refColumn = ClinicTable.id)
     val startetTidspunkt = datetime("started_at")
     val avsluttetTidspunkt = datetime("ended_at")
     val status =
@@ -99,7 +99,7 @@ object MaalingTable : Table("measurement") {
 object FastlegelisteTable : Table("fastlegeliste") {
     val id = uuid("id")
     val hpr = text("hpr")
-    val legekontorId = reference("clinic_id", refColumn = LegekontorTable.id)
+    val clinicId = reference("clinic_id", refColumn = ClinicTable.id)
     val created = datetime("created_at")
     val updated = datetime("updated_at")
 }

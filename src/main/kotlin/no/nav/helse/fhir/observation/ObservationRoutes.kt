@@ -18,8 +18,8 @@ import no.nav.helse.core.utils.KonsultasjonTilhorerAnnenPasientException
 import no.nav.helse.fhir.encounterReferenceId
 import no.nav.helse.fhir.observationId
 import no.nav.helse.fhir.patientOrSubjectReferenceInputId
-import no.nav.helse.fhir.security.clinicalOrgnummer
-import no.nav.helse.fhir.security.requireClinicalOrgnummer
+import no.nav.helse.fhir.security.clinicalOrgNumber
+import no.nav.helse.fhir.security.requireClinicalOrgNumber
 import no.nav.helse.fhir.security.requireFhirScope
 import no.nav.helse.fhir.security.requirePatientMatch
 import no.nav.helse.smart.security.Interaction
@@ -38,7 +38,7 @@ fun Route.observationRoutes(
             val principal = call.requireFhirScope("Observation", Interaction.READ)
 
             val observation =
-                observationService.getObservationById(id, principal.clinicalOrgnummer())
+                observationService.getObservationById(id, principal.clinicalOrgNumber())
                     ?: return@get call.respond(
                         HttpStatusCode.NotFound,
                         "No observation found for $id",
@@ -69,7 +69,7 @@ fun Route.observationRoutes(
                     patientId,
                     encounterId,
                     code,
-                    principal.clinicalOrgnummer(),
+                    principal.clinicalOrgNumber(),
                 )
             call.respondText(fhirR4Json.encodeToString(bundle), fhirContentType)
         }
@@ -132,7 +132,7 @@ fun Route.observationRoutes(
                 try {
                     observationService.createObservation(
                         request,
-                        principal.requireClinicalOrgnummer(),
+                        principal.requireClinicalOrgNumber(),
                     )
                 } catch (exception: KonsultasjonNotFoundException) {
                     return@post call.respondOperationOutcome(

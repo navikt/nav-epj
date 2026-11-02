@@ -4,9 +4,9 @@ export type CurrentUser = {
   navn: string;
   hpr: string;
   autorisasjon: string;
-  legekontor: string;
-  orgnummer?: string;
-  telefon?: string;
+  clinic: string;
+  orgNumber?: string;
+  phone?: string;
 };
 
 export const CurrentUserContext = createContext<CurrentUser | null>(null);

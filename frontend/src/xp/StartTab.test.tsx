@@ -25,7 +25,7 @@ const user: CurrentUser = {
   navn: "Kari Nordmann",
   hpr: "9144889",
   autorisasjon: "Lege",
-  legekontor: "Storgata legekontor",
+  clinic: "Storgata legekontor",
 };
 
 function renderPage(currentUser: CurrentUser | null = user) {

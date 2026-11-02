@@ -47,21 +47,21 @@ class InvalidObservationException(val issueType: OperationOutcome.IssueType, mes
 
 class ObservationService(val maalingService: MaalingService) {
 
-    suspend fun getObservationById(id: ObservationId, orgnummer: String?): Observation? =
-        maalingService.getMaaling(MaalingId(id.value), orgnummer)?.toObservation()
+    suspend fun getObservationById(id: ObservationId, orgNumber: String?): Observation? =
+        maalingService.getMaaling(MaalingId(id.value), orgNumber)?.toObservation()
 
-    suspend fun createObservation(request: OpprettMaalingRequest, orgnummer: String): Observation =
-        maalingService.opprettMaaling(request, orgnummer).toObservation()
+    suspend fun createObservation(request: OpprettMaalingRequest, orgNumber: String): Observation =
+        maalingService.opprettMaaling(request, orgNumber).toObservation()
 
     suspend fun searchObservations(
         patientId: PatientInputId,
         encounterId: EncounterId?,
         code: String?,
-        orgnummer: String?,
+        orgNumber: String?,
     ): Bundle {
         val maalinger =
             maalingService
-                .getMaalingerForPasient(PasientId(patientId.value), orgnummer)
+                .getMaalingerForPasient(PasientId(patientId.value), orgNumber)
                 .filter { encounterId == null || it.konsultasjonId.value == encounterId.value }
                 .filter { code == null || it.loincKode == code }
 

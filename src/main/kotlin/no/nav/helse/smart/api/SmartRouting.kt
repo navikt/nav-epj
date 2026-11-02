@@ -246,8 +246,8 @@ fun Application.configureSmartRouting() {
                     val sessionOrg =
                         (sessionOrgResolver.resolve(user.hpr) as? SessionOrgResolution.Resolved)
                             ?.org
-                            ?.orgnummer
-                    if (launchContext.orgnummer != sessionOrg) {
+                            ?.orgNumber
+                    if (launchContext.orgNumber != sessionOrg) {
                         return@get rejectViaRedirect(
                             redirectUri = redirectUri,
                             state = state,
@@ -389,7 +389,7 @@ fun Application.configureSmartRouting() {
                         ctx.scope,
                         ctx.launch.patientId,
                         ctx.launch.encounterId,
-                        ctx.launch.orgnummer,
+                        ctx.launch.orgNumber,
                         now,
                         expiresAt,
                         smartKeys,
@@ -524,7 +524,7 @@ private fun buildAccessToken(
     grantedScope: String,
     patientId: String?,
     encounterId: String?,
-    orgnummer: String?,
+    orgNumber: String?,
     now: Date,
     expiresAt: Date,
     smartKeys: SmartKeys,
@@ -544,7 +544,7 @@ private fun buildAccessToken(
         .apply {
             patientId?.let { withClaim("patient", it) }
             encounterId?.let { withClaim("encounter", it) }
-            orgnummer?.let { withClaim("orgnr", it) }
+            orgNumber?.let { withClaim("orgnr", it) }
         }
         .sign(smartKeys.algorithm)
 

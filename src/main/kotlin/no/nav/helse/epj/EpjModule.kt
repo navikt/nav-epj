@@ -7,6 +7,9 @@ import io.ktor.server.plugins.*
 import io.ktor.server.plugins.di.*
 import io.ktor.server.routing.*
 import kotlin.uuid.Uuid
+import no.nav.helse.epj.clinic.ClinicId
+import no.nav.helse.epj.clinic.ClinicService
+import no.nav.helse.epj.clinic.clinicRoutes
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.helsepersonell.HelsepersonellService
 import no.nav.helse.epj.helsepersonell.helsepersonellRoutes
@@ -16,9 +19,6 @@ import no.nav.helse.epj.konsultasjon.KonsultasjonService
 import no.nav.helse.epj.konsultasjon.routes.diagnoseRoutes
 import no.nav.helse.epj.konsultasjon.routes.journalnotatRoutes
 import no.nav.helse.epj.konsultasjon.routes.konsultasjonRoutes
-import no.nav.helse.epj.legekontor.LegekontorId
-import no.nav.helse.epj.legekontor.LegekontorService
-import no.nav.helse.epj.legekontor.legekontorRoutes
 import no.nav.helse.epj.maaling.MaalingService
 import no.nav.helse.epj.maaling.maalingRoutes
 import no.nav.helse.epj.pasient.ActivePatientService
@@ -36,7 +36,7 @@ fun Application.configureEpjModule() {
     val pasientService: PasientService by dependencies
     val helsepersonellService: HelsepersonellService by dependencies
     val konsultasjonService: KonsultasjonService by dependencies
-    val legekontorService: LegekontorService by dependencies
+    val clinicService: ClinicService by dependencies
     val maalingService: MaalingService by dependencies
     val valkeyService: ValkeyService by dependencies
     val sessionOrgResolver: SessionOrgResolver by dependencies
@@ -57,7 +57,7 @@ fun Application.configureEpjModule() {
             activePatientRoutes(activePatientService)
             helsepersonellRoutes(helsepersonellService)
             konsultasjonRoutes(konsultasjonService, activePatientService, sessionOrgResolver)
-            legekontorRoutes(legekontorService, sessionOrgResolver)
+            clinicRoutes(clinicService, sessionOrgResolver)
             diagnoseRoutes(konsultasjonService, sessionOrgResolver)
             journalnotatRoutes(konsultasjonService, sessionOrgResolver)
             maalingRoutes(maalingService, sessionOrgResolver)
@@ -73,7 +73,7 @@ fun ApplicationCall.journalnotatId(): JournalnotatId =
 fun ApplicationCall.helsepersonellHpr(): HelsepersonellHpr =
     HelsepersonellHpr(stringParameter("hpr"))
 
-fun ApplicationCall.legekontorId(): LegekontorId = LegekontorId(uuidParameter("legekontorId"))
+fun ApplicationCall.clinicId(): ClinicId = ClinicId(uuidParameter("clinicId"))
 
 fun ApplicationCall.konsultasjonId(): KonsultasjonId =
     KonsultasjonId(uuidParameter("konsultasjonId"))

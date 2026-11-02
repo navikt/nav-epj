@@ -31,10 +31,10 @@ class ValkeyService(private val glideClient: GlideClient) {
     suspend fun getAndDeleteLaunchContext(launchId: String): LaunchContext? =
         glideClient.getdel(launchKey(launchId)).await()?.let { mapper.readValue<LaunchContext>(it) }
 
-    suspend fun setActivePatient(hpr: String, orgnummer: String, patientId: String) {
+    suspend fun setActivePatient(hpr: String, orgNumber: String, patientId: String) {
         glideClient
             .set(
-                activePatientKey(hpr, orgnummer),
+                activePatientKey(hpr, orgNumber),
                 patientId,
                 SetOptions.builder()
                     .expiry(SetOptions.Expiry.Seconds(ACTIVE_PATIENT_TTL_SECONDS))
@@ -43,25 +43,25 @@ class ValkeyService(private val glideClient: GlideClient) {
             .await()
     }
 
-    suspend fun clearActivePatient(hpr: String, orgnummer: String) {
-        glideClient.del(arrayOf(activePatientKey(hpr, orgnummer))).await()
+    suspend fun clearActivePatient(hpr: String, orgNumber: String) {
+        glideClient.del(arrayOf(activePatientKey(hpr, orgNumber))).await()
     }
 
-    suspend fun getActivePatient(hpr: String, orgnummer: String): String? =
-        glideClient.get(activePatientKey(hpr, orgnummer)).await()
+    suspend fun getActivePatient(hpr: String, orgNumber: String): String? =
+        glideClient.get(activePatientKey(hpr, orgNumber)).await()
 
-    suspend fun getActivePatientWithExpiry(hpr: String, orgnummer: String): ActivePatient? {
-        val patientId = getActivePatient(hpr, orgnummer) ?: return null
-        val remainingSeconds = glideClient.ttl(activePatientKey(hpr, orgnummer)).await()
+    suspend fun getActivePatientWithExpiry(hpr: String, orgNumber: String): ActivePatient? {
+        val patientId = getActivePatient(hpr, orgNumber) ?: return null
+        val remainingSeconds = glideClient.ttl(activePatientKey(hpr, orgNumber)).await()
         if (remainingSeconds <= 0) return null
         return ActivePatient(patientId, Instant.now().plusSeconds(remainingSeconds))
     }
 
-    suspend fun setSessionOrg(hpr: String, orgnummer: String) {
+    suspend fun setSessionOrg(hpr: String, orgNumber: String) {
         glideClient
             .set(
                 sessionOrgKey(hpr),
-                orgnummer,
+                orgNumber,
                 SetOptions.builder()
                     .expiry(SetOptions.Expiry.Seconds(ACTIVE_PATIENT_TTL_SECONDS))
                     .build(),
@@ -109,7 +109,7 @@ private fun authCodeKey(code: String) = "smart:code:$code"
 
 private fun launchKey(launchId: String) = "smart:launch:$launchId"
 
-private fun activePatientKey(hpr: String, orgnummer: String) =
-    "smart:active-patient:$hpr:$orgnummer"
+private fun activePatientKey(hpr: String, orgNumber: String) =
+    "smart:active-patient:$hpr:$orgNumber"
 
 private fun sessionOrgKey(hpr: String) = "epj:session-org:$hpr"

@@ -19,9 +19,9 @@ import no.nav.helse.core.utils.DuplikatPasientException
 import no.nav.helse.core.utils.IngenFastlegelisteException
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.UgyldigPersonidentException
+import no.nav.helse.epj.clinic.Clinic
+import no.nav.helse.epj.clinic.ClinicId
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
-import no.nav.helse.epj.legekontor.Legekontor
-import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.sessionorg.SessionOrgResolution
 import no.nav.helse.epj.sessionorg.SessionOrgResolver
 import no.nav.helse.helseId.DebugInfo
@@ -39,7 +39,7 @@ class PasientRoutesTest {
         mockk<SessionOrgResolver> {
             coEvery { resolve(any()) } returns
                 SessionOrgResolution.Resolved(
-                    Legekontor(LegekontorId(Uuid.generateV4()), "Fjordvik", "311111116", null),
+                    Clinic(ClinicId(Uuid.generateV4()), "Fjordvik", "311111116", null),
                     derived = true,
                 )
         }
@@ -156,7 +156,7 @@ class PasientRoutesTest {
                 etternavn = "Nordmann",
                 personident = "15068500017",
             )
-        coEvery { pasientService.listAtLegekontor("311111116", HelsepersonellHpr("111")) } returns
+        coEvery { pasientService.listAtClinic("311111116", HelsepersonellHpr("111")) } returns
             listOf(
                 PasientListeElement(
                     pasient,

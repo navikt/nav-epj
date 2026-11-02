@@ -48,33 +48,33 @@ class DocumentReferenceService(val konsultasjonService: KonsultasjonService) {
 
     suspend fun createDocumentReference(
         request: OpprettJournalnotatRequest,
-        orgnummer: kotlin.String,
+        orgNumber: kotlin.String,
     ): DocumentReference {
-        val journalnotat = konsultasjonService.opprettJournalnotat(request, orgnummer)
-        return journalnotat.toDocumentReference(authors(journalnotat.konsultasjonId, orgnummer))
+        val journalnotat = konsultasjonService.opprettJournalnotat(request, orgNumber)
+        return journalnotat.toDocumentReference(authors(journalnotat.konsultasjonId, orgNumber))
     }
 
     private suspend fun authors(
         konsultasjonId: KonsultasjonId,
-        orgnummer: kotlin.String?,
+        orgNumber: kotlin.String?,
     ): List<HelsepersonellHpr> =
-        konsultasjonService.getKonsultasjon(konsultasjonId, orgnummer).hpr.map {
+        konsultasjonService.getKonsultasjon(konsultasjonId, orgNumber).hpr.map {
             HelsepersonellHpr(it)
         }
 
     suspend fun searchDocumentReferences(
         patientId: PatientInputId,
         encounterId: EncounterId?,
-        orgnummer: kotlin.String?,
+        orgNumber: kotlin.String?,
     ): Bundle {
         val journalnotater =
             konsultasjonService.getJournalnotater(
                 PasientId(patientId.value),
                 encounterId?.let { KonsultasjonId(it.value) },
-                orgnummer,
+                orgNumber,
             )
         val hprByKonsultasjon =
-            konsultasjonService.getKonsultasjoner(PasientId(patientId.value), orgnummer).associate {
+            konsultasjonService.getKonsultasjoner(PasientId(patientId.value), orgNumber).associate {
                 it.id to it.hpr.map { hpr -> HelsepersonellHpr(hpr) }
             }
 
@@ -96,7 +96,7 @@ class DocumentReferenceService(val konsultasjonService: KonsultasjonService) {
 
     suspend fun createDocumentReference(
         documentReference: DocumentReference,
-        orgnummer: kotlin.String,
+        orgNumber: kotlin.String,
     ): Boolean {
         val konsultasjonId =
             documentReference.context
@@ -137,19 +137,19 @@ class DocumentReferenceService(val konsultasjonService: KonsultasjonService) {
                     },
             )
 
-        return konsultasjonService.createJournalnotat(createJournalnotat, orgnummer)
+        return konsultasjonService.createJournalnotat(createJournalnotat, orgNumber)
     }
 
     suspend fun getDocumentReferences(
         documentReferenceId: DocumentReferenceId,
-        orgnummer: kotlin.String?,
+        orgNumber: kotlin.String?,
     ): DocumentReference? {
         val journalnotat =
             konsultasjonService.getJournalnotat(
                 JournalnotatId(documentReferenceId.value),
-                orgnummer,
+                orgNumber,
             ) ?: return null
-        return journalnotat.toDocumentReference(authors(journalnotat.konsultasjonId, orgnummer))
+        return journalnotat.toDocumentReference(authors(journalnotat.konsultasjonId, orgNumber))
     }
 
     fun Journalnotat.toDocumentReference(hpr: List<HelsepersonellHpr>): DocumentReference {

@@ -2,23 +2,23 @@ package no.nav.helse.epj.konsultasjon
 
 import java.time.LocalDateTime
 import kotlin.uuid.Uuid
+import no.nav.helse.core.db.ClinicTable
 import no.nav.helse.core.db.JournalnotatTable
 import no.nav.helse.core.db.KonsultasjonDiagnosekodeTable
 import no.nav.helse.core.db.KonsultasjonHelsepersonell
 import no.nav.helse.core.db.KonsultasjonTable
-import no.nav.helse.core.db.LegekontorTable
 import no.nav.helse.core.db.dbQuery
 import no.nav.helse.core.db.konsultasjonAtOrg
 import no.nav.helse.core.db.konsultasjonIdsAtOrg
+import no.nav.helse.core.utils.ClinicNotFoundException
 import no.nav.helse.core.utils.DuplikatJournalnotatException
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.KonsultasjonTilhorerAnnenPasientException
-import no.nav.helse.core.utils.LegekontorNotfoundException
 import no.nav.helse.core.utils.UgyldigDiagnoseException
 import no.nav.helse.core.utils.logger
+import no.nav.helse.epj.clinic.ClinicId
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
-import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.tsm.diagnoser.Diagnose
 import org.jetbrains.exposed.v1.core.ResultRow
@@ -39,11 +39,11 @@ import org.jetbrains.exposed.v1.jdbc.upsert
 class KonsultasjonRepository {
     private val logger = logger()
 
-    suspend fun listByPasientId(id: PasientId, orgnummer: String?): List<Konsultasjon> = dbQuery {
+    suspend fun listByPasientId(id: PasientId, orgNumber: String?): List<Konsultasjon> = dbQuery {
         val konsultasjoner =
             KonsultasjonTable.selectAll()
                 .where {
-                    (KonsultasjonTable.pasientId eq id.value) and konsultasjonAtOrg(orgnummer)
+                    (KonsultasjonTable.pasientId eq id.value) and konsultasjonAtOrg(orgNumber)
                 }
                 .orderBy(KonsultasjonTable.startetTidspunkt, SortOrder.DESC)
                 .toList()
@@ -82,11 +82,11 @@ class KonsultasjonRepository {
         }
     }
 
-    suspend fun listDiagnoser(id: PasientId, orgnummer: String?): List<Diagnose> = dbQuery {
+    suspend fun listDiagnoser(id: PasientId, orgNumber: String?): List<Diagnose> = dbQuery {
         val konsultasjonIder =
             KonsultasjonTable.select(KonsultasjonTable.id)
                 .where {
-                    (KonsultasjonTable.pasientId eq id.value) and konsultasjonAtOrg(orgnummer)
+                    (KonsultasjonTable.pasientId eq id.value) and konsultasjonAtOrg(orgNumber)
                 }
                 .map { it[KonsultasjonTable.id] }
 
@@ -99,27 +99,27 @@ class KonsultasjonRepository {
             .map { it.toDiagnose() }
     }
 
-    suspend fun listDiagnoser(id: KonsultasjonId, orgnummer: String?): List<Diagnose> = dbQuery {
+    suspend fun listDiagnoser(id: KonsultasjonId, orgNumber: String?): List<Diagnose> = dbQuery {
         KonsultasjonDiagnosekodeTable.selectAll()
             .where {
                 (KonsultasjonDiagnosekodeTable.konsultasjonId eq id.value) and
                     (KonsultasjonDiagnosekodeTable.konsultasjonId inSubQuery
-                        konsultasjonIdsAtOrg(orgnummer))
+                        konsultasjonIdsAtOrg(orgNumber))
             }
             .map { it.toDiagnose() }
     }
 
     suspend fun insert(opprettKonsultasjon: OpprettKonsultasjon) = dbQuery {
-        val legekontorId =
-            LegekontorTable.select(LegekontorTable.id)
-                .where { LegekontorTable.orgnummer eq opprettKonsultasjon.orgnummer }
+        val clinicId =
+            ClinicTable.select(ClinicTable.id)
+                .where { ClinicTable.orgNumber eq opprettKonsultasjon.orgNumber }
                 .singleOrNull()
-                ?.get(LegekontorTable.id)
-                ?: throw LegekontorNotfoundException(opprettKonsultasjon.orgnummer)
+                ?.get(ClinicTable.id)
+                ?: throw ClinicNotFoundException(opprettKonsultasjon.orgNumber)
         val konsultasjon =
             KonsultasjonTable.insertReturning {
                     it[pasientId] = opprettKonsultasjon.pasientId.value
-                    it[KonsultasjonTable.legekontorId] = legekontorId
+                    it[KonsultasjonTable.clinicId] = clinicId
                     it[startetTidspunkt] = opprettKonsultasjon.startetTidspunkt
                     it[status] = opprettKonsultasjon.status
                 }
@@ -134,7 +134,7 @@ class KonsultasjonRepository {
         KonsultasjonId(konsultasjon[KonsultasjonTable.id])
     }
 
-    suspend fun findActiveByPasientId(pasientId: PasientId, orgnummer: String?): Konsultasjon? {
+    suspend fun findActiveByPasientId(pasientId: PasientId, orgNumber: String?): Konsultasjon? {
         val pasientUuid = pasientId.value
         return dbQuery {
             val konsultasjon =
@@ -142,7 +142,7 @@ class KonsultasjonRepository {
                     .where {
                         (KonsultasjonTable.pasientId eq pasientUuid) and
                             (KonsultasjonTable.status eq KonsultasjonStatus.PAAGAAENDE) and
-                            konsultasjonAtOrg(orgnummer)
+                            konsultasjonAtOrg(orgNumber)
                     }
                     .orderBy(KonsultasjonTable.startetTidspunkt, SortOrder.DESC)
                     .limit(1)
@@ -154,7 +154,7 @@ class KonsultasjonRepository {
     suspend fun findActiveByPasientIdAndHpr(
         pasientId: PasientId,
         hpr: HelsepersonellHpr,
-        orgnummer: String?,
+        orgNumber: String?,
     ): Konsultasjon? {
         val pasientUuid = pasientId.value
         return dbQuery {
@@ -165,7 +165,7 @@ class KonsultasjonRepository {
                         (KonsultasjonTable.pasientId eq pasientUuid) and
                             (KonsultasjonTable.status eq KonsultasjonStatus.PAAGAAENDE) and
                             (KonsultasjonHelsepersonell.hpr eq hpr.value) and
-                            konsultasjonAtOrg(orgnummer)
+                            konsultasjonAtOrg(orgNumber)
                     }
                     .orderBy(KonsultasjonTable.startetTidspunkt, SortOrder.DESC)
                     .limit(1)
@@ -176,14 +176,14 @@ class KonsultasjonRepository {
 
     suspend fun findByKonsultasjonId(
         konsultasjonId: KonsultasjonId,
-        orgnummer: String?,
+        orgNumber: String?,
     ): Konsultasjon? {
         return dbQuery {
             val konsultasjon =
                 KonsultasjonTable.selectAll()
                     .where {
                         (KonsultasjonTable.id eq konsultasjonId.value) and
-                            konsultasjonAtOrg(orgnummer)
+                            konsultasjonAtOrg(orgNumber)
                     }
                     .singleOrNull() ?: return@dbQuery null
             toEpjKonsultasjon(konsultasjon)
@@ -193,7 +193,7 @@ class KonsultasjonRepository {
     suspend fun update(
         oppdaterKonsultasjon: OppdaterKonsultasjonRequest,
         pasientId: PasientId,
-        orgnummer: String?,
+        orgNumber: String?,
     ): Int = dbQuery {
         logger.info("Oppdaterer konsultasjon {}", oppdaterKonsultasjon.konsultasjonId)
 
@@ -202,7 +202,7 @@ class KonsultasjonRepository {
                 .where {
                     (KonsultasjonTable.id eq oppdaterKonsultasjon.konsultasjonId.value) and
                         (KonsultasjonTable.pasientId eq pasientId.value) and
-                        konsultasjonAtOrg(orgnummer)
+                        konsultasjonAtOrg(orgNumber)
                 }
                 .limit(1)
                 .any()
@@ -273,13 +273,13 @@ class KonsultasjonRepository {
     suspend fun avbryt(
         konsultasjonId: KonsultasjonId,
         pasientId: PasientId,
-        orgnummer: String?,
+        orgNumber: String?,
     ): Int = dbQuery {
         logger.info("Avbryter konsultasjon {}", konsultasjonId)
         KonsultasjonTable.update({
             (KonsultasjonTable.id eq konsultasjonId.value) and
                 (KonsultasjonTable.pasientId eq pasientId.value) and
-                konsultasjonAtOrg(orgnummer) and
+                konsultasjonAtOrg(orgNumber) and
                 (KonsultasjonTable.status eq KonsultasjonStatus.PAAGAAENDE)
         }) {
             it[avsluttetTidspunkt] = LocalDateTime.now()
@@ -313,12 +313,12 @@ class KonsultasjonRepository {
         }
     }
 
-    suspend fun insertJournalnotat(journalnotat: Journalnotat, orgnummer: String): Int = dbQuery {
+    suspend fun insertJournalnotat(journalnotat: Journalnotat, orgNumber: String): Int = dbQuery {
         val konsultasjonPasientId =
             KonsultasjonTable.select(KonsultasjonTable.pasientId)
                 .where {
                     (KonsultasjonTable.id eq journalnotat.konsultasjonId.value) and
-                        konsultasjonAtOrg(orgnummer)
+                        konsultasjonAtOrg(orgNumber)
                 }
                 .singleOrNull()
                 ?.get(KonsultasjonTable.pasientId)
@@ -421,12 +421,12 @@ class KonsultasjonRepository {
 
     suspend fun findJournalnotat(
         journalnotatId: JournalnotatId,
-        orgnummer: String?,
+        orgNumber: String?,
     ): Journalnotat? = dbQuery {
         JournalnotatTable.selectAll()
             .where {
                 (JournalnotatTable.id eq journalnotatId.value) and
-                    (JournalnotatTable.konsultasjonId inSubQuery konsultasjonIdsAtOrg(orgnummer))
+                    (JournalnotatTable.konsultasjonId inSubQuery konsultasjonIdsAtOrg(orgNumber))
             }
             .singleOrNull()
             ?.toJournalnotat()
@@ -435,12 +435,12 @@ class KonsultasjonRepository {
     suspend fun listJournalnotat(
         pasientId: PasientId,
         konsultasjonId: KonsultasjonId?,
-        orgnummer: String?,
+        orgNumber: String?,
     ): List<Journalnotat> = dbQuery {
         JournalnotatTable.selectAll()
             .where {
                 val atOrg =
-                    JournalnotatTable.konsultasjonId inSubQuery konsultasjonIdsAtOrg(orgnummer)
+                    JournalnotatTable.konsultasjonId inSubQuery konsultasjonIdsAtOrg(orgNumber)
                 if (konsultasjonId != null) {
                     (JournalnotatTable.pasientId eq pasientId.value) and
                         (JournalnotatTable.konsultasjonId eq konsultasjonId.value) and
@@ -455,13 +455,13 @@ class KonsultasjonRepository {
     suspend fun opprettJournalnotat(
         id: JournalnotatId,
         request: OpprettJournalnotatRequest,
-        orgnummer: String,
+        orgNumber: String,
     ): Journalnotat = dbQuery {
         val konsultasjonPasientId =
             KonsultasjonTable.select(KonsultasjonTable.pasientId)
                 .where {
                     (KonsultasjonTable.id eq request.konsultasjonId.value) and
-                        konsultasjonAtOrg(orgnummer)
+                        konsultasjonAtOrg(orgNumber)
                 }
                 .singleOrNull()
                 ?.get(KonsultasjonTable.pasientId)
@@ -511,7 +511,7 @@ class KonsultasjonRepository {
         Konsultasjon(
             id = KonsultasjonId(this[KonsultasjonTable.id]),
             pasientId = PasientId(this[KonsultasjonTable.pasientId]),
-            legekontorId = LegekontorId(this[KonsultasjonTable.legekontorId]),
+            clinicId = ClinicId(this[KonsultasjonTable.clinicId]),
             hpr = hprListe,
             startetTidspunkt = this[KonsultasjonTable.startetTidspunkt],
             avsluttetTidspunkt = this[KonsultasjonTable.avsluttetTidspunkt],

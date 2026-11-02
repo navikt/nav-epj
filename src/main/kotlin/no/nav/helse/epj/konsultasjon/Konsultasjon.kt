@@ -3,8 +3,8 @@ package no.nav.helse.epj.konsultasjon
 import java.time.LocalDateTime
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.KonsultasjonStatus
+import no.nav.helse.epj.clinic.ClinicId
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
-import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.tsm.diagnoser.Diagnose
 import no.nav.tsm.diagnoser.DiagnoseType
@@ -16,7 +16,7 @@ import no.nav.tsm.diagnoser.DiagnoseType
 data class Konsultasjon(
     val id: KonsultasjonId,
     val pasientId: PasientId,
-    val legekontorId: LegekontorId,
+    val clinicId: ClinicId,
     val hpr: List<String>,
     val journalnotat: List<Journalnotat>,
     val diagnoser: List<Diagnose>,
@@ -44,7 +44,7 @@ data class OpprettKonsultasjon(
     val hpr: List<HelsepersonellHpr>,
     val startetTidspunkt: LocalDateTime,
     val status: KonsultasjonStatus,
-    val orgnummer: String,
+    val orgNumber: String,
 )
 
 data class OppdaterKonsultasjonRequest(

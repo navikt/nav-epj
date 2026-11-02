@@ -25,12 +25,12 @@ import no.nav.helse.core.EpjConfig
 import no.nav.helse.core.SmartConfig
 import no.nav.helse.core.ValkeyConfig
 import no.nav.helse.core.utils.KonsultasjonStatus
+import no.nav.helse.epj.clinic.Clinic
+import no.nav.helse.epj.clinic.ClinicId
 import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.konsultasjon.Konsultasjon
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
-import no.nav.helse.epj.legekontor.Legekontor
-import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.epj.pasient.PasientService
 import no.nav.helse.epj.sessionorg.SessionOrgResolution
@@ -145,12 +145,12 @@ class AppRoutesTest : WithValkey() {
         client.block()
     }
 
-    private fun sessionOrg(orgnummer: String?) {
+    private fun sessionOrg(orgNumber: String?) {
         coEvery { sessionOrgResolver.resolve(HPR) } returns
-            if (orgnummer == null) SessionOrgResolution.NeedsChoice
+            if (orgNumber == null) SessionOrgResolution.NeedsChoice
             else
                 SessionOrgResolution.Resolved(
-                    Legekontor(LegekontorId(kotlin.uuid.Uuid.generateV4()), "Org", orgnummer, null),
+                    Clinic(ClinicId(kotlin.uuid.Uuid.generateV4()), "Org", orgNumber, null),
                     derived = true,
                 )
     }
@@ -180,7 +180,7 @@ class AppRoutesTest : WithValkey() {
         Konsultasjon(
             id = KonsultasjonId(kotlin.uuid.Uuid.generateV4()),
             pasientId = pasientId,
-            legekontorId = LegekontorId(kotlin.uuid.Uuid.generateV4()),
+            clinicId = ClinicId(kotlin.uuid.Uuid.generateV4()),
             hpr = listOf(hpr),
             journalnotat = emptyList(),
             diagnoser = emptyList(),

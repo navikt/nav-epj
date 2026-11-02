@@ -6,7 +6,7 @@ import no.nav.helse.epj.konsultasjon.KonsultasjonService
 import no.nav.helse.epj.konsultasjonId
 import no.nav.helse.epj.patientId
 import no.nav.helse.epj.sessionorg.SessionOrgResolver
-import no.nav.helse.epj.sessionorg.requireOrgnummer
+import no.nav.helse.epj.sessionorg.requireOrgNumber
 import no.nav.helse.helseId.loggedInUser
 
 fun Route.diagnoseRoutes(
@@ -19,14 +19,14 @@ fun Route.diagnoseRoutes(
             get {
                 val pasientId = call.parameters["patientId"]
                 val konsultasjonId = call.parameters["konsultasjonId"]
-                val orgnummer = sessionOrgResolver.requireOrgnummer(loggedInUser().hpr)
+                val orgNumber = sessionOrgResolver.requireOrgNumber(loggedInUser().hpr)
 
                 val diagnoser =
                     when {
                         pasientId != null ->
-                            konsultasjonService.getDiagnoser(call.patientId(), orgnummer)
+                            konsultasjonService.getDiagnoser(call.patientId(), orgNumber)
                         konsultasjonId != null ->
-                            konsultasjonService.getDiagnoser(call.konsultasjonId(), orgnummer)
+                            konsultasjonService.getDiagnoser(call.konsultasjonId(), orgNumber)
                         else -> emptyList()
                     }
                 call.respond(diagnoser)

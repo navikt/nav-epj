@@ -7,33 +7,33 @@ import kotlin.test.assertTrue
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
-import no.nav.helse.epj.legekontor.Legekontor
-import no.nav.helse.epj.legekontor.LegekontorId
-import no.nav.helse.epj.legekontor.LegekontorService
-import no.nav.helse.utils.DEFAULT_ORGNUMMER
+import no.nav.helse.epj.clinic.Clinic
+import no.nav.helse.epj.clinic.ClinicId
+import no.nav.helse.epj.clinic.ClinicService
+import no.nav.helse.utils.DEFAULT_ORG_NUMBER
 import org.junit.Test
 
 class OrganizationServiceTest {
 
-    private val legekontorService = mockk<LegekontorService>()
-    private val organizationService = OrganizationService(legekontorService)
+    private val clinicService = mockk<ClinicService>()
+    private val organizationService = OrganizationService(clinicService)
 
     @OptIn(ExperimentalUuidApi::class)
-    private fun legekontor() =
-        Legekontor(
-            id = LegekontorId(Uuid.generateV4()),
-            navn = "Testlegekontor",
-            orgnummer = "123456789",
-            tlf = "12345678",
+    private fun clinic() =
+        Clinic(
+            id = ClinicId(Uuid.generateV4()),
+            name = "Testlegekontor",
+            orgNumber = "123456789",
+            phone = "12345678",
         )
 
     @Test
     fun `organization has only the ENH organisasjonsnummer identifier`() = runTest {
-        val kontor = legekontor()
-        coEvery { legekontorService.getLegekontor(kontor.id, DEFAULT_ORGNUMMER) } returns kontor
+        val clinic = clinic()
+        coEvery { clinicService.getClinic(clinic.id, DEFAULT_ORG_NUMBER) } returns clinic
 
         val organization =
-            organizationService.getOrganization(OrganizationId(kontor.id.value), DEFAULT_ORGNUMMER)
+            organizationService.getOrganization(OrganizationId(clinic.id.value), DEFAULT_ORG_NUMBER)
 
         val identifier = organization!!.identifier.single()
         assertEquals("urn:oid:2.16.578.1.12.4.1.4.101", identifier.system?.value)
@@ -42,11 +42,11 @@ class OrganizationServiceTest {
 
     @Test
     fun `organization declares the no-basis-Organization profile`() = runTest {
-        val kontor = legekontor()
-        coEvery { legekontorService.getLegekontor(kontor.id, DEFAULT_ORGNUMMER) } returns kontor
+        val clinic = clinic()
+        coEvery { clinicService.getClinic(clinic.id, DEFAULT_ORG_NUMBER) } returns clinic
 
         val organization =
-            organizationService.getOrganization(OrganizationId(kontor.id.value), DEFAULT_ORGNUMMER)
+            organizationService.getOrganization(OrganizationId(clinic.id.value), DEFAULT_ORG_NUMBER)
 
         assertTrue(
             organization!!.meta!!.profile.any {

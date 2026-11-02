@@ -19,17 +19,17 @@ import kotlin.test.assertTrue
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.KonsultasjonStatus
+import no.nav.helse.epj.clinic.ClinicId
 import no.nav.helse.epj.konsultasjon.Konsultasjon
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
-import no.nav.helse.epj.legekontor.LegekontorId
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.plugins.configureStatusPages
 import no.nav.helse.smart.security.Interaction
 import no.nav.helse.smart.security.ScopeContext
 import no.nav.helse.smart.security.SmartPrincipal
 import no.nav.helse.smart.security.SmartScope
-import no.nav.helse.utils.DEFAULT_ORGNUMMER
+import no.nav.helse.utils.DEFAULT_ORG_NUMBER
 import no.nav.tsm.diagnoser.Diagnose
 import no.nav.tsm.diagnoser.DiagnoseType
 import org.junit.Test
@@ -49,7 +49,7 @@ class ConditionRoutesTest {
         Konsultasjon(
             id = id,
             pasientId = pasientId,
-            legekontorId = LegekontorId(Uuid.generateV4()),
+            clinicId = ClinicId(Uuid.generateV4()),
             hpr = emptyList(),
             journalnotat = emptyList(),
             diagnoser =
@@ -61,7 +61,7 @@ class ConditionRoutesTest {
         )
 
     private fun givenPatientHasTwoEncounters() {
-        coEvery { konsultasjonService.getKonsultasjoner(pasientId, DEFAULT_ORGNUMMER) } returns
+        coEvery { konsultasjonService.getKonsultasjoner(pasientId, DEFAULT_ORG_NUMBER) } returns
             listOf(
                 konsultasjon(encounterA, pasientId, "A01"),
                 konsultasjon(encounterB, pasientId, "B02"),
@@ -91,7 +91,7 @@ class ConditionRoutesTest {
                                     ),
                                 patient = boundPatient,
                                 encounter = null,
-                                orgnummer = DEFAULT_ORGNUMMER,
+                                orgNumber = DEFAULT_ORG_NUMBER,
                             )
                         )
                     }
@@ -210,7 +210,7 @@ class ConditionRoutesTest {
 
     @Test
     fun `GET Condition with encounter only returns that encounter's conditions`() {
-        coEvery { konsultasjonService.getKonsultasjon(encounterA, DEFAULT_ORGNUMMER) } returns
+        coEvery { konsultasjonService.getKonsultasjon(encounterA, DEFAULT_ORG_NUMBER) } returns
             konsultasjon(encounterA, pasientId, "A01")
 
         testApp {
@@ -223,7 +223,7 @@ class ConditionRoutesTest {
 
     @Test
     fun `GET Condition with encounter only rejects an encounter of another patient`() {
-        coEvery { konsultasjonService.getKonsultasjon(encounterA, DEFAULT_ORGNUMMER) } returns
+        coEvery { konsultasjonService.getKonsultasjon(encounterA, DEFAULT_ORG_NUMBER) } returns
             konsultasjon(encounterA, PasientId(Uuid.generateV4()), "A01")
 
         testApp {

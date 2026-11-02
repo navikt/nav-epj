@@ -4,8 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { copy } from "./copy";
 import { renderApp, setupBrowserStubs, stubApi, testSessionOrg } from "./testApp";
 
-const fjordvik = { id: "a", navn: "Fjordvik Legekontor", orgnummer: "311111116", tlf: null };
-const lyngdal = { id: "b", navn: "Lyngdal Legesenter", orgnummer: "311111124", tlf: null };
+const fjordvik = { id: "a", name: "Fjordvik Legekontor", orgNumber: "311111116", phone: null };
+const lyngdal = { id: "b", name: "Lyngdal Legesenter", orgNumber: "311111124", phone: null };
 const choosable = [
   { org: fjordvik, hasOwnList: false },
   { org: lyngdal, hasOwnList: false },
@@ -50,7 +50,7 @@ describe("session org", () => {
       ).not.toBeInTheDocument(),
     );
     const put = calls.find((c) => c.key === "PUT /api/session-org");
-    expect(JSON.parse(String(put?.init?.body))).toEqual({ orgnummer: "311111124" });
+    expect(JSON.parse(String(put?.init?.body))).toEqual({ orgNumber: "311111124" });
     expect(screen.getByRole("button", { name: copy["header.changeOrg"] })).toBeInTheDocument();
   });
 

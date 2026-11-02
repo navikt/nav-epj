@@ -6,7 +6,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.helse.core.utils.logger
 import no.nav.helse.fhir.organizationId
-import no.nav.helse.fhir.security.clinicalOrgnummer
+import no.nav.helse.fhir.security.clinicalOrgNumber
 import no.nav.helse.fhir.security.requireSystemScopeIfSystemContext
 import no.nav.helse.smart.security.Interaction
 
@@ -21,7 +21,7 @@ fun Route.organizationRoutes(
             val principal = call.requireSystemScopeIfSystemContext("Organization", Interaction.READ)
             val organizationId = call.organizationId()
             val organization =
-                organizationService.getOrganization(organizationId, principal.clinicalOrgnummer())
+                organizationService.getOrganization(organizationId, principal.clinicalOrgNumber())
                     ?: return@get call.respond(HttpStatusCode.NotFound)
             call.respondText(fhirR4Json.encodeToString(organization), fhirContentType)
         }

@@ -15,11 +15,11 @@ export function KontrollOrgPage() {
         <Card heading={copy["s9.org.office"]} headingId={officeId}>
           <dl className="xp-dl">
             <dt>{copy["s9.org.name"]}</dt>
-            <dd>{user.legekontor}</dd>
-            <dt>{copy["s9.org.orgnr"]}</dt>
-            <dd>{user.orgnummer ?? empty}</dd>
+            <dd>{user.clinic}</dd>
+            <dt>{copy["s9.org.orgNumber"]}</dt>
+            <dd>{user.orgNumber ?? empty}</dd>
             <dt>{copy["s9.org.phone"]}</dt>
-            <dd>{user.telefon ?? empty}</dd>
+            <dd>{user.phone ?? empty}</dd>
           </dl>
         </Card>
         <Card heading={copy["s9.org.user"]} headingId={userId}>

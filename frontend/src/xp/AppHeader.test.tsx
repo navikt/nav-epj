@@ -11,7 +11,7 @@ import { copy } from "./copy";
 const user = {
   navn: "Ola Nordmann",
   autorisasjon: "Lege",
-  legekontor: "Legekontoret",
+  clinic: "Legekontoret",
 };
 
 function renderHeader(
@@ -52,7 +52,7 @@ describe("AppHeader", () => {
     renderHeader();
     expect(
       screen.getByText(
-        copy["header.user"](user.navn, user.autorisasjon, user.legekontor),
+        copy["header.user"](user.navn, user.autorisasjon, user.clinic),
       ),
     ).toBeInTheDocument();
   });
