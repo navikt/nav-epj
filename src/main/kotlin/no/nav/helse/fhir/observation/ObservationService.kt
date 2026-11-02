@@ -19,7 +19,6 @@ import kotlin.uuid.Uuid
 import kotlinx.datetime.UtcOffset
 import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.maaling.Maaling
 import no.nav.helse.epj.maaling.MaalingId
@@ -27,6 +26,7 @@ import no.nav.helse.epj.maaling.MaalingService
 import no.nav.helse.epj.maaling.MaalingStatus
 import no.nav.helse.epj.maaling.OpprettMaalingRequest
 import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
 
@@ -297,7 +297,7 @@ private fun parseReferenceId(reference: String?, resourceType: String, field: St
     }
 }
 
-private fun parsePerformer(performer: List<Reference>): HelsepersonellHpr? {
+private fun parsePerformer(performer: List<Reference>): PractitionerHpr? {
     if (performer.isEmpty()) return null
     if (performer.size > 1) {
         invalid(
@@ -318,7 +318,7 @@ private fun parsePerformer(performer: List<Reference>): HelsepersonellHpr? {
             "Observation.performer støtter kun Practitioner-referanser",
         )
     }
-    return HelsepersonellHpr(reference.removePrefix(prefix))
+    return PractitionerHpr(reference.removePrefix(prefix))
 }
 
 private fun parseEffectiveDateTime(effective: Observation.Effective?): java.time.LocalDateTime {

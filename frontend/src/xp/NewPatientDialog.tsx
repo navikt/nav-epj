@@ -78,7 +78,7 @@ export function NewPatientDialog({ onClose }: Props) {
       <form className="xp-msg" noValidate onSubmit={submit}>
         <div className="xp-msg-main">
           <div className="xp-pagehead">
-            <p>{copy["s3b.intro"](user?.navn ?? "")}</p>
+            <p>{copy["s3b.intro"](user?.name ?? "")}</p>
             <Badge tone="info">{copy["badge.localOnly"]}</Badge>
           </div>
           <TextField

@@ -8,7 +8,7 @@ import type {
 
 export type Row = readonly [label: string, value: string];
 
-export type SessionUser = { navn: string; hpr: string };
+export type SessionUser = { name: string; hpr: string };
 
 export const HPR_CLAIM = "helseid://claims/hpr/hpr_number";
 const PID_CLAIM = "helseid://claims/identity/pid";
@@ -46,7 +46,7 @@ export function helseIdRows(
 ): Row[] {
   const local = session.idp === "local-stub";
   return [
-    [copy["s11.helseid.user"], session.claims.name ?? user?.navn ?? EMPTY],
+    [copy["s11.helseid.user"], session.claims.name ?? user?.name ?? EMPTY],
     [copy["s11.helseid.hpr"], session.claims[HPR_CLAIM] ?? user?.hpr ?? EMPTY],
     [
       copy["s11.helseid.idp"],

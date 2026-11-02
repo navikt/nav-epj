@@ -4,31 +4,31 @@ import com.google.fhir.model.r4.Canonical
 import com.google.fhir.model.r4.HumanName
 import com.google.fhir.model.r4.Identifier
 import com.google.fhir.model.r4.Meta
-import com.google.fhir.model.r4.Practitioner
+import com.google.fhir.model.r4.Practitioner as FhirPractitioner
 import com.google.fhir.model.r4.Uri
-import no.nav.helse.epj.helsepersonell.Helsepersonell
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
-import no.nav.helse.epj.helsepersonell.HelsepersonellService
+import no.nav.helse.epj.practitioner.Practitioner
+import no.nav.helse.epj.practitioner.PractitionerHpr
+import no.nav.helse.epj.practitioner.PractitionerService as EpjPractitionerService
 
-class PractitionerService(val helsepersonellService: HelsepersonellService) {
+class PractitionerService(val practitionerService: EpjPractitionerService) {
 
-    suspend fun getPractitioner(practitionerId: PractitionerId): Practitioner? {
-        val helsepersonell =
-            helsepersonellService.getHelsepersonell(HelsepersonellHpr(practitionerId.value))
-        return helsepersonell.toPractitioner()
+    suspend fun getPractitioner(practitionerId: PractitionerId): FhirPractitioner? {
+        val practitioner =
+            practitionerService.getPractitioner(PractitionerHpr(practitionerId.value))
+        return practitioner.toPractitioner()
     }
 
-    fun Helsepersonell.toPractitioner(): Practitioner {
+    fun Practitioner.toPractitioner(): FhirPractitioner {
         val givenNames =
             listOf(
-                com.google.fhir.model.r4.String(value = this.navn.split(' ').first())
+                com.google.fhir.model.r4.String(value = this.name.split(' ').first())
             ) // TODO get dynamically
         val familyName =
             com.google.fhir.model.r4.String(
-                value = this.navn.split(' ').last()
+                value = this.name.split(' ').last()
             ) // TODO get dynamically
 
-        return Practitioner(
+        return FhirPractitioner(
             id = this.hpr.value,
             name = listOf(HumanName(family = familyName, given = givenNames)),
             meta =

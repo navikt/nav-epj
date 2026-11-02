@@ -8,7 +8,7 @@ import no.nav.helse.core.db.KonsultasjonDiagnosekodeTable
 import no.nav.helse.core.db.dbQuery
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.UgyldigDiagnoseException
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
+import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.utils.DEFAULT_ORG_NUMBER
 import no.nav.tsm.diagnoser.Diagnose
 import no.nav.tsm.diagnoser.DiagnoseType
@@ -19,7 +19,7 @@ import org.junit.Test
 class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
     @Test
     fun `konsultasjon retrieves an empty list of diagnoses when there are none`() = runTest {
-        val hpr = HelsepersonellHpr("123")
+        val hpr = PractitionerHpr("123")
         val pasientId = opprettPasient(hpr = hpr)
         val konsultasjonId =
             konsultasjonRepository.insert(
@@ -40,7 +40,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
 
     @Test
     fun `update throws UgyldigDiagnoseException for an unknown diagnosis code`() = runTest {
-        val hpr = HelsepersonellHpr("123")
+        val hpr = PractitionerHpr("123")
         val pasientId = opprettPasient(hpr = hpr)
         val konsultasjonId =
             konsultasjonRepository.insert(
@@ -76,7 +76,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
     @Test
     fun `updateDiagnose does not store the same diagnose twice on the same konsultasjon`() =
         runTest {
-            val hpr = HelsepersonellHpr("123")
+            val hpr = PractitionerHpr("123")
             val pasientId = opprettPasient(hpr = hpr)
             val konsultasjonId =
                 konsultasjonRepository.insert(
@@ -106,7 +106,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
     @Test
     fun `updateDiagnose stores the katalog's canonical ICD10 code regardless of dot formatting`() =
         runTest {
-            val hpr = HelsepersonellHpr("123")
+            val hpr = PractitionerHpr("123")
             val pasientId = opprettPasient(hpr = hpr)
             val konsultasjonId =
                 konsultasjonRepository.insert(
@@ -140,7 +140,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
 
     @Test
     fun `updateDiagnose stores the same diagnose on different konsultasjoner`() = runTest {
-        val hpr = HelsepersonellHpr("123")
+        val hpr = PractitionerHpr("123")
         val pasientId = opprettPasient(hpr = hpr)
 
         val konsultasjonId1 =
@@ -182,7 +182,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
     @Test
     fun `listDiagnoser by pasientId only includes diagnoser for konsultasjoner owned by that patient`() =
         runTest {
-            val hpr = HelsepersonellHpr("123")
+            val hpr = PractitionerHpr("123")
             val pasientA = opprettPasient(hpr = hpr)
             val pasientB = opprettPasient(hpr = hpr)
             val konsultasjonA =
@@ -223,7 +223,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
     @Test
     fun `listDiagnoser resolves official catalogue text for both patient and konsultasjon lookups`() =
         runTest {
-            val hpr = HelsepersonellHpr("123")
+            val hpr = PractitionerHpr("123")
             val pasientId = opprettPasient(hpr = hpr)
             val konsultasjonId =
                 konsultasjonRepository.insert(

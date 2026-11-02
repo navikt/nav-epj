@@ -3,12 +3,12 @@ package no.nav.helse.epj.pasient
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.PasientCreationException
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
+import no.nav.helse.epj.practitioner.PractitionerHpr
 
 class PasientService(private val pasientRepository: PasientRepository) {
     suspend fun listAtClinic(
         orgNumber: String,
-        ownHpr: HelsepersonellHpr,
+        ownHpr: PractitionerHpr,
     ): List<PasientListeElement> {
         return pasientRepository.listAtClinic(orgNumber, ownHpr)
     }
@@ -51,7 +51,7 @@ class PasientService(private val pasientRepository: PasientRepository) {
                 birthDate = request.birthDate,
                 gender = request.gender,
             )
-        pasientRepository.insertOnList(newPasient, HelsepersonellHpr(hpr), orgNumber)
+        pasientRepository.insertOnList(newPasient, PractitionerHpr(hpr), orgNumber)
         return pasientRepository.findByPersonident(request.personident)
             ?: throw PasientCreationException()
     }

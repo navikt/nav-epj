@@ -8,7 +8,7 @@ import kotlin.test.assertNull
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.UgyldigDiagnoseException
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
+import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.utils.DEFAULT_ORG_NUMBER
 import no.nav.tsm.diagnoser.Diagnose
 import no.nav.tsm.diagnoser.DiagnoseType
@@ -18,7 +18,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
     @Test
     fun `update returns 0 rows and makes no changes when pasientId does not own the konsultasjon`() =
         runTest {
-            val hpr = HelsepersonellHpr("123")
+            val hpr = PractitionerHpr("123")
             val pasientId = opprettPasient(hpr = hpr)
             val annenPasientId = opprettPasient(hpr = hpr)
             val konsultasjonId =
@@ -52,7 +52,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
 
     @Test
     fun `update adds a new journalnotat, stores diagnose and completes konsultasjon`() = runTest {
-        val hpr = HelsepersonellHpr("123")
+        val hpr = PractitionerHpr("123")
         val pasientId = opprettPasient(hpr = hpr)
         val konsultasjonId =
             konsultasjonRepository.insert(
@@ -95,7 +95,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
 
     @Test
     fun `update removes a diagnose that is left out of a later diagnoser list`() = runTest {
-        val hpr = HelsepersonellHpr("123")
+        val hpr = PractitionerHpr("123")
         val pasientId = opprettPasient(hpr = hpr)
         val konsultasjonId =
             konsultasjonRepository.insert(
@@ -144,7 +144,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
 
     @Test
     fun `update removes all diagnoser when the diagnoser list is submitted empty`() = runTest {
-        val hpr = HelsepersonellHpr("123")
+        val hpr = PractitionerHpr("123")
         val pasientId = opprettPasient(hpr = hpr)
         val konsultasjonId =
             konsultasjonRepository.insert(
@@ -188,7 +188,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
 
     @Test
     fun `update leaves diagnoser unchanged when an unknown diagnosekode is rejected`() = runTest {
-        val hpr = HelsepersonellHpr("123")
+        val hpr = PractitionerHpr("123")
         val pasientId = opprettPasient(hpr = hpr)
         val konsultasjonId =
             konsultasjonRepository.insert(
@@ -240,7 +240,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
 
     @Test
     fun `update leaves the konsultasjon open when ferdigstill is false`() = runTest {
-        val hpr = HelsepersonellHpr("123")
+        val hpr = PractitionerHpr("123")
         val pasientId = opprettPasient(hpr = hpr)
         val konsultasjonId =
             konsultasjonRepository.insert(
@@ -268,7 +268,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
 
     @Test
     fun `avbryt marks an ongoing konsultasjon as AVLYST`() = runTest {
-        val hpr = HelsepersonellHpr("123")
+        val hpr = PractitionerHpr("123")
         val pasientId = opprettPasient(hpr = hpr)
         val konsultasjonId =
             konsultasjonRepository.insert(
@@ -295,7 +295,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
     @Test
     fun `avbryt returns 0 rows and makes no changes when pasientId does not own the konsultasjon`() =
         runTest {
-            val hpr = HelsepersonellHpr("123")
+            val hpr = PractitionerHpr("123")
             val pasientId = opprettPasient(hpr = hpr)
             val annenPasientId = opprettPasient(hpr = hpr)
             val konsultasjonId =
@@ -321,7 +321,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
 
     @Test
     fun `avbryt does not reopen an already completed konsultasjon`() = runTest {
-        val hpr = HelsepersonellHpr("123")
+        val hpr = PractitionerHpr("123")
         val pasientId = opprettPasient(hpr = hpr)
         val konsultasjonId =
             konsultasjonRepository.insert(
@@ -352,7 +352,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
     @Test
     fun `update saving the same journalnotat text twice does not create a duplicate row`() =
         runTest {
-            val hpr = HelsepersonellHpr("123")
+            val hpr = PractitionerHpr("123")
             val pasientId = opprettPasient(hpr = hpr)
             val konsultasjonId =
                 konsultasjonRepository.insert(
@@ -385,7 +385,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
     @Test
     fun `update saving a changed journalnotat text updates the existing row instead of adding one`() =
         runTest {
-            val hpr = HelsepersonellHpr("123")
+            val hpr = PractitionerHpr("123")
             val pasientId = opprettPasient(hpr = hpr)
             val konsultasjonId =
                 konsultasjonRepository.insert(

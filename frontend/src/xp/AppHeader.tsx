@@ -11,8 +11,8 @@ import {
 } from "./shellContext";
 
 export type HeaderUser = {
-  navn: string;
-  autorisasjon: string;
+  name: string;
+  qualification: string;
   clinic: string;
 };
 
@@ -83,7 +83,7 @@ export function AppHeader({
       <TestMarker />
       {user && (
         <span className="xp-user xp-hide-narrow">
-          {copy["header.user"](user.navn, user.autorisasjon, user.clinic)}
+          {copy["header.user"](user.name, user.qualification, user.clinic)}
         </span>
       )}
       {onChangeOrg && (

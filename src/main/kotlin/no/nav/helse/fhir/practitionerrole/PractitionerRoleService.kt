@@ -9,13 +9,13 @@ import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.Uri
 import no.nav.helse.epj.clinic.ClinicId
 import no.nav.helse.epj.clinic.ClinicRepository
-import no.nav.helse.epj.helsepersonell.Helsepersonell
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
-import no.nav.helse.epj.helsepersonell.HelsepersonellService
+import no.nav.helse.epj.practitioner.Practitioner
+import no.nav.helse.epj.practitioner.PractitionerHpr
+import no.nav.helse.epj.practitioner.PractitionerService
 import no.nav.helse.epj.sessionorg.FastlegelisteRepository
 
 class PractitionerRoleService(
-    val helsepersonellService: HelsepersonellService,
+    val practitionerService: PractitionerService,
     val clinicRepository: ClinicRepository,
     val fastlegelisteRepository: FastlegelisteRepository,
 ) {
@@ -24,12 +24,12 @@ class PractitionerRoleService(
         hpr: String,
         sessionOrgNumber: String? = null,
     ): Bundle {
-        val helsepersonell = helsepersonellService.getHelsepersonell(HelsepersonellHpr(hpr))
+        val practitioner = practitionerService.getPractitioner(PractitionerHpr(hpr))
 
         val organizationId =
             sessionOrgNumber?.let { clinicRepository.findByOrgNumber(it)?.id }
                 ?: fastlegelisteRepository.findClinicIdsByHpr(hpr).singleOrNull()
-        val role = helsepersonell.toPractitionerRole(organizationId)
+        val role = practitioner.toPractitionerRole(organizationId)
         return Bundle(
             type = Enumeration(value = Bundle.BundleType.Searchset),
             entry =
@@ -42,7 +42,7 @@ class PractitionerRoleService(
         )
     }
 
-    private fun Helsepersonell.toPractitionerRole(organizationId: ClinicId?): PractitionerRole =
+    private fun Practitioner.toPractitionerRole(organizationId: ClinicId?): PractitionerRole =
         PractitionerRole(
             id = this.hpr.value,
             meta =

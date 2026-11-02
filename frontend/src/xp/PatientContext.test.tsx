@@ -18,9 +18,9 @@ const pasient: Pasient = {
 };
 
 const user = {
-  navn: "Lege Legesen",
+  name: "Lege Legesen",
   hpr: "9144889",
-  autorisasjon: "Lege",
+  qualification: "Lege",
   clinic: "Testlegekontoret",
   orgNumber: "999888777",
 };

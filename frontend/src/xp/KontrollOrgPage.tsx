@@ -25,11 +25,11 @@ export function KontrollOrgPage() {
         <Card heading={copy["s9.org.user"]} headingId={userId}>
           <dl className="xp-dl">
             <dt>{copy["s9.org.name"]}</dt>
-            <dd>{user.navn}</dd>
+            <dd>{user.name}</dd>
             <dt>{copy["s9.org.hpr"]}</dt>
             <dd>{user.hpr}</dd>
             <dt>{copy["s9.org.auth"]}</dt>
-            <dd>{user.autorisasjon}</dd>
+            <dd>{user.qualification}</dd>
             <dt>{copy["s9.org.login"]}</dt>
             <dd>{copy["s9.org.loginValue"]}</dd>
           </dl>

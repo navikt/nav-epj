@@ -10,9 +10,6 @@ import kotlin.uuid.Uuid
 import no.nav.helse.epj.clinic.ClinicId
 import no.nav.helse.epj.clinic.ClinicService
 import no.nav.helse.epj.clinic.clinicRoutes
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
-import no.nav.helse.epj.helsepersonell.HelsepersonellService
-import no.nav.helse.epj.helsepersonell.helsepersonellRoutes
 import no.nav.helse.epj.konsultasjon.JournalnotatId
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
@@ -26,6 +23,9 @@ import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.epj.pasient.PasientService
 import no.nav.helse.epj.pasient.activePatientRoutes
 import no.nav.helse.epj.pasient.pasientRoutes
+import no.nav.helse.epj.practitioner.PractitionerHpr
+import no.nav.helse.epj.practitioner.PractitionerService
+import no.nav.helse.epj.practitioner.practitionerRoutes
 import no.nav.helse.epj.sessionorg.SessionOrgResolver
 import no.nav.helse.epj.sessionorg.SessionOrgService
 import no.nav.helse.epj.sessionorg.sessionOrgRoutes
@@ -34,7 +34,7 @@ import no.nav.helse.smart.valkey.ValkeyService
 
 fun Application.configureEpjModule() {
     val pasientService: PasientService by dependencies
-    val helsepersonellService: HelsepersonellService by dependencies
+    val practitionerService: PractitionerService by dependencies
     val konsultasjonService: KonsultasjonService by dependencies
     val clinicService: ClinicService by dependencies
     val maalingService: MaalingService by dependencies
@@ -55,7 +55,7 @@ fun Application.configureEpjModule() {
             sessionOrgRoutes(sessionOrgResolver, sessionOrgService)
             pasientRoutes(pasientService, sessionOrgResolver)
             activePatientRoutes(activePatientService)
-            helsepersonellRoutes(helsepersonellService)
+            practitionerRoutes(practitionerService)
             konsultasjonRoutes(konsultasjonService, activePatientService, sessionOrgResolver)
             clinicRoutes(clinicService, sessionOrgResolver)
             diagnoseRoutes(konsultasjonService, sessionOrgResolver)
@@ -70,8 +70,7 @@ fun ApplicationCall.patientId(): PasientId = PasientId(uuidParameter("patientId"
 fun ApplicationCall.journalnotatId(): JournalnotatId =
     JournalnotatId(uuidParameter("journalnotatId"))
 
-fun ApplicationCall.helsepersonellHpr(): HelsepersonellHpr =
-    HelsepersonellHpr(stringParameter("hpr"))
+fun ApplicationCall.practitionerHpr(): PractitionerHpr = PractitionerHpr(stringParameter("hpr"))
 
 fun ApplicationCall.clinicId(): ClinicId = ClinicId(uuidParameter("clinicId"))
 

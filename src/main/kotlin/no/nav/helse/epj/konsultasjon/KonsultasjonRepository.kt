@@ -5,7 +5,7 @@ import kotlin.uuid.Uuid
 import no.nav.helse.core.db.ClinicTable
 import no.nav.helse.core.db.JournalnotatTable
 import no.nav.helse.core.db.KonsultasjonDiagnosekodeTable
-import no.nav.helse.core.db.KonsultasjonHelsepersonell
+import no.nav.helse.core.db.KonsultasjonPractitioner
 import no.nav.helse.core.db.KonsultasjonTable
 import no.nav.helse.core.db.dbQuery
 import no.nav.helse.core.db.konsultasjonAtOrg
@@ -18,8 +18,8 @@ import no.nav.helse.core.utils.KonsultasjonTilhorerAnnenPasientException
 import no.nav.helse.core.utils.UgyldigDiagnoseException
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.clinic.ClinicId
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.tsm.diagnoser.Diagnose
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -50,11 +50,11 @@ class KonsultasjonRepository {
 
         val konsultasjonIder = konsultasjoner.map { it[KonsultasjonTable.id] }
         val hprByKonsultasjonId =
-            KonsultasjonHelsepersonell.selectAll()
-                .where { KonsultasjonHelsepersonell.konsultasjonId inList konsultasjonIder }
+            KonsultasjonPractitioner.selectAll()
+                .where { KonsultasjonPractitioner.konsultasjonId inList konsultasjonIder }
                 .groupBy(
-                    keySelector = { it[KonsultasjonHelsepersonell.konsultasjonId] },
-                    valueTransform = { it[KonsultasjonHelsepersonell.hpr] },
+                    keySelector = { it[KonsultasjonPractitioner.konsultasjonId] },
+                    valueTransform = { it[KonsultasjonPractitioner.hpr] },
                 )
 
         val journalnotatByKonsultasjonId =
@@ -126,7 +126,7 @@ class KonsultasjonRepository {
                 .single()
         val id = konsultasjon[KonsultasjonTable.id]
         opprettKonsultasjon.hpr.forEach { hprValue ->
-            KonsultasjonHelsepersonell.insert {
+            KonsultasjonPractitioner.insert {
                 it[konsultasjonId] = id
                 it[hpr] = hprValue.value
             }
@@ -153,18 +153,18 @@ class KonsultasjonRepository {
 
     suspend fun findActiveByPasientIdAndHpr(
         pasientId: PasientId,
-        hpr: HelsepersonellHpr,
+        hpr: PractitionerHpr,
         orgNumber: String?,
     ): Konsultasjon? {
         val pasientUuid = pasientId.value
         return dbQuery {
             val konsultasjon =
-                (KonsultasjonTable innerJoin KonsultasjonHelsepersonell)
+                (KonsultasjonTable innerJoin KonsultasjonPractitioner)
                     .selectAll()
                     .where {
                         (KonsultasjonTable.pasientId eq pasientUuid) and
                             (KonsultasjonTable.status eq KonsultasjonStatus.PAAGAAENDE) and
-                            (KonsultasjonHelsepersonell.hpr eq hpr.value) and
+                            (KonsultasjonPractitioner.hpr eq hpr.value) and
                             konsultasjonAtOrg(orgNumber)
                     }
                     .orderBy(KonsultasjonTable.startetTidspunkt, SortOrder.DESC)
@@ -393,11 +393,11 @@ class KonsultasjonRepository {
 
     private fun toEpjKonsultasjon(konsultasjon: ResultRow): Konsultasjon {
         val hprListe =
-            KonsultasjonHelsepersonell.select(KonsultasjonHelsepersonell.hpr)
+            KonsultasjonPractitioner.select(KonsultasjonPractitioner.hpr)
                 .where {
-                    KonsultasjonHelsepersonell.konsultasjonId eq konsultasjon[KonsultasjonTable.id]
+                    KonsultasjonPractitioner.konsultasjonId eq konsultasjon[KonsultasjonTable.id]
                 }
-                .map { it[KonsultasjonHelsepersonell.hpr] }
+                .map { it[KonsultasjonPractitioner.hpr] }
 
         val journalnotatListe =
             JournalnotatTable.selectAll()

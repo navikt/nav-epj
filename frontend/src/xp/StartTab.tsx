@@ -37,7 +37,7 @@ export function StartTab() {
 
   return (
     <>
-      <h1 className="xp-h1">{copy["s2.greeting"](user.navn)}</h1>
+      <h1 className="xp-h1">{copy["s2.greeting"](user.name)}</h1>
       <div className="xp-card-grid">
         <Card heading={copy["s2.find.title"]} headingId={findId}>
           <p>{copy["s2.find.body"]}</p>

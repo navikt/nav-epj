@@ -9,7 +9,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.utils.UgyldigPersonidentException
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
+import no.nav.helse.epj.practitioner.PractitionerHpr
 import org.junit.Test
 
 class PasientServiceTest {
@@ -33,7 +33,7 @@ class PasientServiceTest {
                 gender = AdministrativeGender.FEMALE,
             )
         coEvery {
-            repository.insertOnList(capture(inserted), HelsepersonellHpr("123"), "311111116")
+            repository.insertOnList(capture(inserted), PractitionerHpr("123"), "311111116")
         } returns Unit
         coEvery { repository.findByPersonident(request.personident) } answers { inserted.captured }
 

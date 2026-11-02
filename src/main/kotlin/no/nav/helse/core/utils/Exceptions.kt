@@ -1,13 +1,13 @@
 package no.nav.helse.core.utils
 
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.practitioner.PractitionerHpr
 
-class HelsepersonellNotFoundException(hpr: HelsepersonellHpr) :
+class PractitionerNotFoundException(hpr: PractitionerHpr) :
     RuntimeException("Fant ikke helsepersonell med HPR=${hpr.value}")
 
-class HelsepersonellForPatientNotFoundException(patient: PasientId) :
+class PractitionerForPatientNotFoundException(patient: PasientId) :
     RuntimeException("Fant ikke helsepersonell på pasient med id=${patient.value}")
 
 class PasientCreationException : RuntimeException("Pasient ble ikke opprettet")

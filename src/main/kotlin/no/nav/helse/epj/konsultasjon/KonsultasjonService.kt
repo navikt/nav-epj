@@ -7,8 +7,8 @@ import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.logger
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.tsm.diagnoser.Diagnose
 
 class KonsultasjonService(private val konsultasjonRepository: KonsultasjonRepository) {
@@ -24,7 +24,7 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
 
     suspend fun getAktivKonsultasjon(
         pasientId: PasientId,
-        hpr: HelsepersonellHpr,
+        hpr: PractitionerHpr,
         orgNumber: String?,
     ): Konsultasjon? {
         return konsultasjonRepository.findActiveByPasientIdAndHpr(pasientId, hpr, orgNumber)
@@ -86,7 +86,7 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
 
     suspend fun getOrCreateKonsultasjon(
         pasientId: PasientId,
-        hpr: HelsepersonellHpr,
+        hpr: PractitionerHpr,
         orgNumber: String,
     ): Konsultasjon {
         val aktivKonsultasjon = getAktivKonsultasjon(pasientId, hpr, orgNumber)

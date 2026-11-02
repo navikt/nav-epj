@@ -30,11 +30,11 @@ object ClinicTable : Table("clinic") {
     val updated = datetime("updated_at")
 }
 
-object HelsepersonellTable : Table("practitioner") {
+object PractitionerTable : Table("practitioner") {
     val id = uuid("id")
     val hpr = text("hpr")
-    val navn = text("name")
-    val autorisasjon = text("qualification")
+    val name = text("name")
+    val qualification = text("qualification")
     val created = datetime("created_at")
     val updated = datetime("updated_at")
 }
@@ -75,7 +75,7 @@ object KonsultasjonDiagnosekodeTable : Table("consultation_diagnosis_code") {
     override val primaryKey = PrimaryKey(konsultasjonId, diagnosesystem, diagnosekode)
 }
 
-object KonsultasjonHelsepersonell : Table("consultation_practitioner") {
+object KonsultasjonPractitioner : Table("consultation_practitioner") {
     val konsultasjonId = reference("consultation_id", refColumn = KonsultasjonTable.id)
     val hpr = text("hpr")
 }

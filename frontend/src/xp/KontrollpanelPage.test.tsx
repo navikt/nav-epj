@@ -11,9 +11,9 @@ function renderPage(options?: { strict: boolean }) {
   return render(
     <CurrentUserContext.Provider
       value={{
-        navn: "Kari Nordmann",
+        name: "Kari Nordmann",
         hpr: "9144889",
-        autorisasjon: "Lege",
+        qualification: "Lege",
         clinic: "Storgata legekontor",
       }}
     >

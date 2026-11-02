@@ -1,9 +1,9 @@
 import { createContext, use } from "react";
 
 export type CurrentUser = {
-  navn: string;
+  name: string;
   hpr: string;
-  autorisasjon: string;
+  qualification: string;
   clinic: string;
   orgNumber?: string;
   phone?: string;

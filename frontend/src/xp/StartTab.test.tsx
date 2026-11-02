@@ -22,9 +22,9 @@ vi.mock("@tanstack/react-router", async (importOriginal) => ({
 }));
 
 const user: CurrentUser = {
-  navn: "Kari Nordmann",
+  name: "Kari Nordmann",
   hpr: "9144889",
-  autorisasjon: "Lege",
+  qualification: "Lege",
   clinic: "Storgata legekontor",
 };
 

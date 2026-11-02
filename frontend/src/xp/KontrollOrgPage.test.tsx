@@ -6,9 +6,9 @@ import { copy } from "./copy";
 import { CurrentUserContext, type CurrentUser } from "./currentUser";
 
 const user: CurrentUser = {
-  navn: "Kari Nordmann",
+  name: "Kari Nordmann",
   hpr: "9144889",
-  autorisasjon: "Lege",
+  qualification: "Lege",
   clinic: "Storgata legekontor",
   orgNumber: "123456789",
   phone: "22 33 44 55",

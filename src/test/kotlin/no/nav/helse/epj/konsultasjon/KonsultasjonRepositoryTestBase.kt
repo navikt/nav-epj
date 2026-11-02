@@ -4,10 +4,10 @@ import java.time.LocalDateTime
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.KonsultasjonStatus
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.pasient.Pasient
 import no.nav.helse.epj.pasient.PasientId
 import no.nav.helse.epj.pasient.PasientRepository
+import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.utils.DEFAULT_ORG_NUMBER
 import no.nav.helse.utils.WithPostgresql
 
@@ -23,7 +23,7 @@ abstract class KonsultasjonRepositoryTestBase : WithPostgresql() {
     @OptIn(ExperimentalUuidApi::class)
     protected suspend fun opprettPasient(
         pasientId: PasientId = PasientId(Uuid.generateV4()),
-        hpr: HelsepersonellHpr = HelsepersonellHpr("123"),
+        hpr: PractitionerHpr = PractitionerHpr("123"),
     ): PasientId {
         pasientRepository.insert(
             Pasient(
@@ -40,7 +40,7 @@ abstract class KonsultasjonRepositoryTestBase : WithPostgresql() {
         konsultasjonRepository.insert(
             OpprettKonsultasjon(
                 pasientId,
-                listOf(HelsepersonellHpr("123")),
+                listOf(PractitionerHpr("123")),
                 LocalDateTime.now(),
                 KonsultasjonStatus.PAAGAAENDE,
                 orgNumber = DEFAULT_ORG_NUMBER,

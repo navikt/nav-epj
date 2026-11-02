@@ -21,7 +21,7 @@ import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.UgyldigPersonidentException
 import no.nav.helse.epj.clinic.Clinic
 import no.nav.helse.epj.clinic.ClinicId
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
+import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.epj.sessionorg.SessionOrgResolution
 import no.nav.helse.epj.sessionorg.SessionOrgResolver
 import no.nav.helse.helseId.DebugInfo
@@ -156,7 +156,7 @@ class PasientRoutesTest {
                 etternavn = "Nordmann",
                 personident = "15068500017",
             )
-        coEvery { pasientService.listAtClinic("311111116", HelsepersonellHpr("111")) } returns
+        coEvery { pasientService.listAtClinic("311111116", PractitionerHpr("111")) } returns
             listOf(
                 PasientListeElement(
                     pasient,

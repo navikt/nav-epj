@@ -1,9 +1,9 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { notifySessionOrgConflict } from "./sessionOrgConflict";
-import { useHelsepersonell } from "./useHelsepersonell";
+import { usePractitioner } from "./usePractitioner";
 
-const me = { hpr: "9144889", clinicId: null, navn: "Kari", autorisasjon: "Lege" };
+const me = { hpr: "9144889", clinicId: null, name: "Kari", qualification: "Lege" };
 const clinic = { id: "k1", name: "Storgata legekontor", orgNumber: "123456789", phone: null };
 const sessionOrg = {
   org: clinic,
@@ -25,39 +25,39 @@ function stubFetch(handler: (url: string) => Promise<unknown>) {
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe("useHelsepersonell", () => {
+describe("usePractitioner", () => {
   it("starts loading and resolves helsepersonell with the session org", async () => {
     const fetchMock = stubFetch((url) =>
       respond(url === "/api/session-org" ? sessionOrg : me),
     );
-    const { result } = renderHook(() => useHelsepersonell());
+    const { result } = renderHook(() => usePractitioner());
     expect(result.current.state.status).toBe("loading");
     await waitFor(() => expect(result.current.state.status).toBe("ready"));
     expect(result.current.state).toMatchObject({
-      helsepersonell: me,
+      practitioner: me,
       sessionOrg,
     });
     expect(fetchMock.mock.calls.map((c) => c[0])).toEqual([
-      "/api/helsepersonell/me",
+      "/api/practitioners/me",
       "/api/session-org",
     ]);
   });
 
   it("errors on a non-ok response", async () => {
     stubFetch(() => respond({}, false));
-    const { result } = renderHook(() => useHelsepersonell());
+    const { result } = renderHook(() => usePractitioner());
     await waitFor(() => expect(result.current.state.status).toBe("error"));
   });
 
   it("errors on an unexpected payload", async () => {
     stubFetch(() => respond({ unexpected: 1 }));
-    const { result } = renderHook(() => useHelsepersonell());
+    const { result } = renderHook(() => usePractitioner());
     await waitFor(() => expect(result.current.state.status).toBe("error"));
   });
 
   it("errors when the network fails", async () => {
     stubFetch(() => Promise.reject(new TypeError("offline")));
-    const { result } = renderHook(() => useHelsepersonell());
+    const { result } = renderHook(() => usePractitioner());
     await waitFor(() => expect(result.current.state.status).toBe("error"));
   });
 
@@ -67,7 +67,7 @@ describe("useHelsepersonell", () => {
       if (fail) return respond({}, false);
       return respond(url === "/api/session-org" ? sessionOrg : me);
     });
-    const { result } = renderHook(() => useHelsepersonell());
+    const { result } = renderHook(() => usePractitioner());
     await waitFor(() => expect(result.current.state.status).toBe("error"));
     fail = false;
     act(() => result.current.retry());
@@ -77,7 +77,7 @@ describe("useHelsepersonell", () => {
 
   it("keeps an unresolved session org so the user can be asked", async () => {
     stubFetch((url) => respond(url === "/api/session-org" ? needsChoice : me));
-    const { result } = renderHook(() => useHelsepersonell());
+    const { result } = renderHook(() => usePractitioner());
     await waitFor(() => expect(result.current.state.status).toBe("ready"));
     expect(result.current.state).toMatchObject({
       sessionOrg: { needsChoice: true, org: null },
@@ -88,7 +88,7 @@ describe("useHelsepersonell", () => {
     const fetchMock = stubFetch((url) =>
       respond(url === "/api/session-org" ? needsChoice : me),
     );
-    const { result } = renderHook(() => useHelsepersonell());
+    const { result } = renderHook(() => usePractitioner());
     await waitFor(() => expect(result.current.state.status).toBe("ready"));
     fetchMock.mockImplementation(() => respond(sessionOrg));
     await act(() => result.current.chooseOrg("123456789"));
@@ -105,7 +105,7 @@ describe("useHelsepersonell", () => {
   it("refetches the session org after a conflict so an expired choice asks again", async () => {
     let current: unknown = sessionOrg;
     stubFetch((url) => respond(url === "/api/session-org" ? current : me));
-    const { result } = renderHook(() => useHelsepersonell());
+    const { result } = renderHook(() => usePractitioner());
     await waitFor(() => expect(result.current.state.status).toBe("ready"));
     current = needsChoice;
     act(() => notifySessionOrgConflict());

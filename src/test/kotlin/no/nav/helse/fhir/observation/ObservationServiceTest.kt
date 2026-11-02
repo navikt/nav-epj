@@ -17,7 +17,6 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.UtcOffset
 import kotlinx.datetime.toKotlinLocalDateTime
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.maaling.Maaling
 import no.nav.helse.epj.maaling.MaalingId
@@ -25,6 +24,7 @@ import no.nav.helse.epj.maaling.MaalingService
 import no.nav.helse.epj.maaling.MaalingStatus
 import no.nav.helse.epj.maaling.OpprettMaalingRequest
 import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
 import no.nav.helse.utils.DEFAULT_ORG_NUMBER
@@ -40,7 +40,7 @@ class ObservationServiceTest {
         id: MaalingId = MaalingId(Uuid.generateV4()),
         pasientId: PasientId = PasientId(Uuid.generateV4()),
         konsultasjonId: KonsultasjonId = KonsultasjonId(Uuid.generateV4()),
-        hpr: HelsepersonellHpr? = HelsepersonellHpr("123"),
+        hpr: PractitionerHpr? = PractitionerHpr("123"),
         loincKode: String = "8310-5",
         loincVisningsnavn: String = "Body temperature",
         verdi: BigDecimal = BigDecimal("37.2000"),
@@ -168,7 +168,7 @@ class ObservationServiceTest {
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `getObservationById maps performer when hpr is present`() = runTest {
-        val target = maaling(hpr = HelsepersonellHpr("999"))
+        val target = maaling(hpr = PractitionerHpr("999"))
         coEvery { maalingService.getMaaling(target.id, DEFAULT_ORG_NUMBER) } returns target
 
         val observation =

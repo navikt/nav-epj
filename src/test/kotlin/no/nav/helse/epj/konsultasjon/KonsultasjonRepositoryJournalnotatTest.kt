@@ -9,7 +9,7 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.utils.KonsultasjonStatus
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
+import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.utils.DEFAULT_ORG_NUMBER
 import org.junit.Test
 
@@ -17,7 +17,7 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `opprettJournalnotat stores a complete round trip of a journalnotat`() = runTest {
-        val hpr = HelsepersonellHpr("123")
+        val hpr = PractitionerHpr("123")
         val pasientId = opprettPasient(hpr = hpr)
         val konsultasjonId =
             konsultasjonRepository.insert(
@@ -72,7 +72,7 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
     @Test
     fun `opprettJournalnotat throws KonsultasjonTilhorerAnnenPasientException when the encounter belongs to another patient`() =
         runTest {
-            val hpr = HelsepersonellHpr("123")
+            val hpr = PractitionerHpr("123")
             val eier = opprettPasient(hpr = hpr)
             val konsultasjonId =
                 konsultasjonRepository.insert(
@@ -111,7 +111,7 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
     @Test
     fun `opprettJournalnotat with a colliding id throws DuplikatJournalnotatException and leaves data unchanged`() =
         runTest {
-            val hpr = HelsepersonellHpr("123")
+            val hpr = PractitionerHpr("123")
             val pasientId = opprettPasient(hpr = hpr)
             val konsultasjonId =
                 konsultasjonRepository.insert(
@@ -150,7 +150,7 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
     @Test
     fun `listJournalnotat by pasientId only returns journalnotater for the correct patient`() =
         runTest {
-            val hpr = HelsepersonellHpr("123")
+            val hpr = PractitionerHpr("123")
             val pasientA = opprettPasient(hpr = hpr)
             val pasientB = opprettPasient(hpr = hpr)
             val konsultasjonA =
@@ -195,7 +195,7 @@ class KonsultasjonRepositoryJournalnotatTest : KonsultasjonRepositoryTestBase() 
     @Test
     fun `listJournalnotat filters by encounter when both patient and encounter are given`() =
         runTest {
-            val hpr = HelsepersonellHpr("123")
+            val hpr = PractitionerHpr("123")
             val pasientId = opprettPasient(hpr = hpr)
             val konsultasjonA =
                 konsultasjonRepository.insert(

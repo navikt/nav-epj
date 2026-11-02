@@ -53,8 +53,8 @@ export function fakeBackend({ withHistory = false, ongoing = true } = {}) {
       const body = request.postDataJSON() as Record<string, string> | null;
       const patientId = pathname.match(/^\/api\/patients?\/([^/]+)/)?.[1];
       const known = patients.find((p) => p.id === patientId);
-      if (key === "GET /api/helsepersonell/me") {
-        return json(route, { hpr: "9144889", clinicId: "k1", navn: "Kari Lege", autorisasjon: "Lege" });
+      if (key === "GET /api/practitioners/me") {
+        return json(route, { hpr: "9144889", clinicId: "k1", name: "Kari Lege", qualification: "Lege" });
       }
       if (key === "GET /api/clinics/k1") return json(route, clinic);
       if (key === "GET /api/session-org") {

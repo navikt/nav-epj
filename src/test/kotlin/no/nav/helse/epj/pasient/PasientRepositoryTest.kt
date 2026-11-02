@@ -17,9 +17,9 @@ import no.nav.helse.core.db.dbQuery
 import no.nav.helse.core.utils.DuplikatPasientException
 import no.nav.helse.core.utils.IngenFastlegelisteException
 import no.nav.helse.core.utils.KonsultasjonStatus
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.konsultasjon.KonsultasjonRepository
 import no.nav.helse.epj.konsultasjon.OpprettKonsultasjon
+import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.utils.WithPostgresql
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
@@ -197,7 +197,7 @@ class PasientRepositoryTest : WithPostgresql() {
             .insert(
                 OpprettKonsultasjon(
                     pasient.id,
-                    listOf(HelsepersonellHpr("123")),
+                    listOf(PractitionerHpr("123")),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
                     orgNumber,
@@ -214,7 +214,7 @@ class PasientRepositoryTest : WithPostgresql() {
             .insert(
                 OpprettKonsultasjon(
                     pasient.id,
-                    listOf(HelsepersonellHpr("123")),
+                    listOf(PractitionerHpr("123")),
                     startet,
                     status,
                     orgNumber,
@@ -242,7 +242,7 @@ class PasientRepositoryTest : WithPostgresql() {
         putOnList(other, listFor(otherHpr, "311111116"))
         putOnList(elsewhere, listFor(abroad, "311111124"))
 
-        val liste = pasientRepository.listAtClinic("311111116", HelsepersonellHpr(ownHpr))
+        val liste = pasientRepository.listAtClinic("311111116", PractitionerHpr(ownHpr))
 
         val ids = liste.map { it.pasient.id }
         assertEquals(listOf(own.id, other.id), ids.filter { it in setOf(own.id, other.id) })
@@ -263,7 +263,7 @@ class PasientRepositoryTest : WithPostgresql() {
             listOf(lapsed, movedAway).forEach { startKonsultasjonAt(it, "311111116") }
 
             val liste =
-                pasientRepository.listAtClinic("311111116", HelsepersonellHpr(ownHpr)).filter {
+                pasientRepository.listAtClinic("311111116", PractitionerHpr(ownHpr)).filter {
                     it.pasient.id in setOf(listed.id, lapsed.id, movedAway.id)
                 }
 
@@ -304,7 +304,7 @@ class PasientRepositoryTest : WithPostgresql() {
         startKonsultasjon(otherOrgOnly, "311111124", now, KonsultasjonStatus.PAAGAAENDE)
 
         val liste =
-            pasientRepository.listAtClinic("311111116", HelsepersonellHpr(ownHpr)).associateBy {
+            pasientRepository.listAtClinic("311111116", PractitionerHpr(ownHpr)).associateBy {
                 it.pasient.id
             }
 
@@ -338,7 +338,7 @@ class PasientRepositoryTest : WithPostgresql() {
         listFor(hpr, "311111116")
         val pasient = nyPasient()
 
-        pasientRepository.insertOnList(pasient, HelsepersonellHpr(hpr), "311111116")
+        pasientRepository.insertOnList(pasient, PractitionerHpr(hpr), "311111116")
 
         assertTrue(pasientRepository.isListedAt(pasient.id.value, "311111116"))
     }
@@ -349,7 +349,7 @@ class PasientRepositoryTest : WithPostgresql() {
         val pasient = nyPasient()
 
         assertFailsWith<IngenFastlegelisteException> {
-            pasientRepository.insertOnList(pasient, HelsepersonellHpr("no-list"), "311111116")
+            pasientRepository.insertOnList(pasient, PractitionerHpr("no-list"), "311111116")
         }
 
         assertNull(pasientRepository.findById(pasient.id.value))
@@ -363,7 +363,7 @@ class PasientRepositoryTest : WithPostgresql() {
             pasientRepository.insert(pasient)
             putOnList(pasient, listFor("colleague-${Uuid.generateV4()}", "311111116"))
 
-            val liste = pasientRepository.listAtClinic("311111116", HelsepersonellHpr("me"))
+            val liste = pasientRepository.listAtClinic("311111116", PractitionerHpr("me"))
 
             assertEquals(true, liste.single { it.pasient.id == pasient.id }.selectable)
             assertTrue(pasientRepository.isListedAt(pasient.id.value, "311111116"))
@@ -391,12 +391,12 @@ class PasientRepositoryTest : WithPostgresql() {
             assertTrue(konsultasjoner.listByPasientId(pasient.id, "311111124").isEmpty())
 
             val atFirst =
-                pasientRepository.listAtClinic("311111116", HelsepersonellHpr("a")).single {
+                pasientRepository.listAtClinic("311111116", PractitionerHpr("a")).single {
                     it.pasient.id == pasient.id
                 }
             assertFalse(atFirst.selectable)
             val atSecond =
-                pasientRepository.listAtClinic("311111124", HelsepersonellHpr("b")).single {
+                pasientRepository.listAtClinic("311111124", PractitionerHpr("b")).single {
                     it.pasient.id == pasient.id
                 }
             assertTrue(atSecond.selectable)

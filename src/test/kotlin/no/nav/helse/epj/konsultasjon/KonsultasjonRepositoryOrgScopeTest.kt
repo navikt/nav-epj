@@ -8,8 +8,8 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.utils.KonsultasjonStatus
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.utils.DEFAULT_ORG_NUMBER
 import no.nav.helse.utils.OTHER_ORG_NUMBER
 import no.nav.helse.utils.ensureOrg
@@ -17,7 +17,7 @@ import org.junit.Test
 
 @OptIn(ExperimentalUuidApi::class)
 class KonsultasjonRepositoryOrgScopeTest : KonsultasjonRepositoryTestBase() {
-    private val hpr = HelsepersonellHpr("123")
+    private val hpr = PractitionerHpr("123")
 
     private suspend fun startKonsultasjonAt(pasientId: PasientId, orgNumber: String) =
         konsultasjonRepository.insert(

@@ -6,8 +6,8 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.helse.core.utils.securelog
-import no.nav.helse.epj.helsepersonell.HelsepersonellHpr
 import no.nav.helse.epj.patientId
+import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.epj.sessionorg.SessionOrgResolver
 import no.nav.helse.epj.sessionorg.requireOrgNumber
 import no.nav.helse.helseId.loggedInUser
@@ -20,7 +20,7 @@ fun Route.pasientRoutes(pasientService: PasientService, sessionOrgResolver: Sess
         route("/patient") {
             get {
                 val principal = loggedInUser()
-                val hpr = HelsepersonellHpr(principal.hpr)
+                val hpr = PractitionerHpr(principal.hpr)
                 val orgNumber = sessionOrgResolver.requireOrgNumber(principal.hpr)
                 call.respond(pasientService.listAtClinic(orgNumber, hpr))
             }
