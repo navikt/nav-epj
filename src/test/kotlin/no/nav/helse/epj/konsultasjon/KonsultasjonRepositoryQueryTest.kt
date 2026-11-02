@@ -358,7 +358,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                     connection.createStatement().use { statement ->
                         statement.execute(
                             """
-                            INSERT INTO konsultasjon (id, pasient_id, legekontor_id, startet_tidspunkt, status)
+                            INSERT INTO consultation (id, patient_id, clinic_id, started_at, status)
                             VALUES ('$konsultasjonId', '${pasientId.value}', NULL, now(), 'PÅGÅENDE')
                             """
                                 .trimIndent()

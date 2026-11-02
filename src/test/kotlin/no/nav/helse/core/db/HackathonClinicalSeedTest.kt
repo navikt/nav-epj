@@ -49,11 +49,11 @@ class HackathonClinicalSeedTest : WithPostgresql() {
             .use { connection ->
                 connection.createStatement().use { statement ->
                     listOf(
-                            "konsultasjon",
-                            "konsultasjon_helsepersonell",
-                            "konsultasjon_diagnosekode",
-                            "journalnotat",
-                            "maaling",
+                            "consultation",
+                            "consultation_practitioner",
+                            "consultation_diagnosis_code",
+                            "clinical_note",
+                            "measurement",
                         )
                         .map {
                             statement.executeQuery("SELECT count(*) FROM $it").use { rs ->
@@ -127,7 +127,7 @@ class HackathonClinicalSeedTest : WithPostgresql() {
         val before = counts()
         assertTrue(before.all { it.toInt() > 0 })
         execute(
-            "UPDATE konsultasjon SET problemstilling = 'Endret av bruker' " +
+            "UPDATE consultation SET reason_for_visit = 'Endret av bruker' " +
                 "WHERE status = 'PÅGÅENDE'"
         )
         val sql =
@@ -169,10 +169,10 @@ class HackathonClinicalSeedTest : WithPostgresql() {
     fun `deleted seeded diagnoses and measurements stay deleted when the seed is applied again`() {
         val bb1 = "md5('hackathon-konsultasjon-BB1')::uuid"
         execute(
-            "DELETE FROM konsultasjon_diagnosekode WHERE konsultasjon_id = $bb1 " +
-                "AND diagnosekode = 'I10'",
-            "DELETE FROM maaling WHERE konsultasjon_id = $bb1 AND loinc_kode = '29463-7'",
-            "DELETE FROM journalnotat WHERE konsultasjon_id = md5('hackathon-konsultasjon-BB3')::uuid",
+            "DELETE FROM consultation_diagnosis_code WHERE consultation_id = $bb1 " +
+                "AND diagnosis_code = 'I10'",
+            "DELETE FROM measurement WHERE consultation_id = $bb1 AND loinc_code = '29463-7'",
+            "DELETE FROM clinical_note WHERE consultation_id = md5('hackathon-konsultasjon-BB3')::uuid",
         )
         val before = counts()
 
@@ -182,14 +182,14 @@ class HackathonClinicalSeedTest : WithPostgresql() {
         assertEquals(
             0,
             count(
-                "SELECT count(*) FROM konsultasjon_diagnosekode WHERE konsultasjon_id = $bb1 " +
-                    "AND diagnosekode = 'I10'"
+                "SELECT count(*) FROM consultation_diagnosis_code WHERE consultation_id = $bb1 " +
+                    "AND diagnosis_code = 'I10'"
             ),
         )
         assertEquals(
             0,
             count(
-                "SELECT count(*) FROM maaling WHERE konsultasjon_id = $bb1 AND loinc_kode = '29463-7'"
+                "SELECT count(*) FROM measurement WHERE consultation_id = $bb1 AND loinc_code = '29463-7'"
             ),
         )
     }
@@ -197,13 +197,13 @@ class HackathonClinicalSeedTest : WithPostgresql() {
     @Test
     fun `started planned konsultasjon receives no diagnoses when the seed is applied again`() {
         val gf5 = "md5('hackathon-konsultasjon-GF5')::uuid"
-        execute("UPDATE konsultasjon SET status = 'PÅGÅENDE' WHERE id = $gf5")
+        execute("UPDATE consultation SET status = 'PÅGÅENDE' WHERE id = $gf5")
 
         applySeed()
 
         assertEquals(
             0,
-            count("SELECT count(*) FROM konsultasjon_diagnosekode WHERE konsultasjon_id = $gf5"),
+            count("SELECT count(*) FROM consultation_diagnosis_code WHERE consultation_id = $gf5"),
         )
     }
 
@@ -222,7 +222,7 @@ class HackathonClinicalSeedTest : WithPostgresql() {
             }
 
     private val eventPatients =
-        "SELECT flp.pasient_id FROM fastlegeliste_pasient flp " +
+        "SELECT flp.patient_id FROM fastlegeliste_patient flp " +
             "JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id WHERE fl.hpr LIKE '9000001%'"
 
     @Test
@@ -230,23 +230,23 @@ class HackathonClinicalSeedTest : WithPostgresql() {
         val perPatient =
             queryInts(
                 "SELECT count(k.id)::int FROM ($eventPatients) e " +
-                    "LEFT JOIN konsultasjon k ON k.pasient_id = e.pasient_id GROUP BY e.pasient_id"
+                    "LEFT JOIN consultation k ON k.patient_id = e.patient_id GROUP BY e.patient_id"
             )
         assertEquals(32, perPatient.size)
         assertTrue(perPatient.all { it >= 3 }, perPatient.toString())
 
         val spanDays =
             queryInts(
-                "SELECT (max(k.startet_tidspunkt)::date - min(k.startet_tidspunkt)::date)::int " +
-                    "FROM konsultasjon k WHERE k.pasient_id IN ($eventPatients) " +
-                    "AND k.status <> 'PLANLAGT' GROUP BY k.pasient_id"
+                "SELECT (max(k.started_at)::date - min(k.started_at)::date)::int " +
+                    "FROM consultation k WHERE k.patient_id IN ($eventPatients) " +
+                    "AND k.status <> 'PLANLAGT' GROUP BY k.patient_id"
             )
         assertTrue(spanDays.all { it >= 700 }, spanDays.toString())
         assertEquals(
             0,
             count(
-                "SELECT count(*) FROM konsultasjon WHERE status <> 'PLANLAGT' " +
-                    "AND startet_tidspunkt >= '2026-10-21'::timestamptz"
+                "SELECT count(*) FROM consultation WHERE status <> 'PLANLAGT' " +
+                    "AND started_at >= '2026-10-21'::timestamptz"
             ),
         )
     }
@@ -256,15 +256,15 @@ class HackathonClinicalSeedTest : WithPostgresql() {
         assertEquals(
             0,
             count(
-                "SELECT count(*) FROM konsultasjon k WHERE k.status = 'FULLFØRT' AND NOT EXISTS " +
-                    "(SELECT 1 FROM konsultasjon_diagnosekode d WHERE d.konsultasjon_id = k.id)"
+                "SELECT count(*) FROM consultation k WHERE k.status = 'FULLFØRT' AND NOT EXISTS " +
+                    "(SELECT 1 FROM consultation_diagnosis_code d WHERE d.consultation_id = k.id)"
             ),
         )
-        val completed = count("SELECT count(*) FROM konsultasjon WHERE status = 'FULLFØRT'")
+        val completed = count("SELECT count(*) FROM consultation WHERE status = 'FULLFØRT'")
         val withNote =
             count(
-                "SELECT count(*) FROM konsultasjon k WHERE k.status = 'FULLFØRT' AND EXISTS " +
-                    "(SELECT 1 FROM journalnotat j WHERE j.konsultasjon_id = k.id)"
+                "SELECT count(*) FROM consultation k WHERE k.status = 'FULLFØRT' AND EXISTS " +
+                    "(SELECT 1 FROM clinical_note j WHERE j.consultation_id = k.id)"
             )
         assertTrue(withNote * 100 >= completed * 75, "$withNote of $completed")
     }
@@ -273,15 +273,15 @@ class HackathonClinicalSeedTest : WithPostgresql() {
     fun `at least twelve patients have a series of six readings of one measurement`() {
         val patients =
             count(
-                "SELECT count(DISTINCT pasient_id) FROM (SELECT pasient_id, loinc_kode FROM maaling " +
-                    "GROUP BY pasient_id, loinc_kode HAVING count(*) >= 6) series"
+                "SELECT count(DISTINCT patient_id) FROM (SELECT patient_id, loinc_code FROM measurement " +
+                    "GROUP BY patient_id, loinc_code HAVING count(*) >= 6) series"
             )
         assertTrue(patients >= 12, "$patients")
         assertTrue(
-            count("SELECT count(*) FROM maaling WHERE pasient_id IN ($eventPatients)") >= 1000
+            count("SELECT count(*) FROM measurement WHERE patient_id IN ($eventPatients)") >= 1000
         )
         assertTrue(
-            count("SELECT count(*) FROM konsultasjon WHERE pasient_id IN ($eventPatients)") in
+            count("SELECT count(*) FROM consultation WHERE patient_id IN ($eventPatients)") in
                 200..300
         )
     }

@@ -1,16 +1,16 @@
-INSERT INTO legekontor (navn, tlf, orgnummer)
+INSERT INTO clinic (name, phone, org_number)
 VALUES ('Skogtun Legekontor', '22000011', '312000016'),
        ('Havnegata Legesenter', '22000012', '312000024'),
        ('Bjerkely Legepraksis', '22000013', '312000032'),
        ('Solbakken Familielegekontor', '22000014', '312000040')
-ON CONFLICT (orgnummer) DO UPDATE
-    SET navn       = EXCLUDED.navn,
-        tlf        = EXCLUDED.tlf,
+ON CONFLICT (org_number) DO UPDATE
+    SET name       = EXCLUDED.name,
+        phone      = EXCLUDED.phone,
         updated_at = now();
 
-INSERT INTO pasient (fornavn, etternavn, personident, personident_type, birth_date, gender)
-SELECT v.fornavn,
-       v.etternavn,
+INSERT INTO patient (given_name, family_name, personident, personident_type, birth_date, gender)
+SELECT v.given_name,
+       v.family_name,
        v.personident,
        v.personident_type,
        v.birth_date::date,
@@ -47,30 +47,30 @@ FROM (VALUES ('BJARNE', 'BERGE', '20856210112', 'FNR', '1962-05-20', 'MALE'),
              ('SAMIR', 'ALI', '49819110351', 'DNR', '1991-01-09', 'MALE'),
              ('BERIT', 'ODEGAARD', '21865810048', 'FNR', '1958-06-21', 'FEMALE'),
              ('LARS', 'KVAM', '13841050147', 'FNR', '2010-04-13', 'MALE'))
-         AS v (fornavn, etternavn, personident, personident_type, birth_date, gender)
+         AS v (given_name, family_name, personident, personident_type, birth_date, gender)
 ON CONFLICT (personident) DO UPDATE
-    SET fornavn          = EXCLUDED.fornavn,
-        etternavn        = EXCLUDED.etternavn,
+    SET given_name       = EXCLUDED.given_name,
+        family_name      = EXCLUDED.family_name,
         personident_type = EXCLUDED.personident_type,
         birth_date       = EXCLUDED.birth_date,
         gender           = EXCLUDED.gender,
         updated_at       = now();
 
-INSERT INTO fastlegeliste (hpr, legekontor_id)
-SELECT v.hpr, (SELECT id FROM legekontor WHERE orgnummer = v.orgnummer)
+INSERT INTO fastlegeliste (hpr, clinic_id)
+SELECT v.hpr, (SELECT id FROM clinic WHERE org_number = v.org_number)
 FROM (VALUES ('900000101', '312000016'),
              ('900000102', '312000024'),
              ('900000103', '312000032'),
-             ('900000104', '312000040')) AS v (hpr, orgnummer)
-ON CONFLICT (hpr, legekontor_id) DO NOTHING;
+             ('900000104', '312000040')) AS v (hpr, org_number)
+ON CONFLICT (hpr, clinic_id) DO NOTHING;
 
-INSERT INTO fastlegeliste_pasient (fastlegeliste_id, pasient_id)
+INSERT INTO fastlegeliste_patient (fastlegeliste_id, patient_id)
 SELECT (SELECT fl.id
         FROM fastlegeliste fl
-                 JOIN legekontor lk ON lk.id = fl.legekontor_id
+                 JOIN clinic lk ON lk.id = fl.clinic_id
         WHERE fl.hpr = v.hpr
-          AND lk.orgnummer = v.orgnummer),
-       (SELECT id FROM pasient WHERE personident = v.personident)
+          AND lk.org_number = v.org_number),
+       (SELECT id FROM patient WHERE personident = v.personident)
 FROM (VALUES ('900000101', '312000016', '20856210112'),
              ('900000101', '312000016', '03916410017'),
              ('900000101', '312000016', '28815510331'),
@@ -102,10 +102,10 @@ FROM (VALUES ('900000101', '312000016', '20856210112'),
              ('900000104', '312000040', '31857810085'),
              ('900000104', '312000040', '49819110351'),
              ('900000104', '312000040', '21865810048'),
-             ('900000104', '312000040', '13841050147')) AS v (hpr, orgnummer, personident)
-ON CONFLICT (pasient_id) DO UPDATE SET fastlegeliste_id = EXCLUDED.fastlegeliste_id;
+             ('900000104', '312000040', '13841050147')) AS v (hpr, org_number, personident)
+ON CONFLICT (patient_id) DO UPDATE SET fastlegeliste_id = EXCLUDED.fastlegeliste_id;
 
-WITH legacy (key, personident, startet, avsluttet, status, problemstilling) AS (
+WITH legacy (key, personident, startet, avsluttet, status, reason_for_visit) AS (
     VALUES ('BB1', '20856210112', '2026-03-10 09:00', '2026-03-10 09:30', 'FULLFØRT', 'Høyt blodtrykk, kontroll'),
              ('BB2', '20856210112', '2026-06-16 09:00', '2026-06-16 09:30', 'FULLFØRT', 'Høyt blodtrykk, kontroll'),
              ('BB3', '20856210112', '2026-09-22 09:00', '2026-09-22 09:30', 'FULLFØRT', 'Høyt blodtrykk, kontroll'),
@@ -147,7 +147,7 @@ WITH legacy (key, personident, startet, avsluttet, status, problemstilling) AS (
              ('RS2', '69906310147', '2026-06-23 13:30', '2026-06-23 14:00', 'FULLFØRT', 'Diabetes type 2, kontroll'),
              ('RS3', '69906310147', '2026-09-29 13:30', '2026-09-29 14:00', 'FULLFØRT', 'Diabetes type 2, kontroll'),
              ('LK1', '13841050147', '2026-05-19 15:30', '2026-05-19 15:50', 'FULLFØRT', 'Astma, kontroll')),
-     stories (prefix, personident, first_date, offsets, tid, minutter, problemstilling) AS (
+     stories (prefix, personident, first_date, offsets, tid, minutter, reason_for_visit) AS (
     VALUES ('BBh', '20856210112', '2024-06-11', '{0,175,350,525}', '09:00', 30, 'Høyt blodtrykk, kontroll'),
            ('IBh', '03916410017', '2024-07-10', '{0,170,340,510}', '10:00', 30, 'Diabetes type 2, kontroll'),
            ('TLh', '28815510331', '2023-11-07', '{0,130,260,390,520,650}', '13:00', 20, 'Astma, kontroll'),
@@ -176,7 +176,7 @@ WITH legacy (key, personident, startet, avsluttet, status, problemstilling) AS (
            ('SA', '49819110351', '2024-01-23', '{0,120,330,520}', '14:30', 25, 'Ryggsmerter'),
            ('BO', '21865810048', '2023-04-18', '{0,190,380,570,760,950}', '12:00', 20, 'Hypotyreose, kontroll'),
            ('LKh', '13841050147', '2023-03-21', '{0,150,320,500,680,860}', '15:30', 20, 'Astma, kontroll')),
-     oneoffs (key, personident, dato, tid, minutter, status, problemstilling) AS (
+     oneoffs (key, personident, dato, tid, minutter, status, reason_for_visit) AS (
     VALUES ('EKa', '30860850180', '2023-06-27', '14:00', 30, 'FULLFØRT', 'Helsekontroll'),
            ('EKb', '30860850180', '2025-01-14', '15:00', 20, 'FULLFØRT', 'Smerter i ankel etter vrikking'),
            ('EKc', '30860850180', '2025-11-18', '15:00', 20, 'FULLFØRT', 'Kviser'),
@@ -207,11 +207,11 @@ WITH legacy (key, personident, startet, avsluttet, status, problemstilling) AS (
            ('YRavl', '42885110163', '2024-11-12', '09:00', 30, 'AVLYST', 'KOLS, kontroll')),
      dagsplan AS (
 SELECT s.prefix || o.seq AS key, s.prefix, o.seq::int AS seq, s.personident,
-       s.first_date::date + o.dagoffset AS dag, s.tid, s.minutter, 'FULLFØRT' AS status, s.problemstilling
+       s.first_date::date + o.dagoffset AS dag, s.tid, s.minutter, 'FULLFØRT' AS status, s.reason_for_visit
 FROM stories s
          CROSS JOIN LATERAL unnest(s.offsets::int[]) WITH ORDINALITY AS o (dagoffset, seq)
 UNION ALL
-SELECT key, key, 1, personident, dato::date, tid, minutter, status, problemstilling
+SELECT key, key, 1, personident, dato::date, tid, minutter, status, reason_for_visit
 FROM oneoffs),
      plan AS (
 SELECT l.key,
@@ -221,16 +221,16 @@ SELECT l.key,
        l.startet::timestamp AS startet,
        l.avsluttet::timestamp AS avsluttet,
        l.status,
-       l.problemstilling
+       l.reason_for_visit
 FROM legacy l
 UNION ALL
 SELECT d.key, d.prefix, d.seq, d.personident,
        v.virkedag + d.tid::time,
        v.virkedag + d.tid::time + make_interval(mins => d.minutter),
-       d.status, d.problemstilling
+       d.status, d.reason_for_visit
 FROM dagsplan d
          CROSS JOIN LATERAL (SELECT d.dag + CASE extract(isodow FROM d.dag) WHEN 6 THEN 2 WHEN 7 THEN 1 ELSE 0 END AS virkedag) v),
-     diagnosekoder (prefix, diagnosesystem, diagnosekode) AS (
+     diagnosekoder (prefix, diagnosis_system, diagnosis_code) AS (
     VALUES ('BB', 'ICPC2', 'K86'),
            ('BB', 'ICD10', 'I10'),
            ('BBh', 'ICPC2', 'K86'),
@@ -521,7 +521,7 @@ FROM (VALUES ('BB3', 'Blodtrykk synkende på amlodipin. Fortsetter dagens dose, 
              ('HN2', 'Bedring etter oppstart samtaleterapi. Fortsatt sykmeldt 50 prosent.'),
              ('AF1', 'Forkjølelse uten tegn til bakteriell infeksjon. Symptomatisk behandling.'),
              ('LK1', 'God astmakontroll. Videreføres uendret.')) AS v (key, tekst)),
-     loinc (loinc_kode, visningsnavn, enhet_kode, enhet_visningsnavn, desimaler) AS (
+     loinc (loinc_code, visningsnavn, unit_code, unit_display, desimaler) AS (
     VALUES ('8480-6', 'Systolic blood pressure', 'mm[Hg]', 'mm Hg', 0),
            ('8462-4', 'Diastolic blood pressure', 'mm[Hg]', 'mm Hg', 0),
            ('4548-4', 'Hemoglobin A1c/Hemoglobin.total in Blood', '%', '%', 1),
@@ -543,7 +543,7 @@ FROM (VALUES ('BB3', 'Blodtrykk synkende på amlodipin. Fortsetter dagens dose, 
            ('1988-5', 'C reactive protein [Mass/volume] in Serum or Plasma', 'mg/L', 'mg/L', 0),
            ('8310-5', 'Body temperature', 'Cel', '°C', 1),
            ('72514-3', 'Pain severity - 0-10 verbal numeric rating [Score] - Reported', '{score}', 'poeng', 0)),
-     serier (prefix, loinc_kode, startverdi, endring, svingning) AS (
+     serier (prefix, loinc_code, startverdi, endring, svingning) AS (
     VALUES ('BBh', '8480-6', 164, -2.3, 0.8),
            ('BBh', '8462-4', 100, -1.5, 0.6),
            ('BBh', '29463-7', 97.0, -0.6, 0.3),
@@ -731,81 +731,81 @@ FROM (VALUES ('BB3', 'Blodtrykk synkende på amlodipin. Fortsetter dagens dose, 
            ('SAb', '8310-5', 37.6, 0, 0)),
      seriemaalinger AS (
 SELECT p.key,
-       s.loinc_kode,
+       s.loinc_code,
        round(s.startverdi::numeric + s.endring::numeric * (p.seq - 1)
-                 + s.svingning::numeric * (((p.seq * 3 + length(p.prefix) * 2 + ascii(right(s.loinc_kode, 1))) % 5) - 2),
-             l.desimaler) AS verdi
+                 + s.svingning::numeric * (((p.seq * 3 + length(p.prefix) * 2 + ascii(right(s.loinc_code, 1))) % 5) - 2),
+             l.desimaler) AS value
 FROM plan p
          JOIN serier s ON s.prefix = p.prefix
-         JOIN loinc l ON l.loinc_kode = s.loinc_kode),
-     maalinger (key, loinc_kode, loinc_visningsnavn, verdi, enhet_kode, enhet_visningsnavn) AS (
-SELECT m.key, l.loinc_kode, l.visningsnavn, m.verdi, l.enhet_kode, l.enhet_visningsnavn
-FROM (SELECT key, loinc_kode, verdi
+         JOIN loinc l ON l.loinc_code = s.loinc_code),
+     maalinger (key, loinc_code, loinc_display, value, unit_code, unit_display) AS (
+SELECT m.key, l.loinc_code, l.visningsnavn, m.value, l.unit_code, l.unit_display
+FROM (SELECT key, loinc_code, value
       FROM seriemaalinger
       UNION ALL
-      SELECT v.key, '39156-5', round(v.verdi / power(h.verdi / 100, 2), 1)
+      SELECT v.key, '39156-5', round(v.value / power(h.value / 100, 2), 1)
       FROM seriemaalinger v
-               JOIN seriemaalinger h ON h.key = v.key AND h.loinc_kode = '8302-2'
-      WHERE v.loinc_kode = '29463-7'
+               JOIN seriemaalinger h ON h.key = v.key AND h.loinc_code = '8302-2'
+      WHERE v.loinc_code = '29463-7'
         AND v.key IN (SELECT key FROM plan WHERE prefix IN ('NA', 'MSh', 'LKh'))) m
-         JOIN loinc l ON l.loinc_kode = m.loinc_kode),
+         JOIN loinc l ON l.loinc_code = m.loinc_code),
      inserted AS (
-INSERT INTO konsultasjon (id, pasient_id, legekontor_id, startet_tidspunkt, avsluttet_tidspunkt, status,
-                          problemstilling)
+INSERT INTO consultation (id, patient_id, clinic_id, started_at, ended_at, status,
+                          reason_for_visit)
 SELECT md5('hackathon-konsultasjon-' || p.key)::uuid,
        pa.id,
-       fl.legekontor_id,
+       fl.clinic_id,
        p.startet AT TIME ZONE 'Europe/Oslo',
        p.avsluttet AT TIME ZONE 'Europe/Oslo',
        p.status,
-       p.problemstilling
+       p.reason_for_visit
 FROM plan p
-         JOIN pasient pa ON pa.personident = p.personident
-         JOIN fastlegeliste_pasient flp ON flp.pasient_id = pa.id
+         JOIN patient pa ON pa.personident = p.personident
+         JOIN fastlegeliste_patient flp ON flp.patient_id = pa.id
          JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
 ON CONFLICT (id) DO NOTHING
-RETURNING id, pasient_id, startet_tidspunkt, status),
-     helsepersonell AS (
-INSERT INTO konsultasjon_helsepersonell (konsultasjon_id, hpr)
+RETURNING id, patient_id, started_at, status),
+     practitioner AS (
+INSERT INTO consultation_practitioner (consultation_id, hpr)
 SELECT i.id, fl.hpr
 FROM inserted i
-         JOIN fastlegeliste_pasient flp ON flp.pasient_id = i.pasient_id
+         JOIN fastlegeliste_patient flp ON flp.patient_id = i.patient_id
          JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
-RETURNING konsultasjon_id),
+RETURNING consultation_id),
      diagnoser AS (
-INSERT INTO konsultasjon_diagnosekode (konsultasjon_id, diagnosesystem, diagnosekode)
-SELECT k.id, d.diagnosesystem, d.diagnosekode
+INSERT INTO consultation_diagnosis_code (consultation_id, diagnosis_system, diagnosis_code)
+SELECT k.id, d.diagnosis_system, d.diagnosis_code
 FROM inserted k
          JOIN plan p ON md5('hackathon-konsultasjon-' || p.key)::uuid = k.id
          JOIN diagnosekoder d ON d.prefix = p.prefix
 WHERE k.status NOT IN ('PLANLAGT', 'AVLYST')
-RETURNING konsultasjon_id),
+RETURNING consultation_id),
      notater AS (
-INSERT INTO journalnotat (id, konsultasjon_id, pasient_id, journalnotat)
-SELECT md5('hackathon-journalnotat-' || n.key)::uuid, k.id, k.pasient_id, n.tekst
+INSERT INTO clinical_note (id, consultation_id, patient_id, clinical_note)
+SELECT md5('hackathon-journalnotat-' || n.key)::uuid, k.id, k.patient_id, n.tekst
 FROM notat n
          JOIN inserted k ON k.id = md5('hackathon-konsultasjon-' || n.key)::uuid
 RETURNING id)
-INSERT INTO maaling (id, pasient_id, konsultasjon_id, hpr, loinc_kode, loinc_visningsnavn, verdi, enhet_kode,
-                     enhet_visningsnavn, effektiv_tidspunkt, status)
-SELECT md5('hackathon-maaling-' || v.key || v.loinc_kode)::uuid,
-       k.pasient_id,
+INSERT INTO measurement (id, patient_id, consultation_id, hpr, loinc_code, loinc_display, value, unit_code,
+                         unit_display, effective_at, status)
+SELECT md5('hackathon-maaling-' || v.key || v.loinc_code)::uuid,
+       k.patient_id,
        k.id,
        (SELECT fl.hpr
-        FROM fastlegeliste_pasient flp
+        FROM fastlegeliste_patient flp
                  JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
-        WHERE flp.pasient_id = k.pasient_id),
-       v.loinc_kode,
-       v.loinc_visningsnavn,
-       v.verdi::numeric,
-       v.enhet_kode,
-       v.enhet_visningsnavn,
-       k.startet_tidspunkt,
+        WHERE flp.patient_id = k.patient_id),
+       v.loinc_code,
+       v.loinc_display,
+       v.value::numeric,
+       v.unit_code,
+       v.unit_display,
+       k.started_at,
        'FINAL'
-FROM (SELECT key, loinc_kode, loinc_visningsnavn, verdi, enhet_kode, enhet_visningsnavn
+FROM (SELECT key, loinc_code, loinc_display, value, unit_code, unit_display
       FROM maalinger
       UNION ALL
-      SELECT key, loinc_kode, loinc_visningsnavn, verdi::numeric, enhet_kode, enhet_visningsnavn
+      SELECT key, loinc_code, loinc_display, value::numeric, unit_code, unit_display
       FROM (VALUES ('BB1', '8480-6', 'Systolic blood pressure', '152', 'mm[Hg]', 'mm Hg'),
              ('BB1', '8462-4', 'Diastolic blood pressure', '94', 'mm[Hg]', 'mm Hg'),
              ('BB1', '29463-7', 'Body weight', '94.5', 'kg', 'kg'),
@@ -873,5 +873,5 @@ FROM (SELECT key, loinc_kode, loinc_visningsnavn, verdi, enhet_kode, enhet_visni
              ('RS1', '4548-4', 'Hemoglobin A1c/Hemoglobin.total in Blood', '9.1', '%', '%'),
              ('RS2', '4548-4', 'Hemoglobin A1c/Hemoglobin.total in Blood', '8.2', '%', '%'),
              ('RS3', '4548-4', 'Hemoglobin A1c/Hemoglobin.total in Blood', '7.5', '%', '%'))
-           AS legacy_maaling (key, loinc_kode, loinc_visningsnavn, verdi, enhet_kode, enhet_visningsnavn)) AS v
+           AS legacy_measurement (key, loinc_code, loinc_display, value, unit_code, unit_display)) AS v
          JOIN inserted k ON k.id = md5('hackathon-konsultasjon-' || v.key)::uuid;

@@ -17,7 +17,7 @@ abstract class WithPostgresql protected constructor() {
                         config.postgres.username,
                         config.postgres.password,
                     )
-                    .locations("db/migration")
+                    .locations("db/migration", "db/testfixture")
                     .cleanDisabled(false)
                     .load()
 

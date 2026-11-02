@@ -22,6 +22,8 @@ class HelsepersonellServiceTest : WithPostgresql() {
 
     @Test
     fun `an existing clinician is returned unchanged`() = runTest {
+        service.findOrCreateHelsepersonell(HelsepersonellHpr("565501872"), "GRØNN VITS")
+
         val existing = service.findOrCreateHelsepersonell(HelsepersonellHpr("565501872"), "Ny")
 
         assertEquals("GRØNN VITS", existing.navn)
