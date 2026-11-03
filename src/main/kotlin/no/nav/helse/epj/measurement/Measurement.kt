@@ -1,4 +1,4 @@
-package no.nav.helse.epj.maaling
+package no.nav.helse.epj.measurement
 
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -7,33 +7,33 @@ import no.nav.helse.epj.consultation.ConsultationId
 import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.epj.practitioner.PractitionerHpr
 
-@JvmInline value class MaalingId(val value: Uuid)
+@JvmInline value class MeasurementId(val value: Uuid)
 
-data class Maaling(
-    val id: MaalingId,
+data class Measurement(
+    val id: MeasurementId,
     val patientId: PatientId,
     val consultationId: ConsultationId,
     val hpr: PractitionerHpr?,
-    val loincKode: String,
-    val loincVisningsnavn: String,
-    val verdi: BigDecimal,
-    val enhetKode: String,
-    val enhetVisningsnavn: String,
-    val effektivTidspunkt: LocalDateTime,
-    val status: MaalingStatus,
+    val loincCode: String,
+    val loincDisplay: String,
+    val value: BigDecimal,
+    val unitCode: String,
+    val unitDisplay: String,
+    val effectiveAt: LocalDateTime,
+    val status: MeasurementStatus,
 )
 
-data class OpprettMaalingRequest(
+data class CreateMeasurementRequest(
     val patientId: PatientId,
     val consultationId: ConsultationId,
     val hpr: PractitionerHpr?,
-    val loincKode: String,
-    val loincVisningsnavn: String,
-    val verdi: BigDecimal,
-    val enhetKode: String,
-    val enhetVisningsnavn: String,
-    val effektivTidspunkt: LocalDateTime,
-    val status: MaalingStatus,
+    val loincCode: String,
+    val loincDisplay: String,
+    val value: BigDecimal,
+    val unitCode: String,
+    val unitDisplay: String,
+    val effectiveAt: LocalDateTime,
+    val status: MeasurementStatus,
 )
 
 /**
@@ -41,7 +41,7 @@ data class OpprettMaalingRequest(
  * corrected | cancelled | entered-in-error | unknown) so later Observation mapping is a direct name
  * translation rather than a reinterpretation.
  */
-enum class MaalingStatus {
+enum class MeasurementStatus {
     REGISTERED,
     PRELIMINARY,
     FINAL,

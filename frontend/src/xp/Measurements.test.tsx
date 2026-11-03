@@ -1,20 +1,20 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { Maalinger } from "./Maalinger";
+import { Measurements } from "./Measurements";
 import { expectNoSeriousViolations } from "./axeHelper";
 
-const maaling = (overrides: Record<string, unknown> = {}) => ({
+const measurement = (overrides: Record<string, unknown> = {}) => ({
   id: "m1",
   patientId: "p1",
   consultationId: "k1",
   hpr: null,
-  loincKode: "8310-5",
-  loincVisningsnavn: "Body temperature",
-  verdi: 37.2,
-  enhetKode: "Cel",
-  enhetVisningsnavn: "degree Celsius",
-  effektivTidspunkt: "2026-09-30T09:15:00Z",
+  loincCode: "8310-5",
+  loincDisplay: "Body temperature",
+  value: 37.2,
+  unitCode: "Cel",
+  unitDisplay: "degree Celsius",
+  effectiveAt: "2026-09-30T09:15:00Z",
   status: "FINAL",
   ...overrides,
 });
@@ -34,29 +34,29 @@ function stubFetch(...results: { ok: boolean; body?: unknown }[]) {
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe("Maalinger", () => {
+describe("Measurements", () => {
   it("shows loading, then measurements for the patient", async () => {
     const fetchMock = stubFetch({
       ok: true,
       body: [
-        maaling(),
-        maaling({
+        measurement(),
+        measurement({
           id: "m2",
-          loincKode: "8867-4",
-          loincVisningsnavn: "Heart rate",
-          verdi: 72,
-          enhetKode: "/min",
-          enhetVisningsnavn: "per minute",
-          effektivTidspunkt: "2026-10-01T10:00:00Z",
+          loincCode: "8867-4",
+          loincDisplay: "Heart rate",
+          value: 72,
+          unitCode: "/min",
+          unitDisplay: "per minute",
+          effectiveAt: "2026-10-01T10:00:00Z",
           status: "PRELIMINARY",
         }),
       ],
     });
-    const { container } = render(<Maalinger patientId="p1" />);
+    const { container } = render(<Measurements patientId="p1" />);
     expect(screen.getByRole("status")).toHaveTextContent("Laster");
 
     const table = await screen.findByRole("table", { name: "Målinger" });
-    expect(fetchMock).toHaveBeenCalledWith("/api/patient/p1/maalinger", undefined);
+    expect(fetchMock).toHaveBeenCalledWith("/api/patient/p1/measurements", undefined);
     const rows = within(table).getAllByRole("row");
     expect(rows).toHaveLength(3);
     expect(rows[1]).toHaveTextContent("Heart rate");
@@ -73,16 +73,16 @@ describe("Maalinger", () => {
 
   it("shows an empty state", async () => {
     stubFetch({ ok: true, body: [] });
-    render(<Maalinger patientId="p1" />);
+    render(<Measurements patientId="p1" />);
     expect(await screen.findByText("Ingen målinger registrert.")).toBeVisible();
   });
 
   it("shows an error with retry when the request fails", async () => {
     const fetchMock = stubFetch(
       { ok: false },
-      { ok: true, body: [maaling()] },
+      { ok: true, body: [measurement()] },
     );
-    render(<Maalinger patientId="p1" />);
+    render(<Measurements patientId="p1" />);
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Feil ved lasting av målinger",
     );

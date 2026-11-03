@@ -14,7 +14,7 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.SerializationException
 import no.nav.helse.core.utils.ConsultationBelongsToOtherPatientException
 import no.nav.helse.core.utils.ConsultationNotFoundException
-import no.nav.helse.core.utils.DuplikatMaalingException
+import no.nav.helse.core.utils.DuplicateMeasurementException
 import no.nav.helse.fhir.encounterReferenceId
 import no.nav.helse.fhir.observationId
 import no.nav.helse.fhir.patientOrSubjectReferenceInputId
@@ -111,7 +111,7 @@ fun Route.observationRoutes(
 
             val request =
                 try {
-                    observation.toOpprettMaalingRequest()
+                    observation.toCreateMeasurementRequest()
                 } catch (exception: InvalidObservationException) {
                     return@post call.respondOperationOutcome(
                         fhirR4Json,
@@ -150,7 +150,7 @@ fun Route.observationRoutes(
                         OperationOutcome.IssueType.Invalid,
                         exception.message ?: "Encounter tilhører en annen pasient",
                     )
-                } catch (exception: DuplikatMaalingException) {
+                } catch (exception: DuplicateMeasurementException) {
                     return@post call.respondOperationOutcome(
                         fhirR4Json,
                         fhirContentType,
@@ -194,7 +194,7 @@ private suspend fun ApplicationCall.respondOperationOutcome(
 /**
  * Accepts either a bare LOINC code (`code=8310-5`) or a fully qualified `system|code` token
  * (`code=http://loinc.org|8310-5`). Any other system is rejected explicitly rather than silently
- * ignored, since LOINC is the only code system Maaling stores.
+ * ignored, since LOINC is the only code system Measurement stores.
  */
 private fun parseObservationSearchCode(raw: String): String {
     if (raw.isBlank()) {

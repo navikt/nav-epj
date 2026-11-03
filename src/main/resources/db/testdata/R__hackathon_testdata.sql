@@ -521,7 +521,7 @@ FROM (VALUES ('BB3', 'Blodtrykk synkende på amlodipin. Fortsetter dagens dose, 
              ('HN2', 'Bedring etter oppstart samtaleterapi. Fortsatt sykmeldt 50 prosent.'),
              ('AF1', 'Forkjølelse uten tegn til bakteriell infeksjon. Symptomatisk behandling.'),
              ('LK1', 'God astmakontroll. Videreføres uendret.')) AS v (key, note_text)),
-     loinc (loinc_code, visningsnavn, unit_code, unit_display, desimaler) AS (
+     loinc (loinc_code, display_name, unit_code, unit_display, decimals) AS (
     VALUES ('8480-6', 'Systolic blood pressure', 'mm[Hg]', 'mm Hg', 0),
            ('8462-4', 'Diastolic blood pressure', 'mm[Hg]', 'mm Hg', 0),
            ('4548-4', 'Hemoglobin A1c/Hemoglobin.total in Blood', '%', '%', 1),
@@ -543,7 +543,7 @@ FROM (VALUES ('BB3', 'Blodtrykk synkende på amlodipin. Fortsetter dagens dose, 
            ('1988-5', 'C reactive protein [Mass/volume] in Serum or Plasma', 'mg/L', 'mg/L', 0),
            ('8310-5', 'Body temperature', 'Cel', '°C', 1),
            ('72514-3', 'Pain severity - 0-10 verbal numeric rating [Score] - Reported', '{score}', 'poeng', 0)),
-     serier (prefix, loinc_code, startverdi, endring, svingning) AS (
+     series (prefix, loinc_code, start_value, change, variation) AS (
     VALUES ('BBh', '8480-6', 164, -2.3, 0.8),
            ('BBh', '8462-4', 100, -1.5, 0.6),
            ('BBh', '29463-7', 97.0, -0.6, 0.3),
@@ -729,23 +729,23 @@ FROM (VALUES ('BB3', 'Blodtrykk synkende på amlodipin. Fortsetter dagens dose, 
            ('LRc', '8462-4', 66, 0, 0),
            ('BOa', '29463-7', 66.2, 0, 0),
            ('SAb', '8310-5', 37.6, 0, 0)),
-     seriemaalinger AS (
+     series_measurements AS (
 SELECT p.key,
        s.loinc_code,
-       round(s.startverdi::numeric + s.endring::numeric * (p.seq - 1)
-                 + s.svingning::numeric * (((p.seq * 3 + length(p.prefix) * 2 + ascii(right(s.loinc_code, 1))) % 5) - 2),
-             l.desimaler) AS value
+       round(s.start_value::numeric + s.change::numeric * (p.seq - 1)
+                 + s.variation::numeric * (((p.seq * 3 + length(p.prefix) * 2 + ascii(right(s.loinc_code, 1))) % 5) - 2),
+             l.decimals) AS value
 FROM plan p
-         JOIN serier s ON s.prefix = p.prefix
+         JOIN series s ON s.prefix = p.prefix
          JOIN loinc l ON l.loinc_code = s.loinc_code),
-     maalinger (key, loinc_code, loinc_display, value, unit_code, unit_display) AS (
-SELECT m.key, l.loinc_code, l.visningsnavn, m.value, l.unit_code, l.unit_display
+     measurements (key, loinc_code, loinc_display, value, unit_code, unit_display) AS (
+SELECT m.key, l.loinc_code, l.display_name, m.value, l.unit_code, l.unit_display
 FROM (SELECT key, loinc_code, value
-      FROM seriemaalinger
+      FROM series_measurements
       UNION ALL
       SELECT v.key, '39156-5', round(v.value / power(h.value / 100, 2), 1)
-      FROM seriemaalinger v
-               JOIN seriemaalinger h ON h.key = v.key AND h.loinc_code = '8302-2'
+      FROM series_measurements v
+               JOIN series_measurements h ON h.key = v.key AND h.loinc_code = '8302-2'
       WHERE v.loinc_code = '29463-7'
         AND v.key IN (SELECT key FROM plan WHERE prefix IN ('NA', 'MSh', 'LKh'))) m
          JOIN loinc l ON l.loinc_code = m.loinc_code),
@@ -803,7 +803,7 @@ SELECT md5('hackathon-maaling-' || v.key || v.loinc_code)::uuid,
        k.started_at,
        'FINAL'
 FROM (SELECT key, loinc_code, loinc_display, value, unit_code, unit_display
-      FROM maalinger
+      FROM measurements
       UNION ALL
       SELECT key, loinc_code, loinc_display, value::numeric, unit_code, unit_display
       FROM (VALUES ('BB1', '8480-6', 'Systolic blood pressure', '152', 'mm[Hg]', 'mm Hg'),

@@ -99,7 +99,7 @@ export type Consultation = z.infer<typeof ConsultationSchema>;
 
 export type Diagnosis = z.infer<typeof DiagnosisSchema>;
 
-export const MaalingStatusSchema = z.enum([
+export const MeasurementStatusSchema = z.enum([
     "REGISTERED",
     "PRELIMINARY",
     "FINAL",
@@ -110,20 +110,20 @@ export const MaalingStatusSchema = z.enum([
     "UNKNOWN",
 ]);
 
-export const MaalingSchema = z.object({
+export const MeasurementSchema = z.object({
     id: z.string(),
     patientId: z.string(),
     consultationId: z.string(),
-    loincKode: z.string(),
-    loincVisningsnavn: z.string(),
-    verdi: z.number(),
-    enhetKode: z.string(),
-    enhetVisningsnavn: z.string(),
-    effektivTidspunkt: z.string(),
-    status: MaalingStatusSchema,
+    loincCode: z.string(),
+    loincDisplay: z.string(),
+    value: z.number(),
+    unitCode: z.string(),
+    unitDisplay: z.string(),
+    effectiveAt: z.string(),
+    status: MeasurementStatusSchema,
 });
 
-export type Maaling = z.infer<typeof MaalingSchema>;
+export type Measurement = z.infer<typeof MeasurementSchema>;
 
 export const LaunchModeSchema = z.enum(["iframe", "tab", "ask"]);
 

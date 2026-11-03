@@ -9,7 +9,7 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.utils.ConsultationStatus
 import no.nav.helse.epj.consultation.ConsultationRepository
-import no.nav.helse.epj.maaling.MaalingRepository
+import no.nav.helse.epj.measurement.MeasurementRepository
 import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.epj.patient.PatientRepository
 import no.nav.helse.utils.WithPostgresql
@@ -22,7 +22,7 @@ class HackathonClinicalSeedTest : WithPostgresql() {
 
     private val seedConfig = config.postgres.copy(seedTestdata = true)
     private val consultationRepository = ConsultationRepository()
-    private val maalingRepository = MaalingRepository()
+    private val measurementRepository = MeasurementRepository()
     private val patientRepository = PatientRepository()
 
     private val orgWithGunnar = "312000032"
@@ -94,16 +94,14 @@ class HackathonClinicalSeedTest : WithPostgresql() {
         assertTrue(consultations.all { it.hpr == listOf("900000103") })
 
         val hba1c =
-            maalingRepository.listByPatientId(gunnar, orgWithGunnar).filter {
-                it.loincKode == "4548-4"
+            measurementRepository.listByPatientId(gunnar, orgWithGunnar).filter {
+                it.loincCode == "4548-4"
             }
         assertEquals(
             listOf("8.7", "8.8", "8.4", "8", "8.1", "7.9", "7.6", "7.2", "6.9"),
-            hba1c
-                .sortedBy { it.effektivTidspunkt }
-                .map { it.verdi.stripTrailingZeros().toPlainString() },
+            hba1c.sortedBy { it.effectiveAt }.map { it.value.stripTrailingZeros().toPlainString() },
         )
-        assertTrue(hba1c.all { it.enhetKode == "%" })
+        assertTrue(hba1c.all { it.unitCode == "%" })
     }
 
     @Test
@@ -111,7 +109,7 @@ class HackathonClinicalSeedTest : WithPostgresql() {
         val gunnar = patientId("23895710156")
 
         assertTrue(consultationRepository.listByPatientId(gunnar, orgWithBjarne).isEmpty())
-        assertTrue(maalingRepository.listByPatientId(gunnar, orgWithBjarne).isEmpty())
+        assertTrue(measurementRepository.listByPatientId(gunnar, orgWithBjarne).isEmpty())
     }
 
     @Test
@@ -290,21 +288,21 @@ class HackathonClinicalSeedTest : WithPostgresql() {
     fun `rising and falling series exist for a flagging app`() = runTest {
         val sigrun = patientId("09894810030")
         val egfr =
-            maalingRepository
+            measurementRepository
                 .listByPatientId(sigrun, "312000016")
-                .filter { it.loincKode == "62238-1" }
-                .sortedBy { it.effektivTidspunkt }
-                .map { it.verdi.toInt() }
+                .filter { it.loincCode == "62238-1" }
+                .sortedBy { it.effectiveAt }
+                .map { it.value.toInt() }
         assertEquals(8, egfr.size)
         assertTrue(egfr.first() > egfr.last())
 
         val eva = patientId("31857810085")
         val hba1c =
-            maalingRepository
+            measurementRepository
                 .listByPatientId(eva, "312000040")
-                .filter { it.loincKode == "4548-4" }
-                .sortedBy { it.effektivTidspunkt }
-                .map { it.verdi }
+                .filter { it.loincCode == "4548-4" }
+                .sortedBy { it.effectiveAt }
+                .map { it.value }
         assertTrue(hba1c.first() < hba1c.last())
         assertTrue(hba1c.last() > java.math.BigDecimal("8.5"))
     }

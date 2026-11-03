@@ -358,7 +358,7 @@ describe("JournalView", () => {
   });
 
   it("keeps the journal usable when the measurements request fails", async () => {
-    await openJournal([consultation()], { "GET /api/patient/p1/maalinger": () => ({ ok: false }) });
+    await openJournal([consultation()], { "GET /api/patient/p1/measurements": () => ({ ok: false }) });
     await userEvent.click(await screen.findByRole("tab", { name: "Målinger" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Feil ved lasting av målinger");
     expect(screen.getByText(/Ape/)).toBeInTheDocument();

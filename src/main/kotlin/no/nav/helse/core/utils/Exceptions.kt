@@ -39,7 +39,7 @@ class UgyldigPersonidentException(message: String, cause: Throwable? = null) :
 
 class DuplicatePatientException : RuntimeException("Pasienten finnes allerede")
 
-class DuplikatMaalingException : RuntimeException("Målingen finnes allerede")
+class DuplicateMeasurementException : RuntimeException("Målingen finnes allerede")
 
 class DuplicateClinicalNoteException : RuntimeException("Journalnotatet finnes allerede")
 

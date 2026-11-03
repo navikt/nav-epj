@@ -48,7 +48,7 @@ One fixed grid: header, task pane (264px), workspace, status bar. Under 1024px t
 
 ## State
 
-- The URL holds the page and the open journal: `/`, `/patients`, `/patients/$patientId` and `/patients/$patientId/konsultasjon/$konsultasjonId`. The journal sub-tab is `?tab=konsultasjon|tidligere|maalinger|apper`, validated with zod in `routes/patients/$patientId.tsx`.
+- The URL holds the page and the open journal: `/`, `/patients`, `/patients/$patientId` and `/patients/$patientId/konsultasjon/$konsultasjonId`. The journal sub-tab is `?tab=konsultasjon|tidligere|measurements|apper`, validated with zod in `routes/patients/$patientId.tsx`.
 - Zustand holds everything else. `workspaceStore` has the open tabs (app, Kontrollpanel, Systeminformasjon and Hjelp tabs have no route). `journalStore` has the single open journal and its draft. `appRunStore` has running apps. `activePatientStore` has the server's active patient.
 - `useRouteTabSync` (mounted in `__root.tsx`) keeps the two in step. A route change opens or selects the tab and loads the journal. Selecting a tab navigates to `routeForTab`. A sub-tab change replaces the URL. Closing the journal tab clears `journalStore`.
 - Opening a journal claims the active patient with `PUT /api/active-patient`. `useActivePatientSync` re-reads it on window focus, on a `BroadcastChannel` message from another nav-epj tab, and every 15 s while an app runs inside nav-epj.

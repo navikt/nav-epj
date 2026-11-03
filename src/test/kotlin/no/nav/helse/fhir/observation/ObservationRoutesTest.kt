@@ -536,7 +536,7 @@ class ObservationRoutesTest {
     fun `POST Observation surfaces a duplicate id collision explicitly instead of a fallback success`() {
         val patientId = Uuid.generateV4()
         coEvery { observationService.createObservation(any(), DEFAULT_ORG_NUMBER) } throws
-            no.nav.helse.core.utils.DuplikatMaalingException()
+            no.nav.helse.core.utils.DuplicateMeasurementException()
 
         testApp(scopes = createScope(), boundPatient = patientId.toString()) {
             val response =

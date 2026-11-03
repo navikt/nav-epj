@@ -189,7 +189,7 @@ SELECT p.key, n.texts[CASE WHEN p.seq = 1 OR cardinality(n.texts) = 1 THEN 1
 FROM plan p
          JOIN note_templates n ON n.prefix = p.prefix
 WHERE p.status NOT IN ('PLANNED', 'CANCELLED')),
-     loinc (loinc_code, visningsnavn, unit_code, unit_display, desimaler) AS (
+     loinc (loinc_code, display_name, unit_code, unit_display, decimals) AS (
     VALUES ('8480-6', 'Systolic blood pressure', 'mm[Hg]', 'mm Hg', 0),
            ('8462-4', 'Diastolic blood pressure', 'mm[Hg]', 'mm Hg', 0),
            ('4548-4', 'Hemoglobin A1c/Hemoglobin.total in Blood', '%', '%', 1),
@@ -209,7 +209,7 @@ WHERE p.status NOT IN ('PLANNED', 'CANCELLED')),
            ('1988-5', 'C reactive protein [Mass/volume] in Serum or Plasma', 'mg/L', 'mg/L', 0),
            ('8310-5', 'Body temperature', 'Cel', '°C', 1),
            ('72514-3', 'Pain severity - 0-10 verbal numeric rating [Score] - Reported', '{score}', 'poeng', 0)),
-     serier (prefix, loinc_code, startverdi, endring, svingning) AS (
+     series (prefix, loinc_code, start_value, change, variation) AS (
     VALUES ('FR', '4548-4', 5.5, 0.15, 0.05),
            ('FR', '29463-7', 80.0, 1.1, 0.3),
            ('FR', '8480-6', 118, 1.5, 1.5),
@@ -272,23 +272,23 @@ WHERE p.status NOT IN ('PLANNED', 'CANCELLED')),
            ('APd', '8462-4', 84, 0, 0),
            ('APe', '29463-7', 84.9, 0, 0),
            ('APe', '72514-3', 6, 0, 0)),
-     seriemaalinger AS (
+     series_measurements AS (
 SELECT p.key,
        s.loinc_code,
-       round(s.startverdi::numeric + s.endring::numeric * (p.seq - 1)
-                 + s.svingning::numeric * (((p.seq * 3 + length(p.prefix) * 2 + ascii(right(s.loinc_code, 1))) % 5) - 2),
-             l.desimaler) AS value
+       round(s.start_value::numeric + s.change::numeric * (p.seq - 1)
+                 + s.variation::numeric * (((p.seq * 3 + length(p.prefix) * 2 + ascii(right(s.loinc_code, 1))) % 5) - 2),
+             l.decimals) AS value
 FROM plan p
-         JOIN serier s ON s.prefix = p.prefix
+         JOIN series s ON s.prefix = p.prefix
          JOIN loinc l ON l.loinc_code = s.loinc_code),
-     maalinger (key, loinc_code, loinc_display, value, unit_code, unit_display) AS (
-SELECT m.key, l.loinc_code, l.visningsnavn, m.value, l.unit_code, l.unit_display
+     measurements (key, loinc_code, loinc_display, value, unit_code, unit_display) AS (
+SELECT m.key, l.loinc_code, l.display_name, m.value, l.unit_code, l.unit_display
 FROM (SELECT key, loinc_code, value
-      FROM seriemaalinger
+      FROM series_measurements
       UNION ALL
       SELECT v.key, '39156-5', round(v.value / power(h.value / 100, 2), 1)
-      FROM seriemaalinger v
-               JOIN seriemaalinger h ON h.key = v.key AND h.loinc_code = '8302-2'
+      FROM series_measurements v
+               JOIN series_measurements h ON h.key = v.key AND h.loinc_code = '8302-2'
       WHERE v.loinc_code = '29463-7'
         AND v.key IN (SELECT key FROM plan WHERE prefix IN ('LF', 'APd'))) m
          JOIN loinc l ON l.loinc_code = m.loinc_code),
@@ -345,7 +345,7 @@ SELECT md5('testdata-maaling-' || m.key || m.loinc_code)::uuid,
        m.unit_display,
        k.started_at,
        'FINAL'
-FROM maalinger m
+FROM measurements m
          JOIN inserted k ON k.id = md5('testdata-konsultasjon-' || m.key)::uuid;
 
 DELETE

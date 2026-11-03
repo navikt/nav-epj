@@ -83,7 +83,7 @@ class ObservationCreateValidationTest {
         )
 
     @Test
-    fun `toOpprettMaalingRequest maps a fully valid Observation`() {
+    fun `toCreateMeasurementRequest maps a fully valid Observation`() {
         val patientId = Uuid.generateV4()
         val encounterId = Uuid.generateV4()
         val observation =
@@ -93,44 +93,46 @@ class ObservationCreateValidationTest {
                 performer = listOf(Reference(reference = FhirString(value = "Practitioner/999"))),
             )
 
-        val request = observation.toOpprettMaalingRequest()
+        val request = observation.toCreateMeasurementRequest()
 
         assertEquals(patientId, request.patientId.value)
         assertEquals(encounterId, request.consultationId.value)
         assertEquals("999", request.hpr?.value)
-        assertEquals("8310-5", request.loincKode)
-        assertEquals("Body temperature", request.loincVisningsnavn)
-        assertEquals(0, request.verdi.compareTo(BigDecimal("37.2000")))
-        assertEquals("Cel", request.enhetKode)
-        assertEquals("degree Celsius", request.enhetVisningsnavn)
-        assertEquals(LocalDateTime.of(2025, 1, 15, 10, 30), request.effektivTidspunkt)
+        assertEquals("8310-5", request.loincCode)
+        assertEquals("Body temperature", request.loincDisplay)
+        assertEquals(0, request.value.compareTo(BigDecimal("37.2000")))
+        assertEquals("Cel", request.unitCode)
+        assertEquals("degree Celsius", request.unitDisplay)
+        assertEquals(LocalDateTime.of(2025, 1, 15, 10, 30), request.effectiveAt)
     }
 
     @Test
-    fun `toOpprettMaalingRequest ignores a client-supplied id`() {
+    fun `toCreateMeasurementRequest ignores a client-supplied id`() {
         val observation = validObservation(id = "client-chosen-id")
 
-        observation.toOpprettMaalingRequest()
+        observation.toCreateMeasurementRequest()
     }
 
     @Test
-    fun `toOpprettMaalingRequest rejects a missing status`() {
+    fun `toCreateMeasurementRequest rejects a missing status`() {
         val observation = validObservation(status = null)
 
         val exception =
-            assertFailsWith<InvalidObservationException> { observation.toOpprettMaalingRequest() }
+            assertFailsWith<InvalidObservationException> {
+                observation.toCreateMeasurementRequest()
+            }
         assertEquals(OperationOutcome.IssueType.Code_Invalid, exception.issueType)
     }
 
     @Test
-    fun `toOpprettMaalingRequest rejects zero codings`() {
+    fun `toCreateMeasurementRequest rejects zero codings`() {
         val observation = validObservation(coding = emptyList())
 
-        assertFailsWith<InvalidObservationException> { observation.toOpprettMaalingRequest() }
+        assertFailsWith<InvalidObservationException> { observation.toCreateMeasurementRequest() }
     }
 
     @Test
-    fun `toOpprettMaalingRequest rejects multiple codings`() {
+    fun `toCreateMeasurementRequest rejects multiple codings`() {
         val observation =
             validObservation(
                 coding =
@@ -148,11 +150,11 @@ class ObservationCreateValidationTest {
                     )
             )
 
-        assertFailsWith<InvalidObservationException> { observation.toOpprettMaalingRequest() }
+        assertFailsWith<InvalidObservationException> { observation.toCreateMeasurementRequest() }
     }
 
     @Test
-    fun `toOpprettMaalingRequest rejects a non-LOINC coding system`() {
+    fun `toCreateMeasurementRequest rejects a non-LOINC coding system`() {
         val observation =
             validObservation(
                 coding =
@@ -166,40 +168,42 @@ class ObservationCreateValidationTest {
             )
 
         val exception =
-            assertFailsWith<InvalidObservationException> { observation.toOpprettMaalingRequest() }
+            assertFailsWith<InvalidObservationException> {
+                observation.toCreateMeasurementRequest()
+            }
         assertEquals(OperationOutcome.IssueType.Value, exception.issueType)
     }
 
     @Test
-    fun `toOpprettMaalingRequest rejects a missing subject`() {
+    fun `toCreateMeasurementRequest rejects a missing subject`() {
         val observation = validObservation(subjectReference = null)
 
-        assertFailsWith<InvalidObservationException> { observation.toOpprettMaalingRequest() }
+        assertFailsWith<InvalidObservationException> { observation.toCreateMeasurementRequest() }
     }
 
     @Test
-    fun `toOpprettMaalingRequest rejects a subject reference to the wrong resource type`() {
+    fun `toCreateMeasurementRequest rejects a subject reference to the wrong resource type`() {
         val observation = validObservation(subjectReference = "Group/${Uuid.generateV4()}")
 
-        assertFailsWith<InvalidObservationException> { observation.toOpprettMaalingRequest() }
+        assertFailsWith<InvalidObservationException> { observation.toCreateMeasurementRequest() }
     }
 
     @Test
-    fun `toOpprettMaalingRequest rejects a subject reference with a malformed UUID`() {
+    fun `toCreateMeasurementRequest rejects a subject reference with a malformed UUID`() {
         val observation = validObservation(subjectReference = "Patient/not-a-uuid")
 
-        assertFailsWith<InvalidObservationException> { observation.toOpprettMaalingRequest() }
+        assertFailsWith<InvalidObservationException> { observation.toCreateMeasurementRequest() }
     }
 
     @Test
-    fun `toOpprettMaalingRequest rejects a missing encounter`() {
+    fun `toCreateMeasurementRequest rejects a missing encounter`() {
         val observation = validObservation(encounterReference = null)
 
-        assertFailsWith<InvalidObservationException> { observation.toOpprettMaalingRequest() }
+        assertFailsWith<InvalidObservationException> { observation.toCreateMeasurementRequest() }
     }
 
     @Test
-    fun `toOpprettMaalingRequest rejects more than one performer`() {
+    fun `toCreateMeasurementRequest rejects more than one performer`() {
         val observation =
             validObservation(
                 performer =
@@ -209,28 +213,28 @@ class ObservationCreateValidationTest {
                     )
             )
 
-        assertFailsWith<InvalidObservationException> { observation.toOpprettMaalingRequest() }
+        assertFailsWith<InvalidObservationException> { observation.toCreateMeasurementRequest() }
     }
 
     @Test
-    fun `toOpprettMaalingRequest rejects a performer reference that is not a Practitioner`() {
+    fun `toCreateMeasurementRequest rejects a performer reference that is not a Practitioner`() {
         val observation =
             validObservation(
                 performer = listOf(Reference(reference = FhirString(value = "Organization/1")))
             )
 
-        assertFailsWith<InvalidObservationException> { observation.toOpprettMaalingRequest() }
+        assertFailsWith<InvalidObservationException> { observation.toCreateMeasurementRequest() }
     }
 
     @Test
-    fun `toOpprettMaalingRequest rejects a missing effective`() {
+    fun `toCreateMeasurementRequest rejects a missing effective`() {
         val observation = validObservation(effective = null)
 
-        assertFailsWith<InvalidObservationException> { observation.toOpprettMaalingRequest() }
+        assertFailsWith<InvalidObservationException> { observation.toCreateMeasurementRequest() }
     }
 
     @Test
-    fun `toOpprettMaalingRequest rejects an effective Period instead of dateTime`() {
+    fun `toCreateMeasurementRequest rejects an effective Period instead of dateTime`() {
         val observation =
             validObservation(
                 effective =
@@ -249,11 +253,11 @@ class ObservationCreateValidationTest {
                     )
             )
 
-        assertFailsWith<InvalidObservationException> { observation.toOpprettMaalingRequest() }
+        assertFailsWith<InvalidObservationException> { observation.toCreateMeasurementRequest() }
     }
 
     @Test
-    fun `toOpprettMaalingRequest rejects a date-only effectiveDateTime`() {
+    fun `toCreateMeasurementRequest rejects a date-only effectiveDateTime`() {
         val observation =
             validObservation(
                 effective =
@@ -262,11 +266,11 @@ class ObservationCreateValidationTest {
                     )
             )
 
-        assertFailsWith<InvalidObservationException> { observation.toOpprettMaalingRequest() }
+        assertFailsWith<InvalidObservationException> { observation.toCreateMeasurementRequest() }
     }
 
     @Test
-    fun `toOpprettMaalingRequest rejects a non-UTC effectiveDateTime offset`() {
+    fun `toCreateMeasurementRequest rejects a non-UTC effectiveDateTime offset`() {
         val observation =
             validObservation(
                 effective =
@@ -281,28 +285,30 @@ class ObservationCreateValidationTest {
                     )
             )
 
-        assertFailsWith<InvalidObservationException> { observation.toOpprettMaalingRequest() }
+        assertFailsWith<InvalidObservationException> { observation.toCreateMeasurementRequest() }
     }
 
     @Test
-    fun `toOpprettMaalingRequest rejects a valueString instead of valueQuantity`() {
+    fun `toCreateMeasurementRequest rejects a valueString instead of valueQuantity`() {
         val observation =
             validObservation(value = Observation.Value.String(FhirString(value = "37,2")))
 
         val exception =
-            assertFailsWith<InvalidObservationException> { observation.toOpprettMaalingRequest() }
+            assertFailsWith<InvalidObservationException> {
+                observation.toCreateMeasurementRequest()
+            }
         assertEquals(OperationOutcome.IssueType.Not_Supported, exception.issueType)
     }
 
     @Test
-    fun `toOpprettMaalingRequest rejects a missing value`() {
+    fun `toCreateMeasurementRequest rejects a missing value`() {
         val observation = validObservation(value = null)
 
-        assertFailsWith<InvalidObservationException> { observation.toOpprettMaalingRequest() }
+        assertFailsWith<InvalidObservationException> { observation.toCreateMeasurementRequest() }
     }
 
     @Test
-    fun `toOpprettMaalingRequest rejects a non-UCUM quantity system`() {
+    fun `toCreateMeasurementRequest rejects a non-UCUM quantity system`() {
         val observation =
             validObservation(
                 value =
@@ -323,12 +329,14 @@ class ObservationCreateValidationTest {
             )
 
         val exception =
-            assertFailsWith<InvalidObservationException> { observation.toOpprettMaalingRequest() }
+            assertFailsWith<InvalidObservationException> {
+                observation.toCreateMeasurementRequest()
+            }
         assertEquals(OperationOutcome.IssueType.Value, exception.issueType)
     }
 
     @Test
-    fun `toOpprettMaalingRequest rejects a quantity comparator`() {
+    fun `toCreateMeasurementRequest rejects a quantity comparator`() {
         val observation =
             validObservation(
                 value =
@@ -350,7 +358,7 @@ class ObservationCreateValidationTest {
                     )
             )
 
-        assertFailsWith<InvalidObservationException> { observation.toOpprettMaalingRequest() }
+        assertFailsWith<InvalidObservationException> { observation.toCreateMeasurementRequest() }
     }
 
     private fun observationWithValue(value: String) =
@@ -371,38 +379,38 @@ class ObservationCreateValidationTest {
         )
 
     @Test
-    fun `toOpprettMaalingRequest rejects more than four decimals instead of rounding them`() {
+    fun `toCreateMeasurementRequest rejects more than four decimals instead of rounding them`() {
         assertFailsWith<InvalidObservationException> {
-            observationWithValue("37.12345").toOpprettMaalingRequest()
+            observationWithValue("37.12345").toCreateMeasurementRequest()
         }
     }
 
     @Test
-    fun `toOpprettMaalingRequest rejects more than eight integer digits`() {
+    fun `toCreateMeasurementRequest rejects more than eight integer digits`() {
         assertFailsWith<InvalidObservationException> {
-            observationWithValue("123456789").toOpprettMaalingRequest()
+            observationWithValue("123456789").toCreateMeasurementRequest()
         }
     }
 
     @Test
-    fun `toOpprettMaalingRequest accepts the largest value the column stores exactly`() {
+    fun `toCreateMeasurementRequest accepts the largest value the column stores exactly`() {
         assertEquals(
             BigDecimal("99999999.9999"),
-            observationWithValue("99999999.9999").toOpprettMaalingRequest().verdi,
+            observationWithValue("99999999.9999").toCreateMeasurementRequest().value,
         )
     }
 
     @Test
-    fun `toOpprettMaalingRequest accepts trailing zeros beyond four decimals`() {
+    fun `toCreateMeasurementRequest accepts trailing zeros beyond four decimals`() {
         assertEquals(
             0,
             BigDecimal("37.2")
-                .compareTo(observationWithValue("37.200000").toOpprettMaalingRequest().verdi),
+                .compareTo(observationWithValue("37.200000").toCreateMeasurementRequest().value),
         )
     }
 
     @Test
-    fun `toOpprettMaalingRequest rejects components`() {
+    fun `toCreateMeasurementRequest rejects components`() {
         val observation =
             validObservation(
                 component =
@@ -423,12 +431,14 @@ class ObservationCreateValidationTest {
             )
 
         val exception =
-            assertFailsWith<InvalidObservationException> { observation.toOpprettMaalingRequest() }
+            assertFailsWith<InvalidObservationException> {
+                observation.toCreateMeasurementRequest()
+            }
         assertEquals(OperationOutcome.IssueType.Not_Supported, exception.issueType)
     }
 
     @Test
-    fun `toOpprettMaalingRequest rejects dataAbsentReason`() {
+    fun `toCreateMeasurementRequest rejects dataAbsentReason`() {
         val observation =
             validObservation(
                 dataAbsentReason =
@@ -448,7 +458,9 @@ class ObservationCreateValidationTest {
             )
 
         val exception =
-            assertFailsWith<InvalidObservationException> { observation.toOpprettMaalingRequest() }
+            assertFailsWith<InvalidObservationException> {
+                observation.toCreateMeasurementRequest()
+            }
         assertEquals(OperationOutcome.IssueType.Not_Supported, exception.issueType)
     }
 }

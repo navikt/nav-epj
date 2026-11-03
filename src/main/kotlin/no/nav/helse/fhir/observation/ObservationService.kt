@@ -20,38 +20,40 @@ import kotlinx.datetime.UtcOffset
 import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import no.nav.helse.epj.consultation.ConsultationId
-import no.nav.helse.epj.maaling.Maaling
-import no.nav.helse.epj.maaling.MaalingId
-import no.nav.helse.epj.maaling.MaalingService
-import no.nav.helse.epj.maaling.MaalingStatus
-import no.nav.helse.epj.maaling.OpprettMaalingRequest
+import no.nav.helse.epj.measurement.CreateMeasurementRequest
+import no.nav.helse.epj.measurement.Measurement
+import no.nav.helse.epj.measurement.MeasurementId
+import no.nav.helse.epj.measurement.MeasurementService
+import no.nav.helse.epj.measurement.MeasurementStatus
 import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
 
 private const val LOINC_SYSTEM = "http://loinc.org"
-private const val MAALING_MAKS_DESIMALER = 4
+private const val MEASUREMENT_MAX_DECIMALS = 4
 
-private const val MAALING_MAKS_HELTALLSSIFFER = 8
+private const val MEASUREMENT_MAX_INTEGER_DIGITS = 8
 
 private const val UCUM_SYSTEM = "http://unitsofmeasure.org"
 
 /**
- * Raised when an incoming Observation does not fit the narrow scalar shape backed by [Maaling].
+ * Raised when an incoming Observation does not fit the narrow scalar shape backed by [Measurement].
  * Carries the FHIR [OperationOutcome.IssueType] so the route can turn it into a matching
  * OperationOutcome without re-deriving the classification.
  */
 class InvalidObservationException(val issueType: OperationOutcome.IssueType, message: String) :
     RuntimeException(message)
 
-class ObservationService(val maalingService: MaalingService) {
+class ObservationService(val measurementService: MeasurementService) {
 
     suspend fun getObservationById(id: ObservationId, orgNumber: String?): Observation? =
-        maalingService.getMaaling(MaalingId(id.value), orgNumber)?.toObservation()
+        measurementService.getMeasurement(MeasurementId(id.value), orgNumber)?.toObservation()
 
-    suspend fun createObservation(request: OpprettMaalingRequest, orgNumber: String): Observation =
-        maalingService.opprettMaaling(request, orgNumber).toObservation()
+    suspend fun createObservation(
+        request: CreateMeasurementRequest,
+        orgNumber: String,
+    ): Observation = measurementService.createMeasurement(request, orgNumber).toObservation()
 
     suspend fun searchObservations(
         patientId: PatientInputId,
@@ -59,17 +61,17 @@ class ObservationService(val maalingService: MaalingService) {
         code: String?,
         orgNumber: String?,
     ): Bundle {
-        val maalinger =
-            maalingService
-                .getMaalingerForPatient(PatientId(patientId.value), orgNumber)
+        val measurements =
+            measurementService
+                .getMeasurementsForPatient(PatientId(patientId.value), orgNumber)
                 .filter { encounterId == null || it.consultationId.value == encounterId.value }
-                .filter { code == null || it.loincKode == code }
+                .filter { code == null || it.loincCode == code }
 
         return Bundle(
             type = Enumeration(value = Bundle.BundleType.Searchset),
             entry =
-                maalinger.map { maaling ->
-                    val observation = maaling.toObservation()
+                measurements.map { measurement ->
+                    val observation = measurement.toObservation()
                     Bundle.Entry(
                         fullUrl = Uri(value = "Observation/${observation.id}"),
                         resource = observation,
@@ -78,7 +80,7 @@ class ObservationService(val maalingService: MaalingService) {
         )
     }
 
-    fun Maaling.toObservation(): Observation =
+    fun Measurement.toObservation(): Observation =
         Observation(
             id = this.id.value.toString(),
             status = Enumeration(value = this.status.toObservationStatus()),
@@ -88,9 +90,8 @@ class ObservationService(val maalingService: MaalingService) {
                         listOf(
                             Coding(
                                 system = Uri(value = LOINC_SYSTEM),
-                                code = Code(value = this.loincKode),
-                                display =
-                                    com.google.fhir.model.r4.String(value = this.loincVisningsnavn),
+                                code = Code(value = this.loincCode),
+                                display = com.google.fhir.model.r4.String(value = this.loincDisplay),
                             )
                         )
                 ),
@@ -120,7 +121,7 @@ class ObservationService(val maalingService: MaalingService) {
                     DateTime(
                         value =
                             FhirDateTime.DateTime(
-                                this.effektivTidspunkt.toKotlinLocalDateTime(),
+                                this.effectiveAt.toKotlinLocalDateTime(),
                                 UtcOffset.ZERO,
                             )
                     )
@@ -128,52 +129,52 @@ class ObservationService(val maalingService: MaalingService) {
             value =
                 Observation.Value.Quantity(
                     Quantity(
-                        value = Decimal(value = this.verdi.toPlainString().toBigDecimal()),
-                        unit = com.google.fhir.model.r4.String(value = this.enhetVisningsnavn),
+                        value = Decimal(value = this.value.toPlainString().toBigDecimal()),
+                        unit = com.google.fhir.model.r4.String(value = this.unitDisplay),
                         system = Uri(value = UCUM_SYSTEM),
-                        code = Code(value = this.enhetKode),
+                        code = Code(value = this.unitCode),
                     )
                 ),
         )
 
-    private fun MaalingStatus.toObservationStatus(): Observation.ObservationStatus =
+    private fun MeasurementStatus.toObservationStatus(): Observation.ObservationStatus =
         when (this) {
-            MaalingStatus.REGISTERED -> Observation.ObservationStatus.Registered
-            MaalingStatus.PRELIMINARY -> Observation.ObservationStatus.Preliminary
-            MaalingStatus.FINAL -> Observation.ObservationStatus.Final
-            MaalingStatus.AMENDED -> Observation.ObservationStatus.Amended
-            MaalingStatus.CORRECTED -> Observation.ObservationStatus.Corrected
-            MaalingStatus.CANCELLED -> Observation.ObservationStatus.Cancelled
-            MaalingStatus.ENTERED_IN_ERROR -> Observation.ObservationStatus.Entered_In_Error
-            MaalingStatus.UNKNOWN -> Observation.ObservationStatus.Unknown
+            MeasurementStatus.REGISTERED -> Observation.ObservationStatus.Registered
+            MeasurementStatus.PRELIMINARY -> Observation.ObservationStatus.Preliminary
+            MeasurementStatus.FINAL -> Observation.ObservationStatus.Final
+            MeasurementStatus.AMENDED -> Observation.ObservationStatus.Amended
+            MeasurementStatus.CORRECTED -> Observation.ObservationStatus.Corrected
+            MeasurementStatus.CANCELLED -> Observation.ObservationStatus.Cancelled
+            MeasurementStatus.ENTERED_IN_ERROR -> Observation.ObservationStatus.Entered_In_Error
+            MeasurementStatus.UNKNOWN -> Observation.ObservationStatus.Unknown
         }
 }
 
-private fun Observation.ObservationStatus.toMaalingStatus(): MaalingStatus =
+private fun Observation.ObservationStatus.toMeasurementStatus(): MeasurementStatus =
     when (this) {
-        Observation.ObservationStatus.Registered -> MaalingStatus.REGISTERED
-        Observation.ObservationStatus.Preliminary -> MaalingStatus.PRELIMINARY
-        Observation.ObservationStatus.Final -> MaalingStatus.FINAL
-        Observation.ObservationStatus.Amended -> MaalingStatus.AMENDED
-        Observation.ObservationStatus.Corrected -> MaalingStatus.CORRECTED
-        Observation.ObservationStatus.Cancelled -> MaalingStatus.CANCELLED
-        Observation.ObservationStatus.Entered_In_Error -> MaalingStatus.ENTERED_IN_ERROR
-        Observation.ObservationStatus.Unknown -> MaalingStatus.UNKNOWN
+        Observation.ObservationStatus.Registered -> MeasurementStatus.REGISTERED
+        Observation.ObservationStatus.Preliminary -> MeasurementStatus.PRELIMINARY
+        Observation.ObservationStatus.Final -> MeasurementStatus.FINAL
+        Observation.ObservationStatus.Amended -> MeasurementStatus.AMENDED
+        Observation.ObservationStatus.Corrected -> MeasurementStatus.CORRECTED
+        Observation.ObservationStatus.Cancelled -> MeasurementStatus.CANCELLED
+        Observation.ObservationStatus.Entered_In_Error -> MeasurementStatus.ENTERED_IN_ERROR
+        Observation.ObservationStatus.Unknown -> MeasurementStatus.UNKNOWN
     }
 
 private fun invalid(issueType: OperationOutcome.IssueType, message: String): Nothing =
     throw InvalidObservationException(issueType, message)
 
 /**
- * Validates and maps an incoming create request to the narrow scalar shape backed by [Maaling]. The
- * client-supplied `id`, if any, is intentionally never read here: create always assigns a
+ * Validates and maps an incoming create request to the narrow scalar shape backed by [Measurement].
+ * The client-supplied `id`, if any, is intentionally never read here: create always assigns a
  * server-generated id, per FHIR create semantics.
  */
-fun Observation.toOpprettMaalingRequest(): OpprettMaalingRequest {
+fun Observation.toCreateMeasurementRequest(): CreateMeasurementRequest {
     rejectUnsupportedFields(this)
 
     val status =
-        this.status.value?.toMaalingStatus()
+        this.status.value?.toMeasurementStatus()
             ?: invalid(OperationOutcome.IssueType.Code_Invalid, "Observation.status er ugyldig")
 
     val codings = this.code.coding
@@ -190,13 +191,13 @@ fun Observation.toOpprettMaalingRequest(): OpprettMaalingRequest {
             "Observation.code.coding.system må være '$LOINC_SYSTEM'",
         )
     }
-    val loincKode =
+    val loincCode =
         coding.code?.value
             ?: invalid(
                 OperationOutcome.IssueType.Required,
                 "Observation.code.coding.code er påkrevd",
             )
-    val loincVisningsnavn =
+    val loincDisplay =
         coding.display?.value
             ?: invalid(
                 OperationOutcome.IssueType.Required,
@@ -207,7 +208,7 @@ fun Observation.toOpprettMaalingRequest(): OpprettMaalingRequest {
     val consultationId =
         parseReferenceId(this.encounter?.reference?.value, "Encounter", "encounter")
     val hpr = parsePerformer(this.performer)
-    val effektivTidspunkt = parseEffectiveDateTime(this.effective)
+    val effectiveAt = parseEffectiveDateTime(this.effective)
 
     val quantity =
         when (val value = this.value) {
@@ -226,21 +227,21 @@ fun Observation.toOpprettMaalingRequest(): OpprettMaalingRequest {
             "Observation.valueQuantity.comparator støttes ikke",
         )
     }
-    val verdi =
+    val value =
         quantity.value?.value?.let { BigDecimal(it.toPlainString()) }
             ?: invalid(
                 OperationOutcome.IssueType.Required,
                 "Observation.valueQuantity.value er påkrevd",
             )
-    val normalisertVerdi = verdi.stripTrailingZeros()
+    val normalizedValue = value.stripTrailingZeros()
     if (
-        normalisertVerdi.scale() > MAALING_MAKS_DESIMALER ||
-            normalisertVerdi.precision() - normalisertVerdi.scale() > MAALING_MAKS_HELTALLSSIFFER
+        normalizedValue.scale() > MEASUREMENT_MAX_DECIMALS ||
+            normalizedValue.precision() - normalizedValue.scale() > MEASUREMENT_MAX_INTEGER_DIGITS
     ) {
         invalid(
             OperationOutcome.IssueType.Value,
-            "Observation.valueQuantity.value støtter maks $MAALING_MAKS_HELTALLSSIFFER " +
-                "heltallssiffer og $MAALING_MAKS_DESIMALER desimaler",
+            "Observation.valueQuantity.value støtter maks $MEASUREMENT_MAX_INTEGER_DIGITS " +
+                "heltallssiffer og $MEASUREMENT_MAX_DECIMALS desimaler",
         )
     }
     if (quantity.system?.value != UCUM_SYSTEM) {
@@ -249,29 +250,29 @@ fun Observation.toOpprettMaalingRequest(): OpprettMaalingRequest {
             "Observation.valueQuantity.system må være '$UCUM_SYSTEM'",
         )
     }
-    val enhetKode =
+    val unitCode =
         quantity.code?.value
             ?: invalid(
                 OperationOutcome.IssueType.Required,
                 "Observation.valueQuantity.code er påkrevd",
             )
-    val enhetVisningsnavn =
+    val unitDisplay =
         quantity.unit?.value
             ?: invalid(
                 OperationOutcome.IssueType.Required,
                 "Observation.valueQuantity.unit er påkrevd",
             )
 
-    return OpprettMaalingRequest(
+    return CreateMeasurementRequest(
         patientId = PatientId(patientId),
         consultationId = ConsultationId(consultationId),
         hpr = hpr,
-        loincKode = loincKode,
-        loincVisningsnavn = loincVisningsnavn,
-        verdi = verdi,
-        enhetKode = enhetKode,
-        enhetVisningsnavn = enhetVisningsnavn,
-        effektivTidspunkt = effektivTidspunkt,
+        loincCode = loincCode,
+        loincDisplay = loincDisplay,
+        value = value,
+        unitCode = unitCode,
+        unitDisplay = unitDisplay,
+        effectiveAt = effectiveAt,
         status = status,
     )
 }
@@ -347,7 +348,7 @@ private fun parseEffectiveDateTime(effective: Observation.Effective?): java.time
 }
 
 /**
- * Rejects every Observation element that [Maaling] cannot represent, so unsupported content is
+ * Rejects every Observation element that [Measurement] cannot represent, so unsupported content is
  * never silently discarded on create.
  */
 private fun rejectUnsupportedFields(observation: Observation) {
