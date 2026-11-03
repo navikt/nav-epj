@@ -95,7 +95,7 @@ export function TaskPane({
       <SmartAppsPanel />
       <TaskPanel title={copy["pane.system.title"]}>
         <TaskLink
-          icon="pasienter"
+          icon="patients"
           label={copy["pane.system.patients"]}
           current={patientsCurrent}
           onActivate={onOpenPatients}

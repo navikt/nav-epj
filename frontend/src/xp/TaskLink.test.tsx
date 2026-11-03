@@ -28,7 +28,7 @@ describe("TaskLink", () => {
           rootElement: null,
         }}
       >
-        <TaskLink icon="pasienter" label="Pasienter" onActivate={onActivate} />
+        <TaskLink icon="patients" label="Pasienter" onActivate={onActivate} />
       </ShellContext>,
     );
     await user.click(screen.getByRole("button"));
@@ -38,7 +38,7 @@ describe("TaskLink", () => {
   });
 
   it("marks the current link with aria-current", () => {
-    render(<TaskLink icon="pasienter" label="Pasienter" current />);
+    render(<TaskLink icon="patients" label="Pasienter" current />);
     const button = screen.getByRole("button");
     expect(button).toHaveAttribute("aria-current", "page");
     expect(button).toHaveClass("is-current");

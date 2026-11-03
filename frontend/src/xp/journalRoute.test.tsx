@@ -7,8 +7,8 @@ import { useJournalStore } from "./journalStore";
 
 const ape = {
   id: "p1",
-  fornavn: "Matematisk",
-  etternavn: "Ape",
+  givenName: "Matematisk",
+  familyName: "Ape",
   personident: "01019012345",
   personidentType: "FNR",
   birthDate: "1990-01-01",
@@ -18,8 +18,8 @@ const ape = {
 
 const ola = {
   id: "p2",
-  fornavn: "Ola",
-  etternavn: "Nordmann",
+  givenName: "Ola",
+  familyName: "Nordmann",
   personident: "02029054321",
   personidentType: "FNR",
   birthDate: "1990-02-02",
@@ -30,7 +30,7 @@ const ola = {
 function kons(overrides: Record<string, unknown> = {}) {
   return {
     id: "k1",
-    pasientId: "p1",
+    patientId: "p1",
     hpr: ["9144889"],
     journalnotat: [],
     diagnoser: [],
@@ -480,7 +480,7 @@ describe("journal guards", () => {
         body: [
           kons({
             id: "k9",
-            pasientId: "p2",
+            patientId: "p2",
             status: "FULLFØRT",
             avsluttetTidspunkt: "2026-09-01T10:00:00",
             startetTidspunkt: "2026-09-01T09:00:00",

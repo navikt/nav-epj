@@ -11,12 +11,12 @@ already seeded is safe: the seed is ignored and the seeded rows stay.
 
 What the seed does:
 
-- Upserts `legekontor` by `orgnummer` and `pasient` by `personident`. The seed wins on name and
+- Upserts `legekontor` by `orgnummer` and `patient` by `personident`. The seed wins on name and
   demographics.
 - Inserts the seeded `fastlegeliste` rows if missing and upserts the seeded memberships, so a
   patient the seed places on a list moves there. Patients created in the app keep their list.
   Removing a patient line from the seed does not remove their membership: delete the row from
-  `fastlegeliste_pasient` by hand.
+  `fastlegeliste_patient` by hand.
 - Never deletes patients or clinical data. Clinical rows are only inserted, never updated or deleted.
 
 The eight patients on the Fjordvik and Lyngdal lists also get clinical histories from the same
@@ -61,7 +61,7 @@ Add a row to the `legekontor` insert. `orgnummer` must be unique and pass the mo
 
 ## Add a patient
 
-Add a row to the `pasient` values list with a synthetic personident that matches the birth date,
+Add a row to the `patient` values list with a synthetic personident that matches the birth date,
 `personident_type` (`FNR` or `DNR`) and gender (odd individual number for male, even for female).
 `PersonidentValidator.validate` and `PersonidentValidator.isSynthetic` must accept it;
 `TestdataSeedTest` checks this. Then add the patient to a list (below), otherwise nobody sees them.
@@ -69,7 +69,7 @@ Add a row to the `pasient` values list with a synthetic personident that matches
 ## Add a doctor's list
 
 Add a `(hpr, orgnummer)` row to the `fastlegeliste` insert, then one `(hpr, orgnummer, personident)`
-row per member to the `fastlegeliste_pasient` insert. A patient can be on at most one list.
+row per member to the `fastlegeliste_patient` insert. A patient can be on at most one list.
 
 ## Add a column
 

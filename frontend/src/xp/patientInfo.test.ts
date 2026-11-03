@@ -13,12 +13,12 @@ import {
   maskPersonident,
   personidentTail,
 } from "./patientInfo";
-import type { Pasient } from "../utils/mapping/epj";
+import type { Patient } from "../utils/mapping/epj";
 
-const pasient: Pasient = {
+const patient: Patient = {
   id: "1",
-  fornavn: "Matematisk",
-  etternavn: "Ape",
+  givenName: "Matematisk",
+  familyName: "Ape",
   personident: "01019012345",
   personidentType: "FNR",
   birthDate: null,
@@ -65,18 +65,18 @@ describe("patientInfo", () => {
   });
 
   it("prefers stored birth date and gender over derived values", () => {
-    expect(birthDateOf(pasient)).toBe("1990-01-01");
-    expect(genderOf(pasient)).toBe("MALE");
+    expect(birthDateOf(patient)).toBe("1990-01-01");
+    expect(genderOf(patient)).toBe("MALE");
     expect(
-      birthDateOf({ ...pasient, birthDate: "1985-05-05", gender: "FEMALE" }),
+      birthDateOf({ ...patient, birthDate: "1985-05-05", gender: "FEMALE" }),
     ).toBe("1985-05-05");
     expect(
-      genderOf({ ...pasient, birthDate: "1985-05-05", gender: "FEMALE" }),
+      genderOf({ ...patient, birthDate: "1985-05-05", gender: "FEMALE" }),
     ).toBe("FEMALE");
   });
 
   it("returns null when nothing can be derived", () => {
-    const unknown = { ...pasient, personident: "abc" };
+    const unknown = { ...patient, personident: "abc" };
     expect(birthDateOf(unknown)).toBeNull();
     expect(genderOf(unknown)).toBeNull();
   });
@@ -106,7 +106,7 @@ describe("patientInfo", () => {
   });
 
   it("joins the name", () => {
-    expect(fullName(pasient)).toBe("Matematisk Ape");
+    expect(fullName(patient)).toBe("Matematisk Ape");
   });
 });
 

@@ -5,12 +5,12 @@ import { CurrentUserContext } from "./currentUser";
 import { PatientContext } from "./PatientContext";
 import { ShellContext } from "./shellContext";
 import { expectNoSeriousViolations } from "./axeHelper";
-import type { Pasient } from "../utils/mapping/epj";
+import type { Patient } from "../utils/mapping/epj";
 
-const pasient: Pasient = {
+const patient: Patient = {
   id: "p1",
-  fornavn: "Matematisk",
-  etternavn: "Ape",
+  givenName: "Matematisk",
+  familyName: "Ape",
   personident: "01019012345",
   personidentType: "FNR",
   birthDate: "1990-01-01",
@@ -40,7 +40,7 @@ function setup(props: Partial<Parameters<typeof PatientContext>[0]> = {}) {
       }}
     >
       <CurrentUserContext.Provider value={user}>
-        <PatientContext pasient={pasient} {...props} />
+        <PatientContext patient={patient} {...props} />
       </CurrentUserContext.Provider>
     </ShellContext.Provider>,
   );
@@ -95,7 +95,7 @@ describe("PatientContext", () => {
   });
 
   it("falls back to values derived from the fødselsnummer", () => {
-    setup({ pasient: { ...pasient, birthDate: null, gender: null } });
+    setup({ patient: { ...patient, birthDate: null, gender: null } });
     expect(screen.getByText("01.01.1990")).toBeInTheDocument();
     expect(screen.getByText("Mann")).toBeInTheDocument();
   });

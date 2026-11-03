@@ -16,15 +16,15 @@ import org.junit.Test
 
 class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
     @Test
-    fun `update returns 0 rows and makes no changes when pasientId does not own the konsultasjon`() =
+    fun `update returns 0 rows and makes no changes when patientId does not own the konsultasjon`() =
         runTest {
             val hpr = PractitionerHpr("123")
-            val pasientId = opprettPasient(hpr = hpr)
-            val annenPasientId = opprettPasient(hpr = hpr)
+            val patientId = createPatient(hpr = hpr)
+            val otherPatientId = createPatient(hpr = hpr)
             val konsultasjonId =
                 konsultasjonRepository.insert(
                     OpprettKonsultasjon(
-                        pasientId,
+                        patientId,
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
@@ -43,7 +43,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                         journalNotat = "notat",
                         ferdigstill = true,
                     ),
-                    annenPasientId,
+                    otherPatientId,
                     DEFAULT_ORG_NUMBER,
                 )
 
@@ -53,11 +53,11 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
     @Test
     fun `update adds a new journalnotat, stores diagnose and completes konsultasjon`() = runTest {
         val hpr = PractitionerHpr("123")
-        val pasientId = opprettPasient(hpr = hpr)
+        val patientId = createPatient(hpr = hpr)
         val konsultasjonId =
             konsultasjonRepository.insert(
                 OpprettKonsultasjon(
-                    pasientId,
+                    patientId,
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
@@ -73,7 +73,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                     journalNotat = "oppdatert notat",
                     ferdigstill = true,
                 ),
-                pasientId,
+                patientId,
                 DEFAULT_ORG_NUMBER,
             )
 
@@ -96,11 +96,11 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
     @Test
     fun `update removes a diagnose that is left out of a later diagnoser list`() = runTest {
         val hpr = PractitionerHpr("123")
-        val pasientId = opprettPasient(hpr = hpr)
+        val patientId = createPatient(hpr = hpr)
         val konsultasjonId =
             konsultasjonRepository.insert(
                 OpprettKonsultasjon(
-                    pasientId,
+                    patientId,
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
@@ -119,7 +119,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                 journalNotat = null,
                 ferdigstill = false,
             ),
-            pasientId,
+            patientId,
             DEFAULT_ORG_NUMBER,
         )
 
@@ -131,7 +131,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                 journalNotat = null,
                 ferdigstill = false,
             ),
-            pasientId,
+            patientId,
             DEFAULT_ORG_NUMBER,
         )
 
@@ -145,11 +145,11 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
     @Test
     fun `update removes all diagnoser when the diagnoser list is submitted empty`() = runTest {
         val hpr = PractitionerHpr("123")
-        val pasientId = opprettPasient(hpr = hpr)
+        val patientId = createPatient(hpr = hpr)
         val konsultasjonId =
             konsultasjonRepository.insert(
                 OpprettKonsultasjon(
-                    pasientId,
+                    patientId,
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
@@ -165,7 +165,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                 journalNotat = null,
                 ferdigstill = false,
             ),
-            pasientId,
+            patientId,
             DEFAULT_ORG_NUMBER,
         )
 
@@ -176,7 +176,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                 journalNotat = null,
                 ferdigstill = false,
             ),
-            pasientId,
+            patientId,
             DEFAULT_ORG_NUMBER,
         )
 
@@ -189,11 +189,11 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
     @Test
     fun `update leaves diagnoser unchanged when an unknown diagnosekode is rejected`() = runTest {
         val hpr = PractitionerHpr("123")
-        val pasientId = opprettPasient(hpr = hpr)
+        val patientId = createPatient(hpr = hpr)
         val konsultasjonId =
             konsultasjonRepository.insert(
                 OpprettKonsultasjon(
-                    pasientId,
+                    patientId,
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
@@ -209,7 +209,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                 journalNotat = null,
                 ferdigstill = false,
             ),
-            pasientId,
+            patientId,
             DEFAULT_ORG_NUMBER,
         )
 
@@ -227,7 +227,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                     journalNotat = null,
                     ferdigstill = false,
                 ),
-                pasientId,
+                patientId,
                 DEFAULT_ORG_NUMBER,
             )
         }
@@ -241,11 +241,11 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
     @Test
     fun `update leaves the konsultasjon open when ferdigstill is false`() = runTest {
         val hpr = PractitionerHpr("123")
-        val pasientId = opprettPasient(hpr = hpr)
+        val patientId = createPatient(hpr = hpr)
         val konsultasjonId =
             konsultasjonRepository.insert(
                 OpprettKonsultasjon(
-                    pasientId,
+                    patientId,
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
@@ -255,7 +255,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
 
         konsultasjonRepository.update(
             OppdaterKonsultasjonRequest(konsultasjonId, emptyList(), "notat", ferdigstill = false),
-            pasientId,
+            patientId,
             DEFAULT_ORG_NUMBER,
         )
 
@@ -269,11 +269,11 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
     @Test
     fun `avbryt marks an ongoing konsultasjon as AVLYST`() = runTest {
         val hpr = PractitionerHpr("123")
-        val pasientId = opprettPasient(hpr = hpr)
+        val patientId = createPatient(hpr = hpr)
         val konsultasjonId =
             konsultasjonRepository.insert(
                 OpprettKonsultasjon(
-                    pasientId,
+                    patientId,
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
@@ -282,7 +282,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
             )
 
         val updatedRows =
-            konsultasjonRepository.avbryt(konsultasjonId, pasientId, DEFAULT_ORG_NUMBER)
+            konsultasjonRepository.avbryt(konsultasjonId, patientId, DEFAULT_ORG_NUMBER)
 
         assertEquals(1, updatedRows)
         val konsultasjon =
@@ -293,15 +293,15 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
     }
 
     @Test
-    fun `avbryt returns 0 rows and makes no changes when pasientId does not own the konsultasjon`() =
+    fun `avbryt returns 0 rows and makes no changes when patientId does not own the konsultasjon`() =
         runTest {
             val hpr = PractitionerHpr("123")
-            val pasientId = opprettPasient(hpr = hpr)
-            val annenPasientId = opprettPasient(hpr = hpr)
+            val patientId = createPatient(hpr = hpr)
+            val otherPatientId = createPatient(hpr = hpr)
             val konsultasjonId =
                 konsultasjonRepository.insert(
                     OpprettKonsultasjon(
-                        pasientId,
+                        patientId,
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
@@ -310,7 +310,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                 )
 
             val updatedRows =
-                konsultasjonRepository.avbryt(konsultasjonId, annenPasientId, DEFAULT_ORG_NUMBER)
+                konsultasjonRepository.avbryt(konsultasjonId, otherPatientId, DEFAULT_ORG_NUMBER)
 
             assertEquals(0, updatedRows)
             val konsultasjon =
@@ -322,11 +322,11 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
     @Test
     fun `avbryt does not reopen an already completed konsultasjon`() = runTest {
         val hpr = PractitionerHpr("123")
-        val pasientId = opprettPasient(hpr = hpr)
+        val patientId = createPatient(hpr = hpr)
         val konsultasjonId =
             konsultasjonRepository.insert(
                 OpprettKonsultasjon(
-                    pasientId,
+                    patientId,
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
@@ -335,12 +335,12 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
             )
         konsultasjonRepository.update(
             OppdaterKonsultasjonRequest(konsultasjonId, emptyList(), null, ferdigstill = true),
-            pasientId,
+            patientId,
             DEFAULT_ORG_NUMBER,
         )
 
         val updatedRows =
-            konsultasjonRepository.avbryt(konsultasjonId, pasientId, DEFAULT_ORG_NUMBER)
+            konsultasjonRepository.avbryt(konsultasjonId, patientId, DEFAULT_ORG_NUMBER)
 
         assertEquals(0, updatedRows)
         val konsultasjon =
@@ -353,11 +353,11 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
     fun `update saving the same journalnotat text twice does not create a duplicate row`() =
         runTest {
             val hpr = PractitionerHpr("123")
-            val pasientId = opprettPasient(hpr = hpr)
+            val patientId = createPatient(hpr = hpr)
             val konsultasjonId =
                 konsultasjonRepository.insert(
                     OpprettKonsultasjon(
-                        pasientId,
+                        patientId,
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
@@ -372,8 +372,8 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                     ferdigstill = false,
                 )
 
-            konsultasjonRepository.update(request, pasientId, DEFAULT_ORG_NUMBER)
-            konsultasjonRepository.update(request, pasientId, DEFAULT_ORG_NUMBER)
+            konsultasjonRepository.update(request, patientId, DEFAULT_ORG_NUMBER)
+            konsultasjonRepository.update(request, patientId, DEFAULT_ORG_NUMBER)
 
             val konsultasjon =
                 konsultasjonRepository.findByKonsultasjonId(konsultasjonId, DEFAULT_ORG_NUMBER)
@@ -386,11 +386,11 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
     fun `update saving a changed journalnotat text updates the existing row instead of adding one`() =
         runTest {
             val hpr = PractitionerHpr("123")
-            val pasientId = opprettPasient(hpr = hpr)
+            val patientId = createPatient(hpr = hpr)
             val konsultasjonId =
                 konsultasjonRepository.insert(
                     OpprettKonsultasjon(
-                        pasientId,
+                        patientId,
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
@@ -405,7 +405,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                     "første notat",
                     ferdigstill = false,
                 ),
-                pasientId,
+                patientId,
                 DEFAULT_ORG_NUMBER,
             )
             konsultasjonRepository.update(
@@ -415,7 +415,7 @@ class KonsultasjonRepositoryUpdateTest : KonsultasjonRepositoryTestBase() {
                     "oppdatert notat",
                     ferdigstill = false,
                 ),
-                pasientId,
+                patientId,
                 DEFAULT_ORG_NUMBER,
             )
 

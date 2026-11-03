@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { filterPatients } from "./patientFilter";
-import type { Pasient } from "../utils/mapping/epj";
+import type { Patient } from "../utils/mapping/epj";
 
-const make = (id: string, fornavn: string, etternavn: string, personident: string): Pasient => ({
+const make = (id: string, givenName: string, familyName: string, personident: string): Patient => ({
   id,
-  fornavn,
-  etternavn,
+  givenName,
+  familyName,
   personident,
   personidentType: "FNR",
   birthDate: null,

@@ -5,7 +5,7 @@ import { expectNoSeriousViolations } from "./axeHelper";
 
 describe("XpIcon", () => {
   it("renders a decorative image with the requested size", () => {
-    const { container } = render(<XpIcon name="pasient" size={32} />);
+    const { container } = render(<XpIcon name="patient" size={32} />);
     const img = container.querySelector("img")!;
     expect(img).toHaveAttribute("alt", "");
     expect(img).toHaveAttribute("aria-hidden", "true");

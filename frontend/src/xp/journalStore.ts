@@ -13,7 +13,7 @@ import { fullName } from "./patientInfo";
 import { usePatientsStore } from "./patientsStore";
 import { createSession } from "./session";
 import { useWorkspaceStore } from "./workspaceStore";
-import type { Konsultasjon, Pasient } from "../utils/mapping/epj";
+import type { Konsultasjon, Patient } from "../utils/mapping/epj";
 
 export type DiagnoseItem = Konsultasjon["diagnoser"][number];
 export const JOURNAL_SUB_TABS = ["konsultasjon", "tidligere", "maalinger", "apper"] as const;
@@ -25,7 +25,7 @@ type Draft = { diagnoser: DiagnoseItem[]; notat: string };
 
 type JournalState = {
   patientId: string | null;
-  patient: Pasient | null;
+  patient: Patient | null;
   konsultasjoner: Konsultasjon[];
   status: LoadStatus;
   loadError: "patient" | "kons" | null;
@@ -58,7 +58,7 @@ const emptyDraft = (): Draft => ({ diagnoser: [], notat: "" });
 function initialState() {
   return {
     patientId: null as string | null,
-    patient: null as Pasient | null,
+    patient: null as Patient | null,
     konsultasjoner: [] as Konsultasjon[],
     status: "idle" as LoadStatus,
     loadError: null as "patient" | "kons" | null,
@@ -123,7 +123,7 @@ function applySaved(
             {
               id: existing?.id ?? `${id}:note`,
               konsultasjonId: id,
-              pasientId: k.pasientId,
+              patientId: k.patientId,
               journalnotat: draft.notat,
             },
           ];
@@ -160,7 +160,7 @@ function publishLatest(patientId: string, konsultasjoner: Konsultasjon[]) {
     latest
       ? {
           status: latest.status,
-          tidspunkt: latest.avsluttetTidspunkt ?? latest.startetTidspunkt,
+          timestamp: latest.avsluttetTidspunkt ?? latest.startetTidspunkt,
         }
       : null,
   );

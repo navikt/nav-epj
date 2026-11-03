@@ -2,7 +2,7 @@ import { vi } from "vitest";
 import { useAppRunStore } from "./appRunStore";
 import { useAppsStore } from "./appsStore";
 import { useJournalStore } from "./journalStore";
-import type { App, Konsultasjon, Pasient, PasientListeElement } from "../utils/mapping/epj";
+import type { App, Konsultasjon, Patient, PatientListItem } from "../utils/mapping/epj";
 
 export const sykInn: App = {
   clientId: "syk-inn",
@@ -33,10 +33,10 @@ export const nyFane: App = {
   launchMode: "tab",
 };
 
-export const ola: PasientListeElement = {
+export const ola: PatientListItem = {
   id: "p1",
-  fornavn: "Ola",
-  etternavn: "Nordmann",
+  givenName: "Ola",
+  familyName: "Nordmann",
   personident: "01019012345",
   personidentType: "FNR",
   birthDate: "1990-01-01",
@@ -44,16 +44,16 @@ export const ola: PasientListeElement = {
   selectable: true,
 };
 
-export const kari: PasientListeElement = {
+export const kari: PatientListItem = {
   ...ola,
   id: "p2",
-  fornavn: "Kari",
-  etternavn: "Hansen",
+  givenName: "Kari",
+  familyName: "Hansen",
 };
 
 export const ongoingKonsultasjon: Konsultasjon = {
   id: "k1",
-  pasientId: "p1",
+  patientId: "p1",
   hpr: ["9144889"],
   journalnotat: [],
   diagnoser: [],
@@ -64,7 +64,7 @@ export const ongoingKonsultasjon: Konsultasjon = {
 };
 
 export function seedJournal(
-  patient: Pasient = ola,
+  patient: Patient = ola,
   konsultasjoner: Konsultasjon[] = [ongoingKonsultasjon],
 ) {
   useJournalStore.setState({
@@ -79,7 +79,7 @@ export function seedApps(apps: App[] = [sykInn, validator]) {
   useAppsStore.setState({ apps, status: "ready" });
 }
 
-export function seedRun(patient: Pasient = ola, app: App = sykInn) {
+export function seedRun(patient: Patient = ola, app: App = sykInn) {
   useAppRunStore.getState().startRun({
     clientId: app.clientId,
     navn: app.navn,

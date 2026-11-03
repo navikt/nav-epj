@@ -18,11 +18,11 @@ import no.nav.helse.epj.konsultasjon.routes.journalnotatRoutes
 import no.nav.helse.epj.konsultasjon.routes.konsultasjonRoutes
 import no.nav.helse.epj.maaling.MaalingService
 import no.nav.helse.epj.maaling.maalingRoutes
-import no.nav.helse.epj.pasient.ActivePatientService
-import no.nav.helse.epj.pasient.PasientId
-import no.nav.helse.epj.pasient.PasientService
-import no.nav.helse.epj.pasient.activePatientRoutes
-import no.nav.helse.epj.pasient.pasientRoutes
+import no.nav.helse.epj.patient.ActivePatientService
+import no.nav.helse.epj.patient.PatientId
+import no.nav.helse.epj.patient.PatientService
+import no.nav.helse.epj.patient.activePatientRoutes
+import no.nav.helse.epj.patient.patientRoutes
 import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.epj.practitioner.PractitionerService
 import no.nav.helse.epj.practitioner.practitionerRoutes
@@ -33,7 +33,7 @@ import no.nav.helse.helseId.sessionRoutes
 import no.nav.helse.smart.valkey.ValkeyService
 
 fun Application.configureEpjModule() {
-    val pasientService: PasientService by dependencies
+    val patientService: PatientService by dependencies
     val practitionerService: PractitionerService by dependencies
     val konsultasjonService: KonsultasjonService by dependencies
     val clinicService: ClinicService by dependencies
@@ -42,7 +42,7 @@ fun Application.configureEpjModule() {
     val sessionOrgResolver: SessionOrgResolver by dependencies
     val sessionOrgService: SessionOrgService by dependencies
     val activePatientService =
-        ActivePatientService(pasientService, valkeyService, sessionOrgResolver)
+        ActivePatientService(patientService, valkeyService, sessionOrgResolver)
 
     routing {
         authenticate("wonderwall-helseid") {
@@ -53,7 +53,7 @@ fun Application.configureEpjModule() {
             }
             sessionRoutes()
             sessionOrgRoutes(sessionOrgResolver, sessionOrgService)
-            pasientRoutes(pasientService, sessionOrgResolver)
+            patientRoutes(patientService, sessionOrgResolver)
             activePatientRoutes(activePatientService)
             practitionerRoutes(practitionerService)
             konsultasjonRoutes(konsultasjonService, activePatientService, sessionOrgResolver)
@@ -65,7 +65,7 @@ fun Application.configureEpjModule() {
     }
 }
 
-fun ApplicationCall.patientId(): PasientId = PasientId(uuidParameter("patientId"))
+fun ApplicationCall.patientId(): PatientId = PatientId(uuidParameter("patientId"))
 
 fun ApplicationCall.journalnotatId(): JournalnotatId =
     JournalnotatId(uuidParameter("journalnotatId"))

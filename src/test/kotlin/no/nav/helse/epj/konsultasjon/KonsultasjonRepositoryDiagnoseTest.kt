@@ -20,11 +20,11 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
     @Test
     fun `konsultasjon retrieves an empty list of diagnoses when there are none`() = runTest {
         val hpr = PractitionerHpr("123")
-        val pasientId = opprettPasient(hpr = hpr)
+        val patientId = createPatient(hpr = hpr)
         val konsultasjonId =
             konsultasjonRepository.insert(
                 OpprettKonsultasjon(
-                    pasientId,
+                    patientId,
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
@@ -41,11 +41,11 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
     @Test
     fun `update throws UgyldigDiagnoseException for an unknown diagnosis code`() = runTest {
         val hpr = PractitionerHpr("123")
-        val pasientId = opprettPasient(hpr = hpr)
+        val patientId = createPatient(hpr = hpr)
         val konsultasjonId =
             konsultasjonRepository.insert(
                 OpprettKonsultasjon(
-                    pasientId,
+                    patientId,
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
@@ -67,7 +67,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
                     journalNotat = "notat",
                     ferdigstill = false,
                 ),
-                pasientId,
+                patientId,
                 DEFAULT_ORG_NUMBER,
             )
         }
@@ -77,11 +77,11 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
     fun `updateDiagnose does not store the same diagnose twice on the same konsultasjon`() =
         runTest {
             val hpr = PractitionerHpr("123")
-            val pasientId = opprettPasient(hpr = hpr)
+            val patientId = createPatient(hpr = hpr)
             val konsultasjonId =
                 konsultasjonRepository.insert(
                     OpprettKonsultasjon(
-                        pasientId,
+                        patientId,
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
@@ -107,11 +107,11 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
     fun `updateDiagnose stores the katalog's canonical ICD10 code regardless of dot formatting`() =
         runTest {
             val hpr = PractitionerHpr("123")
-            val pasientId = opprettPasient(hpr = hpr)
+            val patientId = createPatient(hpr = hpr)
             val konsultasjonId =
                 konsultasjonRepository.insert(
                     OpprettKonsultasjon(
-                        pasientId,
+                        patientId,
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
@@ -141,12 +141,12 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
     @Test
     fun `updateDiagnose stores the same diagnose on different konsultasjoner`() = runTest {
         val hpr = PractitionerHpr("123")
-        val pasientId = opprettPasient(hpr = hpr)
+        val patientId = createPatient(hpr = hpr)
 
         val konsultasjonId1 =
             konsultasjonRepository.insert(
                 OpprettKonsultasjon(
-                    pasientId,
+                    patientId,
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
@@ -157,7 +157,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
         val konsultasjonId2 =
             konsultasjonRepository.insert(
                 OpprettKonsultasjon(
-                    pasientId,
+                    patientId,
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
@@ -174,21 +174,21 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
         assertEquals(1, firstInsert)
         assertEquals(1, secondInsert)
 
-        val lagredeDiagnoser = konsultasjonRepository.listDiagnoser(pasientId, DEFAULT_ORG_NUMBER)
+        val lagredeDiagnoser = konsultasjonRepository.listDiagnoser(patientId, DEFAULT_ORG_NUMBER)
 
         assertEquals(2, lagredeDiagnoser.size)
     }
 
     @Test
-    fun `listDiagnoser by pasientId only includes diagnoser for konsultasjoner owned by that patient`() =
+    fun `listDiagnoser by patientId only includes diagnoser for konsultasjoner owned by that patient`() =
         runTest {
             val hpr = PractitionerHpr("123")
-            val pasientA = opprettPasient(hpr = hpr)
-            val pasientB = opprettPasient(hpr = hpr)
+            val patientA = createPatient(hpr = hpr)
+            val patientB = createPatient(hpr = hpr)
             val konsultasjonA =
                 konsultasjonRepository.insert(
                     OpprettKonsultasjon(
-                        pasientA,
+                        patientA,
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
@@ -198,7 +198,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
             val konsultasjonB =
                 konsultasjonRepository.insert(
                     OpprettKonsultasjon(
-                        pasientB,
+                        patientB,
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
@@ -214,7 +214,7 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
                 konsultasjonB.value,
             )
 
-            val diagnoserForA = konsultasjonRepository.listDiagnoser(pasientA, DEFAULT_ORG_NUMBER)
+            val diagnoserForA = konsultasjonRepository.listDiagnoser(patientA, DEFAULT_ORG_NUMBER)
 
             assertEquals(1, diagnoserForA.size)
             assertEquals("A01", diagnoserForA.single().code)
@@ -224,11 +224,11 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
     fun `listDiagnoser resolves official catalogue text for both patient and konsultasjon lookups`() =
         runTest {
             val hpr = PractitionerHpr("123")
-            val pasientId = opprettPasient(hpr = hpr)
+            val patientId = createPatient(hpr = hpr)
             val konsultasjonId =
                 konsultasjonRepository.insert(
                     OpprettKonsultasjon(
-                        pasientId,
+                        patientId,
                         listOf(hpr),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
@@ -240,12 +240,12 @@ class KonsultasjonRepositoryDiagnoseTest : KonsultasjonRepositoryTestBase() {
             konsultasjonRepository.updateDiagnose(diagnose, konsultasjonId.value)
 
             val forventetTekst = Diagnose.from(DiagnoseType.ICPC2, "A01")!!.text
-            val diagnoserByPasient =
-                konsultasjonRepository.listDiagnoser(pasientId, DEFAULT_ORG_NUMBER)
+            val diagnoserByPatient =
+                konsultasjonRepository.listDiagnoser(patientId, DEFAULT_ORG_NUMBER)
             val diagnoserByKonsultasjon =
                 konsultasjonRepository.listDiagnoser(konsultasjonId, DEFAULT_ORG_NUMBER)
 
-            assertEquals(forventetTekst, diagnoserByPasient.single().text)
+            assertEquals(forventetTekst, diagnoserByPatient.single().text)
             assertEquals(forventetTekst, diagnoserByKonsultasjon.single().text)
         }
 }

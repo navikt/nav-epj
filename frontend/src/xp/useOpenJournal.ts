@@ -4,8 +4,8 @@ import { journalRoute } from "./tabRoutes";
 
 export function useOpenJournal() {
   const navigate = useNavigate();
-  return (pasient: { id: string }) => {
-    useJournalGuardStore.getState().setInAppTarget(pasient.id);
-    void navigate(journalRoute(pasient.id));
+  return (patient: { id: string }) => {
+    useJournalGuardStore.getState().setInAppTarget(patient.id);
+    void navigate(journalRoute(patient.id));
   };
 }

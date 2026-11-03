@@ -14,10 +14,10 @@ import { diagnoseKey, isDirty, useJournalStore } from "./journalStore";
 import { formatDateTime, formatTime, minutesSince } from "./patientInfo";
 import { useShell } from "./shellContext";
 import { useNow } from "./useNow";
-import type { Konsultasjon, Pasient } from "../utils/mapping/epj";
+import type { Konsultasjon, Patient } from "../utils/mapping/epj";
 
 type Props = {
-  patient: Pasient;
+  patient: Patient;
   konsultasjon: Konsultasjon;
 };
 

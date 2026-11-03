@@ -6,8 +6,8 @@ import java.time.LocalDate
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import no.nav.helse.epj.pasient.PersonidentType
-import no.nav.helse.epj.pasient.PersonidentValidator
+import no.nav.helse.epj.patient.PersonidentType
+import no.nav.helse.epj.patient.PersonidentValidator
 import no.nav.helse.utils.WithPostgresql
 import no.nav.tsm.diagnoser.Diagnose
 import org.junit.After
@@ -566,20 +566,20 @@ class TestdataSeedTest : WithPostgresql() {
 
     @Test
     fun `seed keeps list membership of an app-created patient on a seeded list`() {
-        val pasientId = UUID.randomUUID()
+        val patientId = UUID.randomUUID()
         withConnection { connection ->
             connection.createStatement().use {
                 it.execute(
                     """
                     INSERT INTO patient (id, given_name, family_name, personident)
-                    VALUES ('$pasientId', 'APP', 'OPPRETTET', 'app-created-1')
+                    VALUES ('$patientId', 'APP', 'OPPRETTET', 'app-created-1')
                     """
                         .trimIndent()
                 )
                 it.execute(
                     """
                     INSERT INTO fastlegeliste_patient (fastlegeliste_id, patient_id)
-                    SELECT id, '$pasientId' FROM fastlegeliste WHERE hpr = '565501872'
+                    SELECT id, '$patientId' FROM fastlegeliste WHERE hpr = '565501872'
                     """
                         .trimIndent()
                 )
@@ -595,7 +595,7 @@ class TestdataSeedTest : WithPostgresql() {
                 SELECT fl.hpr
                 FROM fastlegeliste_patient flp
                          JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
-                WHERE flp.patient_id = '$pasientId'
+                WHERE flp.patient_id = '$patientId'
                 """
                     .trimIndent()
             ),

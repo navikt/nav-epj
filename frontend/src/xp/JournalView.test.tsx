@@ -5,10 +5,10 @@ import { JournalView } from "./JournalView";
 import { useJournalStore } from "./journalStore";
 import { expectNoSeriousViolations } from "./axeHelper";
 
-const pasient = {
+const patient = {
   id: "p1",
-  fornavn: "Matematisk",
-  etternavn: "Ape",
+  givenName: "Matematisk",
+  familyName: "Ape",
   personident: "01019012345",
   personidentType: "FNR",
   birthDate: "1990-01-01",
@@ -20,7 +20,7 @@ const diag = { code: "A02", system: "ICPC2", text: "Frysninger" };
 function kons(overrides: Record<string, unknown> = {}) {
   return {
     id: "k1",
-    pasientId: "p1",
+    patientId: "p1",
     hpr: ["9144889"],
     journalnotat: [],
     diagnoser: [],
@@ -57,7 +57,7 @@ function stub(routes: Record<string, Handler>) {
 }
 
 const base = {
-  "GET /api/patient/p1": () => ({ body: pasient }),
+  "GET /api/patient/p1": () => ({ body: patient }),
 };
 
 async function openJournal(konsultasjoner: unknown[], routes: Record<string, Handler> = {}) {
@@ -76,7 +76,7 @@ async function openJournal(konsultasjoner: unknown[], routes: Record<string, Han
 const savedNote = {
   id: "n1",
   konsultasjonId: "k1",
-  pasientId: "p1",
+  patientId: "p1",
   journalnotat: "Hei",
 };
 

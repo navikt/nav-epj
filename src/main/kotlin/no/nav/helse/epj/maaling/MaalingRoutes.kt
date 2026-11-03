@@ -13,7 +13,7 @@ fun Route.maalingRoutes(maalingService: MaalingService, sessionOrgResolver: Sess
         get {
             val orgNumber = sessionOrgResolver.requireOrgNumber(loggedInUser().hpr)
             call.respond(
-                maalingService.getMaalingerForPasient(call.patientId(), orgNumber).map {
+                maalingService.getMaalingerForPatient(call.patientId(), orgNumber).map {
                     it.toResponse()
                 }
             )
@@ -23,7 +23,7 @@ fun Route.maalingRoutes(maalingService: MaalingService, sessionOrgResolver: Sess
 
 private data class MaalingResponse(
     val id: String,
-    val pasientId: String,
+    val patientId: String,
     val konsultasjonId: String,
     val hpr: String?,
     val loincKode: String,
@@ -38,7 +38,7 @@ private data class MaalingResponse(
 private fun Maaling.toResponse() =
     MaalingResponse(
         id = id.value.toString(),
-        pasientId = pasientId.value.toString(),
+        patientId = patientId.value.toString(),
         konsultasjonId = konsultasjonId.value.toString(),
         hpr = hpr?.value,
         loincKode = loincKode,

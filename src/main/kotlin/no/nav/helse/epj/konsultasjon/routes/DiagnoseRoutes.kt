@@ -17,13 +17,13 @@ fun Route.diagnoseRoutes(
     route("/api") {
         route("/diagnoser") {
             get {
-                val pasientId = call.parameters["patientId"]
+                val patientId = call.parameters["patientId"]
                 val konsultasjonId = call.parameters["konsultasjonId"]
                 val orgNumber = sessionOrgResolver.requireOrgNumber(loggedInUser().hpr)
 
                 val diagnoser =
                     when {
-                        pasientId != null ->
+                        patientId != null ->
                             konsultasjonService.getDiagnoser(call.patientId(), orgNumber)
                         konsultasjonId != null ->
                             konsultasjonService.getDiagnoser(call.konsultasjonId(), orgNumber)

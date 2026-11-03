@@ -58,19 +58,19 @@ export function StartTab() {
         {recent.length > 0 && (
           <Card heading={copy["s2.recent.title"]} headingId={recentId}>
             <ul className="xp-recent-list">
-              {recent.map((pasient) => {
-                const birthDate = birthDateOf(pasient);
-                const last = lastKonsultasjon[pasient.id];
+              {recent.map((patient) => {
+                const birthDate = birthDateOf(patient);
+                const last = lastKonsultasjon[patient.id];
                 const siste =
                   !last
                     ? "–"
                     : last.status === "PÅGÅENDE"
                       ? copy["s3.col.last.ongoing"]
-                      : formatDate(last.tidspunkt);
+                      : formatDate(last.timestamp);
                 return (
-                  <li key={pasient.id}>
-                    <Button variant="link" onClick={() => openJournal(pasient)}>
-                      {fullName(pasient)}
+                  <li key={patient.id}>
+                    <Button variant="link" onClick={() => openJournal(patient)}>
+                      {fullName(patient)}
                     </Button>
                     <span>
                       {copy["s2.recent.item"](

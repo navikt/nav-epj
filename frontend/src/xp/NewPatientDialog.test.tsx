@@ -8,8 +8,8 @@ import { expectNoSeriousViolations } from "./axeHelper";
 
 const created = {
   id: "p9",
-  fornavn: "Matematisk",
-  etternavn: "Ape",
+  givenName: "Matematisk",
+  familyName: "Ape",
   personident: "01019012345",
   personidentType: "FNR",
   birthDate: "1990-01-01",
@@ -110,8 +110,8 @@ describe("NewPatientDialog", () => {
     const post = fn.mock.calls.find(([, init]) => init?.method === "POST")!;
     expect(post[0]).toBe("/api/patient");
     expect(JSON.parse(post[1]!.body as string)).toEqual({
-      fornavn: "Matematisk",
-      etternavn: "Ape",
+      givenName: "Matematisk",
+      familyName: "Ape",
       personident: "01019012345",
       personidentType: "FNR",
       birthDate: "1990-01-01",

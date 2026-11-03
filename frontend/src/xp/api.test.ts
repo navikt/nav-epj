@@ -20,10 +20,10 @@ import {
   startKonsultasjon,
 } from "./api";
 
-const pasient = {
+const patient = {
   id: "p1",
-  fornavn: "Matematisk",
-  etternavn: "Ape",
+  givenName: "Matematisk",
+  familyName: "Ape",
   personident: "01019012345",
   personidentType: "FNR",
   birthDate: "1990-01-01",
@@ -32,7 +32,7 @@ const pasient = {
 
 const konsultasjon = {
   id: "k1",
-  pasientId: "p1",
+  patientId: "p1",
   hpr: ["123"],
   journalnotat: [],
   diagnoser: [{ code: "A02", system: "ICPC2", text: "Frysninger" }],
@@ -52,7 +52,7 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe("api", () => {
   it("lists patients", async () => {
-    const fn = stub([{ ...pasient, selectable: false }]);
+    const fn = stub([{ ...patient, selectable: false }]);
     const patients = await fetchPatients();
     expect(patients).toHaveLength(1);
     expect(patients[0].selectable).toBe(false);
@@ -60,16 +60,16 @@ describe("api", () => {
   });
 
   it("fetches one patient", async () => {
-    const fn = stub(pasient);
-    expect((await fetchPatient("p 1")).fornavn).toBe("Matematisk");
+    const fn = stub(patient);
+    expect((await fetchPatient("p 1")).givenName).toBe("Matematisk");
     expect(fn).toHaveBeenCalledWith("/api/patient/p%201", undefined);
   });
 
   it("creates a patient with a JSON body", async () => {
-    const fn = stub(pasient);
+    const fn = stub(patient);
     const body = {
-      fornavn: "Matematisk",
-      etternavn: "Ape",
+      givenName: "Matematisk",
+      familyName: "Ape",
       personident: "01019012345",
       personidentType: "FNR" as const,
       birthDate: "1990-01-01",

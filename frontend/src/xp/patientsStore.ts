@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { fetchPatients } from "./api";
-import type { PasientListeElement } from "../utils/mapping/epj";
+import type { PatientListItem } from "../utils/mapping/epj";
 
 export const PAGE_SIZE = 25;
 const LEGACY_RECENT_KEY = "nav-epj:recent";
@@ -11,14 +11,14 @@ export type PatientsView = "mine" | "recent";
 
 export type LastKonsultasjon = {
   status: string;
-  tidspunkt: string;
+  timestamp: string;
 };
 
 type LoadStatus = "idle" | "loading" | "ready" | "error";
 
 type PatientsState = {
   status: LoadStatus;
-  patients: PasientListeElement[];
+  patients: PatientListItem[];
   query: string;
   view: PatientsView;
   page: number;
@@ -67,7 +67,7 @@ function removeLegacyRecent() {
 function initialState() {
   return {
     status: "idle" as LoadStatus,
-    patients: [] as PasientListeElement[],
+    patients: [] as PatientListItem[],
     query: "",
     view: "mine" as PatientsView,
     page: 1,
@@ -85,8 +85,8 @@ export const usePatientsStore = create<PatientsState>((set, get) => ({
     try {
       const patients = await fetchPatients();
       const lastKonsultasjon: Record<string, LastKonsultasjon> = {};
-      for (const { id, sisteKonsultasjon } of patients) {
-        if (sisteKonsultasjon) lastKonsultasjon[id] = sisteKonsultasjon;
+      for (const { id, latestConsultation } of patients) {
+        if (latestConsultation) lastKonsultasjon[id] = latestConsultation;
       }
       set({ patients, lastKonsultasjon, status: "ready" });
     } catch {
@@ -121,13 +121,13 @@ export const usePatientsStore = create<PatientsState>((set, get) => ({
 }));
 
 export function scopePatients(
-  patients: PasientListeElement[],
+  patients: PatientListItem[],
   recentIds: string[],
   view: PatientsView,
 ) {
   if (view === "mine") return patients;
   return recentIds.flatMap((id) => {
-    const found = patients.find((pasient) => pasient.id === id);
+    const found = patients.find((patient) => patient.id === id);
     return found ? [found] : [];
   });
 }

@@ -111,10 +111,10 @@ describe("useRouteTabSync", () => {
   });
 });
 
-const pasient = {
+const patient = {
   id: "p1",
-  fornavn: "Matematisk",
-  etternavn: "Ape",
+  givenName: "Matematisk",
+  familyName: "Ape",
   personident: "01019012345",
   personidentType: "FNR",
   birthDate: "1990-01-01",
@@ -132,7 +132,7 @@ function stubJournalApi() {
           ? []
           : url === "/api/active-patient"
             ? { patientId: "p1", expiresAt: "2026-09-30T17:14:00Z" }
-            : { ...pasient, id: url.split("/").at(-1), fornavn: `Fornavn ${url.split("/").at(-1)}` },
+            : { ...patient, id: url.split("/").at(-1), givenName: `Fornavn ${url.split("/").at(-1)}` },
     })),
   );
 }
@@ -150,7 +150,7 @@ describe("useRouteTabSync journal routes", () => {
     act(() => store().openTab({ kind: "app", clientId: "test-app", label: "SMART" }));
     vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify([{
       id: "k1",
-      pasientId: "p1",
+      patientId: "p1",
       status: "PÅGÅENDE",
       startetTidspunkt: "2026-09-30T09:00:00",
       avsluttetTidspunkt: null,
@@ -158,7 +158,7 @@ describe("useRouteTabSync journal routes", () => {
       hpr: ["9144889"],
       diagnoser: [],
       journalnotat: [{
-        id: "n1", konsultasjonId: "k1", pasientId: "p1", journalnotat: "Fra SMART",
+        id: "n1", konsultasjonId: "k1", patientId: "p1", journalnotat: "Fra SMART",
       }],
     }])));
     act(() => store().setCurrent("journal"));

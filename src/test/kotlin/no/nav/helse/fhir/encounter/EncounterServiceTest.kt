@@ -17,7 +17,7 @@ import no.nav.helse.epj.clinic.ClinicId
 import no.nav.helse.epj.konsultasjon.Konsultasjon
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
-import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.fhir.patient.PatientInputId
 import no.nav.helse.utils.DEFAULT_ORG_NUMBER
@@ -36,7 +36,7 @@ class EncounterServiceTest {
     @OptIn(ExperimentalUuidApi::class)
     private fun konsultasjon(
         id: KonsultasjonId = KonsultasjonId(Uuid.generateV4()),
-        pasientId: PasientId = PasientId(Uuid.generateV4()),
+        patientId: PatientId = PatientId(Uuid.generateV4()),
         clinicId: ClinicId = ClinicId(Uuid.generateV4()),
         hpr: List<String> = emptyList(),
         diagnoser: List<Diagnose> = emptyList(),
@@ -46,7 +46,7 @@ class EncounterServiceTest {
     ) =
         Konsultasjon(
             id = id,
-            pasientId = pasientId,
+            patientId = patientId,
             clinicId = clinicId,
             hpr = hpr,
             journalnotat = emptyList(),
@@ -60,14 +60,14 @@ class EncounterServiceTest {
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `getEncounterById maps subject, participants, period and status`() = runTest {
-        val pasientId = PasientId(Uuid.generateV4())
+        val patientId = PatientId(Uuid.generateV4())
         val konsultasjonId = KonsultasjonId(Uuid.generateV4())
         val start = LocalDateTime.of(2026, 9, 1, 9, 30, 15, 120_000_000)
         val end = LocalDateTime.of(2026, 9, 1, 10, 5, 40)
         coEvery { konsultasjonService.getKonsultasjon(konsultasjonId, DEFAULT_ORG_NUMBER) } returns
             konsultasjon(
                 id = konsultasjonId,
-                pasientId = pasientId,
+                patientId = patientId,
                 hpr = listOf("1234567"),
                 status = KonsultasjonStatus.FULLFOERT,
                 startetTidspunkt = start,
@@ -77,7 +77,7 @@ class EncounterServiceTest {
         val encounter =
             encounterService.getEncounterById(EncounterId(konsultasjonId.value), DEFAULT_ORG_NUMBER)
 
-        assertEquals("Patient/${pasientId.value}", encounter.subject?.reference?.value)
+        assertEquals("Patient/${patientId.value}", encounter.subject?.reference?.value)
         assertEquals(
             "Practitioner/1234567",
             encounter.participant.single().individual?.reference?.value,
@@ -147,13 +147,13 @@ class EncounterServiceTest {
     @Test
     fun `getEncountersByPatient returns a searchset bundle with one entry per konsultasjon`() =
         runTest {
-            val pasientId = PasientId(Uuid.generateV4())
-            coEvery { konsultasjonService.getKonsultasjoner(pasientId, DEFAULT_ORG_NUMBER) } returns
-                listOf(konsultasjon(pasientId = pasientId), konsultasjon(pasientId = pasientId))
+            val patientId = PatientId(Uuid.generateV4())
+            coEvery { konsultasjonService.getKonsultasjoner(patientId, DEFAULT_ORG_NUMBER) } returns
+                listOf(konsultasjon(patientId = patientId), konsultasjon(patientId = patientId))
 
             val bundle =
                 encounterService.getEncountersByPatient(
-                    PatientInputId(pasientId.value),
+                    PatientInputId(patientId.value),
                     DEFAULT_ORG_NUMBER,
                 )
 
@@ -165,13 +165,13 @@ class EncounterServiceTest {
     @Test
     fun `getEncountersByPatient returns a valid empty searchset bundle when the patient has no konsultasjoner`() =
         runTest {
-            val pasientId = PasientId(Uuid.generateV4())
-            coEvery { konsultasjonService.getKonsultasjoner(pasientId, DEFAULT_ORG_NUMBER) } returns
+            val patientId = PatientId(Uuid.generateV4())
+            coEvery { konsultasjonService.getKonsultasjoner(patientId, DEFAULT_ORG_NUMBER) } returns
                 emptyList()
 
             val bundle =
                 encounterService.getEncountersByPatient(
-                    PatientInputId(pasientId.value),
+                    PatientInputId(patientId.value),
                     DEFAULT_ORG_NUMBER,
                 )
 
@@ -183,14 +183,14 @@ class EncounterServiceTest {
     @Test
     fun `getActiveEncounterByPatient returns null when there is no active konsultasjon`() =
         runTest {
-            val pasientId = PasientId(Uuid.generateV4())
+            val patientId = PatientId(Uuid.generateV4())
             coEvery {
-                konsultasjonService.getAktivKonsultasjon(pasientId, hpr, DEFAULT_ORG_NUMBER)
+                konsultasjonService.getAktivKonsultasjon(patientId, hpr, DEFAULT_ORG_NUMBER)
             } returns null
 
             val encounter =
                 encounterService.getActiveEncounterByPatient(
-                    PatientInputId(pasientId.value),
+                    PatientInputId(patientId.value),
                     hpr,
                     DEFAULT_ORG_NUMBER,
                 )
@@ -201,21 +201,21 @@ class EncounterServiceTest {
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `getActiveEncounterByPatient maps the active konsultasjon`() = runTest {
-        val pasientId = PasientId(Uuid.generateV4())
+        val patientId = PatientId(Uuid.generateV4())
         val konsultasjonId = KonsultasjonId(Uuid.generateV4())
         coEvery {
-            konsultasjonService.getAktivKonsultasjon(pasientId, hpr, DEFAULT_ORG_NUMBER)
-        } returns konsultasjon(id = konsultasjonId, pasientId = pasientId, hpr = listOf(hpr.value))
+            konsultasjonService.getAktivKonsultasjon(patientId, hpr, DEFAULT_ORG_NUMBER)
+        } returns konsultasjon(id = konsultasjonId, patientId = patientId, hpr = listOf(hpr.value))
 
         val encounter =
             encounterService.getActiveEncounterByPatient(
-                PatientInputId(pasientId.value),
+                PatientInputId(patientId.value),
                 hpr,
                 DEFAULT_ORG_NUMBER,
             )
 
         assertNotNull(encounter)
         assertEquals(konsultasjonId.value.toString(), encounter.id)
-        assertEquals("Patient/${pasientId.value}", encounter.subject?.reference?.value)
+        assertEquals("Patient/${patientId.value}", encounter.subject?.reference?.value)
     }
 }

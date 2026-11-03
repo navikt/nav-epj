@@ -1,4 +1,4 @@
-package no.nav.helse.epj.pasient
+package no.nav.helse.epj.patient
 
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -15,7 +15,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
-import no.nav.helse.core.utils.DuplikatPasientException
+import no.nav.helse.core.utils.DuplicatePatientException
 import no.nav.helse.core.utils.IngenFastlegelisteException
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.UgyldigPersonidentException
@@ -32,9 +32,9 @@ import no.nav.helse.plugins.configureStatusPages
 import org.junit.Test
 
 @OptIn(ExperimentalUuidApi::class)
-class PasientRoutesTest {
+class PatientRoutesTest {
 
-    private val pasientService = mockk<PasientService>()
+    private val patientService = mockk<PatientService>()
     private val sessionOrgResolver =
         mockk<SessionOrgResolver> {
             coEvery { resolve(any()) } returns
@@ -59,18 +59,18 @@ class PasientRoutesTest {
             }
             routing {
                 authenticate("wonderwall-helseid") {
-                    pasientRoutes(pasientService, sessionOrgResolver)
+                    patientRoutes(patientService, sessionOrgResolver)
                 }
             }
         }
         client.block()
     }
 
-    private fun opprettPasientJson(personident: String, birthDate: String) =
+    private fun createPatientJson(personident: String, birthDate: String) =
         """
         {
-          "fornavn": "Kari",
-          "etternavn": "Nordmann",
+          "givenName": "Kari",
+          "familyName": "Nordmann",
           "personident": "$personident",
           "personidentType": "FNR",
           "birthDate": "$birthDate",
@@ -85,23 +85,23 @@ class PasientRoutesTest {
         testApp {
             val birthDate = LocalDate.of(1985, 6, 15)
             val personident = "15068500017"
-            val opprettetPasient =
-                Pasient(
-                    id = PasientId(Uuid.generateV4()),
-                    fornavn = "Kari",
-                    etternavn = "Nordmann",
+            val createdPatient =
+                Patient(
+                    id = PatientId(Uuid.generateV4()),
+                    givenName = "Kari",
+                    familyName = "Nordmann",
                     personident = personident,
                     personidentType = PersonidentType.FNR,
                     birthDate = birthDate,
                     gender = AdministrativeGender.FEMALE,
                 )
-            coEvery { pasientService.createPasient(any(), "111", "311111116") } returns
-                opprettetPasient
+            coEvery { patientService.createPatient(any(), "111", "311111116") } returns
+                createdPatient
 
             val response =
                 post("/api/patient") {
                     contentType(ContentType.Application.Json)
-                    setBody(opprettPasientJson(personident, "1985-06-15"))
+                    setBody(createPatientJson(personident, "1985-06-15"))
                 }
 
             assertEquals(HttpStatusCode.Created, response.status)
@@ -112,13 +112,13 @@ class PasientRoutesTest {
     @Test
     fun `POST patient with invalid personident returns 400`() = testApp {
         val personident = "00000000000"
-        coEvery { pasientService.createPasient(any(), any(), any()) } throws
+        coEvery { patientService.createPatient(any(), any(), any()) } throws
             UgyldigPersonidentException("Personident $personident har ugyldig kontrollsiffer")
 
         val response =
             post("/api/patient") {
                 contentType(ContentType.Application.Json)
-                setBody(opprettPasientJson(personident, "1985-06-15"))
+                setBody(createPatientJson(personident, "1985-06-15"))
             }
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
@@ -131,13 +131,13 @@ class PasientRoutesTest {
     @Test
     fun `POST patient with a duplicate personident returns 409`() = testApp {
         val personident = "15068500017"
-        coEvery { pasientService.createPasient(any(), any(), any()) } throws
-            DuplikatPasientException()
+        coEvery { patientService.createPatient(any(), any(), any()) } throws
+            DuplicatePatientException()
 
         val response =
             post("/api/patient") {
                 contentType(ContentType.Application.Json)
-                setBody(opprettPasientJson(personident, "1985-06-15"))
+                setBody(createPatientJson(personident, "1985-06-15"))
             }
 
         assertEquals(HttpStatusCode.Conflict, response.status)
@@ -149,20 +149,20 @@ class PasientRoutesTest {
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `GET patient lists the patients at the session org`() = testApp {
-        val pasient =
-            Pasient(
-                id = PasientId(Uuid.generateV4()),
-                fornavn = "Kari",
-                etternavn = "Nordmann",
+        val patient =
+            Patient(
+                id = PatientId(Uuid.generateV4()),
+                givenName = "Kari",
+                familyName = "Nordmann",
                 personident = "15068500017",
             )
-        coEvery { pasientService.listAtClinic("311111116", PractitionerHpr("111")) } returns
+        coEvery { patientService.listAtClinic("311111116", PractitionerHpr("111")) } returns
             listOf(
-                PasientListeElement(
-                    pasient,
+                PatientListItem(
+                    patient,
                     selectable = false,
-                    sisteKonsultasjon =
-                        SisteKonsultasjon(
+                    latestConsultation =
+                        LatestConsultation(
                             KonsultasjonStatus.PAAGAAENDE,
                             LocalDateTime.parse("2026-01-02T03:04:05"),
                         ),
@@ -175,7 +175,7 @@ class PasientRoutesTest {
         assertTrue(response.bodyAsText().contains("Nordmann"))
         assertTrue(response.bodyAsText().contains("\"selectable\" : false"))
         assertTrue(response.bodyAsText().contains("\"status\" : \"PÅGÅENDE\""))
-        assertTrue(response.bodyAsText().contains("\"tidspunkt\" : \"2026-01-02T03:04:05\""))
+        assertTrue(response.bodyAsText().contains("\"timestamp\" : \"2026-01-02T03:04:05\""))
     }
 
     @Test
@@ -187,13 +187,13 @@ class PasientRoutesTest {
 
     @Test
     fun `POST patient without an own list at the org returns 403`() = testApp {
-        coEvery { pasientService.createPasient(any(), any(), any()) } throws
+        coEvery { patientService.createPatient(any(), any(), any()) } throws
             IngenFastlegelisteException()
 
         val response =
             post("/api/patient") {
                 contentType(ContentType.Application.Json)
-                setBody(opprettPasientJson("15068500017", "1985-06-15"))
+                setBody(createPatientJson("15068500017", "1985-06-15"))
             }
 
         assertEquals(HttpStatusCode.Forbidden, response.status)
@@ -201,10 +201,10 @@ class PasientRoutesTest {
 
     @Test
     fun `GET patient by id returns a patient listed at the session org`() = testApp {
-        val id = PasientId(Uuid.generateV4())
-        coEvery { pasientService.getPasientById(id) } returns
-            Pasient(id, "Kari", "Nordmann", "15068500017")
-        coEvery { pasientService.isListedAt(id, "311111116") } returns true
+        val id = PatientId(Uuid.generateV4())
+        coEvery { patientService.getPatientById(id) } returns
+            Patient(id, "Kari", "Nordmann", "15068500017")
+        coEvery { patientService.isListedAt(id, "311111116") } returns true
 
         assertEquals(HttpStatusCode.OK, get("/api/patient/${id.value}").status)
     }
@@ -212,22 +212,22 @@ class PasientRoutesTest {
     @Test
     fun `GET patient by id returns a patient with konsultasjoner at the session org that is no longer listed`() =
         testApp {
-            val id = PasientId(Uuid.generateV4())
-            coEvery { pasientService.getPasientById(id) } returns
-                Pasient(id, "Kari", "Nordmann", "15068500017")
-            coEvery { pasientService.isListedAt(id, "311111116") } returns false
-            coEvery { pasientService.hasKonsultasjonAt(id, "311111116") } returns true
+            val id = PatientId(Uuid.generateV4())
+            coEvery { patientService.getPatientById(id) } returns
+                Patient(id, "Kari", "Nordmann", "15068500017")
+            coEvery { patientService.isListedAt(id, "311111116") } returns false
+            coEvery { patientService.hasKonsultasjonAt(id, "311111116") } returns true
 
             assertEquals(HttpStatusCode.OK, get("/api/patient/${id.value}").status)
         }
 
     @Test
     fun `GET patient by id returns 404 for a patient not listed at the session org`() = testApp {
-        val id = PasientId(Uuid.generateV4())
-        coEvery { pasientService.getPasientById(id) } returns
-            Pasient(id, "Kari", "Nordmann", "15068500017")
-        coEvery { pasientService.isListedAt(id, "311111116") } returns false
-        coEvery { pasientService.hasKonsultasjonAt(id, "311111116") } returns false
+        val id = PatientId(Uuid.generateV4())
+        coEvery { patientService.getPatientById(id) } returns
+            Patient(id, "Kari", "Nordmann", "15068500017")
+        coEvery { patientService.isListedAt(id, "311111116") } returns false
+        coEvery { patientService.hasKonsultasjonAt(id, "311111116") } returns false
 
         assertEquals(HttpStatusCode.NotFound, get("/api/patient/${id.value}").status)
     }

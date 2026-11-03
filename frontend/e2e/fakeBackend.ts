@@ -3,8 +3,8 @@ import type { BrowserContext, Route } from "@playwright/test";
 type Launch = { appId: string; patientId: string };
 
 const patients = [
-  { id: "p1", fornavn: "Ola", etternavn: "Nordmann", birthDate: "1990-01-01" },
-  { id: "p2", fornavn: "Kari", etternavn: "Hansen", birthDate: "1985-05-05" },
+  { id: "p1", givenName: "Ola", familyName: "Nordmann", birthDate: "1990-01-01" },
+  { id: "p2", givenName: "Kari", familyName: "Hansen", birthDate: "1985-05-05" },
 ].map((p) => ({
   ...p,
   personident: `0101901234${p.id.slice(1)}`,
@@ -69,7 +69,7 @@ export function fakeBackend({ withHistory = false, ongoing = true } = {}) {
             ? [
                 {
                   id: `k-${known.id}`,
-                  pasientId: known.id,
+                  patientId: known.id,
                   hpr: ["9144889"],
                   journalnotat: [],
                   diagnoser: [],
@@ -84,10 +84,10 @@ export function fakeBackend({ withHistory = false, ongoing = true } = {}) {
             ? [
                 {
                   id: `h-${known.id}`,
-                  pasientId: known.id,
+                  patientId: known.id,
                   hpr: ["9144889"],
                   journalnotat: [
-                    { id: "n1", konsultasjonId: `h-${known.id}`, pasientId: known.id, journalnotat: "Kontroll, ingen funn." },
+                    { id: "n1", konsultasjonId: `h-${known.id}`, patientId: known.id, journalnotat: "Kontroll, ingen funn." },
                   ],
                   diagnoser: [{ code: "L87", system: "ICPC-2", text: "Hypertensjon" }],
                   startetTidspunkt: "2026-08-12T09:40:00",

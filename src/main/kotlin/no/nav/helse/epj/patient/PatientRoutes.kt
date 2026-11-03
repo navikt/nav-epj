@@ -1,4 +1,4 @@
-package no.nav.helse.epj.pasient
+package no.nav.helse.epj.patient
 
 import io.ktor.http.*
 import io.ktor.server.auth.principal
@@ -14,7 +14,7 @@ import no.nav.helse.helseId.loggedInUser
 
 private val securelog = securelog()
 
-fun Route.pasientRoutes(pasientService: PasientService, sessionOrgResolver: SessionOrgResolver) {
+fun Route.patientRoutes(patientService: PatientService, sessionOrgResolver: SessionOrgResolver) {
 
     route("/api") {
         route("/patient") {
@@ -22,24 +22,24 @@ fun Route.pasientRoutes(pasientService: PasientService, sessionOrgResolver: Sess
                 val principal = loggedInUser()
                 val hpr = PractitionerHpr(principal.hpr)
                 val orgNumber = sessionOrgResolver.requireOrgNumber(principal.hpr)
-                call.respond(pasientService.listAtClinic(orgNumber, hpr))
+                call.respond(patientService.listAtClinic(orgNumber, hpr))
             }
             post {
                 val principal = loggedInUser()
-                val request = call.receive<OpprettPasientRequest>()
+                val request = call.receive<CreatePatientRequest>()
                 val orgNumber = sessionOrgResolver.requireOrgNumber(principal.hpr)
-                val pasient = pasientService.createPasient(request, principal.hpr, orgNumber)
-                call.respond(HttpStatusCode.Created, pasient)
+                val patient = patientService.createPatient(request, principal.hpr, orgNumber)
+                call.respond(HttpStatusCode.Created, patient)
             }
             get("/{patientId}") {
                 val id = call.patientId()
                 val orgNumber = sessionOrgResolver.requireOrgNumber(loggedInUser().hpr)
-                val pasient =
-                    pasientService.getPasientById(id)?.takeIf {
-                        pasientService.isListedAt(id, orgNumber) ||
-                            pasientService.hasKonsultasjonAt(id, orgNumber)
+                val patient =
+                    patientService.getPatientById(id)?.takeIf {
+                        patientService.isListedAt(id, orgNumber) ||
+                            patientService.hasKonsultasjonAt(id, orgNumber)
                     } ?: return@get call.respond(HttpStatusCode.NotFound, "Pasient not found")
-                call.respond(pasient)
+                call.respond(patient)
             }
         }
     }

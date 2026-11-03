@@ -11,7 +11,7 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
-import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.utils.DEFAULT_ORG_NUMBER
 import org.junit.Test
@@ -22,11 +22,11 @@ class MaalingServiceTest {
 
     @OptIn(ExperimentalUuidApi::class)
     private fun request(
-        pasientId: PasientId = PasientId(Uuid.generateV4()),
+        patientId: PatientId = PatientId(Uuid.generateV4()),
         konsultasjonId: KonsultasjonId = KonsultasjonId(Uuid.generateV4()),
     ) =
         OpprettMaalingRequest(
-            pasientId = pasientId,
+            patientId = patientId,
             konsultasjonId = konsultasjonId,
             hpr = PractitionerHpr("123"),
             loincKode = "8310-5",
@@ -47,7 +47,7 @@ class MaalingServiceTest {
 
         val opprettet = service.opprettMaaling(opprettRequest, DEFAULT_ORG_NUMBER)
 
-        assertEquals(opprettRequest.pasientId, opprettet.pasientId)
+        assertEquals(opprettRequest.patientId, opprettet.patientId)
         assertEquals(opprettRequest.konsultasjonId, opprettet.konsultasjonId)
         assertEquals(opprettRequest.loincKode, opprettet.loincKode)
         assertEquals(opprettRequest.verdi, opprettet.verdi)
@@ -63,7 +63,7 @@ class MaalingServiceTest {
         val maaling =
             Maaling(
                 id = id,
-                pasientId = opprettRequest.pasientId,
+                patientId = opprettRequest.patientId,
                 konsultasjonId = opprettRequest.konsultasjonId,
                 hpr = opprettRequest.hpr,
                 loincKode = opprettRequest.loincKode,
@@ -83,13 +83,13 @@ class MaalingServiceTest {
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `getMaalingerForPasient returns maalinger from the repository`() = runTest {
-        val pasientId = PasientId(Uuid.generateV4())
-        val opprettRequest = request(pasientId = pasientId)
+    fun `getMaalingerForPatient returns maalinger from the repository`() = runTest {
+        val patientId = PatientId(Uuid.generateV4())
+        val opprettRequest = request(patientId = patientId)
         val maaling =
             Maaling(
                 id = MaalingId(Uuid.generateV4()),
-                pasientId = pasientId,
+                patientId = patientId,
                 konsultasjonId = opprettRequest.konsultasjonId,
                 hpr = opprettRequest.hpr,
                 loincKode = opprettRequest.loincKode,
@@ -100,10 +100,10 @@ class MaalingServiceTest {
                 effektivTidspunkt = opprettRequest.effektivTidspunkt,
                 status = opprettRequest.status,
             )
-        coEvery { repository.listByPasientId(pasientId, DEFAULT_ORG_NUMBER) } returns
+        coEvery { repository.listByPatientId(patientId, DEFAULT_ORG_NUMBER) } returns
             listOf(maaling)
 
-        val resultat = service.getMaalingerForPasient(pasientId, DEFAULT_ORG_NUMBER)
+        val resultat = service.getMaalingerForPatient(patientId, DEFAULT_ORG_NUMBER)
 
         assertEquals(listOf(maaling), resultat)
     }
@@ -116,7 +116,7 @@ class MaalingServiceTest {
         val maaling =
             Maaling(
                 id = MaalingId(Uuid.generateV4()),
-                pasientId = opprettRequest.pasientId,
+                patientId = opprettRequest.patientId,
                 konsultasjonId = konsultasjonId,
                 hpr = opprettRequest.hpr,
                 loincKode = opprettRequest.loincKode,

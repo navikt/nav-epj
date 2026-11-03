@@ -2,9 +2,9 @@ import { CompletedKonsultasjon } from "./CompletedKonsultasjon";
 import { NoKonsultasjon } from "./NoKonsultasjon";
 import { OngoingKonsultasjon } from "./OngoingKonsultasjon";
 import { ongoingOf, useJournalStore } from "./journalStore";
-import type { Pasient } from "../utils/mapping/epj";
+import type { Patient } from "../utils/mapping/epj";
 
-type Props = { patient: Pasient };
+type Props = { patient: Patient };
 
 export function KonsultasjonTab({ patient }: Props) {
   const konsultasjoner = useJournalStore((s) => s.konsultasjoner);

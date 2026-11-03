@@ -13,22 +13,22 @@ import {
 import { useShell } from "./shellContext";
 import { useNow } from "./useNow";
 import { XpIcon } from "./XpIcon";
-import type { Pasient } from "../utils/mapping/epj";
+import type { Patient } from "../utils/mapping/epj";
 
 type Props = {
-  pasient: Pasient;
+  patient: Patient;
   compact?: boolean;
   stale?: boolean;
 };
 
-export function PatientContext({ pasient, compact, stale }: Props) {
+export function PatientContext({ patient, compact, stale }: Props) {
   const user = useCurrentUser();
   const { announce } = useShell();
   const now = useNow();
   const [revealed, setRevealed] = useState(false);
-  const birthDate = birthDateOf(pasient);
+  const birthDate = birthDateOf(patient);
   const showOffice = !compact && user !== null;
-  const name = fullName(pasient);
+  const name = fullName(patient);
 
   function toggle() {
     const next = !revealed;
@@ -46,7 +46,7 @@ export function PatientContext({ pasient, compact, stale }: Props) {
         <p className="name">{name}</p>
       ) : (
         <h1 className="name">
-          <XpIcon name="pasient" size={32} />
+          <XpIcon name="patient" size={32} />
           {name}
         </h1>
       )}
@@ -55,7 +55,7 @@ export function PatientContext({ pasient, compact, stale }: Props) {
           <dt>{copy["context.fnr"]}</dt>
           <dd>
             <span className="mono">
-              {revealed ? pasient.personident : maskPersonident(pasient.personident)}
+              {revealed ? patient.personident : maskPersonident(patient.personident)}
             </span>
             <button
               type="button"
@@ -77,7 +77,7 @@ export function PatientContext({ pasient, compact, stale }: Props) {
         </div>
         <div className="kv">
           <dt>{copy["context.gender"]}</dt>
-          <dd>{genderLabel(genderOf(pasient))}</dd>
+          <dd>{genderLabel(genderOf(patient))}</dd>
         </div>
         {showOffice && (
           <>

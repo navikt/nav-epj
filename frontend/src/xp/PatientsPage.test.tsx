@@ -4,12 +4,12 @@ import { describe, expect, it, vi } from "vitest";
 import { PatientsPage } from "./PatientsPage";
 import { usePatientsStore } from "./patientsStore";
 import { expectNoSeriousViolations } from "./axeHelper";
-import type { PasientListeElement } from "../utils/mapping/epj";
+import type { PatientListItem } from "../utils/mapping/epj";
 
-const make = (i: number): PasientListeElement => ({
+const make = (i: number): PatientListItem => ({
   id: String(i),
-  fornavn: `Pasient${String(i).padStart(2, "0")}`,
-  etternavn: "Ape",
+  givenName: `Pasient${String(i).padStart(2, "0")}`,
+  familyName: "Ape",
   personident: `0101901${String(i).padStart(4, "0")}`,
   personidentType: "FNR",
   birthDate: "1990-01-01",
@@ -164,8 +164,8 @@ describe("PatientsPage", () => {
   it("shows the last konsultasjon when known", () => {
     seed(2);
     act(() => {
-      usePatientsStore.getState().setLastKonsultasjon("1", { status: "PÅGÅENDE", tidspunkt: "2026-01-02T10:00:00" });
-      usePatientsStore.getState().setLastKonsultasjon("2", { status: "FULLFØRT", tidspunkt: "2026-01-03T10:00:00" });
+      usePatientsStore.getState().setLastKonsultasjon("1", { status: "PÅGÅENDE", timestamp: "2026-01-02T10:00:00" });
+      usePatientsStore.getState().setLastKonsultasjon("2", { status: "FULLFØRT", timestamp: "2026-01-03T10:00:00" });
     });
     setup();
     expect(screen.getByText("Pågår nå")).toBeInTheDocument();

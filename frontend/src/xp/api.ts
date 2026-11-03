@@ -8,8 +8,8 @@ import {
   LaunchErrorSchema,
   LaunchResponseSchema,
   MaalingSchema,
-  PasientListeElementSchema,
-  PasientSchema,
+  PatientListItemSchema,
+  PatientSchema,
   SessionOrgSchema,
   SessionSchema,
   SmartConfigurationSchema,
@@ -18,9 +18,9 @@ import {
   type CapabilityStatement,
   type Konsultasjon,
   type Maaling,
-  type OpprettPasientRequest,
-  type Pasient,
-  type PasientListeElement,
+  type CreatePatientRequest,
+  type Patient,
+  type PatientListItem,
   type Session,
   type SessionOrg,
   type SmartConfiguration,
@@ -91,21 +91,21 @@ export async function chooseSessionOrg(
   return SessionOrgSchema.parse(await response.json());
 }
 
-export async function fetchPatients(): Promise<PasientListeElement[]> {
+export async function fetchPatients(): Promise<PatientListItem[]> {
   const response = await request("/api/patient");
-  return PasientListeElementSchema.array().parse(await response.json());
+  return PatientListItemSchema.array().parse(await response.json());
 }
 
-export async function fetchPatient(id: string): Promise<Pasient> {
+export async function fetchPatient(id: string): Promise<Patient> {
   const response = await request(`/api/patient/${encodeURIComponent(id)}`);
-  return PasientSchema.parse(await response.json());
+  return PatientSchema.parse(await response.json());
 }
 
 export async function createPatient(
-  body: OpprettPasientRequest,
-): Promise<Pasient> {
+  body: CreatePatientRequest,
+): Promise<Patient> {
   const response = await request("/api/patient", jsonInit("POST", body));
-  return PasientSchema.parse(await response.json());
+  return PatientSchema.parse(await response.json());
 }
 
 export async function fetchKonsultasjoner(

@@ -25,7 +25,7 @@ import no.nav.helse.epj.maaling.MaalingId
 import no.nav.helse.epj.maaling.MaalingService
 import no.nav.helse.epj.maaling.MaalingStatus
 import no.nav.helse.epj.maaling.OpprettMaalingRequest
-import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
@@ -61,7 +61,7 @@ class ObservationService(val maalingService: MaalingService) {
     ): Bundle {
         val maalinger =
             maalingService
-                .getMaalingerForPasient(PasientId(patientId.value), orgNumber)
+                .getMaalingerForPatient(PatientId(patientId.value), orgNumber)
                 .filter { encounterId == null || it.konsultasjonId.value == encounterId.value }
                 .filter { code == null || it.loincKode == code }
 
@@ -97,7 +97,7 @@ class ObservationService(val maalingService: MaalingService) {
             subject =
                 Reference(
                     reference =
-                        com.google.fhir.model.r4.String(value = "Patient/${this.pasientId.value}")
+                        com.google.fhir.model.r4.String(value = "Patient/${this.patientId.value}")
                 ),
             encounter =
                 Reference(
@@ -203,7 +203,7 @@ fun Observation.toOpprettMaalingRequest(): OpprettMaalingRequest {
                 "Observation.code.coding.display er påkrevd",
             )
 
-    val pasientId = parseReferenceId(this.subject?.reference?.value, "Patient", "subject")
+    val patientId = parseReferenceId(this.subject?.reference?.value, "Patient", "subject")
     val konsultasjonId =
         parseReferenceId(this.encounter?.reference?.value, "Encounter", "encounter")
     val hpr = parsePerformer(this.performer)
@@ -263,7 +263,7 @@ fun Observation.toOpprettMaalingRequest(): OpprettMaalingRequest {
             )
 
     return OpprettMaalingRequest(
-        pasientId = PasientId(pasientId),
+        patientId = PatientId(patientId),
         konsultasjonId = KonsultasjonId(konsultasjonId),
         hpr = hpr,
         loincKode = loincKode,

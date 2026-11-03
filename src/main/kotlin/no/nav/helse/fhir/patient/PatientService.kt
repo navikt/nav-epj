@@ -8,18 +8,18 @@ import com.google.fhir.model.r4.FhirDate
 import com.google.fhir.model.r4.HumanName
 import com.google.fhir.model.r4.Identifier
 import com.google.fhir.model.r4.Meta
-import com.google.fhir.model.r4.Patient
+import com.google.fhir.model.r4.Patient as FhirPatient
 import com.google.fhir.model.r4.Uri
 import com.google.fhir.model.r4.terminologies.AdministrativeGender as FhirAdministrativeGender
 import io.ktor.server.plugins.BadRequestException
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.helse.core.utils.logger
-import no.nav.helse.epj.pasient.AdministrativeGender
-import no.nav.helse.epj.pasient.Pasient
-import no.nav.helse.epj.pasient.PasientId
-import no.nav.helse.epj.pasient.PasientService
-import no.nav.helse.epj.pasient.PersonidentType
+import no.nav.helse.epj.patient.AdministrativeGender
+import no.nav.helse.epj.patient.Patient
+import no.nav.helse.epj.patient.PatientId
+import no.nav.helse.epj.patient.PatientService as EpjPatientService
+import no.nav.helse.epj.patient.PersonidentType
 
 // Norwegian national identifier series
 // (ehelse.no/oid-identifikatorserier-i-helse-og-omsorgstjenesten),
@@ -42,29 +42,29 @@ fun parsePatientIdentifierSearch(token: String): PatientIdentifierSearch {
     return PatientIdentifierSearch(system, value)
 }
 
-class PatientService(val epjPatientService: PasientService) {
+class PatientService(val epjPatientService: EpjPatientService) {
 
     val log = logger()
 
     @WithSpan
-    suspend fun getPatient(patientInputId: PatientInputId): Patient? {
+    suspend fun getPatient(patientInputId: PatientInputId): FhirPatient? {
         val span = Span.current()
         span.setAttribute("patientId", patientInputId.value.toString())
-        val epjPatient = epjPatientService.getPasientById(PasientId(patientInputId.value))
+        val epjPatient = epjPatientService.getPatientById(PatientId(patientInputId.value))
         return epjPatient?.toPatient()
     }
 
-    suspend fun findByIdentifier(search: PatientIdentifierSearch): Patient? {
-        val pasient = epjPatientService.getPasientByPersonident(search.value) ?: return null
+    suspend fun findByIdentifier(search: PatientIdentifierSearch): FhirPatient? {
+        val patient = epjPatientService.getPatientByPersonident(search.value) ?: return null
         if (
-            search.system != null && search.system != pasient.personidentType.toIdentifierSystem()
+            search.system != null && search.system != patient.personidentType.toIdentifierSystem()
         ) {
             return null
         }
-        return pasient.toPatient()
+        return patient.toPatient()
     }
 
-    fun searchset(patients: List<Patient>): Bundle =
+    fun searchset(patients: List<FhirPatient>): Bundle =
         Bundle(
             type = Enumeration(value = Bundle.BundleType.Searchset),
             entry =
@@ -73,8 +73,8 @@ class PatientService(val epjPatientService: PasientService) {
                 },
         )
 
-    fun Pasient.toPatient(): Patient {
-        return Patient(
+    fun Patient.toPatient(): FhirPatient {
+        return FhirPatient(
             meta =
                 Meta(
                     profile =
@@ -95,8 +95,8 @@ class PatientService(val epjPatientService: PasientService) {
             name =
                 listOf(
                     HumanName(
-                        family = com.google.fhir.model.r4.String(value = this.etternavn),
-                        given = listOf(com.google.fhir.model.r4.String(value = this.fornavn)),
+                        family = com.google.fhir.model.r4.String(value = this.familyName),
+                        given = listOf(com.google.fhir.model.r4.String(value = this.givenName)),
                     )
                 ),
             gender = this.gender?.let { Enumeration(value = it.toFhirAdministrativeGender()) },

@@ -12,7 +12,7 @@ import no.nav.helse.core.utils.oid
 import no.nav.helse.epj.konsultasjon.Konsultasjon
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
-import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
 import no.nav.tsm.diagnoser.Diagnose
@@ -21,7 +21,7 @@ class ConditionService(val konsultasjonService: KonsultasjonService) {
 
     suspend fun getConditionsByPatientId(patientId: PatientInputId, orgNumber: String?): Bundle {
         val konsultasjoner =
-            konsultasjonService.getKonsultasjoner(PasientId(patientId.value), orgNumber)
+            konsultasjonService.getKonsultasjoner(PatientId(patientId.value), orgNumber)
         return toBundle(konsultasjoner)
     }
 
@@ -37,7 +37,7 @@ class ConditionService(val konsultasjonService: KonsultasjonService) {
         orgNumber: String?,
     ): Bundle {
         val konsultasjoner =
-            konsultasjonService.getKonsultasjoner(PasientId(patientId.value), orgNumber).filter {
+            konsultasjonService.getKonsultasjoner(PatientId(patientId.value), orgNumber).filter {
                 it.id.value == encounterId.value
             }
         return toBundle(konsultasjoner)
@@ -68,7 +68,7 @@ class ConditionService(val konsultasjonService: KonsultasjonService) {
             subject =
                 Reference(
                     reference =
-                        com.google.fhir.model.r4.String(value = "Patient/${pasientId.value}")
+                        com.google.fhir.model.r4.String(value = "Patient/${patientId.value}")
                 ),
             encounter =
                 Reference(

@@ -12,7 +12,7 @@ import no.nav.helse.core.EpjConfig
 import no.nav.helse.core.PostgresConfig
 import no.nav.helse.core.SmartConfig
 import no.nav.helse.core.ValkeyConfig
-import no.nav.helse.epj.pasient.PasientService
+import no.nav.helse.epj.patient.PatientService as EpjPatientService
 import no.nav.helse.epj.sessionorg.SessionOrgResolver
 import no.nav.helse.fhir.encounter.EncounterService
 import no.nav.helse.fhir.patient.PatientService
@@ -35,8 +35,8 @@ internal const val TEST_PRIVATE_KEY_JWK =
 private val valkeyService = mockk<ValkeyService>(relaxed = true)
 private val encounterService = mockk<EncounterService>(relaxed = true)
 private val patientService = mockk<PatientService>(relaxed = true)
-private val pasientService =
-    mockk<PasientService>(relaxed = true) { coEvery { isListedAt(any(), any()) } returns true }
+private val epjPatientService =
+    mockk<EpjPatientService>(relaxed = true) { coEvery { isListedAt(any(), any()) } returns true }
 
 fun Application.configureTestSmartDependencies() {
     configureSerialization()
@@ -45,7 +45,7 @@ fun Application.configureTestSmartDependencies() {
         provide<ValkeyService> { valkeyService }
         provide<EncounterService> { encounterService }
         provide<PatientService> { patientService }
-        provide<PasientService> { pasientService }
+        provide<EpjPatientService> { epjPatientService }
         provide<SessionOrgResolver> { mockk(relaxed = true) }
         provide<ClientAssertionVerifier> { clientAssertionVerifier }
         provide<SmartKeys> { SmartKeys(TEST_PRIVATE_KEY_JWK) }

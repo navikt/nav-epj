@@ -6,9 +6,9 @@ import { copy } from "./copy";
 import { fullName } from "./patientInfo";
 import { useJournalStore } from "./journalStore";
 import { useShell } from "./shellContext";
-import type { Pasient } from "../utils/mapping/epj";
+import type { Patient } from "../utils/mapping/epj";
 
-type Props = { patient: Pasient };
+type Props = { patient: Patient };
 
 export function NoKonsultasjon({ patient }: Props) {
   const headingId = useId();
