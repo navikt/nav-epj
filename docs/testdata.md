@@ -2,7 +2,9 @@
 
 Organisations (legekontor), mock patients and fastlegelister are seeded into the database by the
 repeatable Flyway migration `src/main/resources/db/testdata/R__testdata.sql`. The file always shows
-the current state. Flyway re-applies it whenever its content changes.
+the current state. Flyway re-applies it whenever its content changes. The tables it fills are
+`clinic`, `practitioner`, `patient`, `fastlegeliste` and `fastlegeliste_patient`, created by the
+versioned migrations `V1` to `V7`.
 
 The seed is only applied when `database.seedTestdata` is `true`. It is `true` in
 `application-local.yaml` and `application.yaml` (dev), and `false` when the key is absent. Tests
@@ -11,8 +13,9 @@ already seeded is safe: the seed is ignored and the seeded rows stay.
 
 What the seed does:
 
-- Upserts `legekontor` by `orgnummer` and `patient` by `personident`. The seed wins on name and
-  demographics.
+- Upserts `clinic` by `org_number` and `patient` by `personident`. The seed wins on name and
+  demographics. It also creates the original mock clinic (Utstrakt Bark, no patients) and the
+  practitioner GRØNN VITS (HPR 565501872), which used to come from a versioned migration.
 - Inserts the seeded `fastlegeliste` rows if missing and upserts the seeded memberships, so a
   patient the seed places on a list moves there. Patients created in the app keep their list.
   Removing a patient line from the seed does not remove their membership: delete the row from
@@ -20,12 +23,12 @@ What the seed does:
 - Never deletes patients or clinical data. Clinical rows are only inserted, never updated or deleted.
 
 The eight patients on the Fjordvik and Lyngdal lists also get clinical histories from the same
-file: 73 konsultasjoner (40 at Fjordvik, 33 at Lyngdal), 158 diagnoses, 406 measurements and 68
-journal notes at the patient's list office. Every patient has one active konsultasjon (2026-10-20)
+file: 73 consultations (40 at Fjordvik, 33 at Lyngdal), 158 diagnoses, 406 measurements and 68
+journal notes at the patient's list office. Every patient has one active consultation (`IN_PROGRESS`, 2026-10-20)
 so SMART launches work, and at least one measurement. Six patients have six or more readings of one
 measurement (blood pressure, HbA1c, TSH, weight, FEV1, PHQ-9). Rows have fixed ids derived from a
 key with `md5` and are inserted with `ON CONFLICT DO NOTHING`. Diagnoses, measurements and notes
-are only inserted for konsultasjoner created in the same run, so a re-run never restores rows a
+are only inserted for consultations created in the same run, so a re-run never restores rows a
 user deleted. The local login stub doctor (HPR 565501872) sees the Fjordvik data.
 
 ## Hackathon data
@@ -38,17 +41,17 @@ patients and what happens to them are listed in [hackathon-roster.md](hackathon-
 data is kept permanently as demo data and follows the same rules as `R__testdata.sql`. To stop
 seeding it, set `database.seedTestdata` to `false` (this also stops `R__testdata.sql`).
 
-The same file seeds 231 konsultasjoner (active, completed, planned and cancelled), 534 ICPC-2 and
+The same file seeds 231 consultations (`IN_PROGRESS`, `FINISHED`, `PLANNED` and `CANCELLED`), 534 ICPC-2 and
 ICD-10 diagnoses, 175 journal notes and 1034 LOINC/UCUM measurements at the patient's list org.
-Every event patient has 3 to 10 konsultasjoner over two to four years, and 26 patients have six or
+Every event patient has 3 to 10 consultations over two to four years, and 26 patients have six or
 more readings of one measurement (blood pressure, HbA1c, weight, eGFR, TSH, PHQ-9, FEV1 and more).
 Rows get fixed ids derived from a key with `md5`, are
 inserted with `ON CONFLICT DO NOTHING`, and are never updated or deleted, so re-running the seed
-duplicates nothing and keeps edits made in the app. Konsultasjon dates are generated from fixed day
+duplicates nothing and keeps edits made in the app. Consultation dates are generated from fixed day
 offsets and measurement values from a linear trend plus a deterministic wobble, so the output is the
 same on every run.
 
-Rows are referenced by natural keys (orgnummer, personident, HPR) through subselects, so the seed
+Rows are referenced by natural keys (org number, personident, HPR) through subselects, so the seed
 never hard-codes generated ids.
 
 The mock personidents are Skatteetaten synthetic numbers (month + 80, D-number day + 40) and do not
@@ -56,7 +59,7 @@ exist in PDL. Apps that look patients up in PDL will not find them.
 
 ## Add an organisation
 
-Add a row to the `legekontor` insert. `orgnummer` must be unique and pass the mod11 check (weights
+Add a row to the `clinic` insert. `org_number` must be unique and pass the mod11 check (weights
 3, 2, 7, 6, 5, 4, 3, 2 over the first eight digits). Use a number that is clearly fictional.
 
 ## Add a patient
@@ -68,7 +71,7 @@ Add a row to the `patient` values list with a synthetic personident that matches
 
 ## Add a doctor's list
 
-Add a `(hpr, orgnummer)` row to the `fastlegeliste` insert, then one `(hpr, orgnummer, personident)`
+Add a `(hpr, org_number)` row to the `fastlegeliste` insert, then one `(hpr, org_number, personident)`
 row per member to the `fastlegeliste_patient` insert. A patient can be on at most one list.
 
 ## Add a column
