@@ -11,10 +11,10 @@ import { useLaunchModeStore, type LaunchChoice } from "./launchModeStore";
 import { fullName } from "./patientInfo";
 import { createSession } from "./session";
 import { useWorkspaceStore } from "./workspaceStore";
-import type { App, Konsultasjon, Pasient } from "../utils/mapping/epj";
+import type { App, Konsultasjon, Patient } from "../utils/mapping/epj";
 
 type LaunchContext = {
-  patient: Pasient;
+  patient: Patient;
   konsultasjon: Pick<Konsultasjon, "id" | "startetTidspunkt">;
 };
 
@@ -106,7 +106,7 @@ function readContext(app: App): LaunchContext | null {
   };
 }
 
-const patientChanged = (patient: Pick<Pasient, "id">) =>
+const patientChanged = (patient: Pick<Patient, "id">) =>
   useJournalStore.getState().patientId !== patient.id;
 
 export function findApp(clientId: string) {

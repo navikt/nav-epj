@@ -100,7 +100,7 @@ describe("StartTab", () => {
       patients: [ola, kari],
       recentIds: [ola.id, kari.id],
       lastKonsultasjon: {
-        [ola.id]: { status: "FULLFØRT", tidspunkt: "2026-09-20T10:00:00" },
+        [ola.id]: { status: "FULLFØRT", timestamp: "2026-09-20T10:00:00" },
       },
     });
     renderPage();

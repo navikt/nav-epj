@@ -5,11 +5,11 @@ import {
   parseISO,
   startOfMinute,
 } from "date-fns";
-import type { OpprettPasientRequest, Pasient } from "../utils/mapping/epj";
+import type { CreatePatientRequest, Patient } from "../utils/mapping/epj";
 import { copy } from "./copy";
 
 type DerivedPersonident = Pick<
-  OpprettPasientRequest,
+  CreatePatientRequest,
   "personidentType" | "birthDate" | "gender"
 >;
 
@@ -60,15 +60,15 @@ export function derivePersonident(
   };
 }
 
-export function birthDateOf(pasient: Pasient) {
-  return pasient.birthDate ?? derivePersonident(pasient.personident)?.birthDate ?? null;
+export function birthDateOf(patient: Patient) {
+  return patient.birthDate ?? derivePersonident(patient.personident)?.birthDate ?? null;
 }
 
-export function genderOf(pasient: Pasient) {
-  return pasient.gender ?? derivePersonident(pasient.personident)?.gender ?? null;
+export function genderOf(patient: Patient) {
+  return patient.gender ?? derivePersonident(patient.personident)?.gender ?? null;
 }
 
-export function genderLabel(gender: Pasient["gender"]) {
+export function genderLabel(gender: Patient["gender"]) {
   switch (gender) {
     case "MALE":
       return copy["context.gender.m"];
@@ -119,6 +119,6 @@ export function minutesSince(startIso: string, now: Date) {
   );
 }
 
-export function fullName(pasient: Pick<Pasient, "fornavn" | "etternavn">) {
-  return `${pasient.fornavn} ${pasient.etternavn}`;
+export function fullName(patient: Pick<Patient, "givenName" | "familyName">) {
+  return `${patient.givenName} ${patient.familyName}`;
 }

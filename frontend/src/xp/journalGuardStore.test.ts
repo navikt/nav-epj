@@ -10,10 +10,10 @@ import type { Tab } from "./workspaceStore";
 const journalTab: Tab = { id: "journal", kind: "journal", label: "Journal", closable: true };
 const patientsTab: Tab = { id: "patients", kind: "patients", label: "Pasienter", closable: true };
 
-const pasient = {
+const patient = {
   id: "p1",
-  fornavn: "Matematisk",
-  etternavn: "Ape",
+  givenName: "Matematisk",
+  familyName: "Ape",
   personident: "01019012345",
   personidentType: "FNR" as const,
   birthDate: "1990-01-01",
@@ -46,7 +46,7 @@ describe("needsSwitchConfirmation", () => {
   });
 
   it("is true only for a different patient than the loaded journal", () => {
-    useJournalStore.setState({ patientId: "p1", patient: pasient });
+    useJournalStore.setState({ patientId: "p1", patient: patient });
     expect(needsSwitchConfirmation("p1")).toBe(false);
     expect(needsSwitchConfirmation("p2")).toBe(true);
   });

@@ -6,10 +6,10 @@ import { copy } from "./copy";
 import { fullName } from "./patientInfo";
 import { useJournalStore } from "./journalStore";
 import { useShell } from "./shellContext";
-import type { Konsultasjon, Pasient } from "../utils/mapping/epj";
+import type { Konsultasjon, Patient } from "../utils/mapping/epj";
 
 type Props = {
-  patient: Pasient;
+  patient: Patient;
   konsultasjon: Konsultasjon;
   canStart: boolean;
 };

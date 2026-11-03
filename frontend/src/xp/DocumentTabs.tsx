@@ -6,7 +6,7 @@ import { useWorkspaceStore, type Tab, type TabKind } from "./workspaceStore";
 
 const icons: Record<TabKind, IconName> = {
   start: "hjem",
-  patients: "pasienter",
+  patients: "patients",
   journal: "journal",
   app: "vindu",
   kontrollpanel: "kontrollpanel",

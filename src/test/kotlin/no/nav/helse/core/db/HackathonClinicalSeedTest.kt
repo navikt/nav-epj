@@ -10,8 +10,8 @@ import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.konsultasjon.KonsultasjonRepository
 import no.nav.helse.epj.maaling.MaalingRepository
-import no.nav.helse.epj.pasient.PasientId
-import no.nav.helse.epj.pasient.PasientRepository
+import no.nav.helse.epj.patient.PatientId
+import no.nav.helse.epj.patient.PatientRepository
 import no.nav.helse.utils.WithPostgresql
 import org.junit.After
 import org.junit.Before
@@ -23,7 +23,7 @@ class HackathonClinicalSeedTest : WithPostgresql() {
     private val seedConfig = config.postgres.copy(seedTestdata = true)
     private val konsultasjonRepository = KonsultasjonRepository()
     private val maalingRepository = MaalingRepository()
-    private val pasientRepository = PasientRepository()
+    private val patientRepository = PatientRepository()
 
     private val orgWithGunnar = "312000032"
     private val orgWithBjarne = "312000016"
@@ -64,8 +64,8 @@ class HackathonClinicalSeedTest : WithPostgresql() {
                 }
             }
 
-    private suspend fun pasientId(personident: String) =
-        PasientId(checkNotNull(pasientRepository.findByPersonident(personident)).id.value)
+    private suspend fun patientId(personident: String) =
+        PatientId(checkNotNull(patientRepository.findByPersonident(personident)).id.value)
 
     @Before
     fun migrateWithSeed() {
@@ -82,9 +82,9 @@ class HackathonClinicalSeedTest : WithPostgresql() {
 
     @Test
     fun `seeded konsultasjoner, diagnoses and trend series are read at the list org`() = runTest {
-        val gunnar = pasientId("23895710156")
+        val gunnar = patientId("23895710156")
 
-        val konsultasjoner = konsultasjonRepository.listByPasientId(gunnar, orgWithGunnar)
+        val konsultasjoner = konsultasjonRepository.listByPatientId(gunnar, orgWithGunnar)
         assertEquals(10, konsultasjoner.size)
         assertEquals(1, konsultasjoner.count { it.status == KonsultasjonStatus.PLANLAGT })
         assertEquals(
@@ -94,7 +94,7 @@ class HackathonClinicalSeedTest : WithPostgresql() {
         assertTrue(konsultasjoner.all { it.hpr == listOf("900000103") })
 
         val hba1c =
-            maalingRepository.listByPasientId(gunnar, orgWithGunnar).filter {
+            maalingRepository.listByPatientId(gunnar, orgWithGunnar).filter {
                 it.loincKode == "4548-4"
             }
         assertEquals(
@@ -108,18 +108,18 @@ class HackathonClinicalSeedTest : WithPostgresql() {
 
     @Test
     fun `seeded clinical data is invisible at another org`() = runTest {
-        val gunnar = pasientId("23895710156")
+        val gunnar = patientId("23895710156")
 
-        assertTrue(konsultasjonRepository.listByPasientId(gunnar, orgWithBjarne).isEmpty())
-        assertTrue(maalingRepository.listByPasientId(gunnar, orgWithBjarne).isEmpty())
+        assertTrue(konsultasjonRepository.listByPatientId(gunnar, orgWithBjarne).isEmpty())
+        assertTrue(maalingRepository.listByPatientId(gunnar, orgWithBjarne).isEmpty())
     }
 
     @Test
     fun `active konsultasjon is seeded for some patients`() = runTest {
-        val bjarne = pasientId("20856210112")
+        val bjarne = patientId("20856210112")
 
-        assertNotNull(konsultasjonRepository.findActiveByPasientId(bjarne, orgWithBjarne))
-        assertNull(konsultasjonRepository.findActiveByPasientId(bjarne, orgWithGunnar))
+        assertNotNull(konsultasjonRepository.findActiveByPatientId(bjarne, orgWithBjarne))
+        assertNull(konsultasjonRepository.findActiveByPatientId(bjarne, orgWithGunnar))
     }
 
     @Test
@@ -137,10 +137,10 @@ class HackathonClinicalSeedTest : WithPostgresql() {
         execute(sql)
 
         assertEquals(before, counts())
-        val bjarne = pasientId("20856210112")
+        val bjarne = patientId("20856210112")
         assertEquals(
             "Endret av bruker",
-            konsultasjonRepository.findActiveByPasientId(bjarne, orgWithBjarne)?.problemstilling,
+            konsultasjonRepository.findActiveByPatientId(bjarne, orgWithBjarne)?.problemstilling,
         )
     }
 
@@ -288,20 +288,20 @@ class HackathonClinicalSeedTest : WithPostgresql() {
 
     @Test
     fun `rising and falling series exist for a flagging app`() = runTest {
-        val sigrun = pasientId("09894810030")
+        val sigrun = patientId("09894810030")
         val egfr =
             maalingRepository
-                .listByPasientId(sigrun, "312000016")
+                .listByPatientId(sigrun, "312000016")
                 .filter { it.loincKode == "62238-1" }
                 .sortedBy { it.effektivTidspunkt }
                 .map { it.verdi.toInt() }
         assertEquals(8, egfr.size)
         assertTrue(egfr.first() > egfr.last())
 
-        val eva = pasientId("31857810085")
+        val eva = patientId("31857810085")
         val hba1c =
             maalingRepository
-                .listByPasientId(eva, "312000040")
+                .listByPatientId(eva, "312000040")
                 .filter { it.loincKode == "4548-4" }
                 .sortedBy { it.effektivTidspunkt }
                 .map { it.verdi }

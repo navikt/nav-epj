@@ -6,8 +6,8 @@ import { renderApp, setupBrowserStubs, stubApi } from "./testApp";
 const patients = [
   {
     id: "p1",
-    fornavn: "Matematisk",
-    etternavn: "Ape",
+    givenName: "Matematisk",
+    familyName: "Ape",
     personident: "01019012345",
     personidentType: "FNR",
     birthDate: "1990-01-01",
@@ -16,8 +16,8 @@ const patients = [
   },
   {
     id: "p2",
-    fornavn: "Ola",
-    etternavn: "Nordmann",
+    givenName: "Ola",
+    familyName: "Nordmann",
     personident: "02029054321",
     personidentType: "FNR",
     birthDate: "1990-02-02",

@@ -12,9 +12,9 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.SerializationException
+import no.nav.helse.core.utils.ConsultationBelongsToOtherPatientException
 import no.nav.helse.core.utils.DuplikatMaalingException
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
-import no.nav.helse.core.utils.KonsultasjonTilhorerAnnenPasientException
 import no.nav.helse.fhir.encounterReferenceId
 import no.nav.helse.fhir.observationId
 import no.nav.helse.fhir.patientOrSubjectReferenceInputId
@@ -125,7 +125,7 @@ fun Route.observationRoutes(
             principal.requirePatientMatch(
                 "Observation",
                 Interaction.CREATE,
-                request.pasientId.value.toString(),
+                request.patientId.value.toString(),
             )
 
             val created =
@@ -142,7 +142,7 @@ fun Route.observationRoutes(
                         OperationOutcome.IssueType.Not_Found,
                         exception.message ?: "Fant ikke encounter",
                     )
-                } catch (exception: KonsultasjonTilhorerAnnenPasientException) {
+                } catch (exception: ConsultationBelongsToOtherPatientException) {
                     return@post call.respondOperationOutcome(
                         fhirR4Json,
                         fhirContentType,

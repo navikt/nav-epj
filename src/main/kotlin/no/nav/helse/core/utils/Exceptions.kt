@@ -1,22 +1,22 @@
 package no.nav.helse.core.utils
 
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
-import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.epj.practitioner.PractitionerHpr
 
 class PractitionerNotFoundException(hpr: PractitionerHpr) :
     RuntimeException("Fant ikke helsepersonell med HPR=${hpr.value}")
 
-class PractitionerForPatientNotFoundException(patient: PasientId) :
+class PractitionerForPatientNotFoundException(patient: PatientId) :
     RuntimeException("Fant ikke helsepersonell på pasient med id=${patient.value}")
 
-class PasientCreationException : RuntimeException("Pasient ble ikke opprettet")
+class PatientCreationException : RuntimeException("Pasient ble ikke opprettet")
 
 class KonsultasjonNotFoundException(konsultasjonId: KonsultasjonId) :
     RuntimeException("Fant ikke konsultasjon med id=${konsultasjonId.value}")
 
-class AktivKonsultasjonNotFoundException(pasientId: PasientId) :
-    RuntimeException("Fant ingen aktiv konsultasjon for pasient med id=${pasientId.value}")
+class AktivKonsultasjonNotFoundException(patientId: PatientId) :
+    RuntimeException("Fant ingen aktiv konsultasjon for pasient med id=${patientId.value}")
 
 class SessionOrgRequiredException : RuntimeException("Legekontor er ikke valgt for denne økten")
 
@@ -28,8 +28,8 @@ class ClinicNotFoundException(orgNumber: String? = null) :
         orgNumber?.let { "Fant ikke Legekontor med orgnummer $it" } ?: "Fant ikke Legekontor"
     )
 
-class KonsultasjonNotFoundForPatientException(pasientId: PasientId) :
-    RuntimeException("Fant ikke konsultasjon for pasientId=${pasientId.value}")
+class KonsultasjonNotFoundForPatientException(patientId: PatientId) :
+    RuntimeException("Fant ikke konsultasjon for pasientId=${patientId.value}")
 
 class UgyldigDiagnoseException(kode: String, system: String) :
     RuntimeException("Fant ikke diagnosekode=$kode i kodeverk=$system")
@@ -37,16 +37,16 @@ class UgyldigDiagnoseException(kode: String, system: String) :
 class UgyldigPersonidentException(message: String, cause: Throwable? = null) :
     RuntimeException(message, cause)
 
-class DuplikatPasientException : RuntimeException("Pasienten finnes allerede")
+class DuplicatePatientException : RuntimeException("Pasienten finnes allerede")
 
 class DuplikatMaalingException : RuntimeException("Målingen finnes allerede")
 
 class DuplikatJournalnotatException : RuntimeException("Journalnotatet finnes allerede")
 
-class KonsultasjonTilhorerAnnenPasientException(
+class ConsultationBelongsToOtherPatientException(
     konsultasjonId: KonsultasjonId,
-    pasientId: PasientId,
+    patientId: PatientId,
 ) :
     RuntimeException(
-        "Konsultasjon med id=${konsultasjonId.value} tilhører ikke pasient med id=${pasientId.value}"
+        "Konsultasjon med id=${konsultasjonId.value} tilhører ikke pasient med id=${patientId.value}"
     )

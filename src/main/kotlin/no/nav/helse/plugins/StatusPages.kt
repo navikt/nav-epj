@@ -12,11 +12,11 @@ import io.ktor.server.request.path
 import io.ktor.server.response.*
 import no.nav.helse.core.utils.AktivKonsultasjonNotFoundException
 import no.nav.helse.core.utils.ClinicNotFoundException
-import no.nav.helse.core.utils.DuplikatPasientException
+import no.nav.helse.core.utils.DuplicatePatientException
 import no.nav.helse.core.utils.IngenFastlegelisteException
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
-import no.nav.helse.core.utils.PasientCreationException
+import no.nav.helse.core.utils.PatientCreationException
 import no.nav.helse.core.utils.PractitionerForPatientNotFoundException
 import no.nav.helse.core.utils.PractitionerNotFoundException
 import no.nav.helse.core.utils.SessionOrgRequiredException
@@ -78,7 +78,7 @@ fun Application.configureStatusPages() {
         exception<UgyldigPersonidentException> { call, cause ->
             call.respondText(text = "Ugyldig personident", status = HttpStatusCode.BadRequest)
         }
-        exception<DuplikatPasientException> { call, cause ->
+        exception<DuplicatePatientException> { call, cause ->
             call.respondText(text = "Pasienten finnes allerede", status = HttpStatusCode.Conflict)
         }
         exception<OrganizationContextMissingException> { call, cause ->
@@ -112,7 +112,7 @@ fun Application.configureStatusPages() {
                 status = HttpStatusCode.BadRequest,
             )
         }
-        exception<PasientCreationException> { call, cause ->
+        exception<PatientCreationException> { call, cause ->
             log.error("Pasient ble ikke opprettet", cause)
             call.respondText(
                 text = "En uventet feil oppstod ved opprettelse av pasient",

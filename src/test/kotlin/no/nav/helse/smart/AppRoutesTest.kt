@@ -1,7 +1,7 @@
 package no.nav.helse.smart
 
 import com.google.fhir.model.r4.Encounter
-import com.google.fhir.model.r4.Patient
+import com.google.fhir.model.r4.Patient as FhirPatient
 import io.ktor.client.HttpClient
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -30,8 +30,8 @@ import no.nav.helse.epj.clinic.ClinicId
 import no.nav.helse.epj.konsultasjon.Konsultasjon
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
-import no.nav.helse.epj.pasient.PasientId
-import no.nav.helse.epj.pasient.PasientService
+import no.nav.helse.epj.patient.PatientId
+import no.nav.helse.epj.patient.PatientService as EpjPatientService
 import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.epj.sessionorg.SessionOrgResolution
 import no.nav.helse.epj.sessionorg.SessionOrgResolver
@@ -97,8 +97,8 @@ class AppRoutesTest : WithValkey() {
     private val patientService = mockk<PatientService>()
     private val encounterService = mockk<EncounterService>()
     private val sessionOrgResolver = mockk<SessionOrgResolver>()
-    private val pasientService =
-        mockk<PasientService> { coEvery { isListedAt(any(), any()) } returns true }
+    private val epjPatientService =
+        mockk<EpjPatientService> { coEvery { isListedAt(any(), any()) } returns true }
     private val mapper = jacksonObjectMapper()
 
     private fun testApp(
@@ -125,7 +125,7 @@ class AppRoutesTest : WithValkey() {
                 provide<ValkeyService> { valkeyService }
                 provide<EncounterService> { encounterService }
                 provide<PatientService> { patientService }
-                provide<PasientService> { pasientService }
+                provide<EpjPatientService> { epjPatientService }
                 provide<SessionOrgResolver> { sessionOrgResolver }
                 provide<ClientAssertionVerifier> { mockk(relaxed = true) }
                 provide<SmartKeys> { SmartKeys(environment.smart.privateKeyJwk) }
@@ -171,15 +171,16 @@ class AppRoutesTest : WithValkey() {
             setBody("""{"appId":"$appId","patientId":"$patientId"}""")
         }
 
-    private fun patientWithId(patientId: String) = mockk<Patient> { every { id } returns patientId }
+    private fun patientWithId(patientId: String) =
+        mockk<FhirPatient> { every { id } returns patientId }
 
     private fun encounterWithId(encounterId: String) =
         mockk<Encounter> { every { id } returns encounterId }
 
-    private fun konsultasjon(pasientId: PasientId, hpr: String) =
+    private fun konsultasjon(patientId: PatientId, hpr: String) =
         Konsultasjon(
             id = KonsultasjonId(kotlin.uuid.Uuid.generateV4()),
-            pasientId = pasientId,
+            patientId = patientId,
             clinicId = ClinicId(kotlin.uuid.Uuid.generateV4()),
             hpr = listOf(hpr),
             journalnotat = emptyList(),
@@ -501,7 +502,7 @@ class AppRoutesTest : WithValkey() {
             val id = activePatient()
             val before = launchKeys()
             coEvery {
-                pasientService.isListedAt(PasientId(kotlin.uuid.Uuid.parse(id)), ORG)
+                epjPatientService.isListedAt(PatientId(kotlin.uuid.Uuid.parse(id)), ORG)
             } returns false
 
             val response = launch("syk-inn")
@@ -514,7 +515,7 @@ class AppRoutesTest : WithValkey() {
     @Test
     fun `POST api launch stores the encounter of the launching hpr when another clinician also has one`() =
         testApp {
-            val patientId = PasientId(kotlin.uuid.Uuid.parse(activePatient()))
+            val patientId = PatientId(kotlin.uuid.Uuid.parse(activePatient()))
             coEvery { patientService.getPatient(any<PatientInputId>()) } returns
                 patientWithId("patient-1")
             val own = konsultasjon(patientId, HPR)
@@ -541,7 +542,7 @@ class AppRoutesTest : WithValkey() {
     @Test
     fun `POST api launch without an ongoing konsultasjon for the hpr returns 409 NO_ACTIVE_ENCOUNTER`() =
         testApp {
-            val patientId = PasientId(kotlin.uuid.Uuid.parse(activePatient()))
+            val patientId = PatientId(kotlin.uuid.Uuid.parse(activePatient()))
             coEvery { patientService.getPatient(any<PatientInputId>()) } returns
                 patientWithId("patient-1")
             useRealEncounterService(

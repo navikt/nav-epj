@@ -10,8 +10,8 @@ import no.nav.helse.epj.konsultasjon.KonsultasjonRepository
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
 import no.nav.helse.epj.maaling.MaalingRepository
 import no.nav.helse.epj.maaling.MaalingService
-import no.nav.helse.epj.pasient.PasientRepository
-import no.nav.helse.epj.pasient.PasientService
+import no.nav.helse.epj.patient.PatientRepository
+import no.nav.helse.epj.patient.PatientService as EpjPatientService
 import no.nav.helse.epj.practitioner.PractitionerRepository
 import no.nav.helse.epj.practitioner.PractitionerService as EpjPractitionerService
 import no.nav.helse.epj.sessionorg.FastlegelisteRepository
@@ -47,7 +47,7 @@ fun Application.configureDependencies() {
         provide(ClientAssertionVerifier::class)
         provide<SmartKeys> { SmartKeys(resolve<Environment>().smart.privateKeyJwk) }
 
-        provide(PasientRepository::class)
+        provide(PatientRepository::class)
         provide(PractitionerRepository::class)
         provide(FastlegelisteRepository::class)
         provide(KonsultasjonRepository::class)
@@ -56,7 +56,7 @@ fun Application.configureDependencies() {
 
         provide(EpjPractitionerService::class)
         provide(KonsultasjonService::class)
-        provide(PasientService::class)
+        provide(EpjPatientService::class)
         provide(ClinicService::class)
         provide(MaalingService::class)
 

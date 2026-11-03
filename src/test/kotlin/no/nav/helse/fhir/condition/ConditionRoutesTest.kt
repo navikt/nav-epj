@@ -23,7 +23,7 @@ import no.nav.helse.epj.clinic.ClinicId
 import no.nav.helse.epj.konsultasjon.Konsultasjon
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
-import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.plugins.configureStatusPages
 import no.nav.helse.smart.security.Interaction
 import no.nav.helse.smart.security.ScopeContext
@@ -41,14 +41,14 @@ class ConditionRoutesTest {
     private val fhirJson = FhirR4Json()
     private val fhirContentType = ContentType("application", "fhir+json")
 
-    private val pasientId = PasientId(Uuid.generateV4())
+    private val patientId = PatientId(Uuid.generateV4())
     private val encounterA = KonsultasjonId(Uuid.generateV4())
     private val encounterB = KonsultasjonId(Uuid.generateV4())
 
-    private fun konsultasjon(id: KonsultasjonId, pasientId: PasientId, code: String) =
+    private fun konsultasjon(id: KonsultasjonId, patientId: PatientId, code: String) =
         Konsultasjon(
             id = id,
-            pasientId = pasientId,
+            patientId = patientId,
             clinicId = ClinicId(Uuid.generateV4()),
             hpr = emptyList(),
             journalnotat = emptyList(),
@@ -61,15 +61,15 @@ class ConditionRoutesTest {
         )
 
     private fun givenPatientHasTwoEncounters() {
-        coEvery { konsultasjonService.getKonsultasjoner(pasientId, DEFAULT_ORG_NUMBER) } returns
+        coEvery { konsultasjonService.getKonsultasjoner(patientId, DEFAULT_ORG_NUMBER) } returns
             listOf(
-                konsultasjon(encounterA, pasientId, "A01"),
-                konsultasjon(encounterB, pasientId, "B02"),
+                konsultasjon(encounterA, patientId, "A01"),
+                konsultasjon(encounterB, patientId, "B02"),
             )
     }
 
     private fun testApp(
-        boundPatient: String? = pasientId.value.toString(),
+        boundPatient: String? = patientId.value.toString(),
         scopeContext: ScopeContext = ScopeContext.PATIENT,
         block: suspend io.ktor.client.HttpClient.() -> Unit,
     ) = testApplication {
@@ -116,7 +116,7 @@ class ConditionRoutesTest {
         testApp {
             val response =
                 get(
-                    "/fhir/Condition?subject=Patient/${pasientId.value}&encounter=Encounter/${encounterA.value}"
+                    "/fhir/Condition?subject=Patient/${patientId.value}&encounter=Encounter/${encounterA.value}"
                 )
 
             assertEquals(HttpStatusCode.OK, response.status)
@@ -138,7 +138,7 @@ class ConditionRoutesTest {
         testApp {
             val response =
                 get(
-                    "/fhir/Condition?subject=Patient/${pasientId.value}&encounter=Encounter/${foreignEncounter.value}"
+                    "/fhir/Condition?subject=Patient/${patientId.value}&encounter=Encounter/${foreignEncounter.value}"
                 )
 
             assertEquals(HttpStatusCode.OK, response.status)
@@ -154,7 +154,7 @@ class ConditionRoutesTest {
         testApp {
             val response =
                 get(
-                    "/fhir/Condition?subject=Patient/${pasientId.value}&encounter=Encounter/${unknownEncounter.value}"
+                    "/fhir/Condition?subject=Patient/${patientId.value}&encounter=Encounter/${unknownEncounter.value}"
                 )
 
             assertEquals(HttpStatusCode.OK, response.status)
@@ -169,7 +169,7 @@ class ConditionRoutesTest {
         testApp(boundPatient = Uuid.generateV4().toString()) {
             val response =
                 get(
-                    "/fhir/Condition?subject=Patient/${pasientId.value}&encounter=Encounter/${encounterA.value}"
+                    "/fhir/Condition?subject=Patient/${patientId.value}&encounter=Encounter/${encounterA.value}"
                 )
 
             assertEquals(HttpStatusCode.NotFound, response.status)
@@ -181,7 +181,7 @@ class ConditionRoutesTest {
         givenPatientHasTwoEncounters()
 
         testApp {
-            val response = get("/fhir/Condition?subject=Patient/${pasientId.value}")
+            val response = get("/fhir/Condition?subject=Patient/${patientId.value}")
 
             assertEquals(HttpStatusCode.OK, response.status)
             val codes =
@@ -197,7 +197,7 @@ class ConditionRoutesTest {
         givenPatientHasTwoEncounters()
 
         testApp(boundPatient = null, scopeContext = ScopeContext.SYSTEM) {
-            val response = get("/fhir/Condition?subject=Patient/${pasientId.value}")
+            val response = get("/fhir/Condition?subject=Patient/${patientId.value}")
 
             assertEquals(HttpStatusCode.OK, response.status)
             val codes =
@@ -211,7 +211,7 @@ class ConditionRoutesTest {
     @Test
     fun `GET Condition with encounter only returns that encounter's conditions`() {
         coEvery { konsultasjonService.getKonsultasjon(encounterA, DEFAULT_ORG_NUMBER) } returns
-            konsultasjon(encounterA, pasientId, "A01")
+            konsultasjon(encounterA, patientId, "A01")
 
         testApp {
             val response = get("/fhir/Condition?encounter=Encounter/${encounterA.value}")
@@ -224,7 +224,7 @@ class ConditionRoutesTest {
     @Test
     fun `GET Condition with encounter only rejects an encounter of another patient`() {
         coEvery { konsultasjonService.getKonsultasjon(encounterA, DEFAULT_ORG_NUMBER) } returns
-            konsultasjon(encounterA, PasientId(Uuid.generateV4()), "A01")
+            konsultasjon(encounterA, PatientId(Uuid.generateV4()), "A01")
 
         testApp {
             val response = get("/fhir/Condition?encounter=Encounter/${encounterA.value}")

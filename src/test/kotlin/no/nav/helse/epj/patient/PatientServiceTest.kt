@@ -1,4 +1,4 @@
-package no.nav.helse.epj.pasient
+package no.nav.helse.epj.patient
 
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -12,21 +12,21 @@ import no.nav.helse.core.utils.UgyldigPersonidentException
 import no.nav.helse.epj.practitioner.PractitionerHpr
 import org.junit.Test
 
-class PasientServiceTest {
-    private val repository = mockk<PasientRepository>()
-    private val service = PasientService(repository)
+class PatientServiceTest {
+    private val repository = mockk<PatientRepository>()
+    private val service = PatientService(repository)
 
     // Valid synthetic FNR for 1985-06-15 (modulus-11 checksum: 15068500017).
     private val validFnr = "15068500017"
     private val validBirthDate = LocalDate.of(1985, 6, 15)
 
     @Test
-    fun `createPasient persists complete demographics`() = runTest {
-        val inserted = slot<Pasient>()
+    fun `createPatient persists complete demographics`() = runTest {
+        val inserted = slot<Patient>()
         val request =
-            OpprettPasientRequest(
-                fornavn = "Kari",
-                etternavn = "Nordmann",
+            CreatePatientRequest(
+                givenName = "Kari",
+                familyName = "Nordmann",
                 personident = validFnr,
                 personidentType = PersonidentType.FNR,
                 birthDate = validBirthDate,
@@ -37,7 +37,7 @@ class PasientServiceTest {
         } returns Unit
         coEvery { repository.findByPersonident(request.personident) } answers { inserted.captured }
 
-        val created = service.createPasient(request, "123", "311111116")
+        val created = service.createPatient(request, "123", "311111116")
 
         assertEquals(request.personident, created.personident)
         assertEquals(request.personidentType, created.personidentType)
@@ -48,11 +48,11 @@ class PasientServiceTest {
     }
 
     @Test
-    fun `createPasient rejects invalid personident without inserting`() = runTest {
+    fun `createPatient rejects invalid personident without inserting`() = runTest {
         val request =
-            OpprettPasientRequest(
-                fornavn = "Kari",
-                etternavn = "Nordmann",
+            CreatePatientRequest(
+                givenName = "Kari",
+                familyName = "Nordmann",
                 personident = "00000000000",
                 personidentType = PersonidentType.FNR,
                 birthDate = validBirthDate,
@@ -60,7 +60,7 @@ class PasientServiceTest {
             )
 
         assertFailsWith<UgyldigPersonidentException> {
-            service.createPasient(request, "123", "311111116")
+            service.createPatient(request, "123", "311111116")
         }
 
         coVerify(exactly = 0) { repository.insertOnList(any(), any(), any()) }
@@ -68,11 +68,11 @@ class PasientServiceTest {
     }
 
     @Test
-    fun `createPasient rejects birth date mismatch without inserting`() = runTest {
+    fun `createPatient rejects birth date mismatch without inserting`() = runTest {
         val request =
-            OpprettPasientRequest(
-                fornavn = "Kari",
-                etternavn = "Nordmann",
+            CreatePatientRequest(
+                givenName = "Kari",
+                familyName = "Nordmann",
                 personident = validFnr,
                 personidentType = PersonidentType.FNR,
                 birthDate = validBirthDate.plusDays(1),
@@ -80,7 +80,7 @@ class PasientServiceTest {
             )
 
         assertFailsWith<UgyldigPersonidentException> {
-            service.createPasient(request, "123", "311111116")
+            service.createPatient(request, "123", "311111116")
         }
 
         coVerify(exactly = 0) { repository.insertOnList(any(), any(), any()) }

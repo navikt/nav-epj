@@ -81,8 +81,8 @@ describe("StatusBar", () => {
       patientId: "p1",
       patient: {
         id: "p1",
-        fornavn: "Matematisk",
-        etternavn: "Ape",
+        givenName: "Matematisk",
+        familyName: "Ape",
         personident: "01019012345",
         personidentType: "FNR" as const,
         birthDate: "1990-01-01",
@@ -91,7 +91,7 @@ describe("StatusBar", () => {
       konsultasjoner: [
         {
           id: "k1",
-          pasientId: "p1",
+          patientId: "p1",
           hpr: [],
           journalnotat: [],
           diagnoser: [],

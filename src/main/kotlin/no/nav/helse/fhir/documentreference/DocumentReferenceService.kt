@@ -22,7 +22,7 @@ import no.nav.helse.epj.konsultasjon.JournalnotatId
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
 import no.nav.helse.epj.konsultasjon.OpprettJournalnotatRequest
-import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
@@ -69,12 +69,12 @@ class DocumentReferenceService(val konsultasjonService: KonsultasjonService) {
     ): Bundle {
         val journalnotater =
             konsultasjonService.getJournalnotater(
-                PasientId(patientId.value),
+                PatientId(patientId.value),
                 encounterId?.let { KonsultasjonId(it.value) },
                 orgNumber,
             )
         val hprByKonsultasjon =
-            konsultasjonService.getKonsultasjoner(PasientId(patientId.value), orgNumber).associate {
+            konsultasjonService.getKonsultasjoner(PatientId(patientId.value), orgNumber).associate {
                 it.id to it.hpr.map { hpr -> PractitionerHpr(hpr) }
             }
 
@@ -105,7 +105,7 @@ class DocumentReferenceService(val konsultasjonService: KonsultasjonService) {
                 ?.reference
                 ?.value
                 ?.substringAfter("Encounter/")
-        val pasientId = documentReference.subject?.reference?.value?.substringAfter("Patient/")
+        val patientId = documentReference.subject?.reference?.value?.substringAfter("Patient/")
 
         val createJournalnotat =
             Journalnotat(
@@ -123,10 +123,10 @@ class DocumentReferenceService(val konsultasjonService: KonsultasjonService) {
                             }
                         )
                     ),
-                pasientId =
-                    PasientId(
+                patientId =
+                    PatientId(
                         Uuid.parse(
-                            requireNotNull(pasientId) {
+                            requireNotNull(patientId) {
                                 "DocumentReference mangler subject.reference"
                             }
                         )
@@ -179,7 +179,7 @@ class DocumentReferenceService(val konsultasjonService: KonsultasjonService) {
                             )
                     )
                 ),
-            subject = Reference(reference = String(value = "Patient/${this.pasientId.value}")),
+            subject = Reference(reference = String(value = "Patient/${this.patientId.value}")),
             author = hpr.map { Reference(reference = String(value = "Practitioner/${it.value}")) },
             context =
                 DocumentReference.Context(
@@ -281,7 +281,7 @@ fun DocumentReference.toOpprettJournalnotatRequest(): OpprettJournalnotatRequest
         )
     }
 
-    val pasientId = parseReferenceId(this.subject?.reference?.value, "Patient", "subject")
+    val patientId = parseReferenceId(this.subject?.reference?.value, "Patient", "subject")
 
     val context =
         this.context
@@ -323,7 +323,7 @@ fun DocumentReference.toOpprettJournalnotatRequest(): OpprettJournalnotatRequest
             )
 
     return OpprettJournalnotatRequest(
-        pasientId = PasientId(pasientId),
+        patientId = PatientId(patientId),
         konsultasjonId = KonsultasjonId(konsultasjonId),
         journalnotat = journalnotat,
     )

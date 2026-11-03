@@ -14,7 +14,7 @@ const DOC_WRITE_SCOPE = "launch patient/DocumentReference.rs patient/DocumentRef
 const DOC_READ_SCOPE = "launch patient/DocumentReference.rs";
 const FHIR_JSON = "application/fhir+json";
 
-type Patient = { id: string; fornavn: string; etternavn: string };
+type Patient = { id: string; givenName: string; familyName: string };
 type Konsultasjon = { id: string };
 type Notat = { id: string; journalnotat: string };
 type KonsultasjonMedNotater = Konsultasjon & { journalnotat: Notat[] };
@@ -105,8 +105,8 @@ test.describe("FHIR write-back against the real backend", () => {
       const { fnr, birthDate } = syntheticFnr();
       const response = await api.post("/api/patient", {
         data: {
-          fornavn: "E2E",
-          etternavn: `${label}${randomBytes(3).toString("hex")}`,
+          givenName: "E2E",
+          familyName: `${label}${randomBytes(3).toString("hex")}`,
           personident: fnr,
           personidentType: "FNR",
           birthDate,

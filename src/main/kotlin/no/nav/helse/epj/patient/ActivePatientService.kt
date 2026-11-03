@@ -1,4 +1,4 @@
-package no.nav.helse.epj.pasient
+package no.nav.helse.epj.patient
 
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -10,7 +10,7 @@ import no.nav.helse.smart.valkey.ValkeyService
 
 @OptIn(ExperimentalUuidApi::class)
 class ActivePatientService(
-    private val pasientService: PasientService,
+    private val patientService: PatientService,
     private val valkeyService: ValkeyService,
     private val sessionOrgResolver: SessionOrgResolver,
 ) {
@@ -21,7 +21,7 @@ class ActivePatientService(
 
     suspend fun claimActivePatient(hpr: String, patientId: Uuid): ActivePatient? {
         val orgNumber = resolveOrgNumber(hpr) ?: throw SessionOrgRequiredException()
-        if (!pasientService.isListedAt(PasientId(patientId), orgNumber)) return null
+        if (!patientService.isListedAt(PatientId(patientId), orgNumber)) return null
         valkeyService.setActivePatient(hpr, orgNumber, patientId.toString())
         return checkNotNull(valkeyService.getActivePatientWithExpiry(hpr, orgNumber)) {
             "Active patient missing right after it was set"

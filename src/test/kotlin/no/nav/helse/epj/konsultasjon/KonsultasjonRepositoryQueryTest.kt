@@ -11,8 +11,8 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.clinic.ClinicRepository
-import no.nav.helse.epj.pasient.Pasient
-import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.patient.Patient
+import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.utils.DEFAULT_ORG_NUMBER
 import org.junit.Test
@@ -21,45 +21,45 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `finds no konsultasjon`() = runTest {
-        val pasientId = PasientId(Uuid.generateV4())
-        val konsultasjon = konsultasjonRepository.listByPasientId(pasientId, DEFAULT_ORG_NUMBER)
+        val patientId = PatientId(Uuid.generateV4())
+        val konsultasjon = konsultasjonRepository.listByPatientId(patientId, DEFAULT_ORG_NUMBER)
         assertEquals(0, konsultasjon.size)
     }
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `finds one konsultasjon`() = runTest {
-        val pasientId = PasientId(Uuid.generateV4())
+        val patientId = PatientId(Uuid.generateV4())
         val hpr = PractitionerHpr("123")
-        pasientRepository.insert(
-            Pasient(
-                id = pasientId,
-                fornavn = "fornavn",
-                etternavn = "etternavn",
+        patientRepository.insert(
+            Patient(
+                id = patientId,
+                givenName = "givenName",
+                familyName = "familyName",
                 personident = "personident",
             )
         )
         konsultasjonRepository.insert(
             OpprettKonsultasjon(
-                pasientId = pasientId,
+                patientId = patientId,
                 hpr = listOf(hpr),
                 startetTidspunkt = LocalDateTime.now(),
                 status = KonsultasjonStatus.PAAGAAENDE,
                 orgNumber = DEFAULT_ORG_NUMBER,
             )
         )
-        val konsultasjon = konsultasjonRepository.listByPasientId(pasientId, DEFAULT_ORG_NUMBER)
+        val konsultasjon = konsultasjonRepository.listByPatientId(patientId, DEFAULT_ORG_NUMBER)
         assertEquals(1, konsultasjon.size)
     }
 
     @Test
-    fun `listByPasientId returns only konsultasjoner for the correct patient`() = runTest {
+    fun `listByPatientId returns only konsultasjoner for the correct patient`() = runTest {
         val hpr = PractitionerHpr("123")
-        val pasientA = opprettPasient(hpr = hpr)
-        val pasientB = opprettPasient(hpr = hpr)
+        val patientA = createPatient(hpr = hpr)
+        val patientB = createPatient(hpr = hpr)
         konsultasjonRepository.insert(
             OpprettKonsultasjon(
-                pasientA,
+                patientA,
                 listOf(hpr),
                 LocalDateTime.now(),
                 KonsultasjonStatus.PAAGAAENDE,
@@ -68,7 +68,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
         )
         konsultasjonRepository.insert(
             OpprettKonsultasjon(
-                pasientB,
+                patientB,
                 listOf(hpr),
                 LocalDateTime.now(),
                 KonsultasjonStatus.PAAGAAENDE,
@@ -76,21 +76,21 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
             )
         )
 
-        val konsultasjonerA = konsultasjonRepository.listByPasientId(pasientA, DEFAULT_ORG_NUMBER)
+        val konsultasjonerA = konsultasjonRepository.listByPatientId(patientA, DEFAULT_ORG_NUMBER)
         assertEquals(1, konsultasjonerA.size)
-        assertEquals(pasientA, konsultasjonerA.single().pasientId)
+        assertEquals(patientA, konsultasjonerA.single().patientId)
     }
 
     @Test
-    fun `listByPasientId sorts konsultasjoner descending by startetTidspunkt`() = runTest {
+    fun `listByPatientId sorts konsultasjoner descending by startetTidspunkt`() = runTest {
         val hpr = PractitionerHpr("123")
-        val pasientId = opprettPasient(hpr = hpr)
+        val patientId = createPatient(hpr = hpr)
         val eldst = LocalDateTime.now().minusHours(2)
         val nyest = LocalDateTime.now()
         val eldstId =
             konsultasjonRepository.insert(
                 OpprettKonsultasjon(
-                    pasientId,
+                    patientId,
                     listOf(hpr),
                     eldst,
                     KonsultasjonStatus.FULLFOERT,
@@ -100,7 +100,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
         val nyesteId =
             konsultasjonRepository.insert(
                 OpprettKonsultasjon(
-                    pasientId,
+                    patientId,
                     listOf(hpr),
                     nyest,
                     KonsultasjonStatus.PAAGAAENDE,
@@ -108,7 +108,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                 )
             )
 
-        val konsultasjoner = konsultasjonRepository.listByPasientId(pasientId, DEFAULT_ORG_NUMBER)
+        val konsultasjoner = konsultasjonRepository.listByPatientId(patientId, DEFAULT_ORG_NUMBER)
         assertEquals(2, konsultasjoner.size)
         assertEquals(nyesteId, konsultasjoner[0].id)
         assertEquals(eldstId, konsultasjoner[1].id)
@@ -118,10 +118,10 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
     fun `insert stores multiple hpr for a konsultasjon`() = runTest {
         val hprA = PractitionerHpr("123")
         val hprB = PractitionerHpr("456")
-        val pasientId = opprettPasient(hpr = hprA)
+        val patientId = createPatient(hpr = hprA)
         konsultasjonRepository.insert(
             OpprettKonsultasjon(
-                pasientId,
+                patientId,
                 listOf(hprA, hprB),
                 LocalDateTime.now(),
                 KonsultasjonStatus.PAAGAAENDE,
@@ -130,17 +130,17 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
         )
 
         val konsultasjon =
-            konsultasjonRepository.listByPasientId(pasientId, DEFAULT_ORG_NUMBER).single()
+            konsultasjonRepository.listByPatientId(patientId, DEFAULT_ORG_NUMBER).single()
         assertEquals(setOf("123", "456"), konsultasjon.hpr.toSet())
     }
 
     @Test
     fun `insert with an empty hpr list gives a konsultasjon without healthcare personnel`() =
         runTest {
-            val pasientId = opprettPasient()
+            val patientId = createPatient()
             konsultasjonRepository.insert(
                 OpprettKonsultasjon(
-                    pasientId,
+                    patientId,
                     emptyList(),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PLANLAGT,
@@ -149,24 +149,24 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
             )
 
             val konsultasjon =
-                konsultasjonRepository.listByPasientId(pasientId, DEFAULT_ORG_NUMBER).single()
+                konsultasjonRepository.listByPatientId(patientId, DEFAULT_ORG_NUMBER).single()
             assertTrue(konsultasjon.hpr.isEmpty())
         }
 
     @Test
-    fun `findActiveByPasientId returns null when no konsultasjoner exist`() = runTest {
-        val pasientId = opprettPasient()
-        assertNull(konsultasjonRepository.findActiveByPasientId(pasientId, DEFAULT_ORG_NUMBER))
+    fun `findActiveByPatientId returns null when no konsultasjoner exist`() = runTest {
+        val patientId = createPatient()
+        assertNull(konsultasjonRepository.findActiveByPatientId(patientId, DEFAULT_ORG_NUMBER))
     }
 
     @Test
-    fun `findActiveByPasientId ignores completed konsultasjoner`() = runTest {
+    fun `findActiveByPatientId ignores completed konsultasjoner`() = runTest {
         val hpr = PractitionerHpr("123")
-        val pasientId = opprettPasient(hpr = hpr)
+        val patientId = createPatient(hpr = hpr)
         val oppdaterKonsultasjonRequest =
             konsultasjonRepository.insert(
                 OpprettKonsultasjon(
-                    pasientId,
+                    patientId,
                     listOf(hpr),
                     java.time.LocalDateTime.now(),
                     KonsultasjonStatus.FULLFOERT,
@@ -180,20 +180,20 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                 null,
                 ferdigstill = true,
             ),
-            pasientId,
+            patientId,
             DEFAULT_ORG_NUMBER,
         )
 
-        assertNull(konsultasjonRepository.findActiveByPasientId(pasientId, DEFAULT_ORG_NUMBER))
+        assertNull(konsultasjonRepository.findActiveByPatientId(patientId, DEFAULT_ORG_NUMBER))
     }
 
     @Test
-    fun `findActiveByPasientId returns the newest active konsultasjon`() = runTest {
+    fun `findActiveByPatientId returns the newest active konsultasjon`() = runTest {
         val hpr = PractitionerHpr("123")
-        val pasientId = opprettPasient(hpr = hpr)
+        val patientId = createPatient(hpr = hpr)
         konsultasjonRepository.insert(
             OpprettKonsultasjon(
-                pasientId,
+                patientId,
                 listOf(hpr),
                 LocalDateTime.now().minusHours(2),
                 KonsultasjonStatus.PAAGAAENDE,
@@ -203,7 +203,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
         val nyesteId =
             konsultasjonRepository.insert(
                 OpprettKonsultasjon(
-                    pasientId,
+                    patientId,
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
@@ -211,20 +211,20 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                 )
             )
 
-        val aktiv = konsultasjonRepository.findActiveByPasientId(pasientId, DEFAULT_ORG_NUMBER)
+        val aktiv = konsultasjonRepository.findActiveByPatientId(patientId, DEFAULT_ORG_NUMBER)
         assertNotNull(aktiv)
         assertEquals(nyesteId, aktiv.id)
     }
 
     @Test
-    fun `findActiveByPasientIdAndHpr returns null when the doctor has no active konsultasjon`() =
+    fun `findActiveByPatientIdAndHpr returns null when the doctor has no active konsultasjon`() =
         runTest {
             val hpr = PractitionerHpr("123")
             val annenHpr = PractitionerHpr("456")
-            val pasientId = opprettPasient(hpr = hpr)
+            val patientId = createPatient(hpr = hpr)
             konsultasjonRepository.insert(
                 OpprettKonsultasjon(
-                    pasientId,
+                    patientId,
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
@@ -233,8 +233,8 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
             )
 
             assertNull(
-                konsultasjonRepository.findActiveByPasientIdAndHpr(
-                    pasientId,
+                konsultasjonRepository.findActiveByPatientIdAndHpr(
+                    patientId,
                     annenHpr,
                     DEFAULT_ORG_NUMBER,
                 )
@@ -242,15 +242,15 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
         }
 
     @Test
-    fun `findActiveByPasientIdAndHpr lets two different doctors have simultaneous active konsultasjoner for the same patient`() =
+    fun `findActiveByPatientIdAndHpr lets two different doctors have simultaneous active konsultasjoner for the same patient`() =
         runTest {
             val legeA = PractitionerHpr("123")
             val legeB = PractitionerHpr("456")
-            val pasientId = opprettPasient(hpr = legeA)
+            val patientId = createPatient(hpr = legeA)
             val konsultasjonA =
                 konsultasjonRepository.insert(
                     OpprettKonsultasjon(
-                        pasientId,
+                        patientId,
                         listOf(legeA),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
@@ -260,7 +260,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
             val konsultasjonB =
                 konsultasjonRepository.insert(
                     OpprettKonsultasjon(
-                        pasientId,
+                        patientId,
                         listOf(legeB),
                         LocalDateTime.now(),
                         KonsultasjonStatus.PAAGAAENDE,
@@ -269,14 +269,14 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                 )
 
             val aktivForA =
-                konsultasjonRepository.findActiveByPasientIdAndHpr(
-                    pasientId,
+                konsultasjonRepository.findActiveByPatientIdAndHpr(
+                    patientId,
                     legeA,
                     DEFAULT_ORG_NUMBER,
                 )
             val aktivForB =
-                konsultasjonRepository.findActiveByPasientIdAndHpr(
-                    pasientId,
+                konsultasjonRepository.findActiveByPatientIdAndHpr(
+                    patientId,
                     legeB,
                     DEFAULT_ORG_NUMBER,
                 )
@@ -301,11 +301,11 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
     @Test
     fun `findByKonsultasjonId returns the konsultasjon for a known id`() = runTest {
         val hpr = PractitionerHpr("123")
-        val pasientId = opprettPasient(hpr = hpr)
+        val patientId = createPatient(hpr = hpr)
         val konsultasjonId =
             konsultasjonRepository.insert(
                 OpprettKonsultasjon(
-                    pasientId,
+                    patientId,
                     listOf(hpr),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
@@ -321,11 +321,11 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
 
     @Test
     fun `insert places the konsultasjon at the clinic with the given org number`() = runTest {
-        val pasientId = opprettPasient()
+        val patientId = createPatient()
         val konsultasjonId =
             konsultasjonRepository.insert(
                 OpprettKonsultasjon(
-                    pasientId,
+                    patientId,
                     emptyList(),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
@@ -345,7 +345,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `the database rejects a konsultasjon without an organization`() = runTest {
-        val pasientId = opprettPasient()
+        val patientId = createPatient()
         val konsultasjonId = Uuid.generateV4()
 
         assertFailsWith<java.sql.SQLException> {
@@ -359,7 +359,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                         statement.execute(
                             """
                             INSERT INTO consultation (id, patient_id, clinic_id, started_at, status)
-                            VALUES ('$konsultasjonId', '${pasientId.value}', NULL, now(), 'PÅGÅENDE')
+                            VALUES ('$konsultasjonId', '${patientId.value}', NULL, now(), 'PÅGÅENDE')
                             """
                                 .trimIndent()
                         )
@@ -372,11 +372,11 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
     fun `findActive ignores avlyst and planlagt konsultasjoner without avsluttet tidspunkt`() =
         runTest {
             val hpr = PractitionerHpr("123")
-            val pasientId = opprettPasient(hpr = hpr)
+            val patientId = createPatient(hpr = hpr)
             listOf(KonsultasjonStatus.AVLYST, KonsultasjonStatus.PLANLAGT).forEach {
                 konsultasjonRepository.insert(
                     OpprettKonsultasjon(
-                        pasientId,
+                        patientId,
                         listOf(hpr),
                         LocalDateTime.now().minusDays(1),
                         it,
@@ -385,10 +385,10 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
                 )
             }
 
-            assertNull(konsultasjonRepository.findActiveByPasientId(pasientId, DEFAULT_ORG_NUMBER))
+            assertNull(konsultasjonRepository.findActiveByPatientId(patientId, DEFAULT_ORG_NUMBER))
             assertNull(
-                konsultasjonRepository.findActiveByPasientIdAndHpr(
-                    pasientId,
+                konsultasjonRepository.findActiveByPatientIdAndHpr(
+                    patientId,
                     hpr,
                     DEFAULT_ORG_NUMBER,
                 )
@@ -397,7 +397,7 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
             val pagaaendeId =
                 konsultasjonRepository.insert(
                     OpprettKonsultasjon(
-                        pasientId,
+                        patientId,
                         listOf(hpr),
                         LocalDateTime.now().minusDays(2),
                         KonsultasjonStatus.PAAGAAENDE,
@@ -408,12 +408,12 @@ class KonsultasjonRepositoryQueryTest : KonsultasjonRepositoryTestBase() {
             assertEquals(
                 pagaaendeId,
                 konsultasjonRepository
-                    .findActiveByPasientIdAndHpr(pasientId, hpr, DEFAULT_ORG_NUMBER)
+                    .findActiveByPatientIdAndHpr(patientId, hpr, DEFAULT_ORG_NUMBER)
                     ?.id,
             )
             assertEquals(
                 pagaaendeId,
-                konsultasjonRepository.findActiveByPasientId(pasientId, DEFAULT_ORG_NUMBER)?.id,
+                konsultasjonRepository.findActiveByPatientId(patientId, DEFAULT_ORG_NUMBER)?.id,
             )
         }
 }

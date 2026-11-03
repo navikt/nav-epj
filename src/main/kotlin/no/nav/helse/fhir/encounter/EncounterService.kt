@@ -18,7 +18,7 @@ import no.nav.helse.core.utils.oid
 import no.nav.helse.epj.konsultasjon.Konsultasjon
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.konsultasjon.KonsultasjonService
-import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.fhir.condition.conditionFhirId
 import no.nav.helse.fhir.patient.PatientInputId
@@ -37,13 +37,13 @@ class EncounterService(val konsultasjonService: KonsultasjonService) {
         orgNumber: String?,
     ): Encounter? {
         val konsultasjon =
-            konsultasjonService.getAktivKonsultasjon(PasientId(patientId.value), hpr, orgNumber)
+            konsultasjonService.getAktivKonsultasjon(PatientId(patientId.value), hpr, orgNumber)
         return konsultasjon?.toEncounter()
     }
 
     suspend fun getEncountersByPatient(patientId: PatientInputId, orgNumber: String?): Bundle {
         val konsultasjoner =
-            konsultasjonService.getKonsultasjoner(PasientId(patientId.value), orgNumber)
+            konsultasjonService.getKonsultasjoner(PatientId(patientId.value), orgNumber)
         if (konsultasjoner.isEmpty()) {
             return Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
         }
@@ -73,7 +73,7 @@ class EncounterService(val konsultasjonService: KonsultasjonService) {
             subject =
                 Reference(
                     reference =
-                        com.google.fhir.model.r4.String(value = "Patient/${this.pasientId.value}")
+                        com.google.fhir.model.r4.String(value = "Patient/${this.patientId.value}")
                 ),
             participant =
                 this.hpr.map {

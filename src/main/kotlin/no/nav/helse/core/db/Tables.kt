@@ -2,16 +2,16 @@ package no.nav.helse.core.db
 
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.maaling.MaalingStatus
-import no.nav.helse.epj.pasient.AdministrativeGender
-import no.nav.helse.epj.pasient.PersonidentType
+import no.nav.helse.epj.patient.AdministrativeGender
+import no.nav.helse.epj.patient.PersonidentType
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.javatime.date
 import org.jetbrains.exposed.v1.javatime.datetime
 
-object PasientTable : Table("patient") {
+object PatientTable : Table("patient") {
     val id = uuid("id")
-    val fornavn = text("given_name")
-    val etternavn = text("family_name")
+    val givenName = text("given_name")
+    val familyName = text("family_name")
     val personident = text("personident")
     val personidentType =
         enumerationByName<PersonidentType>("personident_type", length = 3).nullable()
@@ -41,7 +41,7 @@ object PractitionerTable : Table("practitioner") {
 
 object KonsultasjonTable : Table("consultation") {
     val id = uuid("id")
-    val pasientId = reference("patient_id", refColumn = PasientTable.id)
+    val patientId = reference("patient_id", refColumn = PatientTable.id)
     val clinicId = reference("clinic_id", refColumn = ClinicTable.id)
     val startetTidspunkt = datetime("started_at")
     val avsluttetTidspunkt = datetime("ended_at")
@@ -59,7 +59,7 @@ object KonsultasjonTable : Table("consultation") {
 object JournalnotatTable : Table("clinical_note") {
     val id = uuid("id")
     val konsultasjonId = reference("consultation_id", refColumn = KonsultasjonTable.id)
-    val pasientId = reference("patient_id", refColumn = PasientTable.id)
+    val patientId = reference("patient_id", refColumn = PatientTable.id)
     val journalnotat = text("clinical_note").nullable()
 
     init {
@@ -82,7 +82,7 @@ object KonsultasjonPractitioner : Table("consultation_practitioner") {
 
 object MaalingTable : Table("measurement") {
     val id = uuid("id")
-    val pasientId = reference("patient_id", refColumn = PasientTable.id)
+    val patientId = reference("patient_id", refColumn = PatientTable.id)
     val konsultasjonId = reference("consultation_id", refColumn = KonsultasjonTable.id)
     val hpr = text("hpr").nullable()
     val loincKode = text("loinc_code")
@@ -104,7 +104,7 @@ object FastlegelisteTable : Table("fastlegeliste") {
     val updated = datetime("updated_at")
 }
 
-object FastlegelistePasientTable : Table("fastlegeliste_patient") {
+object FastlegelistePatientTable : Table("fastlegeliste_patient") {
     val fastlegelisteId = reference("fastlegeliste_id", refColumn = FastlegelisteTable.id)
-    val pasientId = reference("patient_id", refColumn = PasientTable.id)
+    val patientId = reference("patient_id", refColumn = PatientTable.id)
 }

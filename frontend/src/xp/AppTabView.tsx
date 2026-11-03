@@ -71,7 +71,7 @@ export function AppTabView({ clientId }: Props) {
 
   return (
     <>
-      <PatientContext pasient={run.patient} compact stale={stale} />
+      <PatientContext patient={run.patient} compact stale={stale} />
       <AppToolbar
         clientId={clientId}
         app={run.navn}

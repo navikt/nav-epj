@@ -6,10 +6,10 @@ import { isDirty, ongoingOf, useJournalStore } from "./journalStore";
 import { usePatientsStore } from "./patientsStore";
 import { useWorkspaceStore } from "./workspaceStore";
 
-const pasient = {
+const patient = {
   id: "p1",
-  fornavn: "Matematisk",
-  etternavn: "Ape",
+  givenName: "Matematisk",
+  familyName: "Ape",
   personident: "01019012345",
   personidentType: "FNR",
   birthDate: "1990-01-01",
@@ -21,7 +21,7 @@ const diag = { code: "A02", system: "ICPC2", text: "Frysninger" };
 function kons(overrides: Record<string, unknown> = {}) {
   return {
     id: "k1",
-    pasientId: "p1",
+    patientId: "p1",
     hpr: ["9144889"],
     journalnotat: [],
     diagnoser: [],
@@ -72,13 +72,13 @@ afterEach(() => {
 describe("journalStore", () => {
   it("loads the patient and konsultasjoner and derives the draft from the ongoing one", async () => {
     stub({
-      "GET /api/patient/p1": () => ({ body: pasient }),
+      "GET /api/patient/p1": () => ({ body: patient }),
       "GET /api/patients/p1/konsultasjoner": () => ({
         body: [
           kons({
             diagnoser: [diag],
             journalnotat: [
-              { id: "n1", konsultasjonId: "k1", pasientId: "p1", journalnotat: "Hei" },
+              { id: "n1", konsultasjonId: "k1", patientId: "p1", journalnotat: "Hei" },
             ],
           }),
           kons({ id: "k0", status: "FULLFØRT", startetTidspunkt: "2026-09-01T09:00:00" }),
@@ -87,7 +87,7 @@ describe("journalStore", () => {
     });
     await journal().open("p1");
     expect(journal().status).toBe("ready");
-    expect(journal().patient?.fornavn).toBe("Matematisk");
+    expect(journal().patient?.givenName).toBe("Matematisk");
     expect(journal().draft).toEqual({ diagnoser: [diag], notat: "Hei" });
     expect(journal().draftKonsultasjonId).toBe("k1");
     expect(isDirty(journal())).toBe(false);
@@ -109,7 +109,7 @@ describe("journalStore", () => {
     expect(journal()).toMatchObject({ status: "error", loadError: "patient" });
 
     stub({
-      "GET /api/patient/p1": () => ({ body: pasient }),
+      "GET /api/patient/p1": () => ({ body: patient }),
       "GET /api/patients/p1/konsultasjoner": () => ({ ok: false }),
     });
     await journal().open("p1");
@@ -118,7 +118,7 @@ describe("journalStore", () => {
 
   it("does not reload when the same patient is opened again, but updates the selection", async () => {
     const calls = stub({
-      "GET /api/patient/p1": () => ({ body: pasient }),
+      "GET /api/patient/p1": () => ({ body: patient }),
       "GET /api/patients/p1/konsultasjoner": () => ({ body: [kons()] }),
     });
     await journal().open("p1");
@@ -133,7 +133,7 @@ describe("journalStore", () => {
 
   it("makes the opened patient the active patient", async () => {
     const calls = stub({
-      "GET /api/patient/p1": () => ({ body: pasient }),
+      "GET /api/patient/p1": () => ({ body: patient }),
       "GET /api/patients/p1/konsultasjoner": () => ({ body: [] }),
     });
     await journal().open("p1");
@@ -146,7 +146,7 @@ describe("journalStore", () => {
 
   it("does not open a journal when the active patient could not be set", async () => {
     stub({
-      "GET /api/patient/p1": () => ({ body: pasient }),
+      "GET /api/patient/p1": () => ({ body: patient }),
       "GET /api/patients/p1/konsultasjoner": () => ({ body: [] }),
       "PUT /api/active-patient": () => ({ ok: false }),
     });
@@ -157,15 +157,15 @@ describe("journalStore", () => {
 
   it("reloads and drops the draft when another patient is opened", async () => {
     stub({
-      "GET /api/patient/p1": () => ({ body: pasient }),
+      "GET /api/patient/p1": () => ({ body: patient }),
       "GET /api/patients/p1/konsultasjoner": () => ({ body: [kons()] }),
-      "GET /api/patient/p2": () => ({ body: { ...pasient, id: "p2", fornavn: "Ola" } }),
+      "GET /api/patient/p2": () => ({ body: { ...patient, id: "p2", givenName: "Ola" } }),
       "GET /api/patients/p2/konsultasjoner": () => ({ body: [] }),
     });
     await journal().open("p1");
     journal().setNotat("skisse");
     await journal().open("p2");
-    expect(journal().patient?.fornavn).toBe("Ola");
+    expect(journal().patient?.givenName).toBe("Ola");
     expect(journal().draft.notat).toBe("");
     expect(journal().draftKonsultasjonId).toBeNull();
   });
@@ -179,10 +179,10 @@ describe("journalStore", () => {
           await new Promise<void>((resolve) => {
             releaseP1 = resolve;
           });
-          return { ok: true, status: 200, json: async () => pasient };
+          return { ok: true, status: 200, json: async () => patient };
         }
         if (url === "/api/patient/p2") {
-          return { ok: true, status: 200, json: async () => ({ ...pasient, id: "p2", fornavn: "Ola" }) };
+          return { ok: true, status: 200, json: async () => ({ ...patient, id: "p2", givenName: "Ola" }) };
         }
         if (url === "/api/active-patient") {
           return { ok: true, status: 200, json: async () => activePatient };
@@ -195,7 +195,7 @@ describe("journalStore", () => {
     releaseP1();
     await first;
     expect(journal().patientId).toBe("p2");
-    expect(journal().patient?.fornavn).toBe("Ola");
+    expect(journal().patient?.givenName).toBe("Ola");
   });
 
   it("ignores an older load of the same patient that resolves after a newer one", async () => {
@@ -210,12 +210,12 @@ describe("journalStore", () => {
             await new Promise<void>((resolve) => {
               releaseFirst = resolve;
             });
-            return { ok: true, status: 200, json: async () => ({ ...pasient, fornavn: "First" }) };
+            return { ok: true, status: 200, json: async () => ({ ...patient, givenName: "First" }) };
           }
-          return { ok: true, status: 200, json: async () => ({ ...pasient, fornavn: "Second" }) };
+          return { ok: true, status: 200, json: async () => ({ ...patient, givenName: "Second" }) };
         }
         if (url === "/api/patient/p2") {
-          return { ok: true, status: 200, json: async () => ({ ...pasient, id: "p2" }) };
+          return { ok: true, status: 200, json: async () => ({ ...patient, id: "p2" }) };
         }
         if (url === "/api/active-patient") {
           return { ok: true, status: 200, json: async () => activePatient };
@@ -229,7 +229,7 @@ describe("journalStore", () => {
     journal().setNotat("skrevet etterpå");
     releaseFirst();
     await first;
-    expect(journal().patient?.fornavn).toBe("Second");
+    expect(journal().patient?.givenName).toBe("Second");
     expect(journal().draft.notat).toBe("skrevet etterpå");
   });
 
@@ -244,7 +244,7 @@ describe("journalStore", () => {
           });
           return { ok: true, status: 200, json: async () => kons({ id: "k9" }) };
         }
-        return { ok: true, status: 200, json: async () => (url.endsWith("/konsultasjoner") ? [] : pasient) };
+        return { ok: true, status: 200, json: async () => (url.endsWith("/konsultasjoner") ? [] : patient) };
       }),
     );
     await journal().open("p1");
@@ -263,14 +263,14 @@ describe("journalStore", () => {
     beforeEach(async () => {
       serverKons = kons({ diagnoser: [diag] });
       calls = stub({
-        "GET /api/patient/p1": () => ({ body: pasient }),
+        "GET /api/patient/p1": () => ({ body: patient }),
         "GET /api/patients/p1/konsultasjoner": () => ({ body: [serverKons] }),
         "PATCH /api/patients/p1/konsultasjoner": () => ({ body: {} }),
       });
       await journal().open("p1");
     });
 
-    const note = { id: "n1", konsultasjonId: "k1", pasientId: "p1", journalnotat: "Ekstern" };
+    const note = { id: "n1", konsultasjonId: "k1", patientId: "p1", journalnotat: "Ekstern" };
     const konsCalls = () =>
       calls.filter((c) => c.key === "GET /api/patients/p1/konsultasjoner").length;
 
@@ -376,7 +376,7 @@ describe("journalStore", () => {
       serverKons = kons({
         diagnoser: [diag],
         journalnotat: [
-          { id: "n1", konsultasjonId: "k1", pasientId: "p1", journalnotat: "Pasienten er frisk" },
+          { id: "n1", konsultasjonId: "k1", patientId: "p1", journalnotat: "Pasienten er frisk" },
         ],
       });
       expect(await journal().save()).toBe(true);
@@ -455,7 +455,7 @@ describe("journalStore", () => {
 
   it("starts a konsultasjon with POST and uses it as the draft target", async () => {
     const calls = stub({
-      "GET /api/patient/p1": () => ({ body: pasient }),
+      "GET /api/patient/p1": () => ({ body: patient }),
       "GET /api/patients/p1/konsultasjoner": () => ({ body: [] }),
       "POST /api/patients/p1/konsultasjoner": () => ({ body: kons({ id: "k9" }) }),
     });
@@ -469,7 +469,7 @@ describe("journalStore", () => {
 
   it("makes the patient active locally once a konsultasjon has started", async () => {
     stub({
-      "GET /api/patient/p1": () => ({ body: pasient }),
+      "GET /api/patient/p1": () => ({ body: patient }),
       "GET /api/patients/p1/konsultasjoner": () => ({ body: [] }),
       "POST /api/patients/p1/konsultasjoner": () => ({ body: kons({ id: "k9" }) }),
     });
@@ -481,7 +481,7 @@ describe("journalStore", () => {
 
   it("leaves the active patient alone when starting fails", async () => {
     stub({
-      "GET /api/patient/p1": () => ({ body: pasient }),
+      "GET /api/patient/p1": () => ({ body: patient }),
       "GET /api/patients/p1/konsultasjoner": () => ({ body: [] }),
       "POST /api/patients/p1/konsultasjoner": () => ({ ok: false }),
     });
@@ -493,7 +493,7 @@ describe("journalStore", () => {
 
   it("flags a failed start", async () => {
     stub({
-      "GET /api/patient/p1": () => ({ body: pasient }),
+      "GET /api/patient/p1": () => ({ body: patient }),
       "GET /api/patients/p1/konsultasjoner": () => ({ body: [] }),
       "POST /api/patients/p1/konsultasjoner": () => ({ ok: false }),
     });

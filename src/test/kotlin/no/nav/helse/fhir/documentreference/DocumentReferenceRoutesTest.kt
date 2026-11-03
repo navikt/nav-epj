@@ -26,12 +26,12 @@ import io.mockk.mockk
 import kotlin.test.assertEquals
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import no.nav.helse.core.utils.ConsultationBelongsToOtherPatientException
 import no.nav.helse.core.utils.DuplikatJournalnotatException
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
-import no.nav.helse.core.utils.KonsultasjonTilhorerAnnenPasientException
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
 import no.nav.helse.epj.konsultasjon.OpprettJournalnotatRequest
-import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
 import no.nav.helse.plugins.configureStatusPages
@@ -445,9 +445,9 @@ class DocumentReferenceRoutesTest {
         coEvery {
             documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>(), ORG)
         } throws
-            KonsultasjonTilhorerAnnenPasientException(
+            ConsultationBelongsToOtherPatientException(
                 KonsultasjonId(encounterId),
-                PasientId(patientId),
+                PatientId(patientId),
             )
 
         testApp(scopes = createScope(), boundPatient = patientId.toString()) {
@@ -657,9 +657,9 @@ class DocumentReferenceRoutesTest {
         coEvery {
             documentReferenceService.createDocumentReference(any<DocumentReference>(), ORG)
         } throws
-            KonsultasjonTilhorerAnnenPasientException(
+            ConsultationBelongsToOtherPatientException(
                 KonsultasjonId(Uuid.generateV4()),
-                PasientId(Uuid.parse(patientId)),
+                PatientId(Uuid.parse(patientId)),
             )
 
         testApp(scopes = crsScope(), boundPatient = patientId) {

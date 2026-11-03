@@ -12,16 +12,16 @@ import { useCurrentUser } from "./currentUser";
 import { derivePersonident } from "./patientInfo";
 import { usePatientsStore } from "./patientsStore";
 
-type Errors = Partial<Record<"fornavn" | "etternavn" | "fnr", string>>;
+type Errors = Partial<Record<"givenName" | "familyName" | "fnr", string>>;
 
 type Props = {
   onClose: () => void;
 };
 
-function validate(fornavn: string, etternavn: string, fnr: string): Errors {
+function validate(givenName: string, familyName: string, fnr: string): Errors {
   const errors: Errors = {};
-  if (!fornavn.trim()) errors.fornavn = copy["s3b.err.fornavn"];
-  if (!etternavn.trim()) errors.etternavn = copy["s3b.err.etternavn"];
+  if (!givenName.trim()) errors.givenName = copy["s3b.err.givenName"];
+  if (!familyName.trim()) errors.familyName = copy["s3b.err.familyName"];
   if (!/^\d{11}$/.test(fnr) || !derivePersonident(fnr)) {
     errors.fnr = copy["s3b.err.fnr"];
   }
@@ -30,24 +30,24 @@ function validate(fornavn: string, etternavn: string, fnr: string): Errors {
 
 export function NewPatientDialog({ onClose }: Props) {
   const user = useCurrentUser();
-  const [fornavn, setFornavn] = useState("");
-  const [etternavn, setEtternavn] = useState("");
+  const [givenName, setGivenName] = useState("");
+  const [familyName, setFamilyName] = useState("");
   const [fnr, setFnr] = useState("");
   const [errors, setErrors] = useState<Errors>({});
   const [saving, setSaving] = useState(false);
   const [serverError, setServerError] = useState(false);
-  const fornavnRef = useRef<HTMLInputElement>(null);
-  const etternavnRef = useRef<HTMLInputElement>(null);
+  const givenNameRef = useRef<HTMLInputElement>(null);
+  const familyNameRef = useRef<HTMLInputElement>(null);
   const fnrRef = useRef<HTMLInputElement>(null);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (saving) return;
-    const found = validate(fornavn, etternavn, fnr.trim());
+    const found = validate(givenName, familyName, fnr.trim());
     setErrors(found);
     setServerError(false);
-    if (found.fornavn) return fornavnRef.current?.focus();
-    if (found.etternavn) return etternavnRef.current?.focus();
+    if (found.givenName) return givenNameRef.current?.focus();
+    if (found.familyName) return familyNameRef.current?.focus();
     if (found.fnr) return fnrRef.current?.focus();
 
     const derived = derivePersonident(fnr.trim());
@@ -55,8 +55,8 @@ export function NewPatientDialog({ onClose }: Props) {
     setSaving(true);
     try {
       await createPatient({
-        fornavn: fornavn.trim(),
-        etternavn: etternavn.trim(),
+        givenName: givenName.trim(),
+        familyName: familyName.trim(),
         personident: fnr.trim(),
         ...derived,
       });
@@ -82,23 +82,23 @@ export function NewPatientDialog({ onClose }: Props) {
             <Badge tone="info">{copy["badge.localOnly"]}</Badge>
           </div>
           <TextField
-            label={copy["s3b.fornavn"]}
-            value={fornavn}
-            error={errors.fornavn}
+            label={copy["s3b.givenName"]}
+            value={givenName}
+            error={errors.givenName}
             disabled={saving}
             autoComplete="off"
             data-autofocus=""
-            inputRef={fornavnRef}
-            onChange={(event) => setFornavn(event.target.value)}
+            inputRef={givenNameRef}
+            onChange={(event) => setGivenName(event.target.value)}
           />
           <TextField
-            label={copy["s3b.etternavn"]}
-            value={etternavn}
-            error={errors.etternavn}
+            label={copy["s3b.familyName"]}
+            value={familyName}
+            error={errors.familyName}
             disabled={saving}
             autoComplete="off"
-            inputRef={etternavnRef}
-            onChange={(event) => setEtternavn(event.target.value)}
+            inputRef={familyNameRef}
+            onChange={(event) => setFamilyName(event.target.value)}
           />
           <TextField
             label={copy["s3b.fnr"]}

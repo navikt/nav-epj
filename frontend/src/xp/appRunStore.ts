@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Konsultasjon, Pasient } from "../utils/mapping/epj";
+import type { Konsultasjon, Patient } from "../utils/mapping/epj";
 
 export type RunStatus = "starting" | "running" | "timeout" | "error" | "session";
 
@@ -14,7 +14,7 @@ let eventSeq = 0;
 export type AppRun = {
   clientId: string;
   navn: string;
-  patient: Pasient;
+  patient: Patient;
   konsultasjon: Pick<Konsultasjon, "id" | "startetTidspunkt">;
   launchUrl: string | null;
   status: RunStatus;
@@ -27,7 +27,7 @@ export type TabApp = {
   id: string;
   clientId: string;
   navn: string;
-  patient: Pasient;
+  patient: Patient;
   startedAt: Date;
 };
 

@@ -29,33 +29,33 @@ export const PractitionerSchema = z.object({
 
 export type Practitioner = z.infer<typeof PractitionerSchema>;
 
-export const PasientSchema = z.object({
+export const PatientSchema = z.object({
     id: z.string(),
-    fornavn: z.string(),
-    etternavn: z.string(),
+    givenName: z.string(),
+    familyName: z.string(),
     personident: z.string(),
     personidentType: z.enum(["FNR", "DNR"]).nullable(),
     birthDate: z.string().nullable(),
     gender: z.enum(["FEMALE", "MALE", "OTHER", "UNKNOWN"]).nullable(),
 });
 
-export type Pasient = z.infer<typeof PasientSchema>;
+export type Patient = z.infer<typeof PatientSchema>;
 
-export const SisteKonsultasjonSchema = z.object({
+export const LatestConsultationSchema = z.object({
     status: z.string(),
-    tidspunkt: z.string(),
+    timestamp: z.string(),
 });
 
-export const PasientListeElementSchema = PasientSchema.extend({
+export const PatientListItemSchema = PatientSchema.extend({
     selectable: z.boolean(),
-    sisteKonsultasjon: SisteKonsultasjonSchema.nullish(),
+    latestConsultation: LatestConsultationSchema.nullish(),
 });
 
-export type PasientListeElement = z.infer<typeof PasientListeElementSchema>;
+export type PatientListItem = z.infer<typeof PatientListItemSchema>;
 
-export const OpprettPasientSchema = z.object({
-    fornavn: z.string().min(1, "Fornavn er påkrevd"),
-    etternavn: z.string().min(1, "Etternavn er påkrevd"),
+export const CreatePatientSchema = z.object({
+    givenName: z.string().min(1, "Fornavn er påkrevd"),
+    familyName: z.string().min(1, "Etternavn er påkrevd"),
     personident: z
         .string()
         .regex(/^\d{11}$/, "Fødselsnummer eller D-nummer må bestå av 11 siffer"),
@@ -66,12 +66,12 @@ export const OpprettPasientSchema = z.object({
     gender: z.enum(["FEMALE", "MALE", "OTHER", "UNKNOWN"], "Velg kjønn"),
 });
 
-export type OpprettPasientRequest = z.infer<typeof OpprettPasientSchema>;
+export type CreatePatientRequest = z.infer<typeof CreatePatientSchema>;
 
 export const JournalnotatEntrySchema = z.object({
     id: z.string(),
     konsultasjonId: z.string(),
-    pasientId: z.string(),
+    patientId: z.string(),
     journalnotat: z.string().nullable(),
 });
 
@@ -85,7 +85,7 @@ export const DiagnoseSchema = z.object({
 
 export const KonsultasjonSchema = z.object({
     id: z.string(),
-    pasientId: z.string(),
+    patientId: z.string(),
     hpr: z.array(z.string()),
     journalnotat: z.array(JournalnotatEntrySchema),
     diagnoser: z.array(DiagnoseSchema),
@@ -112,7 +112,7 @@ export const MaalingStatusSchema = z.enum([
 
 export const MaalingSchema = z.object({
     id: z.string(),
-    pasientId: z.string(),
+    patientId: z.string(),
     konsultasjonId: z.string(),
     loincKode: z.string(),
     loincVisningsnavn: z.string(),

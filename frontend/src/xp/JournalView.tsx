@@ -86,7 +86,7 @@ export function JournalView() {
 
   return (
     <>
-      <PatientContext pasient={patient} />
+      <PatientContext patient={patient} />
       {refreshFailed && (
         <div className="xp-note error" role="alert">
           <span>{copy["s4.refreshError"]}</span>

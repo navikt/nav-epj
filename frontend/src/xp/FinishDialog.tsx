@@ -1,10 +1,10 @@
 import { MessageBox } from "./MessageBox";
 import { copy } from "./copy";
 import { fullName } from "./patientInfo";
-import type { Pasient } from "../utils/mapping/epj";
+import type { Patient } from "../utils/mapping/epj";
 
 type Props = {
-  patient: Pasient;
+  patient: Patient;
   unsaved: boolean;
   onConfirm: () => void;
   onCancel: () => void;

@@ -5,12 +5,12 @@ import no.nav.helse.core.db.MaalingTable
 import no.nav.helse.core.db.dbQuery
 import no.nav.helse.core.db.konsultasjonAtOrg
 import no.nav.helse.core.db.konsultasjonIdsAtOrg
+import no.nav.helse.core.utils.ConsultationBelongsToOtherPatientException
 import no.nav.helse.core.utils.DuplikatMaalingException
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
-import no.nav.helse.core.utils.KonsultasjonTilhorerAnnenPasientException
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.konsultasjon.KonsultasjonId
-import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.epj.practitioner.PractitionerHpr
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -25,20 +25,20 @@ class MaalingRepository {
     private val logger = logger()
 
     suspend fun insert(maaling: Maaling, orgNumber: String): Unit = dbQuery {
-        val konsultasjonPasientId =
-            KonsultasjonTable.select(KonsultasjonTable.pasientId)
+        val konsultasjonPatientId =
+            KonsultasjonTable.select(KonsultasjonTable.patientId)
                 .where {
                     (KonsultasjonTable.id eq maaling.konsultasjonId.value) and
                         konsultasjonAtOrg(orgNumber)
                 }
                 .singleOrNull()
-                ?.get(KonsultasjonTable.pasientId)
+                ?.get(KonsultasjonTable.patientId)
                 ?: throw KonsultasjonNotFoundException(maaling.konsultasjonId)
 
-        if (konsultasjonPasientId != maaling.pasientId.value) {
-            throw KonsultasjonTilhorerAnnenPasientException(
+        if (konsultasjonPatientId != maaling.patientId.value) {
+            throw ConsultationBelongsToOtherPatientException(
                 maaling.konsultasjonId,
-                maaling.pasientId,
+                maaling.patientId,
             )
         }
 
@@ -47,7 +47,7 @@ class MaalingRepository {
         val insertedCount =
             MaalingTable.insertIgnore {
                     it[id] = maaling.id.value
-                    it[pasientId] = maaling.pasientId.value
+                    it[patientId] = maaling.patientId.value
                     it[konsultasjonId] = maaling.konsultasjonId.value
                     it[hpr] = maaling.hpr?.value
                     it[loincKode] = maaling.loincKode
@@ -75,10 +75,10 @@ class MaalingRepository {
             ?.toMaaling()
     }
 
-    suspend fun listByPasientId(pasientId: PasientId, orgNumber: String?): List<Maaling> = dbQuery {
+    suspend fun listByPatientId(patientId: PatientId, orgNumber: String?): List<Maaling> = dbQuery {
         MaalingTable.selectAll()
             .where {
-                (MaalingTable.pasientId eq pasientId.value) and
+                (MaalingTable.patientId eq patientId.value) and
                     (MaalingTable.konsultasjonId inSubQuery konsultasjonIdsAtOrg(orgNumber))
             }
             .orderBy(MaalingTable.effektivTidspunkt, SortOrder.ASC)
@@ -101,7 +101,7 @@ class MaalingRepository {
     private fun ResultRow.toMaaling(): Maaling =
         Maaling(
             id = MaalingId(this[MaalingTable.id]),
-            pasientId = PasientId(this[MaalingTable.pasientId]),
+            patientId = PatientId(this[MaalingTable.patientId]),
             konsultasjonId = KonsultasjonId(this[MaalingTable.konsultasjonId]),
             hpr = this[MaalingTable.hpr]?.let { PractitionerHpr(it) },
             loincKode = this[MaalingTable.loincKode],

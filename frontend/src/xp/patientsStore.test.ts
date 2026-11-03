@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { scopePatients, usePatientsStore } from "./patientsStore";
-import type { PasientListeElement } from "../utils/mapping/epj";
+import type { PatientListItem } from "../utils/mapping/epj";
 
-const pasient = (id: string): PasientListeElement => ({
+const patient = (id: string): PatientListItem => ({
   id,
-  fornavn: `Fornavn${id}`,
-  etternavn: "Ape",
+  givenName: `Fornavn${id}`,
+  familyName: "Ape",
   personident: "01019012345",
   personidentType: "FNR",
   birthDate: null,
@@ -26,15 +26,15 @@ describe("patientsStore", () => {
   afterEach(() => vi.unstubAllGlobals());
 
   it("loads patients and reports ready", async () => {
-    stubFetch([pasient("1")]);
+    stubFetch([patient("1")]);
     await store().load();
     expect(store().status).toBe("ready");
     expect(store().patients).toHaveLength(1);
   });
 
   it("seeds the last konsultasjon per patient from the list response", async () => {
-    const last = { status: "PÅGÅENDE", tidspunkt: "2026-01-02T03:04:05" };
-    stubFetch([{ ...pasient("1"), sisteKonsultasjon: last }, pasient("2")]);
+    const last = { status: "PÅGÅENDE", timestamp: "2026-01-02T03:04:05" };
+    stubFetch([{ ...patient("1"), latestConsultation: last }, patient("2")]);
     await store().load();
     expect(store().lastKonsultasjon).toEqual({ "1": last });
   });
@@ -100,14 +100,14 @@ describe("patientsStore", () => {
   });
 
   it("tracks and clears the last konsultasjon per patient", () => {
-    store().setLastKonsultasjon("1", { status: "FULLFØRT", tidspunkt: "2026-01-01T10:00:00" });
+    store().setLastKonsultasjon("1", { status: "FULLFØRT", timestamp: "2026-01-01T10:00:00" });
     expect(store().lastKonsultasjon["1"].status).toBe("FULLFØRT");
     store().setLastKonsultasjon("1", null);
     expect(store().lastKonsultasjon["1"]).toBeUndefined();
   });
 
   it("scopes to recent patients that still exist, in recent order", () => {
-    const patients = [pasient("1"), pasient("2"), pasient("3")];
+    const patients = [patient("1"), patient("2"), patient("3")];
     expect(scopePatients(patients, ["3", "gone", "1"], "recent").map((p) => p.id)).toEqual([
       "3",
       "1",

@@ -1,4 +1,4 @@
-package no.nav.helse.epj.pasient
+package no.nav.helse.epj.patient
 
 import io.ktor.http.*
 import io.ktor.server.request.*

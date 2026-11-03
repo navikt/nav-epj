@@ -12,9 +12,9 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.SerializationException
+import no.nav.helse.core.utils.ConsultationBelongsToOtherPatientException
 import no.nav.helse.core.utils.DuplikatJournalnotatException
 import no.nav.helse.core.utils.KonsultasjonNotFoundException
-import no.nav.helse.core.utils.KonsultasjonTilhorerAnnenPasientException
 import no.nav.helse.core.utils.logger
 import no.nav.helse.fhir.documentReferenceId
 import no.nav.helse.fhir.encounterReferenceId
@@ -124,7 +124,7 @@ fun Route.documentReferenceRoutes(
             principal.requirePatientMatch(
                 "DocumentReference",
                 Interaction.CREATE,
-                request.pasientId.value.toString(),
+                request.patientId.value.toString(),
             )
 
             val created =
@@ -141,7 +141,7 @@ fun Route.documentReferenceRoutes(
                         OperationOutcome.IssueType.Not_Found,
                         exception.message ?: "Fant ikke encounter",
                     )
-                } catch (exception: KonsultasjonTilhorerAnnenPasientException) {
+                } catch (exception: ConsultationBelongsToOtherPatientException) {
                     return@post call.respondOperationOutcome(
                         fhirjson,
                         fhirContentType,
@@ -205,7 +205,7 @@ fun Route.documentReferenceRoutes(
                         OperationOutcome.IssueType.Not_Found,
                         exception.message ?: "Fant ikke encounter",
                     )
-                } catch (exception: KonsultasjonTilhorerAnnenPasientException) {
+                } catch (exception: ConsultationBelongsToOtherPatientException) {
                     return@put call.respondOperationOutcome(
                         fhirjson,
                         fhirContentType,

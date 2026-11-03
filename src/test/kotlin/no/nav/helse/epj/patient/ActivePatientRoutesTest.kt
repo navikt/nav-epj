@@ -1,6 +1,6 @@
 @file:OptIn(kotlin.uuid.ExperimentalUuidApi::class)
 
-package no.nav.helse.epj.pasient
+package no.nav.helse.epj.patient
 
 import io.ktor.client.HttpClient
 import io.ktor.client.request.*
@@ -38,7 +38,7 @@ private const val OTHER_ORG = "311111124"
 
 class ActivePatientRoutesTest : WithValkey() {
 
-    private val pasientService = mockk<PasientService>()
+    private val patientService = mockk<PatientService>()
     private val sessionOrgResolver = mockk<SessionOrgResolver>()
     private val mapper = jacksonObjectMapper()
 
@@ -79,7 +79,7 @@ class ActivePatientRoutesTest : WithValkey() {
             routing {
                 authenticate("wonderwall-helseid") {
                     activePatientRoutes(
-                        ActivePatientService(pasientService, valkeyService, sessionOrgResolver)
+                        ActivePatientService(patientService, valkeyService, sessionOrgResolver)
                     )
                 }
             }
@@ -87,11 +87,11 @@ class ActivePatientRoutesTest : WithValkey() {
         client.block()
     }
 
-    private fun pasient() =
-        Pasient(
-            id = PasientId(Uuid.generateV4()),
-            fornavn = "Ola",
-            etternavn = "Nordmann",
+    private fun patient() =
+        Patient(
+            id = PatientId(Uuid.generateV4()),
+            givenName = "Ola",
+            familyName = "Nordmann",
             personident = "01019012345",
         )
 
@@ -141,26 +141,26 @@ class ActivePatientRoutesTest : WithValkey() {
 
     @Test
     fun `PUT sets the active patient and returns it`() = testApp {
-        val pasient = pasient()
-        coEvery { pasientService.isListedAt(pasient.id, ORG) } returns true
+        val patient = patient()
+        coEvery { patientService.isListedAt(patient.id, ORG) } returns true
 
-        val response = put(pasient.id.value.toString())
+        val response = put(patient.id.value.toString())
 
         assertEquals(HttpStatusCode.OK, response.status)
-        assertEquals(pasient.id.value.toString(), body(response.bodyAsText())["patientId"])
-        assertEquals(pasient.id.value.toString(), valkeyService.getActivePatient(HPR, ORG))
+        assertEquals(patient.id.value.toString(), body(response.bodyAsText())["patientId"])
+        assertEquals(patient.id.value.toString(), valkeyService.getActivePatient(HPR, ORG))
         assertEquals(
-            pasient.id.value.toString(),
+            patient.id.value.toString(),
             body(get("/api/active-patient").bodyAsText())["patientId"],
         )
     }
 
     @Test
     fun `PUT replaces the previous active patient`() = testApp {
-        val first = pasient()
-        val second = pasient()
-        coEvery { pasientService.isListedAt(first.id, ORG) } returns true
-        coEvery { pasientService.isListedAt(second.id, ORG) } returns true
+        val first = patient()
+        val second = patient()
+        coEvery { patientService.isListedAt(first.id, ORG) } returns true
+        coEvery { patientService.isListedAt(second.id, ORG) } returns true
 
         put(first.id.value.toString())
         put(second.id.value.toString())
@@ -170,11 +170,11 @@ class ActivePatientRoutesTest : WithValkey() {
 
     @Test
     fun `PUT for an unknown patient returns 404 and keeps the active patient`() = testApp {
-        val known = pasient()
-        coEvery { pasientService.isListedAt(known.id, ORG) } returns true
+        val known = patient()
+        coEvery { patientService.isListedAt(known.id, ORG) } returns true
         put(known.id.value.toString())
-        val unknown = PasientId(Uuid.generateV4())
-        coEvery { pasientService.isListedAt(unknown, ORG) } returns false
+        val unknown = PatientId(Uuid.generateV4())
+        coEvery { patientService.isListedAt(unknown, ORG) } returns false
 
         val response = put(unknown.value.toString())
 
@@ -184,8 +184,8 @@ class ActivePatientRoutesTest : WithValkey() {
 
     @Test
     fun `PUT for a patient not on a list at the session org returns 404`() = testApp {
-        val other = pasient()
-        coEvery { pasientService.isListedAt(other.id, ORG) } returns false
+        val other = patient()
+        coEvery { patientService.isListedAt(other.id, ORG) } returns false
 
         val response = put(other.id.value.toString())
 
@@ -216,10 +216,10 @@ class ActivePatientRoutesTest : WithValkey() {
     @Test
     fun `PUT without a session org returns 409 and keeps nothing`() = testApp {
         coEvery { sessionOrgResolver.resolve(HPR) } returns SessionOrgResolution.NeedsChoice
-        val pasient = pasient()
-        coEvery { pasientService.isListedAt(pasient.id, ORG) } returns true
+        val patient = patient()
+        coEvery { patientService.isListedAt(patient.id, ORG) } returns true
 
-        val response = put(pasient.id.value.toString())
+        val response = put(patient.id.value.toString())
 
         assertEquals(HttpStatusCode.Conflict, response.status)
         assertNull(valkeyService.getActivePatient(HPR, ORG))
@@ -235,9 +235,9 @@ class ActivePatientRoutesTest : WithValkey() {
 
     @Test
     fun `an active patient set in one org is not returned in another org`() = testApp {
-        val pasient = pasient()
-        coEvery { pasientService.isListedAt(pasient.id, ORG) } returns true
-        put(pasient.id.value.toString())
+        val patient = patient()
+        coEvery { patientService.isListedAt(patient.id, ORG) } returns true
+        put(patient.id.value.toString())
         coEvery { sessionOrgResolver.resolve(HPR) } returns resolvedIn(OTHER_ORG)
 
         assertEquals(HttpStatusCode.NoContent, get("/api/active-patient").status)

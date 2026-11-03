@@ -22,12 +22,12 @@ import {
   type PatientsView,
 } from "./patientsStore";
 import { useNow } from "./useNow";
-import type { Pasient } from "../utils/mapping/epj";
+import type { Patient } from "../utils/mapping/epj";
 
 type Props = {
   canCreate: boolean;
   onNewPatient: () => void;
-  onOpenJournal: (pasient: Pasient) => void;
+  onOpenJournal: (patient: Patient) => void;
 };
 
 export function PatientsPage({ canCreate, onNewPatient, onOpenJournal }: Props) {
@@ -63,7 +63,7 @@ export function PatientsPage({ canCreate, onNewPatient, onOpenJournal }: Props) 
   return (
     <>
       <div className="xp-pagehead">
-        <XpIcon name="pasienter" size={32} />
+        <XpIcon name="patients" size={32} />
         <h1 className="xp-h1">{copy["s3.title"]}</h1>
         <span className="grow" />
         {canCreate && (
@@ -151,13 +151,13 @@ export function PatientsPage({ canCreate, onNewPatient, onOpenJournal }: Props) 
               </tr>
             </thead>
             <tbody>
-              {rows.map((pasient) => {
-                const birthDate = birthDateOf(pasient);
-                const last = lastKonsultasjon[pasient.id];
+              {rows.map((patient) => {
+                const birthDate = birthDateOf(patient);
+                const last = lastKonsultasjon[patient.id];
                 return (
-                  <tr key={pasient.id}>
+                  <tr key={patient.id}>
                     <td>
-                      <strong>{fullName(pasient)}</strong>
+                      <strong>{fullName(patient)}</strong>
                     </td>
                     <td>
                       {birthDate
@@ -169,10 +169,10 @@ export function PatientsPage({ canCreate, onNewPatient, onOpenJournal }: Props) 
                     </td>
                     <td>
                       <span className="mono" aria-hidden="true">
-                        {maskPersonident(pasient.personident)}
+                        {maskPersonident(patient.personident)}
                       </span>
                       <span className="sr-only">
-                        {copy["s3.col.fnr.sr"]} {personidentTail(pasient.personident)}
+                        {copy["s3.col.fnr.sr"]} {personidentTail(patient.personident)}
                       </span>
                     </td>
                     <td>
@@ -180,15 +180,15 @@ export function PatientsPage({ canCreate, onNewPatient, onOpenJournal }: Props) 
                         ? "–"
                         : last.status === "PÅGÅENDE"
                           ? copy["s3.col.last.ongoing"]
-                          : formatDate(last.tidspunkt)}
+                          : formatDate(last.timestamp)}
                     </td>
                     <td>
-                      {pasient.selectable ? (
+                      {patient.selectable ? (
                         <IconButton
                           icon="journal"
-                          label={copy["s3.open.aria"](fullName(pasient))}
+                          label={copy["s3.open.aria"](fullName(patient))}
                           title={copy["s3.open.tooltip"]}
-                          onClick={() => onOpenJournal(pasient)}
+                          onClick={() => onOpenJournal(patient)}
                         />
                       ) : (
                         <span>{copy["s3.notListed"]}</span>

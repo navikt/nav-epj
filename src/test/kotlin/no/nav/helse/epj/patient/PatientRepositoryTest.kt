@@ -1,4 +1,4 @@
-package no.nav.helse.epj.pasient
+package no.nav.helse.epj.patient
 
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -11,10 +11,10 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.db.ClinicTable
-import no.nav.helse.core.db.FastlegelistePasientTable
+import no.nav.helse.core.db.FastlegelistePatientTable
 import no.nav.helse.core.db.FastlegelisteTable
 import no.nav.helse.core.db.dbQuery
-import no.nav.helse.core.utils.DuplikatPasientException
+import no.nav.helse.core.utils.DuplicatePatientException
 import no.nav.helse.core.utils.IngenFastlegelisteException
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.epj.konsultasjon.KonsultasjonRepository
@@ -29,26 +29,26 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.Test
 
 @OptIn(ExperimentalUuidApi::class)
-class PasientRepositoryTest : WithPostgresql() {
+class PatientRepositoryTest : WithPostgresql() {
     init {
         runMigrations(true)
         connect()
     }
 
-    val pasientRepository = PasientRepository()
+    val patientRepository = PatientRepository()
 
     @OptIn(ExperimentalUuidApi::class)
-    private fun nyPasient(
-        id: PasientId = PasientId(Uuid.generateV4()),
+    private fun newPatient(
+        id: PatientId = PatientId(Uuid.generateV4()),
         personident: String = "personident-${id.value}",
         personidentType: PersonidentType = PersonidentType.FNR,
         birthDate: LocalDate = LocalDate.of(1980, 1, 2),
         gender: AdministrativeGender = AdministrativeGender.FEMALE,
     ) =
-        Pasient(
+        Patient(
             id = id,
-            fornavn = "fornavn",
-            etternavn = "etternavn",
+            givenName = "givenName",
+            familyName = "familyName",
             personident = personident,
             personidentType = personidentType,
             birthDate = birthDate,
@@ -58,68 +58,68 @@ class PasientRepositoryTest : WithPostgresql() {
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `findById returns null when patient does not exist`() = runTest {
-        assertNull(pasientRepository.findById(Uuid.generateV4()))
+        assertNull(patientRepository.findById(Uuid.generateV4()))
     }
 
     @Test
     fun `findById returns patient after insert`() = runTest {
-        val pasient = nyPasient()
-        pasientRepository.insert(pasient)
+        val patient = newPatient()
+        patientRepository.insert(patient)
 
-        val funnet = pasientRepository.findById(pasient.id.value)
+        val funnet = patientRepository.findById(patient.id.value)
 
-        assertEquals(pasient.id, funnet?.id)
-        assertEquals(pasient.personident, funnet?.personident)
-        assertEquals(pasient.personidentType, funnet?.personidentType)
-        assertEquals(pasient.birthDate, funnet?.birthDate)
-        assertEquals(pasient.gender, funnet?.gender)
-        assertEquals(pasient.fornavn, funnet?.fornavn)
-        assertEquals(pasient.etternavn, funnet?.etternavn)
+        assertEquals(patient.id, funnet?.id)
+        assertEquals(patient.personident, funnet?.personident)
+        assertEquals(patient.personidentType, funnet?.personidentType)
+        assertEquals(patient.birthDate, funnet?.birthDate)
+        assertEquals(patient.gender, funnet?.gender)
+        assertEquals(patient.givenName, funnet?.givenName)
+        assertEquals(patient.familyName, funnet?.familyName)
     }
 
     @Test
     fun `findByPersonident returns null when personident does not exist`() = runTest {
-        assertNull(pasientRepository.findByPersonident("finnes-ikke"))
+        assertNull(patientRepository.findByPersonident("finnes-ikke"))
     }
 
     @Test
     fun `findByPersonident returns patient with FNR demographics`() = runTest {
-        val pasient = nyPasient(personident = "12345678910")
-        pasientRepository.insert(pasient)
+        val patient = newPatient(personident = "12345678910")
+        patientRepository.insert(patient)
 
-        val funnet = pasientRepository.findByPersonident("12345678910")
+        val funnet = patientRepository.findByPersonident("12345678910")
 
-        assertEquals(pasient, funnet)
+        assertEquals(patient, funnet)
     }
 
     @Test
     fun `findByPersonident returns patient with DNR demographics`() = runTest {
-        val pasient =
-            nyPasient(
+        val patient =
+            newPatient(
                 personident = "45128012345",
                 personidentType = PersonidentType.DNR,
                 birthDate = LocalDate.of(1980, 12, 5),
                 gender = AdministrativeGender.MALE,
             )
-        pasientRepository.insert(pasient)
+        patientRepository.insert(patient)
 
-        val funnet = pasientRepository.findByPersonident("45128012345")
+        val funnet = patientRepository.findByPersonident("45128012345")
 
-        assertEquals(pasient, funnet)
+        assertEquals(patient, funnet)
     }
 
     @Test
     fun `legacy patient remains readable without invented demographics`() = runTest {
-        pasientRepository.insert(
-            Pasient(
-                id = PasientId(Uuid.generateV4()),
-                fornavn = "fornavn",
-                etternavn = "etternavn",
+        patientRepository.insert(
+            Patient(
+                id = PatientId(Uuid.generateV4()),
+                givenName = "givenName",
+                familyName = "familyName",
                 personident = "21914897936",
             )
         )
 
-        val legacyPatient = pasientRepository.findByPersonident("21914897936")
+        val legacyPatient = patientRepository.findByPersonident("21914897936")
 
         assertEquals("21914897936", legacyPatient?.personident)
         assertNull(legacyPatient?.personidentType)
@@ -128,36 +128,37 @@ class PasientRepositoryTest : WithPostgresql() {
     }
 
     @Test
-    fun `insert with the same id twice throws DuplikatPasientException and leaves data unchanged`() =
+    fun `insert with the same id twice throws DuplicatePatientException and leaves data unchanged`() =
         runTest {
-            val pasient = nyPasient()
-            pasientRepository.insert(pasient)
+            val patient = newPatient()
+            patientRepository.insert(patient)
 
-            assertFailsWith<DuplikatPasientException> {
-                pasientRepository.insert(pasient.copy(fornavn = "annet navn"))
+            assertFailsWith<DuplicatePatientException> {
+                patientRepository.insert(patient.copy(givenName = "annet navn"))
             }
 
-            val funnet = pasientRepository.findById(pasient.id.value)
-            assertEquals("fornavn", funnet?.fornavn)
+            val funnet = patientRepository.findById(patient.id.value)
+            assertEquals("givenName", funnet?.givenName)
         }
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `insert with the same personident but a different id throws DuplikatPasientException and leaves data unchanged`() =
+    fun `insert with the same personident but a different id throws DuplicatePatientException and leaves data unchanged`() =
         runTest {
-            val original = nyPasient(personident = "15068500017")
-            pasientRepository.insert(original)
+            val original = newPatient(personident = "15068500017")
+            patientRepository.insert(original)
 
-            val duplikat = nyPasient(id = PasientId(Uuid.generateV4()), personident = "15068500017")
+            val duplikat =
+                newPatient(id = PatientId(Uuid.generateV4()), personident = "15068500017")
 
-            assertFailsWith<DuplikatPasientException> { pasientRepository.insert(duplikat) }
+            assertFailsWith<DuplicatePatientException> { patientRepository.insert(duplikat) }
 
-            val funnetOriginal = pasientRepository.findById(original.id.value)
-            assertEquals(original.fornavn, funnetOriginal?.fornavn)
+            val funnetOriginal = patientRepository.findById(original.id.value)
+            assertEquals(original.givenName, funnetOriginal?.givenName)
 
             // the never-persisted duplicate id must not exist as a patient or association, and no
             // foreign-key error should have occurred while attempting to link it.
-            assertNull(pasientRepository.findById(duplikat.id.value))
+            assertNull(patientRepository.findById(duplikat.id.value))
         }
 
     private val fjordvik = Uuid.generateV4()
@@ -192,11 +193,11 @@ class PasientRepositoryTest : WithPostgresql() {
         }
     }
 
-    private suspend fun startKonsultasjonAt(pasient: Pasient, orgNumber: String) =
+    private suspend fun startKonsultasjonAt(patient: Patient, orgNumber: String) =
         KonsultasjonRepository()
             .insert(
                 OpprettKonsultasjon(
-                    pasient.id,
+                    patient.id,
                     listOf(PractitionerHpr("123")),
                     LocalDateTime.now(),
                     KonsultasjonStatus.PAAGAAENDE,
@@ -205,7 +206,7 @@ class PasientRepositoryTest : WithPostgresql() {
             )
 
     private suspend fun startKonsultasjon(
-        pasient: Pasient,
+        patient: Patient,
         orgNumber: String,
         startet: LocalDateTime,
         status: KonsultasjonStatus,
@@ -213,7 +214,7 @@ class PasientRepositoryTest : WithPostgresql() {
         KonsultasjonRepository()
             .insert(
                 OpprettKonsultasjon(
-                    pasient.id,
+                    patient.id,
                     listOf(PractitionerHpr("123")),
                     startet,
                     status,
@@ -221,10 +222,10 @@ class PasientRepositoryTest : WithPostgresql() {
                 )
             )
 
-    private suspend fun putOnList(pasient: Pasient, listId: Uuid) = dbQuery {
-        FastlegelistePasientTable.insert {
+    private suspend fun putOnList(patient: Patient, listId: Uuid) = dbQuery {
+        FastlegelistePatientTable.insert {
             it[fastlegelisteId] = listId
-            it[pasientId] = pasient.id.value
+            it[patientId] = patient.id.value
         }
     }
 
@@ -234,17 +235,17 @@ class PasientRepositoryTest : WithPostgresql() {
         val ownHpr = "own-${Uuid.generateV4()}"
         val otherHpr = "other-${Uuid.generateV4()}"
         val abroad = "abroad-${Uuid.generateV4()}"
-        val own = nyPasient().copy(etternavn = "Zzz", fornavn = "Own")
-        val other = nyPasient().copy(etternavn = "Aaa", fornavn = "Other")
-        val elsewhere = nyPasient().copy(etternavn = "Bbb", fornavn = "Elsewhere")
-        listOf(own, other, elsewhere).forEach { pasientRepository.insert(it) }
+        val own = newPatient().copy(familyName = "Zzz", givenName = "Own")
+        val other = newPatient().copy(familyName = "Aaa", givenName = "Other")
+        val elsewhere = newPatient().copy(familyName = "Bbb", givenName = "Elsewhere")
+        listOf(own, other, elsewhere).forEach { patientRepository.insert(it) }
         putOnList(own, listFor(ownHpr, "311111116"))
         putOnList(other, listFor(otherHpr, "311111116"))
         putOnList(elsewhere, listFor(abroad, "311111124"))
 
-        val liste = pasientRepository.listAtClinic("311111116", PractitionerHpr(ownHpr))
+        val liste = patientRepository.listAtClinic("311111116", PractitionerHpr(ownHpr))
 
-        val ids = liste.map { it.pasient.id }
+        val ids = liste.map { it.patient.id }
         assertEquals(listOf(own.id, other.id), ids.filter { it in setOf(own.id, other.id) })
         assertFalse(elsewhere.id in ids)
     }
@@ -254,36 +255,36 @@ class PasientRepositoryTest : WithPostgresql() {
         runTest {
             ensureOrgs()
             val ownHpr = "own-${Uuid.generateV4()}"
-            val listed = nyPasient().copy(etternavn = "Zzz")
-            val lapsed = nyPasient().copy(etternavn = "Aaa")
-            val movedAway = nyPasient()
-            listOf(listed, lapsed, movedAway).forEach { pasientRepository.insert(it) }
+            val listed = newPatient().copy(familyName = "Zzz")
+            val lapsed = newPatient().copy(familyName = "Aaa")
+            val movedAway = newPatient()
+            listOf(listed, lapsed, movedAway).forEach { patientRepository.insert(it) }
             putOnList(listed, listFor(ownHpr, "311111116"))
             putOnList(movedAway, listFor("abroad-${Uuid.generateV4()}", "311111124"))
             listOf(lapsed, movedAway).forEach { startKonsultasjonAt(it, "311111116") }
 
             val liste =
-                pasientRepository.listAtClinic("311111116", PractitionerHpr(ownHpr)).filter {
-                    it.pasient.id in setOf(listed.id, lapsed.id, movedAway.id)
+                patientRepository.listAtClinic("311111116", PractitionerHpr(ownHpr)).filter {
+                    it.patient.id in setOf(listed.id, lapsed.id, movedAway.id)
                 }
 
-            assertEquals(listOf(listed.id, lapsed.id, movedAway.id), liste.map { it.pasient.id })
+            assertEquals(listOf(listed.id, lapsed.id, movedAway.id), liste.map { it.patient.id })
             assertEquals(listOf(true, false, false), liste.map { it.selectable })
-            assertTrue(pasientRepository.hasKonsultasjonAt(lapsed.id.value, "311111116"))
-            assertFalse(pasientRepository.hasKonsultasjonAt(lapsed.id.value, "311111124"))
+            assertTrue(patientRepository.hasKonsultasjonAt(lapsed.id.value, "311111116"))
+            assertFalse(patientRepository.hasKonsultasjonAt(lapsed.id.value, "311111124"))
         }
 
     @Test
     fun `listAtClinic includes the latest konsultasjon at the org only`() = runTest {
         ensureOrgs()
         val ownHpr = "own-${Uuid.generateV4()}"
-        val ongoing = nyPasient()
-        val completedLast = nyPasient()
-        val none = nyPasient()
-        val otherOrgOnly = nyPasient()
+        val ongoing = newPatient()
+        val completedLast = newPatient()
+        val none = newPatient()
+        val otherOrgOnly = newPatient()
         val listId = listFor(ownHpr, "311111116")
         listOf(ongoing, completedLast, none, otherOrgOnly).forEach {
-            pasientRepository.insert(it)
+            patientRepository.insert(it)
             putOnList(it, listId)
         }
         val now = LocalDateTime.now()
@@ -304,31 +305,31 @@ class PasientRepositoryTest : WithPostgresql() {
         startKonsultasjon(otherOrgOnly, "311111124", now, KonsultasjonStatus.PAAGAAENDE)
 
         val liste =
-            pasientRepository.listAtClinic("311111116", PractitionerHpr(ownHpr)).associateBy {
-                it.pasient.id
+            patientRepository.listAtClinic("311111116", PractitionerHpr(ownHpr)).associateBy {
+                it.patient.id
             }
 
         assertEquals(
             KonsultasjonStatus.PAAGAAENDE,
-            liste.getValue(ongoing.id).sisteKonsultasjon?.status,
+            liste.getValue(ongoing.id).latestConsultation?.status,
         )
         assertEquals(
             KonsultasjonStatus.FULLFOERT,
-            liste.getValue(completedLast.id).sisteKonsultasjon?.status,
+            liste.getValue(completedLast.id).latestConsultation?.status,
         )
-        assertNull(liste.getValue(none.id).sisteKonsultasjon)
-        assertNull(liste.getValue(otherOrgOnly.id).sisteKonsultasjon)
+        assertNull(liste.getValue(none.id).latestConsultation)
+        assertNull(liste.getValue(otherOrgOnly.id).latestConsultation)
     }
 
     @Test
     fun `isListedAt is true only at the org whose list holds the patient`() = runTest {
         ensureOrgs()
-        val pasient = nyPasient()
-        pasientRepository.insert(pasient)
-        putOnList(pasient, listFor("h-${Uuid.generateV4()}", "311111116"))
+        val patient = newPatient()
+        patientRepository.insert(patient)
+        putOnList(patient, listFor("h-${Uuid.generateV4()}", "311111116"))
 
-        assertTrue(pasientRepository.isListedAt(pasient.id.value, "311111116"))
-        assertFalse(pasientRepository.isListedAt(pasient.id.value, "311111124"))
+        assertTrue(patientRepository.isListedAt(patient.id.value, "311111116"))
+        assertFalse(patientRepository.isListedAt(patient.id.value, "311111124"))
     }
 
     @Test
@@ -336,51 +337,51 @@ class PasientRepositoryTest : WithPostgresql() {
         ensureOrgs()
         val hpr = "h-${Uuid.generateV4()}"
         listFor(hpr, "311111116")
-        val pasient = nyPasient()
+        val patient = newPatient()
 
-        pasientRepository.insertOnList(pasient, PractitionerHpr(hpr), "311111116")
+        patientRepository.insertOnList(patient, PractitionerHpr(hpr), "311111116")
 
-        assertTrue(pasientRepository.isListedAt(pasient.id.value, "311111116"))
+        assertTrue(patientRepository.isListedAt(patient.id.value, "311111116"))
     }
 
     @Test
     fun `insertOnList without an own list at the org inserts nothing`() = runTest {
         ensureOrgs()
-        val pasient = nyPasient()
+        val patient = newPatient()
 
         assertFailsWith<IngenFastlegelisteException> {
-            pasientRepository.insertOnList(pasient, PractitionerHpr("no-list"), "311111116")
+            patientRepository.insertOnList(patient, PractitionerHpr("no-list"), "311111116")
         }
 
-        assertNull(pasientRepository.findById(pasient.id.value))
+        assertNull(patientRepository.findById(patient.id.value))
     }
 
     @Test
     fun `a patient on another doctor's list at the same org is selectable by any doctor there`() =
         runTest {
             ensureOrgs()
-            val pasient = nyPasient()
-            pasientRepository.insert(pasient)
-            putOnList(pasient, listFor("colleague-${Uuid.generateV4()}", "311111116"))
+            val patient = newPatient()
+            patientRepository.insert(patient)
+            putOnList(patient, listFor("colleague-${Uuid.generateV4()}", "311111116"))
 
-            val liste = pasientRepository.listAtClinic("311111116", PractitionerHpr("me"))
+            val liste = patientRepository.listAtClinic("311111116", PractitionerHpr("me"))
 
-            assertEquals(true, liste.single { it.pasient.id == pasient.id }.selectable)
-            assertTrue(pasientRepository.isListedAt(pasient.id.value, "311111116"))
+            assertEquals(true, liste.single { it.patient.id == patient.id }.selectable)
+            assertTrue(patientRepository.isListedAt(patient.id.value, "311111116"))
         }
 
     @Test
     fun `moving a patient to a list at another org keeps the clinical data at the first org`() =
         runTest {
             ensureOrgs()
-            val pasient = nyPasient()
-            pasientRepository.insert(pasient)
+            val patient = newPatient()
+            patientRepository.insert(patient)
             val oldList = listFor("a-${Uuid.generateV4()}", "311111116")
-            putOnList(pasient, oldList)
-            val konsultasjonId = startKonsultasjonAt(pasient, "311111116")
+            putOnList(patient, oldList)
+            val konsultasjonId = startKonsultasjonAt(patient, "311111116")
 
-            dbQuery { FastlegelistePasientTable.deleteWhere { pasientId eq pasient.id.value } }
-            putOnList(pasient, listFor("b-${Uuid.generateV4()}", "311111124"))
+            dbQuery { FastlegelistePatientTable.deleteWhere { patientId eq patient.id.value } }
+            putOnList(patient, listFor("b-${Uuid.generateV4()}", "311111124"))
 
             val konsultasjoner = KonsultasjonRepository()
             assertEquals(
@@ -388,16 +389,16 @@ class PasientRepositoryTest : WithPostgresql() {
                 konsultasjoner.findByKonsultasjonId(konsultasjonId, "311111116")?.id,
             )
             assertNull(konsultasjoner.findByKonsultasjonId(konsultasjonId, "311111124"))
-            assertTrue(konsultasjoner.listByPasientId(pasient.id, "311111124").isEmpty())
+            assertTrue(konsultasjoner.listByPatientId(patient.id, "311111124").isEmpty())
 
             val atFirst =
-                pasientRepository.listAtClinic("311111116", PractitionerHpr("a")).single {
-                    it.pasient.id == pasient.id
+                patientRepository.listAtClinic("311111116", PractitionerHpr("a")).single {
+                    it.patient.id == patient.id
                 }
             assertFalse(atFirst.selectable)
             val atSecond =
-                pasientRepository.listAtClinic("311111124", PractitionerHpr("b")).single {
-                    it.pasient.id == pasient.id
+                patientRepository.listAtClinic("311111124", PractitionerHpr("b")).single {
+                    it.patient.id == patient.id
                 }
             assertTrue(atSecond.selectable)
         }

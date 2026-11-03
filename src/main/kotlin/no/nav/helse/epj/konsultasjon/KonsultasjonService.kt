@@ -7,27 +7,27 @@ import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
 import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.logger
-import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.tsm.diagnoser.Diagnose
 
 class KonsultasjonService(private val konsultasjonRepository: KonsultasjonRepository) {
     val log = logger()
 
-    suspend fun getKonsultasjoner(pasientId: PasientId, orgNumber: String?): List<Konsultasjon> {
-        return konsultasjonRepository.listByPasientId(pasientId, orgNumber)
+    suspend fun getKonsultasjoner(patientId: PatientId, orgNumber: String?): List<Konsultasjon> {
+        return konsultasjonRepository.listByPatientId(patientId, orgNumber)
     }
 
-    suspend fun getAktivKonsultasjon(pasientId: PasientId, orgNumber: String?): Konsultasjon? {
-        return konsultasjonRepository.findActiveByPasientId(pasientId, orgNumber)
+    suspend fun getAktivKonsultasjon(patientId: PatientId, orgNumber: String?): Konsultasjon? {
+        return konsultasjonRepository.findActiveByPatientId(patientId, orgNumber)
     }
 
     suspend fun getAktivKonsultasjon(
-        pasientId: PasientId,
+        patientId: PatientId,
         hpr: PractitionerHpr,
         orgNumber: String?,
     ): Konsultasjon? {
-        return konsultasjonRepository.findActiveByPasientIdAndHpr(pasientId, hpr, orgNumber)
+        return konsultasjonRepository.findActiveByPatientIdAndHpr(patientId, hpr, orgNumber)
     }
 
     suspend fun getKonsultasjon(konsultasjonId: KonsultasjonId, orgNumber: String?): Konsultasjon {
@@ -35,8 +35,8 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
             ?: throw KonsultasjonNotFoundException(konsultasjonId)
     }
 
-    suspend fun getDiagnoser(pasientId: PasientId, orgNumber: String?): List<Diagnose> {
-        return konsultasjonRepository.listDiagnoser(pasientId, orgNumber)
+    suspend fun getDiagnoser(patientId: PatientId, orgNumber: String?): List<Diagnose> {
+        return konsultasjonRepository.listDiagnoser(patientId, orgNumber)
     }
 
     suspend fun getDiagnoser(konsultasjonId: KonsultasjonId, orgNumber: String?): List<Diagnose> {
@@ -54,11 +54,11 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
     }
 
     suspend fun getJournalnotater(
-        pasientId: PasientId,
+        patientId: PatientId,
         konsultasjonId: KonsultasjonId?,
         orgNumber: String?,
     ): List<Journalnotat> {
-        return konsultasjonRepository.listJournalnotat(pasientId, konsultasjonId, orgNumber)
+        return konsultasjonRepository.listJournalnotat(patientId, konsultasjonId, orgNumber)
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -77,23 +77,23 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
                 ?: throw IllegalStateException("Konsultasjon ble ikke opprettet")
 
         log.info(
-            "Created konsultasjon id={} for pasientId={}",
+            "Created konsultasjon id={} for patientId={}",
             createdKonsultasjon.id,
-            opprettKonsultasjon.pasientId,
+            opprettKonsultasjon.patientId,
         )
         return createdKonsultasjon
     }
 
     suspend fun getOrCreateKonsultasjon(
-        pasientId: PasientId,
+        patientId: PatientId,
         hpr: PractitionerHpr,
         orgNumber: String,
     ): Konsultasjon {
-        val aktivKonsultasjon = getAktivKonsultasjon(pasientId, hpr, orgNumber)
+        val aktivKonsultasjon = getAktivKonsultasjon(patientId, hpr, orgNumber)
         if (aktivKonsultasjon != null) return aktivKonsultasjon
         val opprettKonsultasjon =
             OpprettKonsultasjon(
-                pasientId = pasientId,
+                patientId = patientId,
                 hpr = listOf(hpr),
                 startetTidspunkt = LocalDateTime.now(),
                 status = KonsultasjonStatus.PAAGAAENDE,
@@ -104,25 +104,25 @@ class KonsultasjonService(private val konsultasjonRepository: KonsultasjonReposi
 
     suspend fun updateKonsultasjon(
         oppdaterKonsultasjon: OppdaterKonsultasjonRequest,
-        pasientId: PasientId,
+        patientId: PatientId,
         orgNumber: String?,
     ) {
-        log.info("oppdater konsultasjon på pasientId: $pasientId")
-        val updatedRows = konsultasjonRepository.update(oppdaterKonsultasjon, pasientId, orgNumber)
+        log.info("oppdater konsultasjon på pasientId: $patientId")
+        val updatedRows = konsultasjonRepository.update(oppdaterKonsultasjon, patientId, orgNumber)
         if (updatedRows == 0) {
-            throw KonsultasjonNotFoundForPatientException(pasientId)
+            throw KonsultasjonNotFoundForPatientException(patientId)
         }
     }
 
     suspend fun cancelKonsultasjon(
         konsultasjonId: KonsultasjonId,
-        pasientId: PasientId,
+        patientId: PatientId,
         orgNumber: String?,
     ) {
-        log.info("avbryter konsultasjon {} for pasientId: {}", konsultasjonId, pasientId)
-        val updatedRows = konsultasjonRepository.avbryt(konsultasjonId, pasientId, orgNumber)
+        log.info("avbryter konsultasjon {} for pasientId: {}", konsultasjonId, patientId)
+        val updatedRows = konsultasjonRepository.avbryt(konsultasjonId, patientId, orgNumber)
         if (updatedRows == 0) {
-            throw KonsultasjonNotFoundForPatientException(pasientId)
+            throw KonsultasjonNotFoundForPatientException(patientId)
         }
     }
 }

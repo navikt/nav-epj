@@ -23,7 +23,7 @@ import no.nav.helse.epj.maaling.MaalingId
 import no.nav.helse.epj.maaling.MaalingService
 import no.nav.helse.epj.maaling.MaalingStatus
 import no.nav.helse.epj.maaling.OpprettMaalingRequest
-import no.nav.helse.epj.pasient.PasientId
+import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
@@ -38,7 +38,7 @@ class ObservationServiceTest {
     @OptIn(ExperimentalUuidApi::class)
     private fun maaling(
         id: MaalingId = MaalingId(Uuid.generateV4()),
-        pasientId: PasientId = PasientId(Uuid.generateV4()),
+        patientId: PatientId = PatientId(Uuid.generateV4()),
         konsultasjonId: KonsultasjonId = KonsultasjonId(Uuid.generateV4()),
         hpr: PractitionerHpr? = PractitionerHpr("123"),
         loincKode: String = "8310-5",
@@ -51,7 +51,7 @@ class ObservationServiceTest {
     ) =
         Maaling(
             id = id,
-            pasientId = pasientId,
+            patientId = patientId,
             konsultasjonId = konsultasjonId,
             hpr = hpr,
             loincKode = loincKode,
@@ -69,7 +69,7 @@ class ObservationServiceTest {
         runTest {
             val request =
                 OpprettMaalingRequest(
-                    pasientId = PasientId(Uuid.generateV4()),
+                    patientId = PatientId(Uuid.generateV4()),
                     konsultasjonId = KonsultasjonId(Uuid.generateV4()),
                     hpr = null,
                     loincKode = "8310-5",
@@ -82,7 +82,7 @@ class ObservationServiceTest {
                 )
             val persisted =
                 maaling(
-                    pasientId = request.pasientId,
+                    patientId = request.patientId,
                     konsultasjonId = request.konsultasjonId,
                     hpr = request.hpr,
                     loincKode = request.loincKode,
@@ -107,7 +107,7 @@ class ObservationServiceTest {
         runTest {
             val request =
                 OpprettMaalingRequest(
-                    pasientId = PasientId(Uuid.generateV4()),
+                    patientId = PatientId(Uuid.generateV4()),
                     konsultasjonId = KonsultasjonId(Uuid.generateV4()),
                     hpr = null,
                     loincKode = "8310-5",
@@ -138,9 +138,9 @@ class ObservationServiceTest {
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `getObservationById maps subject, encounter, LOINC code and UCUM quantity`() = runTest {
-        val pasientId = PasientId(Uuid.generateV4())
+        val patientId = PatientId(Uuid.generateV4())
         val konsultasjonId = KonsultasjonId(Uuid.generateV4())
-        val target = maaling(pasientId = pasientId, konsultasjonId = konsultasjonId)
+        val target = maaling(patientId = patientId, konsultasjonId = konsultasjonId)
         coEvery { maalingService.getMaaling(target.id, DEFAULT_ORG_NUMBER) } returns target
 
         val observation =
@@ -151,7 +151,7 @@ class ObservationServiceTest {
 
         requireNotNull(observation)
         assertEquals(target.id.value.toString(), observation.id)
-        assertEquals("Patient/${pasientId.value}", observation.subject?.reference?.value)
+        assertEquals("Patient/${patientId.value}", observation.subject?.reference?.value)
         assertEquals("Encounter/${konsultasjonId.value}", observation.encounter?.reference?.value)
 
         val coding = observation.code.coding.single()
@@ -271,13 +271,13 @@ class ObservationServiceTest {
     @Test
     fun `searchObservations returns an empty searchset bundle when the patient has no maalinger`() =
         runTest {
-            val pasientId = PasientId(Uuid.generateV4())
-            coEvery { maalingService.getMaalingerForPasient(pasientId, DEFAULT_ORG_NUMBER) } returns
+            val patientId = PatientId(Uuid.generateV4())
+            coEvery { maalingService.getMaalingerForPatient(patientId, DEFAULT_ORG_NUMBER) } returns
                 emptyList()
 
             val bundle =
                 observationService.searchObservations(
-                    patientId = PatientInputId(pasientId.value),
+                    patientId = PatientInputId(patientId.value),
                     encounterId = null,
                     code = null,
                     DEFAULT_ORG_NUMBER,
@@ -290,15 +290,15 @@ class ObservationServiceTest {
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `searchObservations returns every maaling for the patient without filters`() = runTest {
-        val pasientId = PasientId(Uuid.generateV4())
-        val forste = maaling(pasientId = pasientId)
-        val andre = maaling(pasientId = pasientId)
-        coEvery { maalingService.getMaalingerForPasient(pasientId, DEFAULT_ORG_NUMBER) } returns
+        val patientId = PatientId(Uuid.generateV4())
+        val forste = maaling(patientId = patientId)
+        val andre = maaling(patientId = patientId)
+        coEvery { maalingService.getMaalingerForPatient(patientId, DEFAULT_ORG_NUMBER) } returns
             listOf(forste, andre)
 
         val bundle =
             observationService.searchObservations(
-                patientId = PatientInputId(pasientId.value),
+                patientId = PatientInputId(patientId.value),
                 encounterId = null,
                 code = null,
                 DEFAULT_ORG_NUMBER,
@@ -313,17 +313,17 @@ class ObservationServiceTest {
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `searchObservations filters by encounter`() = runTest {
-        val pasientId = PasientId(Uuid.generateV4())
+        val patientId = PatientId(Uuid.generateV4())
         val konsultasjonA = KonsultasjonId(Uuid.generateV4())
         val konsultasjonB = KonsultasjonId(Uuid.generateV4())
-        val maalingA = maaling(pasientId = pasientId, konsultasjonId = konsultasjonA)
-        val maalingB = maaling(pasientId = pasientId, konsultasjonId = konsultasjonB)
-        coEvery { maalingService.getMaalingerForPasient(pasientId, DEFAULT_ORG_NUMBER) } returns
+        val maalingA = maaling(patientId = patientId, konsultasjonId = konsultasjonA)
+        val maalingB = maaling(patientId = patientId, konsultasjonId = konsultasjonB)
+        coEvery { maalingService.getMaalingerForPatient(patientId, DEFAULT_ORG_NUMBER) } returns
             listOf(maalingA, maalingB)
 
         val bundle =
             observationService.searchObservations(
-                patientId = PatientInputId(pasientId.value),
+                patientId = PatientInputId(patientId.value),
                 encounterId = EncounterId(konsultasjonA.value),
                 code = null,
                 DEFAULT_ORG_NUMBER,
@@ -338,15 +338,15 @@ class ObservationServiceTest {
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `searchObservations filters by LOINC code`() = runTest {
-        val pasientId = PasientId(Uuid.generateV4())
-        val temperatur = maaling(pasientId = pasientId, loincKode = "8310-5")
-        val glukose = maaling(pasientId = pasientId, loincKode = "2339-0")
-        coEvery { maalingService.getMaalingerForPasient(pasientId, DEFAULT_ORG_NUMBER) } returns
+        val patientId = PatientId(Uuid.generateV4())
+        val temperatur = maaling(patientId = patientId, loincKode = "8310-5")
+        val glukose = maaling(patientId = patientId, loincKode = "2339-0")
+        coEvery { maalingService.getMaalingerForPatient(patientId, DEFAULT_ORG_NUMBER) } returns
             listOf(temperatur, glukose)
 
         val bundle =
             observationService.searchObservations(
-                patientId = PatientInputId(pasientId.value),
+                patientId = PatientInputId(patientId.value),
                 encounterId = null,
                 code = "2339-0",
                 DEFAULT_ORG_NUMBER,
@@ -361,21 +361,21 @@ class ObservationServiceTest {
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `searchObservations combines encounter and code filters`() = runTest {
-        val pasientId = PasientId(Uuid.generateV4())
+        val patientId = PatientId(Uuid.generateV4())
         val konsultasjonA = KonsultasjonId(Uuid.generateV4())
         val konsultasjonB = KonsultasjonId(Uuid.generateV4())
         val match =
-            maaling(pasientId = pasientId, konsultasjonId = konsultasjonA, loincKode = "8310-5")
+            maaling(patientId = patientId, konsultasjonId = konsultasjonA, loincKode = "8310-5")
         val wrongEncounter =
-            maaling(pasientId = pasientId, konsultasjonId = konsultasjonB, loincKode = "8310-5")
+            maaling(patientId = patientId, konsultasjonId = konsultasjonB, loincKode = "8310-5")
         val wrongCode =
-            maaling(pasientId = pasientId, konsultasjonId = konsultasjonA, loincKode = "2339-0")
-        coEvery { maalingService.getMaalingerForPasient(pasientId, DEFAULT_ORG_NUMBER) } returns
+            maaling(patientId = patientId, konsultasjonId = konsultasjonA, loincKode = "2339-0")
+        coEvery { maalingService.getMaalingerForPatient(patientId, DEFAULT_ORG_NUMBER) } returns
             listOf(match, wrongEncounter, wrongCode)
 
         val bundle =
             observationService.searchObservations(
-                patientId = PatientInputId(pasientId.value),
+                patientId = PatientInputId(patientId.value),
                 encounterId = EncounterId(konsultasjonA.value),
                 code = "8310-5",
                 DEFAULT_ORG_NUMBER,
