@@ -35,7 +35,7 @@ for (const width of [1280, 800]) {
   test(`app card buttons share one baseline at ${width}px`, async ({ context, page }) => {
     await fakeBackend().install(context);
     await page.setViewportSize({ width, height: 900 });
-    await page.goto("/patients/p1?tab=apper");
+    await page.goto("/patients/p1?tab=apps");
     const starts = page.locator(".xp-appcards").getByRole("button", { name: "Start", exact: true });
     await expect(starts).toHaveCount(2);
     const [first, second] = await starts.evaluateAll((buttons) =>
@@ -49,7 +49,7 @@ for (const width of [1280, 800]) {
     await page.setViewportSize({ width, height: 900 });
     const panel = page.locator("#journal-panel");
 
-    await page.goto("/patients/p1?tab=apper");
+    await page.goto("/patients/p1?tab=apps");
     await expect(panel.getByText("Start en konsultasjon først.")).toBeVisible();
     expect(await gaps(panel)).toEqual([16]);
 

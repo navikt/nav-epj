@@ -108,7 +108,7 @@ export function JournalView() {
             label: copy["s4.tab.previous"](previousConsultations.length),
           },
           { id: "measurements", label: copy["s4.tab.measurements"] },
-          { id: "apper", label: copy["s4.tab.apper"](appCount) },
+          { id: "apps", label: copy["s4.tab.apps"](appCount) },
         ]}
       >
         {subTab === "consultation" && <ConsultationTab patient={patient} />}
@@ -116,7 +116,7 @@ export function JournalView() {
           <PreviousConsultations consultations={previousConsultations} />
         )}
         {subTab === "measurements" && <Measurements patientId={patient.id} />}
-        {subTab === "apper" && <AppsTab />}
+        {subTab === "apps" && <AppsTab />}
       </SubTabs>
     </>
   );

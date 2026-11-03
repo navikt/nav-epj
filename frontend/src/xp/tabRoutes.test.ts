@@ -24,10 +24,10 @@ describe("journalRoute", () => {
   });
 
   it("carries a non-default sub-tab in the search and omits the default", () => {
-    expect(journalRoute("p1", null, "apper")).toEqual({
+    expect(journalRoute("p1", null, "apps")).toEqual({
       to: "/patients/$patientId",
       params: { patientId: "p1" },
-      search: { tab: "apper" },
+      search: { tab: "apps" },
     });
     expect(journalRoute("p1", null, "consultation")).toEqual(journalRoute("p1"));
   });
@@ -55,8 +55,8 @@ describe("routeForTab", () => {
   });
 
   it("keeps the sub-tab of the open journal", () => {
-    useJournalStore.setState({ patientId: "p1", subTab: "apper" });
-    expect(routeForTab(tab("journal"))).toEqual(journalRoute("p1", null, "apper"));
+    useJournalStore.setState({ patientId: "p1", subTab: "apps" });
+    expect(routeForTab(tab("journal"))).toEqual(journalRoute("p1", null, "apps"));
   });
 
   it("returns no route for tabs that are not URL-addressable", () => {

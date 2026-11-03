@@ -149,7 +149,7 @@ describe("journal sub-tab in the URL", () => {
     expect(screen.getByRole("table")).toBeInTheDocument();
   });
 
-  it.each(["previous", "apper"] as const)("keeps %s selected after retrying a failed load", async (tab) => {
+  it.each(["previous", "apps"] as const)("keeps %s selected after retrying a failed load", async (tab) => {
     let fail = true;
     api({
       "GET /api/patients/p1/consultations": () =>
@@ -192,7 +192,7 @@ describe("journal sub-tab in the URL", () => {
     await screen.findByRole("heading", { name: "Matematisk Ape" });
     const length = router.history.length;
     await userEvent.click(screen.getByRole("tab", { name: /^Apper/ }));
-    await waitFor(() => expect(router.state.location.search).toEqual({ tab: "apper" }));
+    await waitFor(() => expect(router.state.location.search).toEqual({ tab: "apps" }));
     selected(/^Apper/);
     await userEvent.click(screen.getByRole("tab", { name: "Konsultasjon" }));
     await waitFor(() => expect(router.state.location.search).toEqual({}));
@@ -299,7 +299,7 @@ describe("journal sub-tab in the URL", () => {
     const { router } = renderApp("/patients/p1/consultations/k9");
     await screen.findByRole("heading", { name: "Fullført konsultasjon" });
     await userEvent.click(screen.getByRole("tab", { name: /^Apper/ }));
-    await waitFor(() => expect(router.state.location.search).toEqual({ tab: "apper" }));
+    await waitFor(() => expect(router.state.location.search).toEqual({ tab: "apps" }));
     act(() => {
       void router.navigate({
         to: "/patients/$patientId",
@@ -327,7 +327,7 @@ describe("journal sub-tab in the URL", () => {
     const { router } = renderApp("/patients/p1/consultations/k9");
     await screen.findByRole("heading", { name: "Fullført konsultasjon" });
     await userEvent.click(screen.getByRole("tab", { name: /^Apper/ }));
-    await waitFor(() => expect(router.state.location.search).toEqual({ tab: "apper" }));
+    await waitFor(() => expect(router.state.location.search).toEqual({ tab: "apps" }));
     await act(() => useJournalStore.getState().start());
     expect(await screen.findByRole("heading", { name: "Pågående konsultasjon" })).toBeInTheDocument();
     await waitFor(() => expect(router.state.location.href).toBe("/patients/p1"));
@@ -336,7 +336,7 @@ describe("journal sub-tab in the URL", () => {
 
   it("ignores the tab param on a consultation route", async () => {
     withHistory();
-    renderApp("/patients/p1/consultations/k9?tab=apper");
+    renderApp("/patients/p1/consultations/k9?tab=apps");
     expect(await screen.findByRole("heading", { name: "Fullført konsultasjon" })).toBeInTheDocument();
     selected("Konsultasjon");
   });

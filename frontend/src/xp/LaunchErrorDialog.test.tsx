@@ -195,7 +195,7 @@ describe("LaunchErrorDialog", () => {
     setup(dialogOf("UNKNOWN_APP"));
     await userEvent.click(screen.getByRole("button", { name: primaryLabel("UNKNOWN_APP") }));
     expect(load).toHaveBeenCalledOnce();
-    expect(useJournalStore.getState().subTab).toBe("apper");
+    expect(useJournalStore.getState().subTab).toBe("apps");
     expect(navigate).toHaveBeenCalled();
   });
 
