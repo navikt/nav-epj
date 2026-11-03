@@ -40,7 +40,7 @@ export function OngoingConsultation({ patient, consultation }: Props) {
     () => new Set(baseline.diagnoses.map(diagnosisKey)),
     [baseline.diagnoses],
   );
-  const { addDiagnosis, removeDiagnosis, setNotat, save, cancel } =
+  const { addDiagnosis, removeDiagnosis, setClinicalNote, save, cancel } =
     useJournalStore.getState();
 
   async function confirmFinish() {
@@ -72,9 +72,9 @@ export function OngoingConsultation({ patient, consultation }: Props) {
           <TextArea
             label={copy["s4.note.label"]}
             rows={6}
-            value={draft.notat}
+            value={draft.clinicalNote}
             readOnly={saving}
-            onChange={(event) => setNotat(event.target.value)}
+            onChange={(event) => setClinicalNote(event.target.value)}
           />
           <div className="xp-form-actions">
             <Button

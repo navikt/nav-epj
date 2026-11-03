@@ -33,7 +33,7 @@ describe("guardTabClose", () => {
   });
 
   it("vetoes closing a dirty journal and requests confirmation", () => {
-    useJournalStore.getState().setNotat("ulagret");
+    useJournalStore.getState().setClinicalNote("ulagret");
     expect(guardTabClose(journalTab)).toBe(false);
     expect(useJournalGuardStore.getState().closeRequested).toBe(true);
     expect(guardTabClose(patientsTab)).toBe(true);

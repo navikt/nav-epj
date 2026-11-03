@@ -4,7 +4,7 @@ import java.time.LocalDate
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import no.nav.helse.core.utils.UgyldigPersonidentException
+import no.nav.helse.core.utils.InvalidPersonidentException
 import org.junit.Test
 
 /**
@@ -60,7 +60,7 @@ class PersonidentValidatorTest {
 
     @Test
     fun `rejects a bad checksum`() {
-        assertFailsWith<UgyldigPersonidentException> {
+        assertFailsWith<InvalidPersonidentException> {
             PersonidentValidator.validate(
                 personident = "15068500018",
                 personidentType = PersonidentType.FNR,
@@ -71,7 +71,7 @@ class PersonidentValidatorTest {
 
     @Test
     fun `rejects a valid FNR declared as DNR`() {
-        assertFailsWith<UgyldigPersonidentException> {
+        assertFailsWith<InvalidPersonidentException> {
             PersonidentValidator.validate(
                 personident = "15068500017",
                 personidentType = PersonidentType.DNR,
@@ -82,7 +82,7 @@ class PersonidentValidatorTest {
 
     @Test
     fun `rejects a valid DNR declared as FNR`() {
-        assertFailsWith<UgyldigPersonidentException> {
+        assertFailsWith<InvalidPersonidentException> {
             PersonidentValidator.validate(
                 personident = "63117800026",
                 personidentType = PersonidentType.FNR,
@@ -93,7 +93,7 @@ class PersonidentValidatorTest {
 
     @Test
     fun `rejects a birth date with the wrong day`() {
-        assertFailsWith<UgyldigPersonidentException> {
+        assertFailsWith<InvalidPersonidentException> {
             PersonidentValidator.validate(
                 personident = "15068500017",
                 personidentType = PersonidentType.FNR,
@@ -104,7 +104,7 @@ class PersonidentValidatorTest {
 
     @Test
     fun `rejects a birth date with the wrong month`() {
-        assertFailsWith<UgyldigPersonidentException> {
+        assertFailsWith<InvalidPersonidentException> {
             PersonidentValidator.validate(
                 personident = "15068500017",
                 personidentType = PersonidentType.FNR,
@@ -115,7 +115,7 @@ class PersonidentValidatorTest {
 
     @Test
     fun `rejects a birth date with the correct day and month but wrong century`() {
-        assertFailsWith<UgyldigPersonidentException> {
+        assertFailsWith<InvalidPersonidentException> {
             PersonidentValidator.validate(
                 personident = "14078750023",
                 personidentType = PersonidentType.FNR,
@@ -132,7 +132,7 @@ class PersonidentValidatorTest {
         val personident = "01014075069"
 
         val exception =
-            assertFailsWith<UgyldigPersonidentException> {
+            assertFailsWith<InvalidPersonidentException> {
                 PersonidentValidator.validate(
                     personident = personident,
                     personidentType = PersonidentType.FNR,
@@ -145,7 +145,7 @@ class PersonidentValidatorTest {
 
     @Test
     fun `rejects non-digit characters`() {
-        assertFailsWith<UgyldigPersonidentException> {
+        assertFailsWith<InvalidPersonidentException> {
             PersonidentValidator.validate(
                 personident = "1506850001A",
                 personidentType = PersonidentType.FNR,
@@ -156,7 +156,7 @@ class PersonidentValidatorTest {
 
     @Test
     fun `rejects the wrong length`() {
-        assertFailsWith<UgyldigPersonidentException> {
+        assertFailsWith<InvalidPersonidentException> {
             PersonidentValidator.validate(
                 personident = "150685000",
                 personidentType = PersonidentType.FNR,
@@ -194,7 +194,7 @@ class PersonidentValidatorTest {
 
     @Test
     fun `rejects a synthetic FNR with a bad checksum`() {
-        assertFailsWith<UgyldigPersonidentException> {
+        assertFailsWith<InvalidPersonidentException> {
             PersonidentValidator.validate(
                 personident = "15868500083",
                 personidentType = PersonidentType.FNR,
@@ -205,7 +205,7 @@ class PersonidentValidatorTest {
 
     @Test
     fun `rejects a synthetic FNR declared as DNR`() {
-        assertFailsWith<UgyldigPersonidentException> {
+        assertFailsWith<InvalidPersonidentException> {
             PersonidentValidator.validate(
                 personident = "15868500082",
                 personidentType = PersonidentType.DNR,
@@ -216,7 +216,7 @@ class PersonidentValidatorTest {
 
     @Test
     fun `rejects a synthetic DNR declared as FNR`() {
-        assertFailsWith<UgyldigPersonidentException> {
+        assertFailsWith<InvalidPersonidentException> {
             PersonidentValidator.validate(
                 personident = "63917800091",
                 personidentType = PersonidentType.FNR,
@@ -227,14 +227,14 @@ class PersonidentValidatorTest {
 
     @Test
     fun `rejects a synthetic personident whose birth date does not match the decoded date`() {
-        assertFailsWith<UgyldigPersonidentException> {
+        assertFailsWith<InvalidPersonidentException> {
             PersonidentValidator.validate(
                 personident = "15868500082",
                 personidentType = PersonidentType.FNR,
                 birthDate = LocalDate.of(1985, 6, 16),
             )
         }
-        assertFailsWith<UgyldigPersonidentException> {
+        assertFailsWith<InvalidPersonidentException> {
             PersonidentValidator.validate(
                 personident = "15868500082",
                 personidentType = PersonidentType.FNR,
@@ -248,7 +248,7 @@ class PersonidentValidatorTest {
         val personident = "15468500180"
 
         assertFalse(PersonidentValidator.isSynthetic(personident))
-        assertFailsWith<UgyldigPersonidentException> {
+        assertFailsWith<InvalidPersonidentException> {
             PersonidentValidator.validate(
                 personident = personident,
                 personidentType = PersonidentType.FNR,

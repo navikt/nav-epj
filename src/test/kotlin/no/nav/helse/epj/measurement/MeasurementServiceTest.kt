@@ -42,16 +42,16 @@ class MeasurementServiceTest {
     @Test
     fun `createMeasurement persists a measurement with a generated id`() = runTest {
         val inserted = slot<Measurement>()
-        val opprettRequest = request()
+        val createRequest = request()
         coEvery { repository.insert(capture(inserted), DEFAULT_ORG_NUMBER) } returns Unit
 
-        val opprettet = service.createMeasurement(opprettRequest, DEFAULT_ORG_NUMBER)
+        val created = service.createMeasurement(createRequest, DEFAULT_ORG_NUMBER)
 
-        assertEquals(opprettRequest.patientId, opprettet.patientId)
-        assertEquals(opprettRequest.consultationId, opprettet.consultationId)
-        assertEquals(opprettRequest.loincCode, opprettet.loincCode)
-        assertEquals(opprettRequest.value, opprettet.value)
-        assertEquals(opprettet, inserted.captured)
+        assertEquals(createRequest.patientId, created.patientId)
+        assertEquals(createRequest.consultationId, created.consultationId)
+        assertEquals(createRequest.loincCode, created.loincCode)
+        assertEquals(createRequest.value, created.value)
+        assertEquals(created, inserted.captured)
         coVerify(exactly = 1) { repository.insert(any(), DEFAULT_ORG_NUMBER) }
     }
 
@@ -59,79 +59,79 @@ class MeasurementServiceTest {
     @Test
     fun `getMeasurement returns the measurement from the repository`() = runTest {
         val id = MeasurementId(Uuid.generateV4())
-        val opprettRequest = request()
+        val createRequest = request()
         val measurement =
             Measurement(
                 id = id,
-                patientId = opprettRequest.patientId,
-                consultationId = opprettRequest.consultationId,
-                hpr = opprettRequest.hpr,
-                loincCode = opprettRequest.loincCode,
-                loincDisplay = opprettRequest.loincDisplay,
-                value = opprettRequest.value,
-                unitCode = opprettRequest.unitCode,
-                unitDisplay = opprettRequest.unitDisplay,
-                effectiveAt = opprettRequest.effectiveAt,
-                status = opprettRequest.status,
+                patientId = createRequest.patientId,
+                consultationId = createRequest.consultationId,
+                hpr = createRequest.hpr,
+                loincCode = createRequest.loincCode,
+                loincDisplay = createRequest.loincDisplay,
+                value = createRequest.value,
+                unitCode = createRequest.unitCode,
+                unitDisplay = createRequest.unitDisplay,
+                effectiveAt = createRequest.effectiveAt,
+                status = createRequest.status,
             )
         coEvery { repository.findById(id, DEFAULT_ORG_NUMBER) } returns measurement
 
-        val resultat = service.getMeasurement(id, DEFAULT_ORG_NUMBER)
+        val result = service.getMeasurement(id, DEFAULT_ORG_NUMBER)
 
-        assertEquals(measurement, resultat)
+        assertEquals(measurement, result)
     }
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `getMeasurementsForPatient returns measurements from the repository`() = runTest {
         val patientId = PatientId(Uuid.generateV4())
-        val opprettRequest = request(patientId = patientId)
+        val createRequest = request(patientId = patientId)
         val measurement =
             Measurement(
                 id = MeasurementId(Uuid.generateV4()),
                 patientId = patientId,
-                consultationId = opprettRequest.consultationId,
-                hpr = opprettRequest.hpr,
-                loincCode = opprettRequest.loincCode,
-                loincDisplay = opprettRequest.loincDisplay,
-                value = opprettRequest.value,
-                unitCode = opprettRequest.unitCode,
-                unitDisplay = opprettRequest.unitDisplay,
-                effectiveAt = opprettRequest.effectiveAt,
-                status = opprettRequest.status,
+                consultationId = createRequest.consultationId,
+                hpr = createRequest.hpr,
+                loincCode = createRequest.loincCode,
+                loincDisplay = createRequest.loincDisplay,
+                value = createRequest.value,
+                unitCode = createRequest.unitCode,
+                unitDisplay = createRequest.unitDisplay,
+                effectiveAt = createRequest.effectiveAt,
+                status = createRequest.status,
             )
         coEvery { repository.listByPatientId(patientId, DEFAULT_ORG_NUMBER) } returns
             listOf(measurement)
 
-        val resultat = service.getMeasurementsForPatient(patientId, DEFAULT_ORG_NUMBER)
+        val result = service.getMeasurementsForPatient(patientId, DEFAULT_ORG_NUMBER)
 
-        assertEquals(listOf(measurement), resultat)
+        assertEquals(listOf(measurement), result)
     }
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `getMeasurementsForConsultation returns measurements from the repository`() = runTest {
         val consultationId = ConsultationId(Uuid.generateV4())
-        val opprettRequest = request(consultationId = consultationId)
+        val createRequest = request(consultationId = consultationId)
         val measurement =
             Measurement(
                 id = MeasurementId(Uuid.generateV4()),
-                patientId = opprettRequest.patientId,
+                patientId = createRequest.patientId,
                 consultationId = consultationId,
-                hpr = opprettRequest.hpr,
-                loincCode = opprettRequest.loincCode,
-                loincDisplay = opprettRequest.loincDisplay,
-                value = opprettRequest.value,
-                unitCode = opprettRequest.unitCode,
-                unitDisplay = opprettRequest.unitDisplay,
-                effectiveAt = opprettRequest.effectiveAt,
-                status = opprettRequest.status,
+                hpr = createRequest.hpr,
+                loincCode = createRequest.loincCode,
+                loincDisplay = createRequest.loincDisplay,
+                value = createRequest.value,
+                unitCode = createRequest.unitCode,
+                unitDisplay = createRequest.unitDisplay,
+                effectiveAt = createRequest.effectiveAt,
+                status = createRequest.status,
             )
         coEvery { repository.listByConsultationId(consultationId, DEFAULT_ORG_NUMBER) } returns
             listOf(measurement)
 
-        val resultat = service.getMeasurementsForConsultation(consultationId, DEFAULT_ORG_NUMBER)
+        val result = service.getMeasurementsForConsultation(consultationId, DEFAULT_ORG_NUMBER)
 
-        assertEquals(listOf(measurement), resultat)
+        assertEquals(listOf(measurement), result)
     }
 }

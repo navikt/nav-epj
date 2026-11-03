@@ -44,9 +44,9 @@ ON CONFLICT (hpr, clinic_id) DO NOTHING;
 INSERT INTO fastlegeliste_patient (fastlegeliste_id, patient_id)
 SELECT (SELECT fl.id
         FROM fastlegeliste fl
-                 JOIN clinic lk ON lk.id = fl.clinic_id
+                 JOIN clinic cl ON cl.id = fl.clinic_id
         WHERE fl.hpr = v.hpr
-          AND lk.org_number = v.org_number),
+          AND cl.org_number = v.org_number),
        (SELECT id FROM patient WHERE personident = v.personident)
 FROM (VALUES ('565501872', '311111116', '21914897936'),
              ('565501872', '311111116', '14838510036'),
@@ -64,14 +64,14 @@ WHERE fl.hpr IN ('565501872', '900000001')
   AND fl.clinic_id NOT IN (SELECT id FROM clinic WHERE org_number IN ('311111116', '311111124'))
   AND NOT EXISTS (SELECT 1 FROM fastlegeliste_patient flp WHERE flp.fastlegeliste_id = fl.id);
 
-WITH stories (prefix, personident, first_date, offsets, tid, minutter, reason_for_visit) AS (
+WITH stories (prefix, personident, first_date, offsets, start_time, duration_minutes, reason_for_visit) AS (
     VALUES ('FR', '14838510036', '2023-03-07', '{0,170,340,510,680,850,1020,1200}', '09:00', 30, 'Overvekt og forhøyet blodsukker, kontroll'),
            ('TF', '02867910193', '2023-02-14', '{0,120,240,360,480,600,720,840,960,1080}', '10:00', 30, 'Høyt blodtrykk, kontroll'),
            ('GV', '30898110431', '2023-05-09', '{0,180,360,540,720,900,1080}', '13:00', 30, 'Hypotyreose, kontroll'),
            ('LF', '17841250397', '2022-09-13', '{0,170,340,510,680,850,1020,1200,1380}', '15:30', 20, 'Astma, kontroll'),
            ('SE', '65819210459', '2024-01-16', '{0,60,120,200,290,380,480,590}', '14:00', 45, 'Depresjon, oppfølging'),
            ('RL', '49886810767', '2023-01-17', '{0,150,300,450,600,750,900,1050,1200,1350}', '08:30', 30, 'Diabetes og høyt blodtrykk, kontroll')),
-     enkeltvis (key, prefix, seq, personident, dato, tid, minutter, status, reason_for_visit) AS (
+     single_visits (key, prefix, seq, personident, visit_date, start_time, duration_minutes, status, reason_for_visit) AS (
     VALUES ('FRa', 'FR', 9, '14838510036', '2026-10-20', '09:30', 30, 'IN_PROGRESS', 'Overvekt og forhøyet blodsukker, kontroll'),
            ('TFa', 'TF', 11, '02867910193', '2026-10-20', '10:30', 30, 'IN_PROGRESS', 'Høyt blodtrykk, kontroll'),
            ('TFp', 'TFp', 1, '02867910193', '2026-11-17', '10:00', 30, 'PLANNED', 'Høyt blodtrykk, kontroll'),
@@ -93,23 +93,23 @@ WITH stories (prefix, personident, first_date, offsets, tid, minutter, reason_fo
            ('RLa', 'RL', 11, '49886810767', '2026-10-20', '08:30', 30, 'IN_PROGRESS', 'Diabetes og høyt blodtrykk, kontroll'),
            ('RLavl', 'RLavl', 1, '49886810767', '2026-03-10', '08:30', 30, 'CANCELLED', 'Diabetes type 2, kontroll'),
            ('RLp', 'RLp', 1, '49886810767', '2026-11-10', '08:30', 30, 'PLANNED', 'Diabetes og høyt blodtrykk, kontroll')),
-     dagsplan AS (
+     schedule AS (
 SELECT s.prefix || o.seq AS key, s.prefix, o.seq::int AS seq, s.personident,
-       s.first_date::date + o.dagoffset AS dag, s.tid, s.minutter, 'FINISHED' AS status, s.reason_for_visit
+       s.first_date::date + o.day_offset AS visit_day, s.start_time, s.duration_minutes, 'FINISHED' AS status, s.reason_for_visit
 FROM stories s
-         CROSS JOIN LATERAL unnest(s.offsets::int[]) WITH ORDINALITY AS o (dagoffset, seq)
+         CROSS JOIN LATERAL unnest(s.offsets::int[]) WITH ORDINALITY AS o (day_offset, seq)
 UNION ALL
-SELECT key, prefix, seq, personident, dato::date, tid, minutter, status, reason_for_visit
-FROM enkeltvis),
+SELECT key, prefix, seq, personident, visit_date::date, start_time, duration_minutes, status, reason_for_visit
+FROM single_visits),
      plan AS (
 SELECT d.key, d.prefix, d.seq, d.personident,
-       v.virkedag + d.tid::time AS startet,
+       v.business_day + d.start_time::time AS started_at,
        CASE WHEN d.status IN ('PLANNED', 'IN_PROGRESS') THEN NULL
-            ELSE v.virkedag + d.tid::time + make_interval(mins => d.minutter) END AS avsluttet,
+            ELSE v.business_day + d.start_time::time + make_interval(mins => d.duration_minutes) END AS ended_at,
        d.status, d.reason_for_visit
-FROM dagsplan d
-         CROSS JOIN LATERAL (SELECT d.dag + CASE extract(isodow FROM d.dag) WHEN 6 THEN 2 WHEN 7 THEN 1 ELSE 0 END AS virkedag) v),
-     diagnosekoder (prefix, diagnosis_system, diagnosis_code) AS (
+FROM schedule d
+         CROSS JOIN LATERAL (SELECT d.visit_day + CASE extract(isodow FROM d.visit_day) WHEN 6 THEN 2 WHEN 7 THEN 1 ELSE 0 END AS business_day) v),
+     diagnosis_codes (prefix, diagnosis_system, diagnosis_code) AS (
     VALUES ('FR', 'ICPC2', 'T82'),
            ('FR', 'ICD10', 'E66.9'),
            ('TF', 'ICPC2', 'K86'),
@@ -296,15 +296,15 @@ FROM (SELECT key, loinc_code, value
 INSERT INTO consultation (id, patient_id, clinic_id, started_at, ended_at, status,
                           reason_for_visit)
 SELECT md5('testdata-konsultasjon-' || p.key)::uuid,
-       pa.id,
+       pt.id,
        fl.clinic_id,
-       p.startet AT TIME ZONE 'Europe/Oslo',
-       p.avsluttet AT TIME ZONE 'Europe/Oslo',
+       p.started_at AT TIME ZONE 'Europe/Oslo',
+       p.ended_at AT TIME ZONE 'Europe/Oslo',
        p.status,
        p.reason_for_visit
 FROM plan p
-         JOIN patient pa ON pa.personident = p.personident
-         JOIN fastlegeliste_patient flp ON flp.patient_id = pa.id
+         JOIN patient pt ON pt.personident = p.personident
+         JOIN fastlegeliste_patient flp ON flp.patient_id = pt.id
          JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
 ON CONFLICT (id) DO NOTHING
 RETURNING id, patient_id, started_at, status),
@@ -317,36 +317,36 @@ FROM inserted i
 RETURNING consultation_id),
      diagnoses AS (
 INSERT INTO consultation_diagnosis_code (consultation_id, diagnosis_system, diagnosis_code)
-SELECT k.id, d.diagnosis_system, d.diagnosis_code
-FROM inserted k
-         JOIN plan p ON md5('testdata-konsultasjon-' || p.key)::uuid = k.id
-         JOIN diagnosekoder d ON d.prefix = p.prefix
-WHERE k.status NOT IN ('PLANNED', 'CANCELLED')
+SELECT c.id, d.diagnosis_system, d.diagnosis_code
+FROM inserted c
+         JOIN plan p ON md5('testdata-konsultasjon-' || p.key)::uuid = c.id
+         JOIN diagnosis_codes d ON d.prefix = p.prefix
+WHERE c.status NOT IN ('PLANNED', 'CANCELLED')
 RETURNING consultation_id),
      clinical_notes AS (
 INSERT INTO clinical_note (id, consultation_id, patient_id, clinical_note)
-SELECT md5('testdata-journalnotat-' || n.key)::uuid, k.id, k.patient_id, n.note_text
+SELECT md5('testdata-journalnotat-' || n.key)::uuid, c.id, c.patient_id, n.note_text
 FROM note_plan n
-         JOIN inserted k ON k.id = md5('testdata-konsultasjon-' || n.key)::uuid
+         JOIN inserted c ON c.id = md5('testdata-konsultasjon-' || n.key)::uuid
 RETURNING id)
 INSERT INTO measurement (id, patient_id, consultation_id, hpr, loinc_code, loinc_display, value, unit_code,
                          unit_display, effective_at, status)
 SELECT md5('testdata-maaling-' || m.key || m.loinc_code)::uuid,
-       k.patient_id,
-       k.id,
+       c.patient_id,
+       c.id,
        (SELECT fl.hpr
         FROM fastlegeliste_patient flp
                  JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
-        WHERE flp.patient_id = k.patient_id),
+        WHERE flp.patient_id = c.patient_id),
        m.loinc_code,
        m.loinc_display,
        m.value,
        m.unit_code,
        m.unit_display,
-       k.started_at,
+       c.started_at,
        'FINAL'
 FROM measurements m
-         JOIN inserted k ON k.id = md5('testdata-konsultasjon-' || m.key)::uuid;
+         JOIN inserted c ON c.id = md5('testdata-konsultasjon-' || m.key)::uuid;
 
 DELETE
 FROM consultation_diagnosis_code d

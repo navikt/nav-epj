@@ -162,7 +162,7 @@ describe("useRouteTabSync journal routes", () => {
       }],
     }])));
     act(() => store().setCurrent("journal"));
-    await waitFor(() => expect(useJournalStore.getState().draft.notat).toBe("Fra SMART"));
+    await waitFor(() => expect(useJournalStore.getState().draft.clinicalNote).toBe("Fra SMART"));
   });
 
   it("opens and selects the single Journal tab for a patient route and loads that patient", async () => {

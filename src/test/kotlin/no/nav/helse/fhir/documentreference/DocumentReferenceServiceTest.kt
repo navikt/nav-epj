@@ -176,14 +176,14 @@ class DocumentReferenceServiceTest {
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `searchDocumentReferences returns every notat for the patient without an encounter filter`() =
+    fun `searchDocumentReferences returns every note for the patient without an encounter filter`() =
         runTest {
             val patientId = PatientId(Uuid.generateV4())
-            val forste = clinicalNote(patientId = patientId)
-            val andre = clinicalNote(patientId = patientId)
+            val first = clinicalNote(patientId = patientId)
+            val second = clinicalNote(patientId = patientId)
             coEvery {
                 consultationService.getClinicalNotes(patientId, null, DEFAULT_ORG_NUMBER)
-            } returns listOf(forste, andre)
+            } returns listOf(first, second)
             coEvery { consultationService.getConsultations(patientId, DEFAULT_ORG_NUMBER) } returns
                 emptyList()
 
@@ -195,7 +195,7 @@ class DocumentReferenceServiceTest {
                 )
 
             assertEquals(
-                setOf(forste.id.value.toString(), andre.id.value.toString()),
+                setOf(first.id.value.toString(), second.id.value.toString()),
                 bundle.entry
                     .map { (it.resource as com.google.fhir.model.r4.DocumentReference).id }
                     .toSet(),
@@ -208,10 +208,10 @@ class DocumentReferenceServiceTest {
         runTest {
             val patientId = PatientId(Uuid.generateV4())
             val consultationId = ConsultationId(Uuid.generateV4())
-            val notat = clinicalNote(patientId = patientId, consultationId = consultationId)
+            val note = clinicalNote(patientId = patientId, consultationId = consultationId)
             coEvery {
                 consultationService.getClinicalNotes(patientId, consultationId, DEFAULT_ORG_NUMBER)
-            } returns listOf(notat)
+            } returns listOf(note)
             coEvery { consultationService.getConsultations(patientId, DEFAULT_ORG_NUMBER) } returns
                 emptyList()
 
@@ -223,7 +223,7 @@ class DocumentReferenceServiceTest {
                 )
 
             assertEquals(
-                notat.id.value.toString(),
+                note.id.value.toString(),
                 (bundle.entry.single().resource as com.google.fhir.model.r4.DocumentReference).id,
             )
             coVerify(exactly = 1) {

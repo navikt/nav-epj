@@ -61,7 +61,7 @@ export function StartTab() {
               {recent.map((patient) => {
                 const birthDate = birthDateOf(patient);
                 const last = lastConsultation[patient.id];
-                const siste =
+                const latest =
                   !last
                     ? "–"
                     : last.status === "IN_PROGRESS"
@@ -75,7 +75,7 @@ export function StartTab() {
                     <span>
                       {copy["s2.recent.item"](
                         birthDate ? formatDate(birthDate) : "–",
-                        siste,
+                        latest,
                       )}
                     </span>
                   </li>
@@ -92,13 +92,13 @@ export function StartTab() {
                 journalPatientId,
                 activePatientId,
               );
-              const tid = formatTime(accessExpiry(tabApp.startedAt));
+              const time = formatTime(accessExpiry(tabApp.startedAt));
               return (
                 <Note key={tabApp.id} tone={stale ? "warn" : "info"}>
                   <strong>{tabApp.navn}</strong>{" "}
                   {stale
-                    ? copy["s2.tabApps.stale"](tid)
-                    : copy["s2.tabApps.running"](tid)}
+                    ? copy["s2.tabApps.stale"](time)
+                    : copy["s2.tabApps.running"](time)}
                 </Note>
               );
             })}

@@ -29,12 +29,12 @@ function dateTime(iso: string | null | undefined) {
 
 function expiryText(iso: string | null | undefined, now: Date) {
   if (!iso) return EMPTY;
-  const [dato, tid] = formatDateTime(iso).split(" ");
+  const [date, time] = formatDateTime(iso).split(" ");
   const remaining = new Date(iso).getTime() - now.getTime();
-  if (remaining <= 0) return copy["s11.helseid.expiredValue"](dato, tid);
+  if (remaining <= 0) return copy["s11.helseid.expiredValue"](date, time);
   return copy["s11.helseid.expValue"](
-    dato,
-    tid,
+    date,
+    time,
     Math.round(remaining / 60_000),
   );
 }

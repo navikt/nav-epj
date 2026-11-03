@@ -75,10 +75,10 @@ class ConsultationRepository {
 
         consultations.map { row ->
             val consultationId = row[ConsultationTable.id]
-            val hprListe = hprByConsultationId[consultationId].orEmpty()
+            val hprList = hprByConsultationId[consultationId].orEmpty()
             val clinicalNotes = clinicalNotesByConsultationId[consultationId].orEmpty()
             val diagnosisList = diagnosesByConsultationId[consultationId].orEmpty()
-            row.toConsultationWithHprAndClinicalNotes(hprListe, clinicalNotes, diagnosisList)
+            row.toConsultationWithHprAndClinicalNotes(hprList, clinicalNotes, diagnosisList)
         }
     }
 
@@ -288,15 +288,15 @@ class ConsultationRepository {
         patientId: PatientId,
         clinicalNote: String,
     ): Int = dbQuery {
-        val eksisterendeId =
+        val existingId =
             ClinicalNoteTable.select(ClinicalNoteTable.id)
                 .where { ClinicalNoteTable.consultationId eq consultationId.value }
                 .limit(1)
                 .singleOrNull()
                 ?.get(ClinicalNoteTable.id)
 
-        if (eksisterendeId != null) {
-            ClinicalNoteTable.update({ ClinicalNoteTable.id eq eksisterendeId }) {
+        if (existingId != null) {
+            ClinicalNoteTable.update({ ClinicalNoteTable.id eq existingId }) {
                 it[ClinicalNoteTable.clinicalNote] = clinicalNote
             }
         } else {
@@ -340,14 +340,14 @@ class ConsultationRepository {
 
     suspend fun updateDiagnosis(diagnosis: CreateDiagnosisRequest, consultationId: Uuid): Int =
         dbQuery {
-            val kodeverkDiagnosis =
+            val resolvedDiagnosis =
                 Diagnose.from(diagnosis.system, diagnosis.code)
                     ?: throw InvalidDiagnosisException(diagnosis.code, diagnosis.system.toString())
 
             ConsultationDiagnosisCodeTable.insertIgnore {
                     it[ConsultationDiagnosisCodeTable.consultationId] = consultationId
-                    it[diagnosisCode] = kodeverkDiagnosis.code
-                    it[diagnosisSystem] = kodeverkDiagnosis.system.toString()
+                    it[diagnosisCode] = resolvedDiagnosis.code
+                    it[diagnosisSystem] = resolvedDiagnosis.system.toString()
                 }
                 .insertedCount
         }
@@ -356,7 +356,7 @@ class ConsultationRepository {
         diagnoses: List<CreateDiagnosisRequest>,
         consultationId: Uuid,
     ): Int {
-        val onskedeNokler =
+        val desiredKeys =
             diagnoses
                 .map { diagnosis ->
                     Diagnose.from(diagnosis.system, diagnosis.code)
@@ -368,7 +368,7 @@ class ConsultationRepository {
                 .map { it.system.toString() to it.code }
                 .toSet()
 
-        val eksisterendeNokler =
+        val existingKeys =
             ConsultationDiagnosisCodeTable.select(
                     ConsultationDiagnosisCodeTable.diagnosisSystem,
                     ConsultationDiagnosisCodeTable.diagnosisCode,
@@ -379,8 +379,8 @@ class ConsultationRepository {
                         it[ConsultationDiagnosisCodeTable.diagnosisCode]
                 }
 
-        return eksisterendeNokler
-            .filterNot { it in onskedeNokler }
+        return existingKeys
+            .filterNot { it in desiredKeys }
             .sumOf { (system, code) ->
                 ConsultationDiagnosisCodeTable.deleteWhere {
                     (ConsultationDiagnosisCodeTable.consultationId eq consultationId) and
@@ -391,7 +391,7 @@ class ConsultationRepository {
     }
 
     private fun toEpjConsultation(consultation: ResultRow): Consultation {
-        val hprListe =
+        val hprList =
             ConsultationPractitioner.select(ConsultationPractitioner.hpr)
                 .where {
                     ConsultationPractitioner.consultationId eq consultation[ConsultationTable.id]
@@ -412,7 +412,7 @@ class ConsultationRepository {
                 .map { it.toDiagnosis() }
 
         return consultation.toConsultationWithHprAndClinicalNotes(
-            hprListe,
+            hprList,
             clinicalNotes,
             diagnosisList,
         )
@@ -503,7 +503,7 @@ class ConsultationRepository {
         )
 
     fun ResultRow.toConsultationWithHprAndClinicalNotes(
-        hprListe: List<String>,
+        hprList: List<String>,
         clinicalNotes: List<ClinicalNote>,
         diagnosisList: List<Diagnose>,
     ): Consultation =
@@ -511,7 +511,7 @@ class ConsultationRepository {
             id = ConsultationId(this[ConsultationTable.id]),
             patientId = PatientId(this[ConsultationTable.patientId]),
             clinicId = ClinicId(this[ConsultationTable.clinicId]),
-            hpr = hprListe,
+            hpr = hprList,
             startedAt = this[ConsultationTable.startedAt],
             endedAt = this[ConsultationTable.endedAt],
             status = this[ConsultationTable.status],

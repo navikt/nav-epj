@@ -37,14 +37,14 @@ class ConsultationRepositoryClinicalNoteTest : ConsultationRepositoryTestBase() 
                 clinicalNote = "notat",
             )
 
-        val opprettet = consultationRepository.createClinicalNote(id, request, DEFAULT_ORG_NUMBER)
+        val created = consultationRepository.createClinicalNote(id, request, DEFAULT_ORG_NUMBER)
 
-        assertEquals(id, opprettet.id)
-        assertEquals(patientId, opprettet.patientId)
-        assertEquals(consultationId, opprettet.consultationId)
-        assertEquals("notat", opprettet.clinicalNote)
-        val lagret = consultationRepository.findClinicalNote(id, DEFAULT_ORG_NUMBER)
-        assertEquals("notat", lagret?.clinicalNote)
+        assertEquals(id, created.id)
+        assertEquals(patientId, created.patientId)
+        assertEquals(consultationId, created.consultationId)
+        assertEquals("notat", created.clinicalNote)
+        val saved = consultationRepository.findClinicalNote(id, DEFAULT_ORG_NUMBER)
+        assertEquals("notat", saved?.clinicalNote)
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -73,11 +73,11 @@ class ConsultationRepositoryClinicalNoteTest : ConsultationRepositoryTestBase() 
     fun `createClinicalNote throws ConsultationBelongsToOtherPatientException when the encounter belongs to another patient`() =
         runTest {
             val hpr = PractitionerHpr("123")
-            val eier = createPatient(hpr = hpr)
+            val owner = createPatient(hpr = hpr)
             val consultationId =
                 consultationRepository.insert(
                     CreateConsultation(
-                        eier,
+                        owner,
                         listOf(hpr),
                         LocalDateTime.now(),
                         ConsultationStatus.IN_PROGRESS,
@@ -184,11 +184,11 @@ class ConsultationRepositoryClinicalNoteTest : ConsultationRepositoryTestBase() 
                 DEFAULT_ORG_NUMBER,
             )
 
-            val notaterForA =
+            val notesForA =
                 consultationRepository.listClinicalNotes(patientA, null, DEFAULT_ORG_NUMBER)
 
-            assertEquals(1, notaterForA.size)
-            assertEquals("for A", notaterForA.single().clinicalNote)
+            assertEquals(1, notesForA.size)
+            assertEquals("for A", notesForA.single().clinicalNote)
         }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -228,15 +228,15 @@ class ConsultationRepositoryClinicalNoteTest : ConsultationRepositoryTestBase() 
                 DEFAULT_ORG_NUMBER,
             )
 
-            val notater =
+            val notes =
                 consultationRepository.listClinicalNotes(
                     patientId,
                     consultationA,
                     DEFAULT_ORG_NUMBER,
                 )
 
-            assertEquals(1, notater.size)
-            assertEquals("for A", notater.single().clinicalNote)
+            assertEquals(1, notes.size)
+            assertEquals("for A", notes.single().clinicalNote)
         }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -245,17 +245,17 @@ class ConsultationRepositoryClinicalNoteTest : ConsultationRepositoryTestBase() 
         runTest {
             val patientId = createPatient()
 
-            val notater =
+            val notes =
                 consultationRepository.listClinicalNotes(patientId, null, DEFAULT_ORG_NUMBER)
 
-            assertTrue(notater.isEmpty())
+            assertTrue(notes.isEmpty())
         }
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `insertClinicalNote rejects an encounter that belongs to another patient`() = runTest {
-        val eier = createPatient()
-        val consultationId = createConsultation(eier)
+        val owner = createPatient()
+        val consultationId = createConsultation(owner)
         val otherPatient = createPatient()
         val id = ClinicalNoteId(Uuid.generateV4())
 
@@ -272,27 +272,27 @@ class ConsultationRepositoryClinicalNoteTest : ConsultationRepositoryTestBase() 
     @Test
     fun `insertClinicalNote does not move an existing clinical note to another consultation`() =
         runTest {
-            val eier = createPatient()
-            val ownerConsultation = createConsultation(eier)
+            val owner = createPatient()
+            val ownerConsultation = createConsultation(owner)
             val id = ClinicalNoteId(Uuid.generateV4())
             consultationRepository.insertClinicalNote(
-                ClinicalNote(id, ownerConsultation, eier, "original"),
+                ClinicalNote(id, ownerConsultation, owner, "original"),
                 DEFAULT_ORG_NUMBER,
             )
-            val angriper = createPatient()
-            val attackerConsultation = createConsultation(angriper)
+            val attacker = createPatient()
+            val attackerConsultation = createConsultation(attacker)
 
             val rows =
                 consultationRepository.insertClinicalNote(
-                    ClinicalNote(id, attackerConsultation, angriper, "overskrevet"),
+                    ClinicalNote(id, attackerConsultation, attacker, "overskrevet"),
                     DEFAULT_ORG_NUMBER,
                 )
 
             assertEquals(0, rows)
-            val lagret = consultationRepository.findClinicalNote(id, DEFAULT_ORG_NUMBER)
-            assertEquals("original", lagret?.clinicalNote)
-            assertEquals(eier, lagret?.patientId)
-            assertEquals(ownerConsultation, lagret?.consultationId)
+            val saved = consultationRepository.findClinicalNote(id, DEFAULT_ORG_NUMBER)
+            assertEquals("original", saved?.clinicalNote)
+            assertEquals(owner, saved?.patientId)
+            assertEquals(ownerConsultation, saved?.consultationId)
         }
 
     @OptIn(ExperimentalUuidApi::class)

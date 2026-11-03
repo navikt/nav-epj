@@ -227,17 +227,17 @@ class HackathonClinicalSeedTest : WithPostgresql() {
     fun `every event patient has at least three consultations over two years or more`() {
         val perPatient =
             queryInts(
-                "SELECT count(k.id)::int FROM ($eventPatients) e " +
-                    "LEFT JOIN consultation k ON k.patient_id = e.patient_id GROUP BY e.patient_id"
+                "SELECT count(c.id)::int FROM ($eventPatients) e " +
+                    "LEFT JOIN consultation c ON c.patient_id = e.patient_id GROUP BY e.patient_id"
             )
         assertEquals(32, perPatient.size)
         assertTrue(perPatient.all { it >= 3 }, perPatient.toString())
 
         val spanDays =
             queryInts(
-                "SELECT (max(k.started_at)::date - min(k.started_at)::date)::int " +
-                    "FROM consultation k WHERE k.patient_id IN ($eventPatients) " +
-                    "AND k.status <> 'PLANNED' GROUP BY k.patient_id"
+                "SELECT (max(c.started_at)::date - min(c.started_at)::date)::int " +
+                    "FROM consultation c WHERE c.patient_id IN ($eventPatients) " +
+                    "AND c.status <> 'PLANNED' GROUP BY c.patient_id"
             )
         assertTrue(spanDays.all { it >= 700 }, spanDays.toString())
         assertEquals(
@@ -254,15 +254,15 @@ class HackathonClinicalSeedTest : WithPostgresql() {
         assertEquals(
             0,
             count(
-                "SELECT count(*) FROM consultation k WHERE k.status = 'FINISHED' AND NOT EXISTS " +
-                    "(SELECT 1 FROM consultation_diagnosis_code d WHERE d.consultation_id = k.id)"
+                "SELECT count(*) FROM consultation c WHERE c.status = 'FINISHED' AND NOT EXISTS " +
+                    "(SELECT 1 FROM consultation_diagnosis_code d WHERE d.consultation_id = c.id)"
             ),
         )
         val completed = count("SELECT count(*) FROM consultation WHERE status = 'FINISHED'")
         val withNote =
             count(
-                "SELECT count(*) FROM consultation k WHERE k.status = 'FINISHED' AND EXISTS " +
-                    "(SELECT 1 FROM clinical_note j WHERE j.consultation_id = k.id)"
+                "SELECT count(*) FROM consultation c WHERE c.status = 'FINISHED' AND EXISTS " +
+                    "(SELECT 1 FROM clinical_note cn WHERE cn.consultation_id = c.id)"
             )
         assertTrue(withNote * 100 >= completed * 75, "$withNote of $completed")
     }

@@ -88,7 +88,7 @@ describe("journalStore", () => {
     await journal().open("p1");
     expect(journal().status).toBe("ready");
     expect(journal().patient?.givenName).toBe("Matematisk");
-    expect(journal().draft).toEqual({ diagnoses: [diag], notat: "Hei" });
+    expect(journal().draft).toEqual({ diagnoses: [diag], clinicalNote: "Hei" });
     expect(journal().draftConsultationId).toBe("k1");
     expect(isDirty(journal())).toBe(false);
     expect(ongoingOf(journal().consultations)?.id).toBe("k1");
@@ -163,10 +163,10 @@ describe("journalStore", () => {
       "GET /api/patients/p2/consultations": () => ({ body: [] }),
     });
     await journal().open("p1");
-    journal().setNotat("skisse");
+    journal().setClinicalNote("skisse");
     await journal().open("p2");
     expect(journal().patient?.givenName).toBe("Ola");
-    expect(journal().draft.notat).toBe("");
+    expect(journal().draft.clinicalNote).toBe("");
     expect(journal().draftConsultationId).toBeNull();
   });
 
@@ -226,11 +226,11 @@ describe("journalStore", () => {
     const first = journal().open("p1");
     await journal().open("p2");
     await journal().open("p1");
-    journal().setNotat("skrevet etterpå");
+    journal().setClinicalNote("skrevet etterpå");
     releaseFirst();
     await first;
     expect(journal().patient?.givenName).toBe("Second");
-    expect(journal().draft.notat).toBe("skrevet etterpå");
+    expect(journal().draft.clinicalNote).toBe("skrevet etterpå");
   });
 
   it("drops the result of a start that finishes after the journal was cleared", async () => {
@@ -279,26 +279,26 @@ describe("journalStore", () => {
       const claims = calls.filter((c) => c.key === "PUT /api/active-patient").length;
       serverConsultation = consultation({ diagnoses: [diag], clinicalNotes: [note] });
       await journal().refresh();
-      expect(journal().draft.notat).toBe("Ekstern");
+      expect(journal().draft.clinicalNote).toBe("Ekstern");
       expect(isDirty(journal())).toBe(false);
       expect(journal().subTab).toBe("previous");
       expect(calls.filter((c) => c.key === "PUT /api/active-patient")).toHaveLength(claims);
     });
 
     it("skips refresh while the draft is dirty", async () => {
-      journal().setNotat("mitt");
+      journal().setClinicalNote("mitt");
       const before = consultationCalls();
       await journal().refresh();
       expect(consultationCalls()).toBe(before);
-      expect(journal().draft.notat).toBe("mitt");
+      expect(journal().draft.clinicalNote).toBe("mitt");
     });
 
     it("keeps edits made while a refresh is pending", async () => {
       serverConsultation = consultation({ clinicalNotes: [note] });
       const pending = journal().refresh();
-      journal().setNotat("mitt");
+      journal().setClinicalNote("mitt");
       await pending;
-      expect(journal().draft.notat).toBe("mitt");
+      expect(journal().draft.clinicalNote).toBe("mitt");
       expect(isDirty(journal())).toBe(true);
     });
 
@@ -331,15 +331,15 @@ describe("journalStore", () => {
       serverConsultation = consultation({ clinicalNotes: [note] });
       await journal().refresh();
       expect(journal().refreshFailed).toBe(false);
-      expect(journal().draft.notat).toBe("Ekstern");
+      expect(journal().draft.clinicalNote).toBe("Ekstern");
     });
 
     it("marks the tab unsaved when the draft differs and clears it when it matches again", () => {
       const tab = () => useWorkspaceStore.getState().tabs.find((t) => t.kind === "journal");
-      journal().setNotat("ny tekst");
+      journal().setClinicalNote("ny tekst");
       expect(isDirty(journal())).toBe(true);
       expect(tab()?.unsaved).toBe(true);
-      journal().setNotat("");
+      journal().setClinicalNote("");
       expect(tab()?.unsaved).toBe(false);
     });
 
@@ -360,7 +360,7 @@ describe("journalStore", () => {
     });
 
     it("saves with clinicalNote null when the note is blank", async () => {
-      journal().setNotat("   ");
+      journal().setClinicalNote("   ");
       expect(await journal().save()).toBe(true);
       const patch = calls.find((c) => c.key.startsWith("PATCH"))!;
       expect(patch.body).toEqual({
@@ -372,7 +372,7 @@ describe("journalStore", () => {
     });
 
     it("saves the note text and reloads the baseline from the server", async () => {
-      journal().setNotat("Pasienten er frisk");
+      journal().setClinicalNote("Pasienten er frisk");
       serverConsultation = consultation({
         diagnoses: [diag],
         clinicalNotes: [
@@ -403,10 +403,10 @@ describe("journalStore", () => {
       stub({
         "PATCH /api/patients/p1/consultations": () => ({ ok: false }),
       });
-      journal().setNotat("viktig");
+      journal().setClinicalNote("viktig");
       expect(await journal().save()).toBe(false);
       expect(journal().saveStatus).toBe("error");
-      expect(journal().draft.notat).toBe("viktig");
+      expect(journal().draft.clinicalNote).toBe("viktig");
       const tab = useWorkspaceStore.getState().tabs.find((t) => t.kind === "journal");
       expect(tab).toMatchObject({ unsaved: true, error: true });
     });
@@ -433,17 +433,17 @@ describe("journalStore", () => {
         "PATCH /api/patients/p1/consultations": () => ({ body: {} }),
         "GET /api/patients/p1/consultations": () => ({ ok: false }),
       });
-      journal().setNotat("lokalt");
+      journal().setClinicalNote("lokalt");
       expect(await journal().save({ finalize: true })).toBe(true);
       expect(journal().consultations[0]).toMatchObject({ status: "FINISHED" });
       expect(journal().consultations[0].clinicalNotes.at(-1)?.clinicalNote).toBe("lokalt");
     });
 
     it("discards the draft back to the baseline", () => {
-      journal().setNotat("skisse");
+      journal().setClinicalNote("skisse");
       journal().removeDiagnosis("A02", "ICPC2");
       journal().discardDraft();
-      expect(journal().draft).toEqual({ diagnoses: [diag], notat: "" });
+      expect(journal().draft).toEqual({ diagnoses: [diag], clinicalNote: "" });
       expect(isDirty(journal())).toBe(false);
     });
 

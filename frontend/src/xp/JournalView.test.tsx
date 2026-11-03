@@ -108,7 +108,7 @@ describe("JournalView", () => {
       document.dispatchEvent(new Event("visibilitychange"));
     });
     expect(count()).toBe(before + 1);
-    expect(useJournalStore.getState().draft.notat).toBe("Hei");
+    expect(useJournalStore.getState().draft.clinicalNote).toBe("Hei");
     unmount();
     window.dispatchEvent(new Event("focus"));
     document.dispatchEvent(new Event("visibilitychange"));

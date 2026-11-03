@@ -67,9 +67,9 @@ ON CONFLICT (hpr, clinic_id) DO NOTHING;
 INSERT INTO fastlegeliste_patient (fastlegeliste_id, patient_id)
 SELECT (SELECT fl.id
         FROM fastlegeliste fl
-                 JOIN clinic lk ON lk.id = fl.clinic_id
+                 JOIN clinic cl ON cl.id = fl.clinic_id
         WHERE fl.hpr = v.hpr
-          AND lk.org_number = v.org_number),
+          AND cl.org_number = v.org_number),
        (SELECT id FROM patient WHERE personident = v.personident)
 FROM (VALUES ('900000101', '312000016', '20856210112'),
              ('900000101', '312000016', '03916410017'),
@@ -105,7 +105,7 @@ FROM (VALUES ('900000101', '312000016', '20856210112'),
              ('900000104', '312000040', '13841050147')) AS v (hpr, org_number, personident)
 ON CONFLICT (patient_id) DO UPDATE SET fastlegeliste_id = EXCLUDED.fastlegeliste_id;
 
-WITH legacy (key, personident, startet, avsluttet, status, reason_for_visit) AS (
+WITH legacy (key, personident, started_at, ended_at, status, reason_for_visit) AS (
     VALUES ('BB1', '20856210112', '2026-03-10 09:00', '2026-03-10 09:30', 'FINISHED', 'Høyt blodtrykk, kontroll'),
              ('BB2', '20856210112', '2026-06-16 09:00', '2026-06-16 09:30', 'FINISHED', 'Høyt blodtrykk, kontroll'),
              ('BB3', '20856210112', '2026-09-22 09:00', '2026-09-22 09:30', 'FINISHED', 'Høyt blodtrykk, kontroll'),
@@ -147,7 +147,7 @@ WITH legacy (key, personident, startet, avsluttet, status, reason_for_visit) AS 
              ('RS2', '69906310147', '2026-06-23 13:30', '2026-06-23 14:00', 'FINISHED', 'Diabetes type 2, kontroll'),
              ('RS3', '69906310147', '2026-09-29 13:30', '2026-09-29 14:00', 'FINISHED', 'Diabetes type 2, kontroll'),
              ('LK1', '13841050147', '2026-05-19 15:30', '2026-05-19 15:50', 'FINISHED', 'Astma, kontroll')),
-     stories (prefix, personident, first_date, offsets, tid, minutter, reason_for_visit) AS (
+     stories (prefix, personident, first_date, offsets, start_time, duration_minutes, reason_for_visit) AS (
     VALUES ('BBh', '20856210112', '2024-06-11', '{0,175,350,525}', '09:00', 30, 'Høyt blodtrykk, kontroll'),
            ('IBh', '03916410017', '2024-07-10', '{0,170,340,510}', '10:00', 30, 'Diabetes type 2, kontroll'),
            ('TLh', '28815510331', '2023-11-07', '{0,130,260,390,520,650}', '13:00', 20, 'Astma, kontroll'),
@@ -176,7 +176,7 @@ WITH legacy (key, personident, startet, avsluttet, status, reason_for_visit) AS 
            ('SA', '49819110351', '2024-01-23', '{0,120,330,520}', '14:30', 25, 'Ryggsmerter'),
            ('BO', '21865810048', '2023-04-18', '{0,190,380,570,760,950}', '12:00', 20, 'Hypotyreose, kontroll'),
            ('LKh', '13841050147', '2023-03-21', '{0,150,320,500,680,860}', '15:30', 20, 'Astma, kontroll')),
-     oneoffs (key, personident, dato, tid, minutter, status, reason_for_visit) AS (
+     oneoffs (key, personident, visit_date, start_time, duration_minutes, status, reason_for_visit) AS (
     VALUES ('EKa', '30860850180', '2023-06-27', '14:00', 30, 'FINISHED', 'Helsekontroll'),
            ('EKb', '30860850180', '2025-01-14', '15:00', 20, 'FINISHED', 'Smerter i ankel etter vrikking'),
            ('EKc', '30860850180', '2025-11-18', '15:00', 20, 'FINISHED', 'Kviser'),
@@ -205,32 +205,32 @@ WITH legacy (key, personident, startet, avsluttet, status, reason_for_visit) AS 
            ('SMavl', '09894810030', '2025-06-10', '09:30', 30, 'CANCELLED', 'Kontroll, avlyst av pasient'),
            ('ELavl', '31857810085', '2024-09-24', '11:30', 30, 'CANCELLED', 'Diabetes type 2, kontroll'),
            ('YRavl', '42885110163', '2024-11-12', '09:00', 30, 'CANCELLED', 'KOLS, kontroll')),
-     dagsplan AS (
+     schedule AS (
 SELECT s.prefix || o.seq AS key, s.prefix, o.seq::int AS seq, s.personident,
-       s.first_date::date + o.dagoffset AS dag, s.tid, s.minutter, 'FINISHED' AS status, s.reason_for_visit
+       s.first_date::date + o.day_offset AS visit_day, s.start_time, s.duration_minutes, 'FINISHED' AS status, s.reason_for_visit
 FROM stories s
-         CROSS JOIN LATERAL unnest(s.offsets::int[]) WITH ORDINALITY AS o (dagoffset, seq)
+         CROSS JOIN LATERAL unnest(s.offsets::int[]) WITH ORDINALITY AS o (day_offset, seq)
 UNION ALL
-SELECT key, key, 1, personident, dato::date, tid, minutter, status, reason_for_visit
+SELECT key, key, 1, personident, visit_date::date, start_time, duration_minutes, status, reason_for_visit
 FROM oneoffs),
      plan AS (
 SELECT l.key,
        regexp_replace(l.key, '\d+$', '') AS prefix,
        regexp_replace(l.key, '^\D+', '')::int AS seq,
        l.personident,
-       l.startet::timestamp AS startet,
-       l.avsluttet::timestamp AS avsluttet,
+       l.started_at::timestamp AS started_at,
+       l.ended_at::timestamp AS ended_at,
        l.status,
        l.reason_for_visit
 FROM legacy l
 UNION ALL
 SELECT d.key, d.prefix, d.seq, d.personident,
-       v.virkedag + d.tid::time,
-       v.virkedag + d.tid::time + make_interval(mins => d.minutter),
+       v.business_day + d.start_time::time,
+       v.business_day + d.start_time::time + make_interval(mins => d.duration_minutes),
        d.status, d.reason_for_visit
-FROM dagsplan d
-         CROSS JOIN LATERAL (SELECT d.dag + CASE extract(isodow FROM d.dag) WHEN 6 THEN 2 WHEN 7 THEN 1 ELSE 0 END AS virkedag) v),
-     diagnosekoder (prefix, diagnosis_system, diagnosis_code) AS (
+FROM schedule d
+         CROSS JOIN LATERAL (SELECT d.visit_day + CASE extract(isodow FROM d.visit_day) WHEN 6 THEN 2 WHEN 7 THEN 1 ELSE 0 END AS business_day) v),
+     diagnosis_codes (prefix, diagnosis_system, diagnosis_code) AS (
     VALUES ('BB', 'ICPC2', 'K86'),
            ('BB', 'ICD10', 'I10'),
            ('BBh', 'ICPC2', 'K86'),
@@ -753,15 +753,15 @@ FROM (SELECT key, loinc_code, value
 INSERT INTO consultation (id, patient_id, clinic_id, started_at, ended_at, status,
                           reason_for_visit)
 SELECT md5('hackathon-konsultasjon-' || p.key)::uuid,
-       pa.id,
+       pt.id,
        fl.clinic_id,
-       p.startet AT TIME ZONE 'Europe/Oslo',
-       p.avsluttet AT TIME ZONE 'Europe/Oslo',
+       p.started_at AT TIME ZONE 'Europe/Oslo',
+       p.ended_at AT TIME ZONE 'Europe/Oslo',
        p.status,
        p.reason_for_visit
 FROM plan p
-         JOIN patient pa ON pa.personident = p.personident
-         JOIN fastlegeliste_patient flp ON flp.patient_id = pa.id
+         JOIN patient pt ON pt.personident = p.personident
+         JOIN fastlegeliste_patient flp ON flp.patient_id = pt.id
          JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
 ON CONFLICT (id) DO NOTHING
 RETURNING id, patient_id, started_at, status),
@@ -774,33 +774,33 @@ FROM inserted i
 RETURNING consultation_id),
      diagnoses AS (
 INSERT INTO consultation_diagnosis_code (consultation_id, diagnosis_system, diagnosis_code)
-SELECT k.id, d.diagnosis_system, d.diagnosis_code
-FROM inserted k
-         JOIN plan p ON md5('hackathon-konsultasjon-' || p.key)::uuid = k.id
-         JOIN diagnosekoder d ON d.prefix = p.prefix
-WHERE k.status NOT IN ('PLANNED', 'CANCELLED')
+SELECT c.id, d.diagnosis_system, d.diagnosis_code
+FROM inserted c
+         JOIN plan p ON md5('hackathon-konsultasjon-' || p.key)::uuid = c.id
+         JOIN diagnosis_codes d ON d.prefix = p.prefix
+WHERE c.status NOT IN ('PLANNED', 'CANCELLED')
 RETURNING consultation_id),
      clinical_notes AS (
 INSERT INTO clinical_note (id, consultation_id, patient_id, clinical_note)
-SELECT md5('hackathon-journalnotat-' || n.key)::uuid, k.id, k.patient_id, n.note_text
+SELECT md5('hackathon-journalnotat-' || n.key)::uuid, c.id, c.patient_id, n.note_text
 FROM note_plan n
-         JOIN inserted k ON k.id = md5('hackathon-konsultasjon-' || n.key)::uuid
+         JOIN inserted c ON c.id = md5('hackathon-konsultasjon-' || n.key)::uuid
 RETURNING id)
 INSERT INTO measurement (id, patient_id, consultation_id, hpr, loinc_code, loinc_display, value, unit_code,
                          unit_display, effective_at, status)
 SELECT md5('hackathon-maaling-' || v.key || v.loinc_code)::uuid,
-       k.patient_id,
-       k.id,
+       c.patient_id,
+       c.id,
        (SELECT fl.hpr
         FROM fastlegeliste_patient flp
                  JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
-        WHERE flp.patient_id = k.patient_id),
+        WHERE flp.patient_id = c.patient_id),
        v.loinc_code,
        v.loinc_display,
        v.value::numeric,
        v.unit_code,
        v.unit_display,
-       k.started_at,
+       c.started_at,
        'FINAL'
 FROM (SELECT key, loinc_code, loinc_display, value, unit_code, unit_display
       FROM measurements
@@ -874,4 +874,4 @@ FROM (SELECT key, loinc_code, loinc_display, value, unit_code, unit_display
              ('RS2', '4548-4', 'Hemoglobin A1c/Hemoglobin.total in Blood', '8.2', '%', '%'),
              ('RS3', '4548-4', 'Hemoglobin A1c/Hemoglobin.total in Blood', '7.5', '%', '%'))
            AS legacy_measurement (key, loinc_code, loinc_display, value, unit_code, unit_display)) AS v
-         JOIN inserted k ON k.id = md5('hackathon-konsultasjon-' || v.key)::uuid;
+         JOIN inserted c ON c.id = md5('hackathon-konsultasjon-' || v.key)::uuid;

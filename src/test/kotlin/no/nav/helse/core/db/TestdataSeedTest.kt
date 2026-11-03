@@ -63,14 +63,14 @@ class TestdataSeedTest : WithPostgresql() {
 
     @Test
     fun `every seeded diagnosis code exists in the diagnosis library`() {
-        val koder =
+        val codes =
             queryStrings(
                 "SELECT DISTINCT diagnosis_system, diagnosis_code FROM consultation_diagnosis_code"
             )
 
-        assertTrue(koder.isNotEmpty())
-        koder.forEach { (system, kode) ->
-            assertTrue(Diagnose.from(system!!, kode!!) != null, "$system $kode")
+        assertTrue(codes.isNotEmpty())
+        codes.forEach { (system, code) ->
+            assertTrue(Diagnose.from(system!!, code!!) != null, "$system $code")
         }
     }
 
@@ -230,11 +230,11 @@ class TestdataSeedTest : WithPostgresql() {
         val lists =
             queryStrings(
                 """
-                SELECT fl.hpr, lk.org_number, count(flp.patient_id)
+                SELECT fl.hpr, cl.org_number, count(flp.patient_id)
                 FROM fastlegeliste fl
-                         JOIN clinic lk ON lk.id = fl.clinic_id
+                         JOIN clinic cl ON cl.id = fl.clinic_id
                          LEFT JOIN fastlegeliste_patient flp ON flp.fastlegeliste_id = fl.id
-                GROUP BY fl.hpr, lk.org_number
+                GROUP BY fl.hpr, cl.org_number
                 ORDER BY fl.hpr
                 """
                     .trimIndent()
@@ -258,13 +258,13 @@ class TestdataSeedTest : WithPostgresql() {
         val offices =
             queryStrings(
                 """
-                SELECT DISTINCT lk.org_number
+                SELECT DISTINCT cl.org_number
                 FROM patient p
                          JOIN fastlegeliste_patient flp ON flp.patient_id = p.id
                          JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
-                         JOIN clinic lk ON lk.id = fl.clinic_id
+                         JOIN clinic cl ON cl.id = fl.clinic_id
                 WHERE p.family_name = 'FJORD'
-                ORDER BY lk.org_number
+                ORDER BY cl.org_number
                 """
                     .trimIndent()
             )
@@ -309,15 +309,15 @@ class TestdataSeedTest : WithPostgresql() {
     private fun clinicalCounts(orgNumber: String): List<String> =
         queryStrings(
                 """
-                SELECT (SELECT count(*) FROM consultation k WHERE k.clinic_id = lk.id),
+                SELECT (SELECT count(*) FROM consultation c WHERE c.clinic_id = cl.id),
                        (SELECT count(*) FROM consultation_diagnosis_code d
-                                 JOIN consultation k ON k.id = d.consultation_id WHERE k.clinic_id = lk.id),
+                                 JOIN consultation c ON c.id = d.consultation_id WHERE c.clinic_id = cl.id),
                        (SELECT count(*) FROM measurement m
-                                 JOIN consultation k ON k.id = m.consultation_id WHERE k.clinic_id = lk.id),
-                       (SELECT count(*) FROM clinical_note j
-                                 JOIN consultation k ON k.id = j.consultation_id WHERE k.clinic_id = lk.id)
-                FROM clinic lk
-                WHERE lk.org_number = '$orgNumber'
+                                 JOIN consultation c ON c.id = m.consultation_id WHERE c.clinic_id = cl.id),
+                       (SELECT count(*) FROM clinical_note cn
+                                 JOIN consultation c ON c.id = cn.consultation_id WHERE c.clinic_id = cl.id)
+                FROM clinic cl
+                WHERE cl.org_number = '$orgNumber'
                 """
                     .trimIndent()
             )
@@ -341,10 +341,10 @@ class TestdataSeedTest : WithPostgresql() {
                          JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
                 WHERE fl.hpr IN ('565501872', '900000001')
                   AND NOT EXISTS (SELECT 1
-                                  FROM consultation k
-                                  WHERE k.patient_id = p.id
-                                    AND k.clinic_id = fl.clinic_id
-                                    AND k.status = 'IN_PROGRESS')
+                                  FROM consultation c
+                                  WHERE c.patient_id = p.id
+                                    AND c.clinic_id = fl.clinic_id
+                                    AND c.status = 'IN_PROGRESS')
                 """
                     .trimIndent()
             )
@@ -366,8 +366,8 @@ class TestdataSeedTest : WithPostgresql() {
         assertEquals(
             "0",
             queryStrings(
-                    "SELECT count(*) FROM consultation k WHERE k.status = 'FINISHED' AND NOT EXISTS " +
-                        "(SELECT 1 FROM consultation_diagnosis_code d WHERE d.consultation_id = k.id)"
+                    "SELECT count(*) FROM consultation c WHERE c.status = 'FINISHED' AND NOT EXISTS " +
+                        "(SELECT 1 FROM consultation_diagnosis_code d WHERE d.consultation_id = c.id)"
                 )
                 .single()
                 .single(),
@@ -424,15 +424,15 @@ class TestdataSeedTest : WithPostgresql() {
 
     @Test
     fun `applying both seeds again keeps clinical counts and does not restore deleted rows`() {
-        val rask = "md5('testdata-konsultasjon-RL1')::uuid"
+        val rl1ConsultationId = "md5('testdata-konsultasjon-RL1')::uuid"
         withConnection { connection ->
             connection.createStatement().use {
                 it.execute(
-                    "DELETE FROM consultation_diagnosis_code WHERE consultation_id = $rask " +
+                    "DELETE FROM consultation_diagnosis_code WHERE consultation_id = $rl1ConsultationId " +
                         "AND diagnosis_code = 'I10'"
                 )
                 it.execute(
-                    "DELETE FROM measurement WHERE consultation_id = $rask AND loinc_code = '29463-7'"
+                    "DELETE FROM measurement WHERE consultation_id = $rl1ConsultationId AND loinc_code = '29463-7'"
                 )
             }
         }
@@ -452,7 +452,7 @@ class TestdataSeedTest : WithPostgresql() {
         assertEquals(
             "0",
             queryStrings(
-                    "SELECT count(*) FROM consultation_diagnosis_code WHERE consultation_id = $rask " +
+                    "SELECT count(*) FROM consultation_diagnosis_code WHERE consultation_id = $rl1ConsultationId " +
                         "AND diagnosis_code = 'I10'"
                 )
                 .single()
@@ -461,7 +461,7 @@ class TestdataSeedTest : WithPostgresql() {
         assertEquals(
             "0",
             queryStrings(
-                    "SELECT count(*) FROM measurement WHERE consultation_id = $rask AND loinc_code = '29463-7'"
+                    "SELECT count(*) FROM measurement WHERE consultation_id = $rl1ConsultationId AND loinc_code = '29463-7'"
                 )
                 .single()
                 .single(),
@@ -502,14 +502,14 @@ class TestdataSeedTest : WithPostgresql() {
         val types =
             queryStrings(
                 """
-                SELECT lk.org_number, string_agg(DISTINCT p.personident_type, ',' ORDER BY p.personident_type)
+                SELECT cl.org_number, string_agg(DISTINCT p.personident_type, ',' ORDER BY p.personident_type)
                 FROM patient p
                          JOIN fastlegeliste_patient flp ON flp.patient_id = p.id
                          JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
-                         JOIN clinic lk ON lk.id = fl.clinic_id
+                         JOIN clinic cl ON cl.id = fl.clinic_id
                 WHERE fl.hpr LIKE '9000001%'
-                GROUP BY lk.org_number
-                ORDER BY lk.org_number
+                GROUP BY cl.org_number
+                ORDER BY cl.org_number
                 """
                     .trimIndent()
             )
