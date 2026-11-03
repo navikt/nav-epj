@@ -143,7 +143,7 @@ export function AppFrame({
     overlay = (
       <Overlay
         title={copy["s5.error.title"]}
-        body={copy["s5.error.body"](run.navn)}
+        body={copy["s5.error.body"](run.name)}
         live="alert"
         buttons={[
           {
@@ -160,7 +160,7 @@ export function AppFrame({
     overlay = (
       <Overlay
         title={copy["s6.timeout.title"]}
-        body={copy["s6.timeout.body"](run.navn)}
+        body={copy["s6.timeout.body"](run.name)}
         buttons={[
           { label: copy["s5.popout"], onClick: onPopOut, isDefault: true },
           { label: copy["s5.close"], onClick: onClose },
@@ -172,7 +172,7 @@ export function AppFrame({
     overlay = (
       <div className="xp-frame-over">
         <section className="xp-card" role="status">
-          <h2>{copy["s6.title"](run.navn)}</h2>
+          <h2>{copy["s6.title"](run.name)}</h2>
           <ul className="xp-steps">
             <li>
               <span aria-hidden="true">{parts ? "✔" : "◐"}</span>{" "}
@@ -187,7 +187,7 @@ export function AppFrame({
               {parts && ` ${copy["s6.step2.wait"](parts.origin)}`}
             </li>
           </ul>
-          <Progress label={copy["s6.title"](run.navn)} />
+          <Progress label={copy["s6.title"](run.name)} />
           <p>{copy["s6.hint"]}</p>
         </section>
       </div>
@@ -199,7 +199,7 @@ export function AppFrame({
       {showFrame && launchUrl && (
         <iframe
           key={`${appTabId(clientId)}:${attempt}`}
-          title={copy["s5.iframeTitle"](run.navn, clientId, patientName)}
+          title={copy["s5.iframeTitle"](run.name, clientId, patientName)}
           src={launchUrl}
           sandbox={IFRAME_SANDBOX}
           referrerPolicy={IFRAME_REFERRER_POLICY}

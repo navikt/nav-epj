@@ -28,9 +28,9 @@ type Props = {
 
 const icons: Record<MessageBoxVariant, IconName> = {
   info: "info",
-  warning: "advarsel",
-  error: "feil",
-  question: "sporsmal",
+  warning: "warning",
+  error: "error",
+  question: "question",
 };
 
 export function MessageBox({

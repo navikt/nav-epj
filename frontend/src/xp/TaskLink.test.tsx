@@ -49,7 +49,7 @@ describe("TaskLink", () => {
     const onActivate = vi.fn();
     render(
       <TaskLink
-        icon="hendelseslogg"
+        icon="event-log"
         label="Hendelseslogg"
         badge="Fase 2"
         disabled
@@ -95,7 +95,7 @@ describe("TaskLink", () => {
     const { container } = render(
       <>
         <TaskLink icon="app" label="Sykmelding" sub="▣ Vindu" />
-        <TaskLink icon="hjelp" label="Hjelp" badge="Fase 2" disabled />
+        <TaskLink icon="help" label="Hjelp" badge="Fase 2" disabled />
         <TaskLink icon="app" label="Valider" reason="Ikke tilgjengelig." disabled />
       </>,
     );

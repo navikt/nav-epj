@@ -131,7 +131,7 @@ describe("StartTab", () => {
     useJournalStore.setState({ patientId: ola.id, patient: ola, consultations: [], status: "ready" });
     useAppRunStore.setState({
       tabApps: [
-        { id: "t1", clientId: "syk-inn", navn: "Sykmelding", patient: ola, startedAt: new Date() },
+        { id: "t1", clientId: "syk-inn", name: "Sykmelding", patient: ola, startedAt: new Date() },
       ],
     });
     renderPage();
@@ -143,7 +143,7 @@ describe("StartTab", () => {
     useJournalStore.setState({ patientId: kari.id, patient: kari, consultations: [], status: "ready" });
     useAppRunStore.setState({
       tabApps: [
-        { id: "t1", clientId: "syk-inn", navn: "Sykmelding", patient: ola, startedAt: new Date() },
+        { id: "t1", clientId: "syk-inn", name: "Sykmelding", patient: ola, startedAt: new Date() },
       ],
     });
     renderPage();
@@ -161,7 +161,7 @@ describe("StartTab", () => {
     usePatientsStore.setState({ patients: [ola], recentIds: [ola.id], lastConsultation: {} });
     useAppRunStore.setState({
       tabApps: [
-        { id: "t1", clientId: "syk-inn", navn: "Sykmelding", patient: ola, startedAt: new Date() },
+        { id: "t1", clientId: "syk-inn", name: "Sykmelding", patient: ola, startedAt: new Date() },
       ],
     });
     const { container } = renderPage();

@@ -23,7 +23,7 @@ describe("AppsTab", () => {
       "Validator",
       "Fanen",
     ]);
-    expect(within(cards[0]).getByText(sykInn.beskrivelse ?? "")).toBeInTheDocument();
+    expect(within(cards[0]).getByText(sykInn.description ?? "")).toBeInTheDocument();
     expect(within(cards[0]).getByText(copy["pane.apps.mode.iframe"])).toBeInTheDocument();
     expect(within(cards[1]).getByText(copy["pane.apps.mode.ask"])).toBeInTheDocument();
     expect(within(cards[2]).getByText(copy["pane.apps.mode.tab"])).toBeInTheDocument();
@@ -71,7 +71,7 @@ describe("AppsTab", () => {
     useAppRunStore.getState().addTabApp({
       id: "smart-ny-fane-1",
       clientId: "ny-fane",
-      navn: "Fanen",
+      name: "Fanen",
       patient: ola,
       startedAt: new Date(),
     });

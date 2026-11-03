@@ -26,9 +26,9 @@ smart:
   fhirServerUrl: ${FHIR_SERVER_URL}
   clients:
     - clientId: "syk-inn"
-      navn: "Sykmelding"
-      beskrivelse: "Skriv sykmelding og send den til Nav."
-      ikon: "sykmelding"
+      name: "Sykmelding"
+      description: "Skriv sykmelding og send den til Nav."
+      icon: "sick-note"
       launchMode: "ask"
       redirectUris: [ "https://www.ekstern.dev.nav.no/samarbeidspartner/sykmelding", "https://www.ekstern.dev.nav.no/samarbeidspartner/sykmelding/fhir/callback" ]
       launchUris: [ "https://www.ekstern.dev.nav.no/samarbeidspartner/sykmelding/fhir/launch" ]
@@ -47,9 +47,9 @@ smart:
         - patient/Observation.write
         - patient/DocumentReference.crs
     - clientId: "NAV_SMART_on_FHIR_validator"
-      navn: "Validator"
-      beskrivelse: "Tester SMART on FHIR-oppstart og FHIR-API-et mot nav-epj."
-      ikon: "validator"
+      name: "Validator"
+      description: "Tester SMART on FHIR-oppstart og FHIR-API-et mot nav-epj."
+      icon: "validator"
       launchMode: "iframe"
       redirectUris: [ "https://nav-on-fhir.ekstern.dev.nav.no/callback" ]
       launchUris: [ "https://nav-on-fhir.ekstern.dev.nav.no/launch" ]
@@ -73,8 +73,8 @@ smart:
         - patient/Binary.cruds
         - patient/QuestionnaireResponse.cruds
     - clientId: "hackathon-public"
-      navn: "Hackathon starter"
-      beskrivelse: "Delt klient for hackathon-apper som kjører på localhost:3100."
+      name: "Hackathon starter"
+      description: "Delt klient for hackathon-apper som kjører på localhost:3100."
       launchMode: "tab"
       redirectUris: [ "http://localhost:3100/callback" ]
       launchUris: [ "http://localhost:3100/launch" ]

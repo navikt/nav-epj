@@ -29,7 +29,7 @@ export function ChooseViewDialog({ app, onClose }: Props) {
 
   return (
     <Dialog
-      title={copy["s6b.title"](app.navn)}
+      title={copy["s6b.title"](app.name)}
       labelledBy={questionId}
       describedBy={hintId}
       onClose={onClose}
@@ -41,7 +41,7 @@ export function ChooseViewDialog({ app, onClose }: Props) {
         }}
       >
         <p id={questionId}>
-          {copy["s6b.question"](app.navn, patient ? fullName(patient) : "")}
+          {copy["s6b.question"](app.name, patient ? fullName(patient) : "")}
         </p>
         <fieldset className="xp-fieldset">
           <legend>{copy["s6b.legend"]}</legend>

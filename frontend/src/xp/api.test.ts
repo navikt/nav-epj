@@ -131,9 +131,9 @@ describe("api", () => {
     const fn = stub([
       {
         clientId: "syk-inn",
-        navn: "Sykmelding",
-        beskrivelse: null,
-        ikon: "sykmelding",
+        name: "Sykmelding",
+        description: null,
+        icon: "sick-note",
         launchMode: "iframe",
         launchUri: "https://syk.example",
         tokenEndpointAuthMethod: "client_secret_basic",
@@ -148,7 +148,7 @@ describe("api", () => {
   });
 
   it("rejects an app with an unknown launch mode", async () => {
-    stub([{ clientId: "x", navn: "X", ikon: "vindu", launchMode: "popup" }]);
+    stub([{ clientId: "x", name: "X", icon: "window", launchMode: "popup" }]);
     await expect(fetchApps()).rejects.toThrow();
   });
 

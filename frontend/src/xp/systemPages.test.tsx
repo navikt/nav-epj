@@ -72,12 +72,12 @@ describe("system pages in the shell", () => {
 
   it("opens Kontrollpanel as a document tab and lists the registered apps", async () => {
     renderApp("/");
-    await openSystemPage(copy["pane.system.kontroll"]);
+    await openSystemPage(copy["pane.system.controlPanel"]);
     expect(
       await screen.findByRole("heading", { level: 1, name: copy["s9.title"] }),
     ).toBeVisible();
     expect(
-      screen.getByRole("tab", { name: copy["pane.system.kontroll"] }),
+      screen.getByRole("tab", { name: copy["pane.system.controlPanel"] }),
     ).toHaveAttribute("aria-selected", "true");
     await userEvent.click(
       screen.getByRole("button", { name: new RegExp(copy["s9.cat.apps"]) }),
@@ -96,7 +96,7 @@ describe("system pages in the shell", () => {
 
   it("shows the office and user from the existing helsepersonell fetch", async () => {
     renderApp("/");
-    await openSystemPage(copy["pane.system.kontroll"]);
+    await openSystemPage(copy["pane.system.controlPanel"]);
     await userEvent.click(
       await screen.findByRole("button", {
         name: new RegExp(copy["s9.cat.org"]),
@@ -140,7 +140,7 @@ describe("system pages in the shell", () => {
 
   it("opens Hjelp and returns to the start page when its tab is closed", async () => {
     renderApp("/");
-    await openSystemPage(copy["pane.system.hjelp"]);
+    await openSystemPage(copy["pane.system.help"]);
     expect(
       await screen.findByRole("heading", { level: 1, name: copy["s13.title"] }),
     ).toBeVisible();
@@ -159,10 +159,10 @@ describe("system pages in the shell", () => {
   it("keeps the page when another tab is opened and closed", async () => {
     vi.stubGlobal("scrollTo", vi.fn());
     renderApp("/");
-    await openSystemPage(copy["pane.system.hjelp"]);
-    await openSystemPage(copy["pane.system.kontroll"]);
+    await openSystemPage(copy["pane.system.help"]);
+    await openSystemPage(copy["pane.system.controlPanel"]);
     await userEvent.click(
-      screen.getByRole("tab", { name: copy["pane.system.hjelp"] }),
+      screen.getByRole("tab", { name: copy["pane.system.help"] }),
     );
     expect(
       screen.getByRole("heading", { level: 1, name: copy["s13.title"] }),

@@ -521,9 +521,9 @@ class SmartClientRegistryTest {
                   tokenEndpointAuthMethod: "none"
                   scopes: [ "openid", "launch" ]
                 - clientId: "shown-app"
-                  navn: "Vist app"
-                  beskrivelse: "En beskrivelse."
-                  ikon: "sykmelding"
+                  name: "Vist app"
+                  description: "En beskrivelse."
+                  icon: "sick-note"
                   launchMode: "ask"
                   redirectUris: [ "https://shown.example.com/callback" ]
                   launchUris: [ "https://shown.example.com/launch" ]
@@ -536,12 +536,12 @@ class SmartClientRegistryTest {
         val (plain, shown) = loadSmartClients(config)
 
         assertEquals("plain-app", plain.displayName)
-        assertEquals("", plain.beskrivelse)
-        assertEquals("vindu", plain.ikon)
+        assertEquals("", plain.description)
+        assertEquals("window", plain.icon)
         assertEquals(LaunchMode.IFRAME, plain.launchMode)
         assertEquals("Vist app", shown.displayName)
-        assertEquals("En beskrivelse.", shown.beskrivelse)
-        assertEquals("sykmelding", shown.ikon)
+        assertEquals("En beskrivelse.", shown.description)
+        assertEquals("sick-note", shown.icon)
         assertEquals(LaunchMode.ASK, shown.launchMode)
     }
 
@@ -574,7 +574,7 @@ class SmartClientRegistryTest {
                   issuerBaseUrl: "http://test/oidc"
                   fhirServerUrl: "http://test/fhir"
                   privateKeyJwk: "unused"
-                  clientRegistryJson: '[{"clientId":"json-app","navn":"Json app","launchMode":"tab","ikon":"validator","redirectUris":["https://app.example.com/callback"],"launchUris":["https://app.example.com/launch"],"tokenEndpointAuthMethod":"none","scopes":["openid"]}]'
+                  clientRegistryJson: '[{"clientId":"json-app","name":"Json app","launchMode":"tab","icon":"validator","redirectUris":["https://app.example.com/callback"],"launchUris":["https://app.example.com/launch"],"tokenEndpointAuthMethod":"none","scopes":["openid"]}]'
                 """
                     .trimIndent()
             )
@@ -582,6 +582,6 @@ class SmartClientRegistryTest {
         val client = loadSmartClients(config).single()
         assertEquals("Json app", client.displayName)
         assertEquals(LaunchMode.TAB, client.launchMode)
-        assertEquals("validator", client.ikon)
+        assertEquals("validator", client.icon)
     }
 }

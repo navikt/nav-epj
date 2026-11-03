@@ -54,7 +54,7 @@ describe("AppPropertiesDialog", () => {
     setup();
     const panel = screen.getByRole("tabpanel");
     expect(within(panel).getByText("Sykmelding")).toBeInTheDocument();
-    expect(within(panel).getByText(sykInn.beskrivelse ?? "")).toBeInTheDocument();
+    expect(within(panel).getByText(sykInn.description ?? "")).toBeInTheDocument();
     expect(within(panel).getByText(copy["s10.launchUrl"])).toBeInTheDocument();
     expect(within(panel).getByText(sykInn.launchUri ?? "")).toBeInTheDocument();
     expect(within(panel).getByText(copy["pane.apps.mode.iframe"])).toBeInTheDocument();

@@ -15,7 +15,7 @@ export function HelpPage() {
   return (
     <>
       <div className="xp-pagehead">
-        <XpIcon name="hjelp" size={32} />
+        <XpIcon name="help" size={32} />
         <h1 className="xp-h1">{copy["s13.title"]}</h1>
       </div>
       <Card heading={copy["s13.keys.title"]} headingId="help-keys">

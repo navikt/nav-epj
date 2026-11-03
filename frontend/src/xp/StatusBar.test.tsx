@@ -120,7 +120,7 @@ describe("StatusBar", () => {
       useAppRunStore.getState().addTabApp({
         id: "smart-ny-fane-1",
         clientId: "ny-fane",
-        navn: "Fanen",
+        name: "Fanen",
         patient: ola,
         startedAt: new Date(2026, 8, 30, 9, 14),
       });

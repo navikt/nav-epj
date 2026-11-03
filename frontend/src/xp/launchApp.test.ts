@@ -105,7 +105,7 @@ describe("startApp", () => {
       "noopener,noreferrer",
     );
     expect(useAppRunStore.getState().tabApps).toMatchObject([
-      { clientId: "ny-fane", navn: "Fanen" },
+      { clientId: "ny-fane", name: "Fanen" },
     ]);
     expect(useAppRunStore.getState().runs).toEqual([]);
     expect(useBalloonStore.getState().balloon?.body).toBe(

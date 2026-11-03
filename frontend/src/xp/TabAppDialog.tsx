@@ -32,8 +32,8 @@ export function TabAppDialog({ tabId, onClose }: Props) {
   if (stale) {
     return (
       <MessageBox
-        title={copy["s7.staleDlg.title"](tabApp.navn)}
-        heading={copy["s7.staleDlg.head"](tabApp.navn, owner)}
+        title={copy["s7.staleDlg.title"](tabApp.name)}
+        heading={copy["s7.staleDlg.head"](tabApp.name, owner)}
         variant="warning"
         buttons={[
           { label: copy["s7.staleDlg.done"], onClick: remove, isDefault: true },
@@ -59,8 +59,8 @@ export function TabAppDialog({ tabId, onClose }: Props) {
 
   return (
     <MessageBox
-      title={copy["s7.tabInfo.title"](tabApp.navn)}
-      heading={copy["s7.tabInfo.head"](tabApp.navn, owner)}
+      title={copy["s7.tabInfo.title"](tabApp.name)}
+      heading={copy["s7.tabInfo.head"](tabApp.name, owner)}
       variant="info"
       buttons={[
         { label: copy["s7.tabInfo.restart"], onClick: restart, isDefault: true },

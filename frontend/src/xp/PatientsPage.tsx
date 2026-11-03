@@ -98,7 +98,7 @@ export function PatientsPage({ canCreate, onNewPatient, onOpenJournal }: Props) 
         </p>
       ) : status === "error" ? (
         <div className="xp-note error" role="alert">
-          <XpIcon name="feil" />
+          <XpIcon name="error" />
           <span>{copy["s3.loadError"]}</span>
           <Button onClick={() => void load()}>{copy["s1.error.retry"]}</Button>
         </div>

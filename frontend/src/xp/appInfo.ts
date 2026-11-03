@@ -6,11 +6,11 @@ import type { IconName } from "./XpIcon";
 const APP_ICONS: readonly IconName[] = [
   "app",
   "journal",
-  "mappe",
-  "sykmelding",
-  "timebok",
+  "folder",
+  "sick-note",
+  "appointment-book",
   "validator",
-  "vindu",
+  "window",
 ];
 
 export const APP_MODE_LABELS = {
@@ -19,8 +19,8 @@ export const APP_MODE_LABELS = {
   ask: copy["pane.apps.mode.ask"],
 } as const;
 
-export function appIconName(ikon: string): IconName {
-  return APP_ICONS.find((name) => name === ikon) ?? "vindu";
+export function appIconName(icon: string): IconName {
+  return APP_ICONS.find((name) => name === icon) ?? "window";
 }
 
 export function initialsOf(name: string) {

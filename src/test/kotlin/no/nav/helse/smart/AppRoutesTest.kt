@@ -75,8 +75,8 @@ private val clients =
             clientSecret = SECRET,
             allowedScopes = parseRegisteredScopes(listOf("openid", "launch", "patient/Patient.rs")),
             displayName = "Sykmelding",
-            beskrivelse = "Skriv sykmelding og send den til Nav.",
-            ikon = "sykmelding",
+            description = "Skriv sykmelding og send den til Nav.",
+            icon = "sick-note",
             launchMode = LaunchMode.IFRAME,
         ),
         SmartClient(
@@ -237,9 +237,9 @@ class AppRoutesTest : WithValkey() {
         assertEquals(
             mapOf(
                 "clientId" to "syk-inn",
-                "navn" to "Sykmelding",
-                "beskrivelse" to "Skriv sykmelding og send den til Nav.",
-                "ikon" to "sykmelding",
+                "name" to "Sykmelding",
+                "description" to "Skriv sykmelding og send den til Nav.",
+                "icon" to "sick-note",
                 "launchMode" to "iframe",
                 "launchUri" to "https://sykmelding.test/fhir/launch",
                 "tokenEndpointAuthMethod" to "client_secret_basic",
@@ -252,9 +252,9 @@ class AppRoutesTest : WithValkey() {
         assertEquals(
             mapOf(
                 "clientId" to "validator",
-                "navn" to "Validator",
-                "beskrivelse" to "",
-                "ikon" to "vindu",
+                "name" to "Validator",
+                "description" to "",
+                "icon" to "window",
                 "launchMode" to "ask",
                 "launchUri" to "https://validator.test/launch",
                 "tokenEndpointAuthMethod" to "private_key_jwt",

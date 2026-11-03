@@ -17,9 +17,9 @@ const clinic = { id: "k1", name: "Storgata legekontor", orgNumber: "123456789", 
 
 const app = {
   clientId: "syk-inn",
-  navn: "Sykmelding",
-  beskrivelse: null,
-  ikon: "sykmelding",
+  name: "Sykmelding",
+  description: null,
+  icon: "sick-note",
   launchMode: "iframe",
   launchUri: "https://syk.example/fhir",
   tokenEndpointAuthMethod: "client_secret_basic",
@@ -31,9 +31,9 @@ const app = {
 const validator = {
   ...app,
   clientId: "validator",
-  navn: "Validator",
-  beskrivelse: "Tester SMART on FHIR-oppstart og FHIR-API-et mot nav-epj, med en beskrivelse som brekker over flere linjer.",
-  ikon: "validator",
+  name: "Validator",
+  description: "Tester SMART on FHIR-oppstart og FHIR-API-et mot nav-epj, med en beskrivelse som brekker over flere linjer.",
+  icon: "validator",
   launchUri: "https://validator.example/fhir",
 };
 

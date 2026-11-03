@@ -57,18 +57,18 @@ export function SwitchPatientDialog({
         </li>
         {runs.map((run) => (
           <li key={run.clientId}>
-            {run.navn} · {copy["s7.mode.iframe"]} · {copy["s7.effect.close"]}
+            {run.name} · {copy["s7.mode.iframe"]} · {copy["s7.effect.close"]}
           </li>
         ))}
         {tabApps.map((app) => (
           <li key={app.clientId}>
-            {app.navn} · {copy["s7.mode.tab"]} · {copy["s7.effect.cannot"]}
+            {app.name} · {copy["s7.mode.tab"]} · {copy["s7.effect.cannot"]}
           </li>
         ))}
       </ul>
       {tabApps.map((app) => (
         <Note key={app.clientId} tone="warn">
-          {copy["s7.tabWarning"](app.navn, app.clientId, from)}
+          {copy["s7.tabWarning"](app.name, app.clientId, from)}
         </Note>
       ))}
       {unsaved && <Note tone="error">{copy["s7.unsaved"]}</Note>}

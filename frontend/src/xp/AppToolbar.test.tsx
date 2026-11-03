@@ -21,7 +21,7 @@ function setup(props: Partial<Parameters<typeof AppToolbar>[0]> = {}) {
       <AppToolbar
         clientId="syk-inn"
         app="Sykmelding"
-        icon="sykmelding"
+        icon="sick-note"
         title="Sykmelding — Ola Nordmann — Konsultasjon 30.09 09:14"
         canNavigate
         canReload
