@@ -7,7 +7,7 @@ import {
   ConsultationSchema,
   LaunchErrorSchema,
   LaunchResponseSchema,
-  MaalingSchema,
+  MeasurementSchema,
   PatientListItemSchema,
   PatientSchema,
   SessionOrgSchema,
@@ -17,7 +17,7 @@ import {
   type App,
   type CapabilityStatement,
   type Consultation,
-  type Maaling,
+  type Measurement,
   type CreatePatientRequest,
   type Patient,
   type PatientListItem,
@@ -117,11 +117,11 @@ export async function fetchConsultations(
   return ConsultationSchema.array().parse(await response.json());
 }
 
-export async function fetchMaalinger(patientId: string): Promise<Maaling[]> {
+export async function fetchMeasurements(patientId: string): Promise<Measurement[]> {
   const response = await request(
-    `/api/patient/${encodeURIComponent(patientId)}/maalinger`,
+    `/api/patient/${encodeURIComponent(patientId)}/measurements`,
   );
-  return MaalingSchema.array().parse(await response.json());
+  return MeasurementSchema.array().parse(await response.json());
 }
 
 export async function startConsultation(

@@ -16,8 +16,8 @@ import no.nav.helse.epj.consultation.ConsultationService
 import no.nav.helse.epj.consultation.routes.clinicalNoteRoutes
 import no.nav.helse.epj.consultation.routes.consultationRoutes
 import no.nav.helse.epj.consultation.routes.diagnosisRoutes
-import no.nav.helse.epj.maaling.MaalingService
-import no.nav.helse.epj.maaling.maalingRoutes
+import no.nav.helse.epj.measurement.MeasurementService
+import no.nav.helse.epj.measurement.measurementRoutes
 import no.nav.helse.epj.patient.ActivePatientService
 import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.epj.patient.PatientService
@@ -37,7 +37,7 @@ fun Application.configureEpjModule() {
     val practitionerService: PractitionerService by dependencies
     val consultationService: ConsultationService by dependencies
     val clinicService: ClinicService by dependencies
-    val maalingService: MaalingService by dependencies
+    val measurementService: MeasurementService by dependencies
     val valkeyService: ValkeyService by dependencies
     val sessionOrgResolver: SessionOrgResolver by dependencies
     val sessionOrgService: SessionOrgService by dependencies
@@ -60,7 +60,7 @@ fun Application.configureEpjModule() {
             clinicRoutes(clinicService, sessionOrgResolver)
             diagnosisRoutes(consultationService, sessionOrgResolver)
             clinicalNoteRoutes(consultationService, sessionOrgResolver)
-            maalingRoutes(maalingService, sessionOrgResolver)
+            measurementRoutes(measurementService, sessionOrgResolver)
         }
     }
 }

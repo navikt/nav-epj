@@ -16,7 +16,7 @@ import { useWorkspaceStore } from "./workspaceStore";
 import type { Consultation, Patient } from "../utils/mapping/epj";
 
 export type DiagnosisItem = Consultation["diagnoses"][number];
-export const JOURNAL_SUB_TABS = ["consultation", "previous", "maalinger", "apper"] as const;
+export const JOURNAL_SUB_TABS = ["consultation", "previous", "measurements", "apper"] as const;
 export type JournalSubTab = (typeof JOURNAL_SUB_TABS)[number];
 export type LoadStatus = "idle" | "loading" | "ready" | "error";
 export type SaveStatus = "idle" | "saving" | "saved" | "error";

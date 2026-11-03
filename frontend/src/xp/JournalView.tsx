@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { Button } from "./Button";
 import { AppsTab } from "./AppsTab";
 import { ConsultationTab } from "./ConsultationTab";
-import { Maalinger } from "./Maalinger";
+import { Measurements } from "./Measurements";
 import { Note } from "./Note";
 import { PatientContext } from "./PatientContext";
 import { SubTabs } from "./SubTabs";
@@ -107,7 +107,7 @@ export function JournalView() {
             id: "previous",
             label: copy["s4.tab.previous"](previousConsultations.length),
           },
-          { id: "maalinger", label: copy["s4.tab.maalinger"] },
+          { id: "measurements", label: copy["s4.tab.measurements"] },
           { id: "apper", label: copy["s4.tab.apper"](appCount) },
         ]}
       >
@@ -115,7 +115,7 @@ export function JournalView() {
         {subTab === "previous" && (
           <PreviousConsultations consultations={previousConsultations} />
         )}
-        {subTab === "maalinger" && <Maalinger patientId={patient.id} />}
+        {subTab === "measurements" && <Measurements patientId={patient.id} />}
         {subTab === "apper" && <AppsTab />}
       </SubTabs>
     </>

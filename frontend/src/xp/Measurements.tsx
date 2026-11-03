@@ -3,17 +3,17 @@ import { Button } from "./Button";
 import { Card } from "./Card";
 import { Note } from "./Note";
 import { copy } from "./copy";
-import { fetchMaalinger } from "./api";
+import { fetchMeasurements } from "./api";
 import { formatUtcDateTimeInOslo } from "./patientInfo";
-import type { Maaling } from "../utils/mapping/epj";
+import type { Measurement } from "../utils/mapping/epj";
 
 type Result =
-  | { key: string; maalinger: Maaling[] }
-  | { key: string; maalinger: null };
+  | { key: string; measurements: Measurement[] }
+  | { key: string; measurements: null };
 
 type Props = { patientId: string };
 
-export function Maalinger({ patientId }: Props) {
+export function Measurements({ patientId }: Props) {
   const headingId = useId();
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<Result | null>(null);
@@ -21,12 +21,12 @@ export function Maalinger({ patientId }: Props) {
 
   useEffect(() => {
     let current = true;
-    fetchMaalinger(patientId).then(
-      (maalinger) => {
-        if (current) setResult({ key, maalinger });
+    fetchMeasurements(patientId).then(
+      (measurements) => {
+        if (current) setResult({ key, measurements });
       },
       () => {
-        if (current) setResult({ key, maalinger: null });
+        if (current) setResult({ key, measurements: null });
       },
     );
     return () => {
@@ -42,10 +42,10 @@ export function Maalinger({ patientId }: Props) {
     );
   }
 
-  if (result.maalinger === null) {
+  if (result.measurements === null) {
     return (
       <div className="xp-note error" role="alert">
-        <span>{copy["s4.maal.loadError"]}</span>
+        <span>{copy["s4.measurement.loadError"]}</span>
         <Button onClick={() => setAttempt((n) => n + 1)}>
           {copy["s1.error.retry"]}
         </Button>
@@ -53,37 +53,37 @@ export function Maalinger({ patientId }: Props) {
     );
   }
 
-  if (result.maalinger.length === 0) {
+  if (result.measurements.length === 0) {
     return (
       <div className="xp-card xp-empty">
         <p>
-          <b>{copy["s4.maal.empty"]}</b>
+          <b>{copy["s4.measurement.empty"]}</b>
         </p>
       </div>
     );
   }
 
-  const sorted = [...result.maalinger].sort((a, b) =>
-    b.effektivTidspunkt.localeCompare(a.effektivTidspunkt),
+  const sorted = [...result.measurements].sort((a, b) =>
+    b.effectiveAt.localeCompare(a.effectiveAt),
   );
 
   return (
-    <Card heading={copy["s4.maal.heading"]} headingId={headingId}>
+    <Card heading={copy["s4.measurement.heading"]} headingId={headingId}>
       <div className="xp-tablewrap">
         <table className="xp-list" aria-labelledby={headingId}>
           <thead>
             <tr>
               <th scope="col">
-                <span className="h">{copy["s4.maal.col.name"]}</span>
+                <span className="h">{copy["s4.measurement.col.name"]}</span>
               </th>
               <th scope="col">
-                <span className="h">{copy["s4.maal.col.value"]}</span>
+                <span className="h">{copy["s4.measurement.col.value"]}</span>
               </th>
               <th scope="col">
-                <span className="h">{copy["s4.maal.col.time"]}</span>
+                <span className="h">{copy["s4.measurement.col.time"]}</span>
               </th>
               <th scope="col">
-                <span className="h">{copy["s4.maal.col.status"]}</span>
+                <span className="h">{copy["s4.measurement.col.status"]}</span>
               </th>
             </tr>
           </thead>
@@ -91,13 +91,13 @@ export function Maalinger({ patientId }: Props) {
             {sorted.map((m) => (
               <tr key={m.id}>
                 <td>
-                  {m.loincVisningsnavn} (<code>{m.loincKode}</code>)
+                  {m.loincDisplay} (<code>{m.loincCode}</code>)
                 </td>
                 <td>
-                  {m.verdi} {m.enhetVisningsnavn} (<code>{m.enhetKode}</code>)
+                  {m.value} {m.unitDisplay} (<code>{m.unitCode}</code>)
                 </td>
-                <td>{formatUtcDateTimeInOslo(m.effektivTidspunkt)}</td>
-                <td>{copy[`s4.maal.status.${m.status}`]}</td>
+                <td>{formatUtcDateTimeInOslo(m.effectiveAt)}</td>
+                <td>{copy[`s4.measurement.status.${m.status}`]}</td>
               </tr>
             ))}
           </tbody>

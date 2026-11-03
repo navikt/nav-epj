@@ -18,11 +18,11 @@ import kotlinx.datetime.UtcOffset
 import kotlinx.datetime.toKotlinLocalDateTime
 import no.nav.helse.core.utils.ConsultationNotFoundException
 import no.nav.helse.epj.consultation.ConsultationId
-import no.nav.helse.epj.maaling.Maaling
-import no.nav.helse.epj.maaling.MaalingId
-import no.nav.helse.epj.maaling.MaalingService
-import no.nav.helse.epj.maaling.MaalingStatus
-import no.nav.helse.epj.maaling.OpprettMaalingRequest
+import no.nav.helse.epj.measurement.CreateMeasurementRequest
+import no.nav.helse.epj.measurement.Measurement
+import no.nav.helse.epj.measurement.MeasurementId
+import no.nav.helse.epj.measurement.MeasurementService
+import no.nav.helse.epj.measurement.MeasurementStatus
 import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.fhir.encounter.EncounterId
@@ -32,73 +32,76 @@ import org.junit.Test
 
 class ObservationServiceTest {
 
-    private val maalingService = mockk<MaalingService>()
-    private val observationService = ObservationService(maalingService)
+    private val measurementService = mockk<MeasurementService>()
+    private val observationService = ObservationService(measurementService)
 
     @OptIn(ExperimentalUuidApi::class)
-    private fun maaling(
-        id: MaalingId = MaalingId(Uuid.generateV4()),
+    private fun measurement(
+        id: MeasurementId = MeasurementId(Uuid.generateV4()),
         patientId: PatientId = PatientId(Uuid.generateV4()),
         consultationId: ConsultationId = ConsultationId(Uuid.generateV4()),
         hpr: PractitionerHpr? = PractitionerHpr("123"),
-        loincKode: String = "8310-5",
-        loincVisningsnavn: String = "Body temperature",
-        verdi: BigDecimal = BigDecimal("37.2000"),
-        enhetKode: String = "Cel",
-        enhetVisningsnavn: String = "degree Celsius",
-        effektivTidspunkt: LocalDateTime = LocalDateTime.of(2025, 1, 15, 10, 30),
-        status: MaalingStatus = MaalingStatus.FINAL,
+        loincCode: String = "8310-5",
+        loincDisplay: String = "Body temperature",
+        value: BigDecimal = BigDecimal("37.2000"),
+        unitCode: String = "Cel",
+        unitDisplay: String = "degree Celsius",
+        effectiveAt: LocalDateTime = LocalDateTime.of(2025, 1, 15, 10, 30),
+        status: MeasurementStatus = MeasurementStatus.FINAL,
     ) =
-        Maaling(
+        Measurement(
             id = id,
             patientId = patientId,
             consultationId = consultationId,
             hpr = hpr,
-            loincKode = loincKode,
-            loincVisningsnavn = loincVisningsnavn,
-            verdi = verdi,
-            enhetKode = enhetKode,
-            enhetVisningsnavn = enhetVisningsnavn,
-            effektivTidspunkt = effektivTidspunkt,
+            loincCode = loincCode,
+            loincDisplay = loincDisplay,
+            value = value,
+            unitCode = unitCode,
+            unitDisplay = unitDisplay,
+            effectiveAt = effectiveAt,
             status = status,
         )
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `createObservation persists through MaalingService and maps the server-generated id back`() =
+    fun `createObservation persists through MeasurementService and maps the server-generated id back`() =
         runTest {
             val request =
-                OpprettMaalingRequest(
+                CreateMeasurementRequest(
                     patientId = PatientId(Uuid.generateV4()),
                     consultationId = ConsultationId(Uuid.generateV4()),
                     hpr = null,
-                    loincKode = "8310-5",
-                    loincVisningsnavn = "Body temperature",
-                    verdi = BigDecimal("37.2000"),
-                    enhetKode = "Cel",
-                    enhetVisningsnavn = "degree Celsius",
-                    effektivTidspunkt = LocalDateTime.of(2025, 1, 15, 10, 30),
-                    status = MaalingStatus.FINAL,
+                    loincCode = "8310-5",
+                    loincDisplay = "Body temperature",
+                    value = BigDecimal("37.2000"),
+                    unitCode = "Cel",
+                    unitDisplay = "degree Celsius",
+                    effectiveAt = LocalDateTime.of(2025, 1, 15, 10, 30),
+                    status = MeasurementStatus.FINAL,
                 )
             val persisted =
-                maaling(
+                measurement(
                     patientId = request.patientId,
                     consultationId = request.consultationId,
                     hpr = request.hpr,
-                    loincKode = request.loincKode,
-                    loincVisningsnavn = request.loincVisningsnavn,
-                    verdi = request.verdi,
-                    enhetKode = request.enhetKode,
-                    enhetVisningsnavn = request.enhetVisningsnavn,
-                    effektivTidspunkt = request.effektivTidspunkt,
+                    loincCode = request.loincCode,
+                    loincDisplay = request.loincDisplay,
+                    value = request.value,
+                    unitCode = request.unitCode,
+                    unitDisplay = request.unitDisplay,
+                    effectiveAt = request.effectiveAt,
                     status = request.status,
                 )
-            coEvery { maalingService.opprettMaaling(request, DEFAULT_ORG_NUMBER) } returns persisted
+            coEvery { measurementService.createMeasurement(request, DEFAULT_ORG_NUMBER) } returns
+                persisted
 
             val observation = observationService.createObservation(request, DEFAULT_ORG_NUMBER)
 
             assertEquals(persisted.id.value.toString(), observation.id)
-            coVerify(exactly = 1) { maalingService.opprettMaaling(request, DEFAULT_ORG_NUMBER) }
+            coVerify(exactly = 1) {
+                measurementService.createMeasurement(request, DEFAULT_ORG_NUMBER)
+            }
         }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -106,19 +109,19 @@ class ObservationServiceTest {
     fun `createObservation propagates encounter-not-found without swallowing the error`() =
         runTest {
             val request =
-                OpprettMaalingRequest(
+                CreateMeasurementRequest(
                     patientId = PatientId(Uuid.generateV4()),
                     consultationId = ConsultationId(Uuid.generateV4()),
                     hpr = null,
-                    loincKode = "8310-5",
-                    loincVisningsnavn = "Body temperature",
-                    verdi = BigDecimal("37.2000"),
-                    enhetKode = "Cel",
-                    enhetVisningsnavn = "degree Celsius",
-                    effektivTidspunkt = LocalDateTime.of(2025, 1, 15, 10, 30),
-                    status = MaalingStatus.FINAL,
+                    loincCode = "8310-5",
+                    loincDisplay = "Body temperature",
+                    value = BigDecimal("37.2000"),
+                    unitCode = "Cel",
+                    unitDisplay = "degree Celsius",
+                    effectiveAt = LocalDateTime.of(2025, 1, 15, 10, 30),
+                    status = MeasurementStatus.FINAL,
                 )
-            coEvery { maalingService.opprettMaaling(request, DEFAULT_ORG_NUMBER) } throws
+            coEvery { measurementService.createMeasurement(request, DEFAULT_ORG_NUMBER) } throws
                 ConsultationNotFoundException(request.consultationId)
 
             assertFailsWith<ConsultationNotFoundException> {
@@ -128,9 +131,11 @@ class ObservationServiceTest {
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `getObservationById returns null when the maaling does not exist`() = runTest {
+    fun `getObservationById returns null when the measurement does not exist`() = runTest {
         val id = ObservationId(Uuid.generateV4())
-        coEvery { maalingService.getMaaling(MaalingId(id.value), DEFAULT_ORG_NUMBER) } returns null
+        coEvery {
+            measurementService.getMeasurement(MeasurementId(id.value), DEFAULT_ORG_NUMBER)
+        } returns null
 
         assertNull(observationService.getObservationById(id, DEFAULT_ORG_NUMBER))
     }
@@ -140,8 +145,8 @@ class ObservationServiceTest {
     fun `getObservationById maps subject, encounter, LOINC code and UCUM quantity`() = runTest {
         val patientId = PatientId(Uuid.generateV4())
         val consultationId = ConsultationId(Uuid.generateV4())
-        val target = maaling(patientId = patientId, consultationId = consultationId)
-        coEvery { maalingService.getMaaling(target.id, DEFAULT_ORG_NUMBER) } returns target
+        val target = measurement(patientId = patientId, consultationId = consultationId)
+        coEvery { measurementService.getMeasurement(target.id, DEFAULT_ORG_NUMBER) } returns target
 
         val observation =
             observationService.getObservationById(
@@ -168,8 +173,8 @@ class ObservationServiceTest {
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `getObservationById maps performer when hpr is present`() = runTest {
-        val target = maaling(hpr = PractitionerHpr("999"))
-        coEvery { maalingService.getMaaling(target.id, DEFAULT_ORG_NUMBER) } returns target
+        val target = measurement(hpr = PractitionerHpr("999"))
+        coEvery { measurementService.getMeasurement(target.id, DEFAULT_ORG_NUMBER) } returns target
 
         val observation =
             observationService.getObservationById(
@@ -184,8 +189,8 @@ class ObservationServiceTest {
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `getObservationById omits performer when hpr is absent`() = runTest {
-        val target = maaling(hpr = null)
-        coEvery { maalingService.getMaaling(target.id, DEFAULT_ORG_NUMBER) } returns target
+        val target = measurement(hpr = null)
+        coEvery { measurementService.getMeasurement(target.id, DEFAULT_ORG_NUMBER) } returns target
 
         val observation =
             observationService.getObservationById(
@@ -199,10 +204,10 @@ class ObservationServiceTest {
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `getObservationById maps effektivTidspunkt as the effective dateTime`() = runTest {
+    fun `getObservationById maps effectiveAt as the effective dateTime`() = runTest {
         val tidspunkt = LocalDateTime.of(2025, 3, 4, 9, 15)
-        val target = maaling(effektivTidspunkt = tidspunkt)
-        coEvery { maalingService.getMaaling(target.id, DEFAULT_ORG_NUMBER) } returns target
+        val target = measurement(effectiveAt = tidspunkt)
+        coEvery { measurementService.getMeasurement(target.id, DEFAULT_ORG_NUMBER) } returns target
 
         val observation =
             observationService.getObservationById(
@@ -221,8 +226,8 @@ class ObservationServiceTest {
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `getObservationById preserves decimal precision of the measured value`() = runTest {
-        val target = maaling(verdi = BigDecimal("5.6789"))
-        coEvery { maalingService.getMaaling(target.id, DEFAULT_ORG_NUMBER) } returns target
+        val target = measurement(value = BigDecimal("5.6789"))
+        coEvery { measurementService.getMeasurement(target.id, DEFAULT_ORG_NUMBER) } returns target
 
         val observation =
             observationService.getObservationById(
@@ -232,29 +237,30 @@ class ObservationServiceTest {
 
         requireNotNull(observation)
         val quantity = (observation.value as Observation.Value.Quantity).value
-        val verdi = requireNotNull(quantity.value?.value) { "Quantity mangler value" }
-        assertEquals(0, BigDecimal(verdi.toString()).compareTo(BigDecimal("5.6789")))
+        val value = requireNotNull(quantity.value?.value) { "Quantity mangler value" }
+        assertEquals(0, BigDecimal(value.toString()).compareTo(BigDecimal("5.6789")))
     }
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `every MaalingStatus maps to the corresponding FHIR Observation status`() = runTest {
+    fun `every MeasurementStatus maps to the corresponding FHIR Observation status`() = runTest {
         val expected =
             mapOf(
-                MaalingStatus.REGISTERED to "registered",
-                MaalingStatus.PRELIMINARY to "preliminary",
-                MaalingStatus.FINAL to "final",
-                MaalingStatus.AMENDED to "amended",
-                MaalingStatus.CORRECTED to "corrected",
-                MaalingStatus.CANCELLED to "cancelled",
-                MaalingStatus.ENTERED_IN_ERROR to "entered-in-error",
-                MaalingStatus.UNKNOWN to "unknown",
+                MeasurementStatus.REGISTERED to "registered",
+                MeasurementStatus.PRELIMINARY to "preliminary",
+                MeasurementStatus.FINAL to "final",
+                MeasurementStatus.AMENDED to "amended",
+                MeasurementStatus.CORRECTED to "corrected",
+                MeasurementStatus.CANCELLED to "cancelled",
+                MeasurementStatus.ENTERED_IN_ERROR to "entered-in-error",
+                MeasurementStatus.UNKNOWN to "unknown",
             )
-        assertEquals(MaalingStatus.entries.toSet(), expected.keys)
+        assertEquals(MeasurementStatus.entries.toSet(), expected.keys)
 
         expected.forEach { (status, expectedCode) ->
-            val target = maaling(status = status)
-            coEvery { maalingService.getMaaling(target.id, DEFAULT_ORG_NUMBER) } returns target
+            val target = measurement(status = status)
+            coEvery { measurementService.getMeasurement(target.id, DEFAULT_ORG_NUMBER) } returns
+                target
 
             val observation =
                 observationService.getObservationById(
@@ -269,11 +275,12 @@ class ObservationServiceTest {
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `searchObservations returns an empty searchset bundle when the patient has no maalinger`() =
+    fun `searchObservations returns an empty searchset bundle when the patient has no measurements`() =
         runTest {
             val patientId = PatientId(Uuid.generateV4())
-            coEvery { maalingService.getMaalingerForPatient(patientId, DEFAULT_ORG_NUMBER) } returns
-                emptyList()
+            coEvery {
+                measurementService.getMeasurementsForPatient(patientId, DEFAULT_ORG_NUMBER)
+            } returns emptyList()
 
             val bundle =
                 observationService.searchObservations(
@@ -289,12 +296,13 @@ class ObservationServiceTest {
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `searchObservations returns every maaling for the patient without filters`() = runTest {
+    fun `searchObservations returns every measurement for the patient without filters`() = runTest {
         val patientId = PatientId(Uuid.generateV4())
-        val forste = maaling(patientId = patientId)
-        val andre = maaling(patientId = patientId)
-        coEvery { maalingService.getMaalingerForPatient(patientId, DEFAULT_ORG_NUMBER) } returns
-            listOf(forste, andre)
+        val forste = measurement(patientId = patientId)
+        val andre = measurement(patientId = patientId)
+        coEvery {
+            measurementService.getMeasurementsForPatient(patientId, DEFAULT_ORG_NUMBER)
+        } returns listOf(forste, andre)
 
         val bundle =
             observationService.searchObservations(
@@ -316,10 +324,11 @@ class ObservationServiceTest {
         val patientId = PatientId(Uuid.generateV4())
         val consultationA = ConsultationId(Uuid.generateV4())
         val consultationB = ConsultationId(Uuid.generateV4())
-        val maalingA = maaling(patientId = patientId, consultationId = consultationA)
-        val maalingB = maaling(patientId = patientId, consultationId = consultationB)
-        coEvery { maalingService.getMaalingerForPatient(patientId, DEFAULT_ORG_NUMBER) } returns
-            listOf(maalingA, maalingB)
+        val measurementA = measurement(patientId = patientId, consultationId = consultationA)
+        val measurementB = measurement(patientId = patientId, consultationId = consultationB)
+        coEvery {
+            measurementService.getMeasurementsForPatient(patientId, DEFAULT_ORG_NUMBER)
+        } returns listOf(measurementA, measurementB)
 
         val bundle =
             observationService.searchObservations(
@@ -330,7 +339,7 @@ class ObservationServiceTest {
             )
 
         assertEquals(
-            maalingA.id.value.toString(),
+            measurementA.id.value.toString(),
             (bundle.entry.single().resource as Observation).id,
         )
     }
@@ -339,10 +348,11 @@ class ObservationServiceTest {
     @Test
     fun `searchObservations filters by LOINC code`() = runTest {
         val patientId = PatientId(Uuid.generateV4())
-        val temperatur = maaling(patientId = patientId, loincKode = "8310-5")
-        val glukose = maaling(patientId = patientId, loincKode = "2339-0")
-        coEvery { maalingService.getMaalingerForPatient(patientId, DEFAULT_ORG_NUMBER) } returns
-            listOf(temperatur, glukose)
+        val temperatur = measurement(patientId = patientId, loincCode = "8310-5")
+        val glukose = measurement(patientId = patientId, loincCode = "2339-0")
+        coEvery {
+            measurementService.getMeasurementsForPatient(patientId, DEFAULT_ORG_NUMBER)
+        } returns listOf(temperatur, glukose)
 
         val bundle =
             observationService.searchObservations(
@@ -365,13 +375,14 @@ class ObservationServiceTest {
         val consultationA = ConsultationId(Uuid.generateV4())
         val consultationB = ConsultationId(Uuid.generateV4())
         val match =
-            maaling(patientId = patientId, consultationId = consultationA, loincKode = "8310-5")
+            measurement(patientId = patientId, consultationId = consultationA, loincCode = "8310-5")
         val wrongEncounter =
-            maaling(patientId = patientId, consultationId = consultationB, loincKode = "8310-5")
+            measurement(patientId = patientId, consultationId = consultationB, loincCode = "8310-5")
         val wrongCode =
-            maaling(patientId = patientId, consultationId = consultationA, loincKode = "2339-0")
-        coEvery { maalingService.getMaalingerForPatient(patientId, DEFAULT_ORG_NUMBER) } returns
-            listOf(match, wrongEncounter, wrongCode)
+            measurement(patientId = patientId, consultationId = consultationA, loincCode = "2339-0")
+        coEvery {
+            measurementService.getMeasurementsForPatient(patientId, DEFAULT_ORG_NUMBER)
+        } returns listOf(match, wrongEncounter, wrongCode)
 
         val bundle =
             observationService.searchObservations(

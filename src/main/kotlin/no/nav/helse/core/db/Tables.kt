@@ -1,7 +1,7 @@
 package no.nav.helse.core.db
 
 import no.nav.helse.core.utils.ConsultationStatus
-import no.nav.helse.epj.maaling.MaalingStatus
+import no.nav.helse.epj.measurement.MeasurementStatus
 import no.nav.helse.epj.patient.AdministrativeGender
 import no.nav.helse.epj.patient.PersonidentType
 import org.jetbrains.exposed.v1.core.Table
@@ -80,18 +80,18 @@ object ConsultationPractitioner : Table("consultation_practitioner") {
     val hpr = text("hpr")
 }
 
-object MaalingTable : Table("measurement") {
+object MeasurementTable : Table("measurement") {
     val id = uuid("id")
     val patientId = reference("patient_id", refColumn = PatientTable.id)
     val consultationId = reference("consultation_id", refColumn = ConsultationTable.id)
     val hpr = text("hpr").nullable()
-    val loincKode = text("loinc_code")
-    val loincVisningsnavn = text("loinc_display")
-    val verdi = decimal("value", precision = 12, scale = 4)
-    val enhetKode = text("unit_code")
-    val enhetVisningsnavn = text("unit_display")
-    val effektivTidspunkt = datetime("effective_at")
-    val status = enumerationByName<MaalingStatus>("status", length = 20)
+    val loincCode = text("loinc_code")
+    val loincDisplay = text("loinc_display")
+    val value = decimal("value", precision = 12, scale = 4)
+    val unitCode = text("unit_code")
+    val unitDisplay = text("unit_display")
+    val effectiveAt = datetime("effective_at")
+    val status = enumerationByName<MeasurementStatus>("status", length = 20)
     val created = datetime("created_at")
     val updated = datetime("updated_at")
 }

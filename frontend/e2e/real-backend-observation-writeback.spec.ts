@@ -18,7 +18,7 @@ type Patient = { id: string; givenName: string; familyName: string };
 type Consultation = { id: string };
 type ClinicalNote = { id: string; clinicalNote: string };
 type ConsultationWithNotes = Consultation & { clinicalNotes: ClinicalNote[] };
-type Maaling = { id: string; verdi: number; enhetKode: string; enhetVisningsnavn: string };
+type Measurement = { id: string; value: number; unitCode: string; unitDisplay: string };
 type Token = { access_token: string; patient?: string; encounter?: string; scope: string; token_type: string };
 
 function assertLoopback(label: string, url: string | undefined) {
@@ -133,8 +133,8 @@ test.describe("FHIR write-back against the real backend", () => {
     return consultation;
   }
 
-  async function maalinger(patientId: string): Promise<Maaling[]> {
-    return json<Maaling[]>(api.get(`/api/patient/${patientId}/maalinger`));
+  async function measurements(patientId: string): Promise<Measurement[]> {
+    return json<Measurement[]>(api.get(`/api/patient/${patientId}/measurements`));
   }
 
   async function clinicalNotes(patientId: string): Promise<ClinicalNote[]> {
@@ -254,8 +254,8 @@ test.describe("FHIR write-back against the real backend", () => {
     const other = await createPatient("Annenpasient");
     const otherConsultation = await startConsultation(other);
     const consultation = await startConsultation(target);
-    expect(await maalinger(target.id)).toEqual([]);
-    expect(await maalinger(other.id)).toEqual([]);
+    expect(await measurements(target.id)).toEqual([]);
+    expect(await measurements(other.id)).toEqual([]);
 
     const writeToken = await smartToken(target.id, WRITE_SCOPE);
     expect(writeToken.encounter).toBe(consultation.id);
@@ -286,9 +286,9 @@ test.describe("FHIR write-back against the real backend", () => {
       valueQuantity: { value, code: "Cel" },
     });
 
-    const stored = await maalinger(target.id);
+    const stored = await measurements(target.id);
     expect(stored).toHaveLength(1);
-    expect(stored[0]).toMatchObject({ id: createdBody.id, verdi: value, enhetKode: "Cel" });
+    expect(stored[0]).toMatchObject({ id: createdBody.id, value: value, unitCode: "Cel" });
 
     const readToken = await smartToken(target.id, READ_SCOPE);
     expect(readToken.scope.split(" ")).not.toContain("patient/Observation.cud");
@@ -304,7 +304,7 @@ test.describe("FHIR write-back against the real backend", () => {
       },
     ];
 
-    const countsBefore = [(await maalinger(target.id)).length, (await maalinger(other.id)).length];
+    const countsBefore = [(await measurements(target.id)).length, (await measurements(other.id)).length];
     const rejected = [
       {
         label: "read-only token write",
@@ -344,11 +344,11 @@ test.describe("FHIR write-back against the real backend", () => {
     for (const { label, response, status } of rejected) {
       expect(status, `${label}: ${response.status()}`).toContain(response.status());
     }
-    const countsAfter = [(await maalinger(target.id)).length, (await maalinger(other.id)).length];
+    const countsAfter = [(await measurements(target.id)).length, (await measurements(other.id)).length];
     expect(countsAfter).toEqual(countsBefore);
     expect(countsAfter).toEqual([1, 0]);
 
-    await page.goto(`/patients/${target.id}?tab=maalinger`);
+    await page.goto(`/patients/${target.id}?tab=measurements`);
     const table = page.getByRole("table", { name: "Målinger" });
     await expect(table).toBeVisible();
     const rows = table.getByRole("row");

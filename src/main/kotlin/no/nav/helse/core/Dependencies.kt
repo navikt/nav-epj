@@ -8,8 +8,8 @@ import no.nav.helse.epj.clinic.ClinicRepository
 import no.nav.helse.epj.clinic.ClinicService
 import no.nav.helse.epj.consultation.ConsultationRepository
 import no.nav.helse.epj.consultation.ConsultationService
-import no.nav.helse.epj.maaling.MaalingRepository
-import no.nav.helse.epj.maaling.MaalingService
+import no.nav.helse.epj.measurement.MeasurementRepository
+import no.nav.helse.epj.measurement.MeasurementService
 import no.nav.helse.epj.patient.PatientRepository
 import no.nav.helse.epj.patient.PatientService as EpjPatientService
 import no.nav.helse.epj.practitioner.PractitionerRepository
@@ -52,13 +52,13 @@ fun Application.configureDependencies() {
         provide(FastlegelisteRepository::class)
         provide(ConsultationRepository::class)
         provide(ClinicRepository::class)
-        provide(MaalingRepository::class)
+        provide(MeasurementRepository::class)
 
         provide(EpjPractitionerService::class)
         provide(ConsultationService::class)
         provide(EpjPatientService::class)
         provide(ClinicService::class)
-        provide(MaalingService::class)
+        provide(MeasurementService::class)
 
         provide<SessionOrgChoiceStore> { ValkeySessionOrgChoiceStore(resolve()) }
         provide(SessionOrgResolver::class)
