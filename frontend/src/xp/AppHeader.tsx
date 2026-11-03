@@ -63,7 +63,7 @@ export function AppHeader({
         <label htmlFor={SEARCH_INPUT_ID} className="sr-only">
           {copy["header.search.label"]}
         </label>
-        <XpIcon name="sok" />
+        <XpIcon name="search" />
         <input
           id={SEARCH_INPUT_ID}
           type="search"
@@ -100,7 +100,7 @@ export function AppHeader({
         className="xp-hbtn xp-hide-narrow"
         onClick={onLogout}
       >
-        <XpIcon name="loggav" />
+        <XpIcon name="log-out" />
         {copy["header.logout"]}
       </button>
     </header>

@@ -66,9 +66,9 @@ describe("TaskPane", () => {
   });
 
   it.each([
-    ["control-panel", "pane.system.kontroll"],
+    ["control-panel", "pane.system.controlPanel"],
     ["sysinfo", "pane.system.sysinfo"],
-    ["help", "pane.system.hjelp"],
+    ["help", "pane.system.help"],
   ] as const)("opens %s as a document tab", async (kind, label) => {
     renderPane();
     const link = screen.getByRole("button", { name: copy[label] });
@@ -85,7 +85,7 @@ describe("TaskPane", () => {
   it("reuses an open system tab instead of opening a second one", async () => {
     renderPane();
     const link = screen.getByRole("button", {
-      name: copy["pane.system.hjelp"],
+      name: copy["pane.system.help"],
     });
     await userEvent.click(link);
     await userEvent.click(
@@ -100,7 +100,7 @@ describe("TaskPane", () => {
   it("disables Hendelseslogg with the Fase 2 badge", () => {
     renderPane();
     const link = screen.getByRole("button", {
-      name: new RegExp(copy["pane.system.logg"]),
+      name: new RegExp(copy["pane.system.eventLog"]),
     });
     expect(link).toHaveAttribute("aria-disabled", "true");
     expect(

@@ -23,9 +23,9 @@ smart:
   fhirServerUrl: "http://localhost:8080/fhir"
   clients:
     - clientId: "syk-inn"
-      navn: "Sykmelding"
-      beskrivelse: "Skriv sykmelding og send den til Nav."
-      ikon: "sykmelding"
+      name: "Sykmelding"
+      description: "Skriv sykmelding og send den til Nav."
+      icon: "sick-note"
       launchMode: "iframe"
       redirectUris: [ "http://localhost:3000", "http://localhost:3000/fhir/callback" ]
       launchUris: [ "http://localhost:3000/fhir/launch" ]
@@ -44,9 +44,9 @@ smart:
         - patient/Observation.write
         - patient/DocumentReference.crs
     - clientId: "NAV_SMART_on_FHIR_validator"
-      navn: "Validator"
-      beskrivelse: "Tester SMART on FHIR-oppstart og FHIR-API-et mot nav-epj."
-      ikon: "validator"
+      name: "Validator"
+      description: "Tester SMART on FHIR-oppstart og FHIR-API-et mot nav-epj."
+      icon: "validator"
       launchMode: "iframe"
       redirectUris: [ "http://localhost:3001/callback" ]
       launchUris: [ "http://localhost:3001/launch" ]

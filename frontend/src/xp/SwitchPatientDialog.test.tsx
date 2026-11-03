@@ -53,7 +53,7 @@ describe("SwitchPatientDialog with apps", () => {
     useAppRunStore.getState().addTabApp({
       id: "smart-ny-fane-1",
       clientId: newTab.clientId,
-      navn: "Fanen",
+      name: "Fanen",
       patient: ola,
       startedAt: new Date(),
     });
@@ -70,7 +70,7 @@ describe("SwitchPatientDialog with apps", () => {
     useAppRunStore.getState().addTabApp({
       id: "smart-ny-fane-1",
       clientId: newTab.clientId,
-      navn: "Fanen",
+      name: "Fanen",
       patient: kari,
       startedAt: new Date(),
     });
@@ -106,7 +106,7 @@ describe("SwitchPatientDialog with apps", () => {
     useAppRunStore.getState().addTabApp({
       id: "smart-ny-fane-1",
       clientId: newTab.clientId,
-      navn: "Fanen",
+      name: "Fanen",
       patient: ola,
       startedAt: new Date(),
     });

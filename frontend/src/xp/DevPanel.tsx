@@ -47,7 +47,7 @@ export function DevPanel({ run, hidden, onClose }: Props) {
 
   function copyAll() {
     const text = [
-      `${run.navn} (${fullName(run.patient)}, ${formatTime(parseISO(run.consultation.startedAt))})`,
+      `${run.name} (${fullName(run.patient)}, ${formatTime(parseISO(run.consultation.startedAt))})`,
       ...rows.map(([key, value]) => `${key}: ${value}`),
       ...events.map((event) => event.text),
     ].join("\n");
@@ -62,7 +62,7 @@ export function DevPanel({ run, hidden, onClose }: Props) {
       aria-labelledby={headingId}
     >
       <div className="xp-devpanel-head">
-        <h2 id={headingId}>{copy["dev.title"](run.navn)}</h2>
+        <h2 id={headingId}>{copy["dev.title"](run.name)}</h2>
         <Button variant="small" onClick={copyAll}>
           {copy["dev.copy"]}
         </Button>

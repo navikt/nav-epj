@@ -5,14 +5,14 @@ import { WORK_PANEL_ID } from "./shellContext";
 import { useWorkspaceStore, type Tab, type TabKind } from "./workspaceStore";
 
 const icons: Record<TabKind, IconName> = {
-  start: "hjem",
+  start: "home",
   patients: "patients",
   journal: "journal",
-  app: "vindu",
-  "control-panel": "kontrollpanel",
+  app: "window",
+  "control-panel": "control-panel",
   sysinfo: "systeminfo",
-  help: "hjelp",
-  "event-log": "hendelseslogg",
+  help: "help",
+  "event-log": "event-log",
 };
 
 type Props = {

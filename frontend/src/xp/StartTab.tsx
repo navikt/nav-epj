@@ -95,7 +95,7 @@ export function StartTab() {
               const time = formatTime(accessExpiry(tabApp.startedAt));
               return (
                 <Note key={tabApp.id} tone={stale ? "warn" : "info"}>
-                  <strong>{tabApp.navn}</strong>{" "}
+                  <strong>{tabApp.name}</strong>{" "}
                   {stale
                     ? copy["s2.tabApps.stale"](time)
                     : copy["s2.tabApps.running"](time)}

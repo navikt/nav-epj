@@ -21,7 +21,7 @@ const CATEGORIES: ReadonlyArray<{
   },
   {
     id: "org",
-    icon: "bruker",
+    icon: "user",
     title: copy["s9.cat.org"],
     sub: copy["s9.cat.org.sub"],
   },
@@ -53,7 +53,7 @@ export function ControlPanelPage() {
     return (
       <>
         <div className="xp-pagehead">
-          <XpIcon name="kontrollpanel" size={32} />
+          <XpIcon name="control-panel" size={32} />
           <h1 ref={headingRef} tabIndex={-1} className="xp-h1">
             {copy["s9.title"]}
           </h1>

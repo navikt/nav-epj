@@ -32,7 +32,7 @@ export function OrgPicker({ sessionOrg, onChoose, onCancel }: Props) {
       <p>{copy["org.pick.body"]}</p>
       {failed && (
         <div className="xp-note error" role="alert">
-          <XpIcon name="feil" />
+          <XpIcon name="error" />
           <div>{copy["org.pick.error"]}</div>
         </div>
       )}

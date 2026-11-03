@@ -14,7 +14,7 @@ describe("XpIcon", () => {
   });
 
   it("has no serious accessibility violations", async () => {
-    const { container } = render(<XpIcon name="hjem" />);
+    const { container } = render(<XpIcon name="home" />);
     await expectNoSeriousViolations(container);
   });
 });

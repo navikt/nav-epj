@@ -64,7 +64,7 @@ export function AppSettingsPage() {
               <tr key={app.clientId}>
                 <td>
                   <span className="xp-namecell">
-                    <XpIcon name={appIconName(app.ikon)} /> {app.navn}
+                    <XpIcon name={appIconName(app.icon)} /> {app.name}
                   </span>
                 </td>
                 <td className="mono">{app.clientId}</td>
@@ -75,7 +75,7 @@ export function AppSettingsPage() {
                 <td>
                   <Button
                     variant="small"
-                    aria-label={copy["s10.title"](app.navn)}
+                    aria-label={copy["s10.title"](app.name)}
                     onClick={() => setSelected(app)}
                   >
                     {copy["s9.apps.props"]}

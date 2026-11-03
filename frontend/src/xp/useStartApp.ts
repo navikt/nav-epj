@@ -10,7 +10,7 @@ export function useStartApp() {
   const start = useCallback(
     async (app: App, choice?: LaunchChoice) => {
       if ((await startApp(app, choice)) === "tab") {
-        announce(copy["live.appTab"](app.navn));
+        announce(copy["live.appTab"](app.name));
       }
     },
     [announce],
@@ -19,7 +19,7 @@ export function useStartApp() {
     async (clientId: string) => {
       const app = findApp(clientId);
       if ((await popOutApp(clientId)) === "tab" && app) {
-        announce(copy["live.appTab"](app.navn));
+        announce(copy["live.appTab"](app.name));
       }
     },
     [announce],

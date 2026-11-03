@@ -4,8 +4,8 @@ import { XpIcon, type IconName } from "./XpIcon";
 type Tone = "warn" | "error" | "info" | "ok";
 
 const ICONS: Record<Tone, IconName> = {
-  warn: "advarsel",
-  error: "feil",
+  warn: "warning",
+  error: "error",
   info: "info",
   ok: "info",
 };

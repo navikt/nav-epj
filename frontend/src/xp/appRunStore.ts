@@ -13,7 +13,7 @@ let eventSeq = 0;
 
 export type AppRun = {
   clientId: string;
-  navn: string;
+  name: string;
   patient: Patient;
   consultation: Pick<Consultation, "id" | "startedAt">;
   launchUrl: string | null;
@@ -26,7 +26,7 @@ export type AppRun = {
 export type TabApp = {
   id: string;
   clientId: string;
-  navn: string;
+  name: string;
   patient: Patient;
   startedAt: Date;
 };

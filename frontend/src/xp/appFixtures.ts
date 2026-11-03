@@ -6,9 +6,9 @@ import type { App, Consultation, Patient, PatientListItem } from "../utils/mappi
 
 export const sykInn: App = {
   clientId: "syk-inn",
-  navn: "Sykmelding",
-  beskrivelse: "Skriv sykmelding og send den til Nav.",
-  ikon: "sykmelding",
+  name: "Sykmelding",
+  description: "Skriv sykmelding og send den til Nav.",
+  icon: "sick-note",
   launchMode: "iframe",
   launchUri: "https://syk.example/fhir",
   tokenEndpointAuthMethod: "client_secret_basic",
@@ -20,16 +20,16 @@ export const sykInn: App = {
 export const validator: App = {
   ...sykInn,
   clientId: "validator",
-  navn: "Validator",
-  beskrivelse: "Tester SMART on FHIR.",
-  ikon: "validator",
+  name: "Validator",
+  description: "Tester SMART on FHIR.",
+  icon: "validator",
   launchMode: "ask",
 };
 
 export const newTab: App = {
   ...sykInn,
   clientId: "ny-fane",
-  navn: "Fanen",
+  name: "Fanen",
   launchMode: "tab",
 };
 
@@ -82,7 +82,7 @@ export function seedApps(apps: App[] = [sykInn, validator]) {
 export function seedRun(patient: Patient = ola, app: App = sykInn) {
   useAppRunStore.getState().startRun({
     clientId: app.clientId,
-    navn: app.navn,
+    name: app.name,
     patient,
     consultation: {
       id: ongoingConsultation.id,

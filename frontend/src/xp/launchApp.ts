@@ -43,7 +43,7 @@ export function resetLaunches() {
 
 function showError(
   code: AppErrorCode,
-  app: { clientId: string | null; navn: string },
+  app: { clientId: string | null; name: string },
   patient: string,
   extra: { status?: number | null; call?: string; retry?: () => void } = {},
 ) {
@@ -51,7 +51,7 @@ function showError(
     kind: "error",
     code,
     clientId: app.clientId,
-    app: app.navn,
+    app: app.name,
     patientName: patient,
     status: extra.status ?? null,
     call: extra.call ?? "",
@@ -124,7 +124,7 @@ async function launchInFrame(app: App, context: LaunchContext) {
   const isCurrent = beginLaunch(app.clientId);
   runs.startRun({
     clientId: app.clientId,
-    navn: app.navn,
+    name: app.name,
     patient: context.patient,
     consultation: context.consultation,
     startedAt: new Date(),
@@ -132,9 +132,9 @@ async function launchInFrame(app: App, context: LaunchContext) {
   useWorkspaceStore.getState().openTab({
     kind: "app",
     clientId: app.clientId,
-    label: copy["tabs.app"](app.navn, initialsOf(fullName(context.patient))),
+    label: copy["tabs.app"](app.name, initialsOf(fullName(context.patient))),
     ariaLabel: copy["tabs.app.aria"](
-      app.navn,
+      app.name,
       fullName(context.patient),
       copy["s5.status.starting"],
     ),
@@ -189,14 +189,14 @@ async function launchInTab(
   useAppRunStore.getState().addTabApp({
     id,
     clientId: app.clientId,
-    navn: app.navn,
+    name: app.name,
     patient: context.patient,
     startedAt: new Date(),
   });
   useBalloonStore.getState().show({
-    title: copy["s5.popout.balloon.title"](app.navn),
+    title: copy["s5.popout.balloon.title"](app.name),
     body: opened ? balloonBody : `${balloonBody} ${copy["s5.tab.balloon.blocked"]}`,
-    icon: "ny-fane",
+    icon: "new-tab",
   });
   return "tab" as const;
 }
@@ -270,7 +270,7 @@ export function reportTimeout(clientId: string, origin: string) {
   const run = useAppRunStore.getState().runs.find((r) => r.clientId === clientId);
   if (!run || run.status !== "starting") return;
   useAppRunStore.getState().setStatus(clientId, "timeout");
-  showError("FRAMING_REFUSED", { clientId, navn: run.navn }, fullName(run.patient), {
+  showError("FRAMING_REFUSED", { clientId, name: run.name }, fullName(run.patient), {
     call: origin,
   });
 }
@@ -303,7 +303,7 @@ export function syncRunTabs() {
     if (!tab) continue;
     const stale = isOutdatedFor(run.patient.id, journalPatientId, activePatientId);
     const ariaLabel = copy["tabs.app.aria"](
-      run.navn,
+      run.name,
       fullName(run.patient),
       statusText(run.status, stale, run),
     );

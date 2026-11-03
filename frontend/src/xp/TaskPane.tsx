@@ -76,7 +76,7 @@ export function TaskPane({
               onActivate={onOpenJournal}
             />
             <TaskLink
-              icon="sok"
+              icon="search"
               label={copy["pane.patient.findOther"]}
               onActivate={onOpenPatients}
             />
@@ -85,7 +85,7 @@ export function TaskPane({
           <>
             <span className="xp-tp-note">{copy["pane.patient.none"]}</span>
             <TaskLink
-              icon="sok"
+              icon="search"
               label={copy["pane.patient.find"]}
               onActivate={onOpenPatients}
             />
@@ -101,11 +101,11 @@ export function TaskPane({
           onActivate={onOpenPatients}
         />
         <TaskLink
-          icon="kontrollpanel"
-          label={copy["pane.system.kontroll"]}
+          icon="control-panel"
+          label={copy["pane.system.controlPanel"]}
           current={current === "control-panel"}
           onActivate={() =>
-            openSystemTab("control-panel", copy["pane.system.kontroll"])
+            openSystemTab("control-panel", copy["pane.system.controlPanel"])
           }
         />
         <TaskLink
@@ -117,20 +117,20 @@ export function TaskPane({
           }
         />
         <TaskLink
-          icon="hendelseslogg"
-          label={copy["pane.system.logg"]}
+          icon="event-log"
+          label={copy["pane.system.eventLog"]}
           badge={copy["badge.phase2"]}
           disabled
         />
         <TaskLink
-          icon="hjelp"
-          label={copy["pane.system.hjelp"]}
+          icon="help"
+          label={copy["pane.system.help"]}
           current={current === "help"}
-          onActivate={() => openSystemTab("help", copy["pane.system.hjelp"])}
+          onActivate={() => openSystemTab("help", copy["pane.system.help"])}
         />
         {userName && (
           <TaskLink
-            icon="loggav"
+            icon="log-out"
             label={copy["pane.system.logoutNarrow"](userName)}
             narrowOnly
             onActivate={onLogout}
@@ -139,19 +139,19 @@ export function TaskPane({
       </TaskPanel>
       <TaskPanel title={copy["pane.soon.title"]}>
         <TaskLink
-          icon="kommer"
+          icon="coming-soon"
           label={copy["pane.soon.kj"]}
           badge={copy["pane.soon.label"]}
           disabled
         />
         <TaskLink
-          icon="kommer"
+          icon="coming-soon"
           label={copy["pane.soon.er"]}
           badge={copy["pane.soon.label"]}
           disabled
         />
         <TaskLink
-          icon="kommer"
+          icon="coming-soon"
           label={copy["pane.soon.em"]}
           badge={copy["pane.soon.label"]}
           disabled

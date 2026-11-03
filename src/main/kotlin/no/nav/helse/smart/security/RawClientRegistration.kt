@@ -16,9 +16,9 @@ internal data class RawClientRegistration(
     val jwkSet: String? = null,
     val scopes: List<String> = emptyList(),
     val displayName: String? = null,
-    val navn: String? = null,
-    val beskrivelse: String? = null,
-    val ikon: String? = null,
+    val name: String? = null,
+    val description: String? = null,
+    val icon: String? = null,
     val launchMode: String? = null,
     val grantTypes: List<String>? = null,
 ) {

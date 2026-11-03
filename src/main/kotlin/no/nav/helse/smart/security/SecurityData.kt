@@ -58,8 +58,8 @@ data class SmartClient(
     val inlineJwkSet: JWKSet? = null,
     val allowedScopes: Set<SmartScope>,
     val displayName: String = clientId,
-    val beskrivelse: String = "",
-    val ikon: String = DEFAULT_APP_ICON,
+    val description: String = "",
+    val icon: String = DEFAULT_APP_ICON,
     val launchMode: LaunchMode = LaunchMode.IFRAME,
     val grantTypes: Set<GrantType> = setOf(GrantType.AUTHORIZATION_CODE),
 ) {
@@ -76,7 +76,7 @@ data class SmartClient(
         )
 }
 
-const val DEFAULT_APP_ICON = "vindu"
+const val DEFAULT_APP_ICON = "window"
 
 data class SmartClientDisplay(
     val clientId: String,

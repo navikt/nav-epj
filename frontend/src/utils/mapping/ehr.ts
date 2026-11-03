@@ -131,9 +131,9 @@ export type LaunchMode = z.infer<typeof LaunchModeSchema>;
 
 export const AppSchema = z.object({
     clientId: z.string(),
-    navn: z.string(),
-    beskrivelse: z.string().nullish(),
-    ikon: z.string(),
+    name: z.string(),
+    description: z.string().nullish(),
+    icon: z.string(),
     launchMode: LaunchModeSchema,
     launchUri: z.string().nullable(),
     tokenEndpointAuthMethod: z.string().nullish(),

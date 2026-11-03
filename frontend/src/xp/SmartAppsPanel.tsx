@@ -45,8 +45,8 @@ export function SmartAppsPanel() {
         return (
           <TaskLink
             key={app.clientId}
-            icon={appIconName(app.ikon)}
-            label={app.navn}
+            icon={appIconName(app.icon)}
+            label={app.name}
             sub={modeLabels[app.launchMode]}
             badge={
               outdated
@@ -68,8 +68,8 @@ export function SmartAppsPanel() {
         return (
           <TaskLink
             key={tabApp.id}
-            icon="ny-fane"
-            label={tabApp.navn}
+            icon="new-tab"
+            label={tabApp.name}
             sub={stale ? copy["pane.apps.stale"] : copy["pane.apps.runningTab"]}
             stale={stale}
             onActivate={() =>

@@ -30,7 +30,7 @@ export function AppTabView({ clientId }: Props) {
   const openJournal = useOpenJournal();
   const [devOpen, setDevOpen] = useState(false);
   const status = run?.status;
-  const navn = run?.navn;
+  const name = run?.name;
   const ownerId = run?.patient.id;
   let otherId: string | null = null;
   if (ownerId && isStaleFor(ownerId, journalPatientId)) otherId = journalPatientId;
@@ -41,10 +41,10 @@ export function AppTabView({ clientId }: Props) {
   const ownerName = run ? fullName(run.patient) : "";
 
   useEffect(() => {
-    if (active && status === "running" && navn) {
-      announce(copy["live.appRunning"](navn));
+    if (active && status === "running" && name) {
+      announce(copy["live.appRunning"](name));
     }
-  }, [active, status, navn, announce]);
+  }, [active, status, name, announce]);
 
   useEffect(() => {
     if (active && stale && otherLoaded) {
@@ -74,10 +74,10 @@ export function AppTabView({ clientId }: Props) {
       <PatientContext patient={run.patient} compact stale={stale} />
       <AppToolbar
         clientId={clientId}
-        app={run.navn}
-        icon={appIconName(app?.ikon ?? "")}
+        app={run.name}
+        icon={appIconName(app?.icon ?? "")}
         title={copy["s5.title"](
-          run.navn,
+          run.name,
           patientName,
           format(parseISO(run.consultation.startedAt), "dd.MM HH:mm"),
         )}
@@ -86,11 +86,11 @@ export function AppTabView({ clientId }: Props) {
         devOpen={devOpen}
         onBack={() => {
           window.history.back();
-          announce(copy["live.back"](run.navn));
+          announce(copy["live.back"](run.name));
         }}
         onForward={() => {
           window.history.forward();
-          announce(copy["live.forward"](run.navn));
+          announce(copy["live.forward"](run.name));
         }}
         onReload={() => void reloadApp(clientId)}
         onToggleDev={() => setDevOpen(!devOpen)}

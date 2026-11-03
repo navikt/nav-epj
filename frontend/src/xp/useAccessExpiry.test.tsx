@@ -12,7 +12,7 @@ function addTabApp(id: string, startedAt: Date, patient = ola) {
   useAppRunStore.getState().addTabApp({
     id,
     clientId: "syk-inn",
-    navn: "Sykmelding",
+    name: "Sykmelding",
     patient,
     startedAt,
   });

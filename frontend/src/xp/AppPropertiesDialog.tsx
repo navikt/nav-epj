@@ -40,10 +40,10 @@ function GeneralTab({ app }: { app: App }) {
   return (
     <>
       <div className="xp-appcard-head">
-        <XpIcon name={appIconName(app.ikon)} size={48} />
+        <XpIcon name={appIconName(app.icon)} size={48} />
         <div>
-          <strong>{app.navn}</strong>
-          {app.beskrivelse && <p>{app.beskrivelse}</p>}
+          <strong>{app.name}</strong>
+          {app.description && <p>{app.description}</p>}
         </div>
       </div>
       <dl className="xp-dl">
@@ -110,7 +110,7 @@ export function AppPropertiesDialog({ app, onClose }: Props) {
   const idPrefix = useId();
   return (
     <Dialog
-      title={copy["s10.title"](app.navn)}
+      title={copy["s10.title"](app.name)}
       wide
       onClose={onClose}
     >

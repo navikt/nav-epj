@@ -37,11 +37,11 @@ function AppCard({
   return (
     <section className="xp-card" aria-labelledby={headingId}>
       <div className="xp-appcard-head">
-        <XpIcon name={appIconName(app.ikon)} size={32} />
-        <h3 id={headingId}>{app.navn}</h3>
+        <XpIcon name={appIconName(app.icon)} size={32} />
+        <h3 id={headingId}>{app.name}</h3>
         <Badge>{modeLabels[app.launchMode]}</Badge>
       </div>
-      {app.beskrivelse && <p>{app.beskrivelse}</p>}
+      {app.description && <p>{app.description}</p>}
       {running && <Badge tone="ok">{copy["s4.apps.runningHost"]}</Badge>}
       {inTab && <Badge tone="info">{copy["s4.apps.runningTab"]}</Badge>}
       <div className="xp-form-actions">

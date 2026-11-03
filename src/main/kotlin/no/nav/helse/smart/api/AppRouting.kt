@@ -13,9 +13,9 @@ import no.nav.helse.smart.security.TokenEndpointAuthMethod
 /** The registered client as the frontend may see it. Never carries secrets or key material. */
 data class AppDto(
     val clientId: String,
-    val navn: String,
-    val beskrivelse: String,
-    val ikon: String,
+    val name: String,
+    val description: String,
+    val icon: String,
     val launchMode: LaunchMode,
     val launchUri: String?,
     val tokenEndpointAuthMethod: TokenEndpointAuthMethod,
@@ -27,9 +27,9 @@ data class AppDto(
 fun SmartClient.toAppDto() =
     AppDto(
         clientId = clientId,
-        navn = displayName,
-        beskrivelse = beskrivelse,
-        ikon = ikon,
+        name = displayName,
+        description = description,
+        icon = icon,
         launchMode = launchMode,
         launchUri = launchUris.firstOrNull(),
         tokenEndpointAuthMethod = tokenEndpointAuthMethod,

@@ -32,7 +32,7 @@ export function UserGate({
   if (state.status === "error") {
     return (
       <div className="xp-note error" role="alert">
-        <XpIcon name="feil" />
+        <XpIcon name="error" />
         <div>
           <b>{copy["s1.error.title"]}</b>
           <p>{copy["s1.error.body"]}</p>
