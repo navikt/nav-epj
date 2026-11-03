@@ -17,8 +17,8 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.ConsultationStatus
 import no.nav.helse.core.utils.DuplicatePatientException
-import no.nav.helse.core.utils.IngenFastlegelisteException
-import no.nav.helse.core.utils.UgyldigPersonidentException
+import no.nav.helse.core.utils.InvalidPersonidentException
+import no.nav.helse.core.utils.NoFastlegelisteException
 import no.nav.helse.epj.clinic.Clinic
 import no.nav.helse.epj.clinic.ClinicId
 import no.nav.helse.epj.practitioner.PractitionerHpr
@@ -113,7 +113,7 @@ class PatientRoutesTest {
     fun `POST patient with invalid personident returns 400`() = testApp {
         val personident = "00000000000"
         coEvery { patientService.createPatient(any(), any(), any()) } throws
-            UgyldigPersonidentException("Personident $personident har ugyldig kontrollsiffer")
+            InvalidPersonidentException("Personident $personident har ugyldig kontrollsiffer")
 
         val response =
             post("/api/patient") {
@@ -188,7 +188,7 @@ class PatientRoutesTest {
     @Test
     fun `POST patient without an own list at the org returns 403`() = testApp {
         coEvery { patientService.createPatient(any(), any(), any()) } throws
-            IngenFastlegelisteException()
+            NoFastlegelisteException()
 
         val response =
             post("/api/patient") {

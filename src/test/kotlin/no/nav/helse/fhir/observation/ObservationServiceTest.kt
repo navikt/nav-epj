@@ -205,8 +205,8 @@ class ObservationServiceTest {
     @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `getObservationById maps effectiveAt as the effective dateTime`() = runTest {
-        val tidspunkt = LocalDateTime.of(2025, 3, 4, 9, 15)
-        val target = measurement(effectiveAt = tidspunkt)
+        val effectiveAt = LocalDateTime.of(2025, 3, 4, 9, 15)
+        val target = measurement(effectiveAt = effectiveAt)
         coEvery { measurementService.getMeasurement(target.id, DEFAULT_ORG_NUMBER) } returns target
 
         val observation =
@@ -218,7 +218,7 @@ class ObservationServiceTest {
         requireNotNull(observation)
         val effective = observation.effective as Observation.Effective.DateTime
         assertEquals(
-            FhirDateTime.DateTime(tidspunkt.toKotlinLocalDateTime(), UtcOffset.ZERO),
+            FhirDateTime.DateTime(effectiveAt.toKotlinLocalDateTime(), UtcOffset.ZERO),
             effective.value.value,
         )
     }
@@ -298,11 +298,11 @@ class ObservationServiceTest {
     @Test
     fun `searchObservations returns every measurement for the patient without filters`() = runTest {
         val patientId = PatientId(Uuid.generateV4())
-        val forste = measurement(patientId = patientId)
-        val andre = measurement(patientId = patientId)
+        val first = measurement(patientId = patientId)
+        val second = measurement(patientId = patientId)
         coEvery {
             measurementService.getMeasurementsForPatient(patientId, DEFAULT_ORG_NUMBER)
-        } returns listOf(forste, andre)
+        } returns listOf(first, second)
 
         val bundle =
             observationService.searchObservations(
@@ -313,7 +313,7 @@ class ObservationServiceTest {
             )
 
         assertEquals(
-            setOf(forste.id.value.toString(), andre.id.value.toString()),
+            setOf(first.id.value.toString(), second.id.value.toString()),
             bundle.entry.map { (it.resource as Observation).id }.toSet(),
         )
     }
@@ -348,11 +348,11 @@ class ObservationServiceTest {
     @Test
     fun `searchObservations filters by LOINC code`() = runTest {
         val patientId = PatientId(Uuid.generateV4())
-        val temperatur = measurement(patientId = patientId, loincCode = "8310-5")
-        val glukose = measurement(patientId = patientId, loincCode = "2339-0")
+        val temperature = measurement(patientId = patientId, loincCode = "8310-5")
+        val glucose = measurement(patientId = patientId, loincCode = "2339-0")
         coEvery {
             measurementService.getMeasurementsForPatient(patientId, DEFAULT_ORG_NUMBER)
-        } returns listOf(temperatur, glukose)
+        } returns listOf(temperature, glucose)
 
         val bundle =
             observationService.searchObservations(
@@ -363,7 +363,7 @@ class ObservationServiceTest {
             )
 
         assertEquals(
-            glukose.id.value.toString(),
+            glucose.id.value.toString(),
             (bundle.entry.single().resource as Observation).id,
         )
     }

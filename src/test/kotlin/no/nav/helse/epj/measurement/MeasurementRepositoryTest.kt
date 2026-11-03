@@ -103,19 +103,19 @@ class MeasurementRepositoryTest : WithPostgresql() {
         val measurement = newMeasurement(patientId, consultationId)
 
         measurementRepository.insert(measurement, DEFAULT_ORG_NUMBER)
-        val funnet = measurementRepository.findById(measurement.id, DEFAULT_ORG_NUMBER)
+        val found = measurementRepository.findById(measurement.id, DEFAULT_ORG_NUMBER)
 
-        assertEquals(measurement.id, funnet?.id)
-        assertEquals(measurement.patientId, funnet?.patientId)
-        assertEquals(measurement.consultationId, funnet?.consultationId)
-        assertEquals(measurement.hpr, funnet?.hpr)
-        assertEquals(measurement.loincCode, funnet?.loincCode)
-        assertEquals(measurement.loincDisplay, funnet?.loincDisplay)
-        assertEquals(0, measurement.value.compareTo(funnet?.value))
-        assertEquals(measurement.unitCode, funnet?.unitCode)
-        assertEquals(measurement.unitDisplay, funnet?.unitDisplay)
-        assertEquals(measurement.effectiveAt, funnet?.effectiveAt)
-        assertEquals(measurement.status, funnet?.status)
+        assertEquals(measurement.id, found?.id)
+        assertEquals(measurement.patientId, found?.patientId)
+        assertEquals(measurement.consultationId, found?.consultationId)
+        assertEquals(measurement.hpr, found?.hpr)
+        assertEquals(measurement.loincCode, found?.loincCode)
+        assertEquals(measurement.loincDisplay, found?.loincDisplay)
+        assertEquals(0, measurement.value.compareTo(found?.value))
+        assertEquals(measurement.unitCode, found?.unitCode)
+        assertEquals(measurement.unitDisplay, found?.unitDisplay)
+        assertEquals(measurement.effectiveAt, found?.effectiveAt)
+        assertEquals(measurement.status, found?.status)
     }
 
     @Test
@@ -134,13 +134,13 @@ class MeasurementRepositoryTest : WithPostgresql() {
             )
 
         measurementRepository.insert(measurement, DEFAULT_ORG_NUMBER)
-        val funnet = measurementRepository.findById(measurement.id, DEFAULT_ORG_NUMBER)
+        val found = measurementRepository.findById(measurement.id, DEFAULT_ORG_NUMBER)
 
-        assertEquals(0, BigDecimal("5.6789").compareTo(funnet?.value))
-        assertEquals("mmol/L", funnet?.unitCode)
-        assertEquals("millimole per liter", funnet?.unitDisplay)
-        assertEquals("2339-0", funnet?.loincCode)
-        assertEquals(MeasurementStatus.ENTERED_IN_ERROR, funnet?.status)
+        assertEquals(0, BigDecimal("5.6789").compareTo(found?.value))
+        assertEquals("mmol/L", found?.unitCode)
+        assertEquals("millimole per liter", found?.unitDisplay)
+        assertEquals("2339-0", found?.loincCode)
+        assertEquals(MeasurementStatus.ENTERED_IN_ERROR, found?.status)
     }
 
     @Test
@@ -149,9 +149,9 @@ class MeasurementRepositoryTest : WithPostgresql() {
         val measurement = newMeasurement(patientId, consultationId, hpr = null)
 
         measurementRepository.insert(measurement, DEFAULT_ORG_NUMBER)
-        val funnet = measurementRepository.findById(measurement.id, DEFAULT_ORG_NUMBER)
+        val found = measurementRepository.findById(measurement.id, DEFAULT_ORG_NUMBER)
 
-        assertNull(funnet?.hpr)
+        assertNull(found?.hpr)
     }
 
     @Test
@@ -160,14 +160,15 @@ class MeasurementRepositoryTest : WithPostgresql() {
             val (patientId, consultationId) = createPatientWithConsultation()
             val (otherPatientId, otherConsultationId) = createPatientWithConsultation()
 
-            val eldst =
+            val oldest =
                 newMeasurement(
                     patientId,
                     consultationId,
                     effectiveAt = LocalDateTime.now().minusDays(2),
                 )
-            val nyest = newMeasurement(patientId, consultationId, effectiveAt = LocalDateTime.now())
-            val mellom =
+            val newest =
+                newMeasurement(patientId, consultationId, effectiveAt = LocalDateTime.now())
+            val middle =
                 newMeasurement(
                     patientId,
                     consultationId,
@@ -175,13 +176,13 @@ class MeasurementRepositoryTest : WithPostgresql() {
                 )
             val otherPatientMeasurement = newMeasurement(otherPatientId, otherConsultationId)
 
-            listOf(nyest, eldst, mellom, otherPatientMeasurement).forEach {
+            listOf(newest, oldest, middle, otherPatientMeasurement).forEach {
                 measurementRepository.insert(it, DEFAULT_ORG_NUMBER)
             }
 
             val measurements = measurementRepository.listByPatientId(patientId, DEFAULT_ORG_NUMBER)
 
-            assertEquals(listOf(eldst.id, mellom.id, nyest.id), measurements.map { it.id })
+            assertEquals(listOf(oldest.id, middle.id, newest.id), measurements.map { it.id })
         }
 
     @Test
@@ -199,23 +200,24 @@ class MeasurementRepositoryTest : WithPostgresql() {
                     )
                 )
 
-            val eldst =
+            val oldest =
                 newMeasurement(
                     patientId,
                     consultationId,
                     effectiveAt = LocalDateTime.now().minusDays(1),
                 )
-            val nyest = newMeasurement(patientId, consultationId, effectiveAt = LocalDateTime.now())
+            val newest =
+                newMeasurement(patientId, consultationId, effectiveAt = LocalDateTime.now())
             val otherConsultationMeasurement = newMeasurement(patientId, otherConsultationId)
 
-            listOf(nyest, eldst, otherConsultationMeasurement).forEach {
+            listOf(newest, oldest, otherConsultationMeasurement).forEach {
                 measurementRepository.insert(it, DEFAULT_ORG_NUMBER)
             }
 
             val measurements =
                 measurementRepository.listByConsultationId(consultationId, DEFAULT_ORG_NUMBER)
 
-            assertEquals(listOf(eldst.id, nyest.id), measurements.map { it.id })
+            assertEquals(listOf(oldest.id, newest.id), measurements.map { it.id })
         }
 
     @Test
@@ -233,8 +235,8 @@ class MeasurementRepositoryTest : WithPostgresql() {
                 )
             }
 
-            val funnet = measurementRepository.findById(measurement.id, DEFAULT_ORG_NUMBER)
-            assertEquals("8310-5", funnet?.loincCode)
+            val found = measurementRepository.findById(measurement.id, DEFAULT_ORG_NUMBER)
+            assertEquals("8310-5", found?.loincCode)
         }
 
     @Test

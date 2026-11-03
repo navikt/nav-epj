@@ -10,7 +10,7 @@ import no.nav.helse.core.db.PatientTable
 import no.nav.helse.core.db.consultationAtOrg
 import no.nav.helse.core.db.dbQuery
 import no.nav.helse.core.utils.DuplicatePatientException
-import no.nav.helse.core.utils.IngenFastlegelisteException
+import no.nav.helse.core.utils.NoFastlegelisteException
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.practitioner.PractitionerHpr
 import org.jetbrains.exposed.v1.core.JoinType
@@ -120,11 +120,11 @@ class PatientRepository {
             .orderBy(ConsultationTable.startedAt, SortOrder.DESC)
             .groupBy { it[ConsultationTable.patientId] }
             .mapValues { (_, consultations) ->
-                val siste = consultations.first()
-                val avsluttet: LocalDateTime? = siste[ConsultationTable.endedAt]
+                val latest = consultations.first()
+                val endedAt: LocalDateTime? = latest[ConsultationTable.endedAt]
                 LatestConsultation(
-                    status = siste[ConsultationTable.status],
-                    timestamp = avsluttet ?: siste[ConsultationTable.startedAt],
+                    status = latest[ConsultationTable.status],
+                    timestamp = endedAt ?: latest[ConsultationTable.startedAt],
                 )
             }
 
@@ -168,7 +168,7 @@ class PatientRepository {
                             (ClinicTable.orgNumber eq orgNumber)
                     }
                     .singleOrNull()
-                    ?.get(FastlegelisteTable.id) ?: throw IngenFastlegelisteException()
+                    ?.get(FastlegelisteTable.id) ?: throw NoFastlegelisteException()
 
             insertPatient(patient)
             FastlegelistePatientTable.insert {

@@ -357,7 +357,7 @@ describe("journal guards", () => {
     await expectNoSeriousViolations(document.body);
     await userEvent.click(within(dialog).getByRole("button", { name: "Avbryt" }));
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
-    expect(useJournalStore.getState().draft.notat).toBe("Hei");
+    expect(useJournalStore.getState().draft.clinicalNote).toBe("Hei");
 
     docTab(/Journal ·/).focus();
     await userEvent.keyboard("{Delete}");
@@ -571,14 +571,14 @@ describe("journal guards", () => {
   it("warns before the page unloads only while the draft is dirty", async () => {
     api();
     renderApp("/patients/p1", { browserHistory: true });
-    const notat = await screen.findByLabelText("Journalnotat");
+    const clinicalNote = await screen.findByLabelText("Journalnotat");
     const unload = () => {
       const event = new Event("beforeunload", { cancelable: true });
       window.dispatchEvent(event);
       return event.defaultPrevented;
     };
     expect(unload()).toBe(false);
-    await userEvent.type(notat, "Hei");
+    await userEvent.type(clinicalNote, "Hei");
     expect(unload()).toBe(true);
   });
 });

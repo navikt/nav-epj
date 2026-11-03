@@ -20,7 +20,7 @@ class ActiveConsultationNotFoundException(patientId: PatientId) :
 
 class SessionOrgRequiredException : RuntimeException("Legekontor er ikke valgt for denne økten")
 
-class IngenFastlegelisteException :
+class NoFastlegelisteException :
     RuntimeException("Legen har ingen fastlegeliste hos dette legekontoret")
 
 class ClinicNotFoundException(orgNumber: String? = null) :
@@ -34,7 +34,7 @@ class ConsultationNotFoundForPatientException(patientId: PatientId) :
 class InvalidDiagnosisException(code: String, system: String) :
     RuntimeException("Fant ikke diagnosekode=$code i kodeverk=$system")
 
-class UgyldigPersonidentException(message: String, cause: Throwable? = null) :
+class InvalidPersonidentException(message: String, cause: Throwable? = null) :
     RuntimeException(message, cause)
 
 class DuplicatePatientException : RuntimeException("Pasienten finnes allerede")

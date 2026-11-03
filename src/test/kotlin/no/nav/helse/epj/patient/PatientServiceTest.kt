@@ -8,7 +8,7 @@ import java.time.LocalDate
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.test.runTest
-import no.nav.helse.core.utils.UgyldigPersonidentException
+import no.nav.helse.core.utils.InvalidPersonidentException
 import no.nav.helse.epj.practitioner.PractitionerHpr
 import org.junit.Test
 
@@ -59,7 +59,7 @@ class PatientServiceTest {
                 gender = AdministrativeGender.FEMALE,
             )
 
-        assertFailsWith<UgyldigPersonidentException> {
+        assertFailsWith<InvalidPersonidentException> {
             service.createPatient(request, "123", "311111116")
         }
 
@@ -79,7 +79,7 @@ class PatientServiceTest {
                 gender = AdministrativeGender.FEMALE,
             )
 
-        assertFailsWith<UgyldigPersonidentException> {
+        assertFailsWith<InvalidPersonidentException> {
             service.createPatient(request, "123", "311111116")
         }
 

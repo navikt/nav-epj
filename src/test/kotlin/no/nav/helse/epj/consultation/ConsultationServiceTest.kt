@@ -63,14 +63,14 @@ class ConsultationServiceTest {
     @Test
     fun `getConsultation returns consultation when it exists`() = runTest {
         val consultationId = ConsultationId(Uuid.generateV4())
-        val forventet = consultation(id = consultationId)
+        val expected = consultation(id = consultationId)
         coEvery {
             consultationRepository.findByConsultationId(consultationId, DEFAULT_ORG_NUMBER)
-        } returns forventet
+        } returns expected
 
-        val resultat = consultationService.getConsultation(consultationId, DEFAULT_ORG_NUMBER)
+        val result = consultationService.getConsultation(consultationId, DEFAULT_ORG_NUMBER)
 
-        assertSame(forventet, resultat)
+        assertSame(expected, result)
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -88,10 +88,10 @@ class ConsultationServiceTest {
                 )
             } returns activeConsultation
 
-            val resultat =
+            val result =
                 consultationService.getOrCreateConsultation(patientId, hpr, DEFAULT_ORG_NUMBER)
 
-            assertSame(activeConsultation, resultat)
+            assertSame(activeConsultation, result)
             coVerify(exactly = 0) { consultationRepository.insert(any()) }
         }
 
@@ -100,21 +100,20 @@ class ConsultationServiceTest {
     fun `getOrCreateConsultation creates a new consultation when none is active`() = runTest {
         val patientId = PatientId(Uuid.generateV4())
         val hpr = PractitionerHpr("123")
-        val opprettetId = ConsultationId(Uuid.generateV4())
-        val createdConsultation = consultation(id = opprettetId, patientId = patientId)
+        val createdId = ConsultationId(Uuid.generateV4())
+        val createdConsultation = consultation(id = createdId, patientId = patientId)
 
         coEvery {
             consultationRepository.findActiveByPatientIdAndHpr(patientId, hpr, DEFAULT_ORG_NUMBER)
         } returns null
-        coEvery { consultationRepository.insert(any()) } returns opprettetId
+        coEvery { consultationRepository.insert(any()) } returns createdId
         coEvery {
-            consultationRepository.findByConsultationId(opprettetId, DEFAULT_ORG_NUMBER)
+            consultationRepository.findByConsultationId(createdId, DEFAULT_ORG_NUMBER)
         } returns createdConsultation
 
-        val resultat =
-            consultationService.getOrCreateConsultation(patientId, hpr, DEFAULT_ORG_NUMBER)
+        val result = consultationService.getOrCreateConsultation(patientId, hpr, DEFAULT_ORG_NUMBER)
 
-        assertSame(createdConsultation, resultat)
+        assertSame(createdConsultation, result)
         coVerify(exactly = 1) { consultationRepository.insert(any()) }
     }
 
@@ -123,30 +122,26 @@ class ConsultationServiceTest {
     fun `getOrCreateConsultation creates a new consultation for a different doctor even when one is active`() =
         runTest {
             val patientId = PatientId(Uuid.generateV4())
-            val annenLegeHpr = PractitionerHpr("456")
-            val opprettetId = ConsultationId(Uuid.generateV4())
-            val createdConsultation = consultation(id = opprettetId, patientId = patientId)
+            val otherHpr = PractitionerHpr("456")
+            val createdId = ConsultationId(Uuid.generateV4())
+            val createdConsultation = consultation(id = createdId, patientId = patientId)
 
             coEvery {
                 consultationRepository.findActiveByPatientIdAndHpr(
                     patientId,
-                    annenLegeHpr,
+                    otherHpr,
                     DEFAULT_ORG_NUMBER,
                 )
             } returns null
-            coEvery { consultationRepository.insert(any()) } returns opprettetId
+            coEvery { consultationRepository.insert(any()) } returns createdId
             coEvery {
-                consultationRepository.findByConsultationId(opprettetId, DEFAULT_ORG_NUMBER)
+                consultationRepository.findByConsultationId(createdId, DEFAULT_ORG_NUMBER)
             } returns createdConsultation
 
-            val resultat =
-                consultationService.getOrCreateConsultation(
-                    patientId,
-                    annenLegeHpr,
-                    DEFAULT_ORG_NUMBER,
-                )
+            val result =
+                consultationService.getOrCreateConsultation(patientId, otherHpr, DEFAULT_ORG_NUMBER)
 
-            assertSame(createdConsultation, resultat)
+            assertSame(createdConsultation, result)
             coVerify(exactly = 1) { consultationRepository.insert(any()) }
         }
 
@@ -155,7 +150,7 @@ class ConsultationServiceTest {
     fun `createConsultation throws IllegalStateException when consultation does not exist after insert`() =
         runTest {
             val patientId = PatientId(Uuid.generateV4())
-            val opprettetId = ConsultationId(Uuid.generateV4())
+            val createdId = ConsultationId(Uuid.generateV4())
             val createConsultation =
                 CreateConsultation(
                     patientId = patientId,
@@ -164,9 +159,9 @@ class ConsultationServiceTest {
                     status = ConsultationStatus.IN_PROGRESS,
                     orgNumber = DEFAULT_ORG_NUMBER,
                 )
-            coEvery { consultationRepository.insert(createConsultation) } returns opprettetId
+            coEvery { consultationRepository.insert(createConsultation) } returns createdId
             coEvery {
-                consultationRepository.findByConsultationId(opprettetId, DEFAULT_ORG_NUMBER)
+                consultationRepository.findByConsultationId(createdId, DEFAULT_ORG_NUMBER)
             } returns null
 
             assertFailsWith<IllegalStateException> {
@@ -258,9 +253,9 @@ class ConsultationServiceTest {
         coEvery { consultationRepository.listDiagnoses(consultationId, DEFAULT_ORG_NUMBER) } returns
             listOf(diagnosis)
 
-        val resultat = consultationService.getDiagnoses(consultationId, DEFAULT_ORG_NUMBER)
+        val result = consultationService.getDiagnoses(consultationId, DEFAULT_ORG_NUMBER)
 
-        assertEquals(listOf(diagnosis), resultat)
+        assertEquals(listOf(diagnosis), result)
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -327,12 +322,12 @@ class ConsultationServiceTest {
                     )
                 }
 
-            val resultat = consultationService.createClinicalNote(request, DEFAULT_ORG_NUMBER)
+            val result = consultationService.createClinicalNote(request, DEFAULT_ORG_NUMBER)
 
-            assertEquals(slot.single(), resultat.id)
-            assertEquals(request.patientId, resultat.patientId)
-            assertEquals(request.consultationId, resultat.consultationId)
-            assertEquals(request.clinicalNote, resultat.clinicalNote)
+            assertEquals(slot.single(), result.id)
+            assertEquals(request.patientId, result.patientId)
+            assertEquals(request.consultationId, result.consultationId)
+            assertEquals(request.clinicalNote, result.clinicalNote)
         }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -356,9 +351,9 @@ class ConsultationServiceTest {
                 )
             } returns listOf(clinicalNote)
 
-            val resultat =
+            val result =
                 consultationService.getClinicalNotes(patientId, consultationId, DEFAULT_ORG_NUMBER)
 
-            assertEquals(listOf(clinicalNote), resultat)
+            assertEquals(listOf(clinicalNote), result)
         }
 }

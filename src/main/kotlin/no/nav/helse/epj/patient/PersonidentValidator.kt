@@ -2,7 +2,7 @@ package no.nav.helse.epj.patient
 
 import java.time.DateTimeException
 import java.time.LocalDate
-import no.nav.helse.core.utils.UgyldigPersonidentException
+import no.nav.helse.core.utils.InvalidPersonidentException
 
 /**
  * Validates Norwegian personident (fødselsnummer/D-nummer) independently of any transport
@@ -52,7 +52,7 @@ object PersonidentValidator {
      */
     fun validate(personident: String, personidentType: PersonidentType, birthDate: LocalDate) {
         if (!digitsOnly.matches(personident)) {
-            throw UgyldigPersonidentException("Personident må bestå av nøyaktig 11 siffer")
+            throw InvalidPersonidentException("Personident må bestå av nøyaktig 11 siffer")
         }
 
         val digits = personident.map { it - '0' }
@@ -68,7 +68,7 @@ object PersonidentValidator {
             )
 
         if (encodedBirthDate != birthDate) {
-            throw UgyldigPersonidentException("Fødselsdato samsvarer ikke med personident")
+            throw InvalidPersonidentException("Fødselsdato samsvarer ikke med personident")
         }
     }
 
@@ -85,13 +85,13 @@ object PersonidentValidator {
             else encodedMonth
         val century =
             resolveCentury(individualNumber, twoDigitYear)
-                ?: throw UgyldigPersonidentException(
+                ?: throw InvalidPersonidentException(
                     "Fant ikke noe gyldig århundre for individnummeret i personidenten"
                 )
         return try {
             LocalDate.of(century + twoDigitYear, month, day)
         } catch (cause: DateTimeException) {
-            throw UgyldigPersonidentException(
+            throw InvalidPersonidentException(
                 "Personidenten inneholder ikke en gyldig kalenderdato",
                 cause,
             )
@@ -105,7 +105,7 @@ object PersonidentValidator {
                 PersonidentType.DNR -> (encodedDay - DNR_DAY_OFFSET) to "et D-nummer (DNR)"
             }
         if (day !in dayOfMonthRange) {
-            throw UgyldigPersonidentException(
+            throw InvalidPersonidentException(
                 "Fødselsdag i personident samsvarer ikke med $description"
             )
         }
@@ -117,7 +117,7 @@ object PersonidentValidator {
         val k1 = checksum(baseDigits, k1Weights)
         val k2 = k1?.let { checksum(baseDigits + it, k2Weights) }
         if (k1 != digits[FIRST_CHECKSUM_INDEX] || k2 != digits[SECOND_CHECKSUM_INDEX]) {
-            throw UgyldigPersonidentException("Personident har ugyldig kontrollsiffer")
+            throw InvalidPersonidentException("Personident har ugyldig kontrollsiffer")
         }
     }
 

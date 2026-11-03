@@ -90,12 +90,12 @@ class ConsultationRepositoryDiagnosisTest : ConsultationRepositoryTestBase() {
                 )
             val diagnosis = CreateDiagnosisRequest(code = "A01", system = DiagnoseType.ICPC2)
 
-            val forsteInsert =
+            val firstInsert =
                 consultationRepository.updateDiagnosis(diagnosis, consultationId.value)
             val secondInsert =
                 consultationRepository.updateDiagnosis(diagnosis, consultationId.value)
 
-            assertEquals(1, forsteInsert)
+            assertEquals(1, firstInsert)
             assertEquals(0, secondInsert)
             val diagnosisCount = dbQuery {
                 ConsultationDiagnosisCodeTable.selectAll()
@@ -121,19 +121,19 @@ class ConsultationRepositoryDiagnosisTest : ConsultationRepositoryTestBase() {
                     )
                 )
 
-            val utenPunktum =
+            val withoutPeriod =
                 consultationRepository.updateDiagnosis(
                     CreateDiagnosisRequest(code = "A000", system = DiagnoseType.ICD10),
                     consultationId.value,
                 )
-            val medPunktum =
+            val withPeriod =
                 consultationRepository.updateDiagnosis(
                     CreateDiagnosisRequest(code = "A00.0", system = DiagnoseType.ICD10),
                     consultationId.value,
                 )
 
-            assertEquals(1, utenPunktum)
-            assertEquals(0, medPunktum)
+            assertEquals(1, withoutPeriod)
+            assertEquals(0, withPeriod)
             val savedDiagnoses =
                 consultationRepository.listDiagnoses(consultationId, DEFAULT_ORG_NUMBER)
             assertEquals(1, savedDiagnoses.size)
@@ -241,13 +241,13 @@ class ConsultationRepositoryDiagnosisTest : ConsultationRepositoryTestBase() {
 
             consultationRepository.updateDiagnosis(diagnosis, consultationId.value)
 
-            val forventetTekst = Diagnose.from(DiagnoseType.ICPC2, "A01")!!.text
+            val expectedText = Diagnose.from(DiagnoseType.ICPC2, "A01")!!.text
             val diagnosesByPatient =
                 consultationRepository.listDiagnoses(patientId, DEFAULT_ORG_NUMBER)
             val diagnosesByConsultation =
                 consultationRepository.listDiagnoses(consultationId, DEFAULT_ORG_NUMBER)
 
-            assertEquals(forventetTekst, diagnosesByPatient.single().text)
-            assertEquals(forventetTekst, diagnosesByConsultation.single().text)
+            assertEquals(expectedText, diagnosesByPatient.single().text)
+            assertEquals(expectedText, diagnosesByConsultation.single().text)
         }
 }

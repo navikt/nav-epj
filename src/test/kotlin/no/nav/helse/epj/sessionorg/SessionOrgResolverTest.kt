@@ -154,8 +154,8 @@ class SessionOrgResolverTest : WithPostgresql() {
         val multi = resolver.choosableOrgs("222")
         val single = resolver.choosableOrgs("333")
 
-        val unknownOrgnumre = unknown.map { it.org.orgNumber }
-        assertTrue(listOf("311111116", "311111124", "864425208").all { it in unknownOrgnumre })
+        val unknownOrgNumbers = unknown.map { it.org.orgNumber }
+        assertTrue(listOf("311111116", "311111124", "864425208").all { it in unknownOrgNumbers })
         assertTrue(unknown.none { it.hasOwnList })
         assertEquals(
             setOf("311111116", "311111124"),

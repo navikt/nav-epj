@@ -21,7 +21,7 @@ export type JournalSubTab = (typeof JOURNAL_SUB_TABS)[number];
 export type LoadStatus = "idle" | "loading" | "ready" | "error";
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
 
-type Draft = { diagnoses: DiagnosisItem[]; notat: string };
+type Draft = { diagnoses: DiagnosisItem[]; clinicalNote: string };
 
 type JournalState = {
   patientId: string | null;
@@ -43,7 +43,7 @@ type JournalState = {
   open: (patientId: string, consultationId?: string) => Promise<void>;
   refresh: () => Promise<void>;
   setSubTab: (subTab: JournalSubTab) => void;
-  setNotat: (notat: string) => void;
+  setClinicalNote: (clinicalNote: string) => void;
   addDiagnosis: (diagnosis: DiagnosisItem) => void;
   removeDiagnosis: (code: string, system: string) => void;
   start: () => Promise<void>;
@@ -53,7 +53,7 @@ type JournalState = {
   clear: () => void;
 };
 
-const emptyDraft = (): Draft => ({ diagnoses: [], notat: "" });
+const emptyDraft = (): Draft => ({ diagnoses: [], clinicalNote: "" });
 
 function initialState() {
   return {
@@ -91,12 +91,12 @@ function draftOf(consultation: Consultation | null): Draft {
   if (!consultation) return emptyDraft();
   return {
     diagnoses: consultation.diagnoses.map((d) => ({ ...d })),
-    notat: noteOf(consultation),
+    clinicalNote: noteOf(consultation),
   };
 }
 
 function sameDraft(a: Draft, b: Draft) {
-  if (a.notat !== b.notat || a.diagnoses.length !== b.diagnoses.length) {
+  if (a.clinicalNote !== b.clinicalNote || a.diagnoses.length !== b.diagnoses.length) {
     return false;
   }
   const keys = new Set(b.diagnoses.map(diagnosisKey));
@@ -117,14 +117,14 @@ function applySaved(
     if (k.id !== id) return k;
     const existing = k.clinicalNotes.at(-1);
     const clinicalNotes =
-      draft.notat.trim() === ""
+      draft.clinicalNote.trim() === ""
         ? k.clinicalNotes
         : [
             {
               id: existing?.id ?? `${id}:note`,
               consultationId: id,
               patientId: k.patientId,
-              clinicalNote: draft.notat,
+              clinicalNote: draft.clinicalNote,
             },
           ];
     return {
@@ -278,9 +278,9 @@ export const useJournalStore = create<JournalState>((set, get) => {
 
     setSubTab: (subTab) => commit({ subTab }),
 
-    setNotat: (notat) =>
+    setClinicalNote: (clinicalNote) =>
       commit({
-        draft: { ...get().draft, notat },
+        draft: { ...get().draft, clinicalNote },
         saveStatus: get().saveStatus === "saved" ? "idle" : get().saveStatus,
       }),
 
@@ -344,7 +344,7 @@ export const useJournalStore = create<JournalState>((set, get) => {
             code: d.code,
             system: d.system,
           })),
-          clinicalNote: draft.notat.trim() === "" ? null : draft.notat,
+          clinicalNote: draft.clinicalNote.trim() === "" ? null : draft.clinicalNote,
           finalize,
         });
       } catch {

@@ -15,13 +15,13 @@ import no.nav.helse.core.utils.ClinicNotFoundException
 import no.nav.helse.core.utils.ConsultationNotFoundException
 import no.nav.helse.core.utils.ConsultationNotFoundForPatientException
 import no.nav.helse.core.utils.DuplicatePatientException
-import no.nav.helse.core.utils.IngenFastlegelisteException
 import no.nav.helse.core.utils.InvalidDiagnosisException
+import no.nav.helse.core.utils.InvalidPersonidentException
+import no.nav.helse.core.utils.NoFastlegelisteException
 import no.nav.helse.core.utils.PatientCreationException
 import no.nav.helse.core.utils.PractitionerForPatientNotFoundException
 import no.nav.helse.core.utils.PractitionerNotFoundException
 import no.nav.helse.core.utils.SessionOrgRequiredException
-import no.nav.helse.core.utils.UgyldigPersonidentException
 import no.nav.helse.core.utils.logger
 import no.nav.helse.fhir.security.InsufficientScopeException
 import no.nav.helse.fhir.security.OrganizationContextMissingException
@@ -60,7 +60,7 @@ fun Application.configureStatusPages() {
                 status = HttpStatusCode.NotFound,
             )
         }
-        exception<IngenFastlegelisteException> { call, cause ->
+        exception<NoFastlegelisteException> { call, cause ->
             call.respondText(text = cause.message.orEmpty(), status = HttpStatusCode.Forbidden)
         }
         exception<SessionOrgRequiredException> { call, cause ->
@@ -75,7 +75,7 @@ fun Application.configureStatusPages() {
                 status = HttpStatusCode.BadRequest,
             )
         }
-        exception<UgyldigPersonidentException> { call, cause ->
+        exception<InvalidPersonidentException> { call, cause ->
             call.respondText(text = "Ugyldig personident", status = HttpStatusCode.BadRequest)
         }
         exception<DuplicatePatientException> { call, cause ->

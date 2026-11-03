@@ -85,24 +85,24 @@ class ConsultationRepositoryQueryTest : ConsultationRepositoryTestBase() {
     fun `listByPatientId sorts consultations descending by startedAt`() = runTest {
         val hpr = PractitionerHpr("123")
         val patientId = createPatient(hpr = hpr)
-        val eldst = LocalDateTime.now().minusHours(2)
-        val nyest = LocalDateTime.now()
-        val eldstId =
+        val oldest = LocalDateTime.now().minusHours(2)
+        val newest = LocalDateTime.now()
+        val oldestId =
             consultationRepository.insert(
                 CreateConsultation(
                     patientId,
                     listOf(hpr),
-                    eldst,
+                    oldest,
                     ConsultationStatus.FINISHED,
                     orgNumber = DEFAULT_ORG_NUMBER,
                 )
             )
-        val nyesteId =
+        val newestId =
             consultationRepository.insert(
                 CreateConsultation(
                     patientId,
                     listOf(hpr),
-                    nyest,
+                    newest,
                     ConsultationStatus.IN_PROGRESS,
                     orgNumber = DEFAULT_ORG_NUMBER,
                 )
@@ -110,8 +110,8 @@ class ConsultationRepositoryQueryTest : ConsultationRepositoryTestBase() {
 
         val consultations = consultationRepository.listByPatientId(patientId, DEFAULT_ORG_NUMBER)
         assertEquals(2, consultations.size)
-        assertEquals(nyesteId, consultations[0].id)
-        assertEquals(eldstId, consultations[1].id)
+        assertEquals(newestId, consultations[0].id)
+        assertEquals(oldestId, consultations[1].id)
     }
 
     @Test
@@ -200,7 +200,7 @@ class ConsultationRepositoryQueryTest : ConsultationRepositoryTestBase() {
                 orgNumber = DEFAULT_ORG_NUMBER,
             )
         )
-        val nyesteId =
+        val newestId =
             consultationRepository.insert(
                 CreateConsultation(
                     patientId,
@@ -211,16 +211,16 @@ class ConsultationRepositoryQueryTest : ConsultationRepositoryTestBase() {
                 )
             )
 
-        val aktiv = consultationRepository.findActiveByPatientId(patientId, DEFAULT_ORG_NUMBER)
-        assertNotNull(aktiv)
-        assertEquals(nyesteId, aktiv.id)
+        val active = consultationRepository.findActiveByPatientId(patientId, DEFAULT_ORG_NUMBER)
+        assertNotNull(active)
+        assertEquals(newestId, active.id)
     }
 
     @Test
     fun `findActiveByPatientIdAndHpr returns null when the doctor has no active consultation`() =
         runTest {
             val hpr = PractitionerHpr("123")
-            val annenHpr = PractitionerHpr("456")
+            val otherHpr = PractitionerHpr("456")
             val patientId = createPatient(hpr = hpr)
             consultationRepository.insert(
                 CreateConsultation(
@@ -235,7 +235,7 @@ class ConsultationRepositoryQueryTest : ConsultationRepositoryTestBase() {
             assertNull(
                 consultationRepository.findActiveByPatientIdAndHpr(
                     patientId,
-                    annenHpr,
+                    otherHpr,
                     DEFAULT_ORG_NUMBER,
                 )
             )
@@ -244,14 +244,14 @@ class ConsultationRepositoryQueryTest : ConsultationRepositoryTestBase() {
     @Test
     fun `findActiveByPatientIdAndHpr lets two different doctors have simultaneous active consultations for the same patient`() =
         runTest {
-            val legeA = PractitionerHpr("123")
-            val legeB = PractitionerHpr("456")
-            val patientId = createPatient(hpr = legeA)
+            val hprA = PractitionerHpr("123")
+            val hprB = PractitionerHpr("456")
+            val patientId = createPatient(hpr = hprA)
             val consultationA =
                 consultationRepository.insert(
                     CreateConsultation(
                         patientId,
-                        listOf(legeA),
+                        listOf(hprA),
                         LocalDateTime.now(),
                         ConsultationStatus.IN_PROGRESS,
                         orgNumber = DEFAULT_ORG_NUMBER,
@@ -261,30 +261,30 @@ class ConsultationRepositoryQueryTest : ConsultationRepositoryTestBase() {
                 consultationRepository.insert(
                     CreateConsultation(
                         patientId,
-                        listOf(legeB),
+                        listOf(hprB),
                         LocalDateTime.now(),
                         ConsultationStatus.IN_PROGRESS,
                         orgNumber = DEFAULT_ORG_NUMBER,
                     )
                 )
 
-            val aktivForA =
+            val activeForA =
                 consultationRepository.findActiveByPatientIdAndHpr(
                     patientId,
-                    legeA,
+                    hprA,
                     DEFAULT_ORG_NUMBER,
                 )
-            val aktivForB =
+            val activeForB =
                 consultationRepository.findActiveByPatientIdAndHpr(
                     patientId,
-                    legeB,
+                    hprB,
                     DEFAULT_ORG_NUMBER,
                 )
 
-            assertNotNull(aktivForA)
-            assertNotNull(aktivForB)
-            assertEquals(consultationA, aktivForA.id)
-            assertEquals(consultationB, aktivForB.id)
+            assertNotNull(activeForA)
+            assertNotNull(activeForB)
+            assertEquals(consultationA, activeForA.id)
+            assertEquals(consultationB, activeForB.id)
         }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -389,7 +389,7 @@ class ConsultationRepositoryQueryTest : ConsultationRepositoryTestBase() {
             consultationRepository.findActiveByPatientIdAndHpr(patientId, hpr, DEFAULT_ORG_NUMBER)
         )
 
-        val pagaaendeId =
+        val inProgressId =
             consultationRepository.insert(
                 CreateConsultation(
                     patientId,
@@ -401,13 +401,13 @@ class ConsultationRepositoryQueryTest : ConsultationRepositoryTestBase() {
             )
 
         assertEquals(
-            pagaaendeId,
+            inProgressId,
             consultationRepository
                 .findActiveByPatientIdAndHpr(patientId, hpr, DEFAULT_ORG_NUMBER)
                 ?.id,
         )
         assertEquals(
-            pagaaendeId,
+            inProgressId,
             consultationRepository.findActiveByPatientId(patientId, DEFAULT_ORG_NUMBER)?.id,
         )
     }
