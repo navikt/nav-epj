@@ -54,6 +54,35 @@ Organisations, mock patients and fastlegelister are seeded by a repeatable Flywa
 [docs/testdata.md](./docs/testdata.md) for how to add an organisation, a patient, a doctor's list or
 a column.
 
+### Breaking cutover to the English code names
+
+The code, database schema and config now use English names (`ehr` instead of `epj`, `clinic`,
+`practitioner`, `patient`, `consultation`, `clinical_note`, `measurement`). The UI text is still
+Norwegian. The old and new versions are not compatible, so this is not a rolling deploy. Run through
+these steps before the first deploy of the new version to an environment with data (dev):
+
+1. Stop all old app instances first. Do not let old and new instances run side by side.
+2. Reset the database schema. The new Flyway migrations `V1` to `V7` replace the old `V1` to `V11`
+   and recreate the final schema, and the repeatable testdata migrations reseed it when
+   `database.seedTestdata` is `true`. Data written to the old schema is lost by design.
+3. Clear or let expire the short-lived launch and auth code contexts in Valkey (5 minutes and 60
+   seconds). Their JSON field `orgnummer` is now `orgNumber`, so an old context fails to parse in the
+   new version.
+4. The session organisation cache moved from the key prefix `epj:session-org:` to `ehr:session-org:`.
+   Clinicians are asked to pick an organisation again after login. The old keys expire on their own.
+5. The root config section is `ehr:` (was `epj:`) and the base URL is `ehr.baseUrl`. `.nais/nais-dev.yaml`
+   does not override it.
+6. If the SMART client registry comes from the secret `nav-epj-client-config` as
+   `smart.clientRegistryJson` (the secret is not in this repository, check it yourself), rename the
+   keys in each element: `navn` to `name`, `beskrivelse` to `description` and `ikon` to `icon`. Owned
+   icon ids changed too: `sykmelding` to `sick-note`, `vindu` to `window`, `mappe` to `folder`,
+   `timebok` to `appointment-book`. The other icon ids (`app`, `journal`, `validator`) are unchanged,
+   as are the OAuth keys such as `clientId`, `redirectUris` and `scopes`. The old keys are not
+   aliased. They are ignored without an error, so an app without migrated keys stays registered but
+   shows its client id as name, no description and the default `window` icon. An old icon id also
+   falls back to `window`. Migrate them to keep
+   the app display config.
+
 ### Session information
 
 `GET /api/session` backs the Systeminformasjon page. It returns a fixed selection of claims from the
