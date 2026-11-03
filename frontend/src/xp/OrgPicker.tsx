@@ -4,7 +4,7 @@ import { Button } from "./Button";
 import { Card } from "./Card";
 import { XpIcon } from "./XpIcon";
 import { copy } from "./copy";
-import type { SessionOrg } from "../utils/mapping/epj";
+import type { SessionOrg } from "../utils/mapping/ehr";
 
 type Props = {
   sessionOrg: SessionOrg;

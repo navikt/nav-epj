@@ -17,11 +17,11 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
-import no.nav.helse.epj.patient.AdministrativeGender
-import no.nav.helse.epj.patient.Patient
-import no.nav.helse.epj.patient.PatientId
-import no.nav.helse.epj.patient.PatientService as EpjPatientService
-import no.nav.helse.epj.patient.PersonidentType
+import no.nav.helse.ehr.patient.AdministrativeGender
+import no.nav.helse.ehr.patient.Patient
+import no.nav.helse.ehr.patient.PatientId
+import no.nav.helse.ehr.patient.PatientService as EhrPatientService
+import no.nav.helse.ehr.patient.PersonidentType
 import no.nav.helse.plugins.configureStatusPages
 import no.nav.helse.smart.security.Interaction
 import no.nav.helse.smart.security.ScopeContext
@@ -31,8 +31,8 @@ import org.junit.Test
 
 class PatientRoutesTest {
 
-    private val epjPatientService = mockk<EpjPatientService>()
-    private val patientService = PatientService(epjPatientService)
+    private val ehrPatientService = mockk<EhrPatientService>()
+    private val patientService = PatientService(ehrPatientService)
     private val fhirJson = FhirR4Json()
     private val fhirContentType = ContentType("application", "fhir+json")
 
@@ -93,7 +93,7 @@ class PatientRoutesTest {
     @Test
     fun `GET Patient returns the fnr identifier system and demographics`() {
         val subject = patient(personidentType = PersonidentType.FNR)
-        coEvery { epjPatientService.getPatientById(subject.id) } returns subject
+        coEvery { ehrPatientService.getPatientById(subject.id) } returns subject
 
         testApp(patientId = subject.id.value.toString()) {
             val response = get("/fhir/Patient/${subject.id.value}")
@@ -113,7 +113,7 @@ class PatientRoutesTest {
     @Test
     fun `GET Patient returns the dnr identifier system`() {
         val subject = patient(personidentType = PersonidentType.DNR)
-        coEvery { epjPatientService.getPatientById(subject.id) } returns subject
+        coEvery { ehrPatientService.getPatientById(subject.id) } returns subject
 
         testApp(patientId = subject.id.value.toString()) {
             val response = get("/fhir/Patient/${subject.id.value}")
@@ -126,7 +126,7 @@ class PatientRoutesTest {
     @Test
     fun `GET Patient omits gender and birthDate for a legacy patient without demographics`() {
         val subject = patient(personidentType = null, birthDate = null, gender = null)
-        coEvery { epjPatientService.getPatientById(subject.id) } returns subject
+        coEvery { ehrPatientService.getPatientById(subject.id) } returns subject
 
         testApp(patientId = subject.id.value.toString()) {
             val response = get("/fhir/Patient/${subject.id.value}")
@@ -143,7 +143,7 @@ class PatientRoutesTest {
     @Test
     fun `GET Patient returns 404 for an unknown patient`() {
         val id = PatientId(Uuid.generateV4())
-        coEvery { epjPatientService.getPatientById(id) } returns null
+        coEvery { ehrPatientService.getPatientById(id) } returns null
 
         testApp(patientId = id.value.toString()) {
             val response = get("/fhir/Patient/${id.value}")
@@ -161,7 +161,7 @@ class PatientRoutesTest {
     @Test
     fun `GET Patient by identifier returns the launched patient in a searchset`() {
         val subject = patient(personidentType = PersonidentType.FNR)
-        coEvery { epjPatientService.getPatientByPersonident(subject.personident) } returns subject
+        coEvery { ehrPatientService.getPatientByPersonident(subject.personident) } returns subject
 
         testApp(patientId = subject.id.value.toString(), scopes = searchScopes()) {
             val response =
@@ -179,7 +179,7 @@ class PatientRoutesTest {
     @Test
     fun `GET Patient by identifier value without system matches`() {
         val subject = patient(personidentType = PersonidentType.DNR)
-        coEvery { epjPatientService.getPatientByPersonident(subject.personident) } returns subject
+        coEvery { ehrPatientService.getPatientByPersonident(subject.personident) } returns subject
 
         testApp(patientId = subject.id.value.toString(), scopes = searchScopes()) {
             val response = get("/fhir/Patient") { parameter("identifier", subject.personident) }
@@ -192,7 +192,7 @@ class PatientRoutesTest {
     @Test
     fun `GET Patient by identifier with the other national system returns no match`() {
         val subject = patient(personidentType = PersonidentType.FNR)
-        coEvery { epjPatientService.getPatientByPersonident(subject.personident) } returns subject
+        coEvery { ehrPatientService.getPatientByPersonident(subject.personident) } returns subject
 
         testApp(patientId = subject.id.value.toString(), scopes = searchScopes()) {
             val response =
@@ -209,7 +209,7 @@ class PatientRoutesTest {
     @Test
     fun `GET Patient by identifier hides another patient from a patient-bound token`() {
         val other = patient()
-        coEvery { epjPatientService.getPatientByPersonident(other.personident) } returns other
+        coEvery { ehrPatientService.getPatientByPersonident(other.personident) } returns other
 
         testApp(patientId = Uuid.generateV4().toString(), scopes = searchScopes()) {
             val response = get("/fhir/Patient") { parameter("identifier", other.personident) }
@@ -222,7 +222,7 @@ class PatientRoutesTest {
     @Test
     fun `GET Patient by identifier finds any patient with a user-level scope`() {
         val other = patient()
-        coEvery { epjPatientService.getPatientByPersonident(other.personident) } returns other
+        coEvery { ehrPatientService.getPatientByPersonident(other.personident) } returns other
 
         testApp(
             patientId = null,
@@ -238,7 +238,7 @@ class PatientRoutesTest {
     @Test
     fun `GET Patient by identifier finds a patient with a system-level scope and no launch context`() {
         val other = patient()
-        coEvery { epjPatientService.getPatientByPersonident(other.personident) } returns other
+        coEvery { ehrPatientService.getPatientByPersonident(other.personident) } returns other
 
         testApp(patientId = null, scopes = setOf(scope(ScopeContext.SYSTEM, Interaction.SEARCH))) {
             val response = get("/fhir/Patient") { parameter("identifier", other.personident) }
@@ -250,7 +250,7 @@ class PatientRoutesTest {
 
     @Test
     fun `GET Patient by identifier returns an empty searchset for an unknown identifier`() {
-        coEvery { epjPatientService.getPatientByPersonident("15068500017") } returns null
+        coEvery { ehrPatientService.getPatientByPersonident("15068500017") } returns null
 
         testApp(patientId = null, scopes = searchScopes()) {
             val response = get("/fhir/Patient") { parameter("identifier", "15068500017") }

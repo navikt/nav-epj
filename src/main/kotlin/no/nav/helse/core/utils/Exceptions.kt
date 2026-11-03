@@ -1,8 +1,8 @@
 package no.nav.helse.core.utils
 
-import no.nav.helse.epj.consultation.ConsultationId
-import no.nav.helse.epj.patient.PatientId
-import no.nav.helse.epj.practitioner.PractitionerHpr
+import no.nav.helse.ehr.consultation.ConsultationId
+import no.nav.helse.ehr.patient.PatientId
+import no.nav.helse.ehr.practitioner.PractitionerHpr
 
 class PractitionerNotFoundException(hpr: PractitionerHpr) :
     RuntimeException("Fant ikke helsepersonell med HPR=${hpr.value}")

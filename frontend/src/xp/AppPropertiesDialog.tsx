@@ -6,7 +6,7 @@ import { XpIcon } from "./XpIcon";
 import { APP_MODE_LABELS, appIconName } from "./appInfo";
 import { copy } from "./copy";
 import { explanationOf, groupScopes } from "./scopes";
-import type { App } from "../utils/mapping/epj";
+import type { App } from "../utils/mapping/ehr";
 
 type TabId = "gen" | "oauth" | "scope";
 

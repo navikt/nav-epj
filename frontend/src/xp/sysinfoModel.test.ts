@@ -10,7 +10,7 @@ import {
   resourceRows,
   smartRows,
 } from "./sysinfoModel";
-import type { Session, SmartConfiguration } from "../utils/mapping/epj";
+import type { Session, SmartConfiguration } from "../utils/mapping/ehr";
 
 const real: Session = {
   idp: "helseid",

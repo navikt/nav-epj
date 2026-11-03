@@ -1,4 +1,4 @@
-import type { Patient } from "../utils/mapping/epj";
+import type { Patient } from "../utils/mapping/ehr";
 import { fullName } from "./patientInfo";
 
 export function filterPatients<T extends Patient>(patients: T[], query: string) {

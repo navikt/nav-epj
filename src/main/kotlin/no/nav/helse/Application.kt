@@ -3,7 +3,7 @@ package no.nav.helse
 import io.ktor.server.application.*
 import no.nav.helse.core.configureDependencies
 import no.nav.helse.core.db.configureDatabases
-import no.nav.helse.epj.configureEpjModule
+import no.nav.helse.ehr.configureEhrModule
 import no.nav.helse.fhir.configureFhirModule
 import no.nav.helse.helseId.configureHelseId
 import no.nav.helse.plugins.configureCallLogging
@@ -33,5 +33,5 @@ fun Application.module() {
     configureSmartRouting()
     configureFhirModule()
 
-    configureEpjModule()
+    configureEhrModule()
 }

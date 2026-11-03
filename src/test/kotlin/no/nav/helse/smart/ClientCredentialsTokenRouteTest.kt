@@ -24,12 +24,12 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import no.nav.helse.core.EhrConfig
 import no.nav.helse.core.Environment
-import no.nav.helse.core.EpjConfig
 import no.nav.helse.core.SmartConfig
 import no.nav.helse.core.ValkeyConfig
-import no.nav.helse.epj.patient.PatientService as EpjPatientService
-import no.nav.helse.epj.sessionorg.SessionOrgResolver
+import no.nav.helse.ehr.patient.PatientService as EhrPatientService
+import no.nav.helse.ehr.sessionorg.SessionOrgResolver
 import no.nav.helse.fhir.encounter.EncounterService
 import no.nav.helse.fhir.patient.PatientService
 import no.nav.helse.helseId.DebugInfo
@@ -107,7 +107,7 @@ class ClientCredentialsTokenRouteTest {
                     privateKeyJwk = TEST_PRIVATE_KEY_JWK,
                 ),
             valkey = ValkeyConfig("valkey", 8080, false, null, null),
-            epj = EpjConfig(baseUrl = "testurl"),
+            ehr = EhrConfig(baseUrl = "testurl"),
         )
 
     private val valkey =
@@ -122,7 +122,7 @@ class ClientCredentialsTokenRouteTest {
             provide<ValkeyService> { valkey }
             provide<EncounterService> { mockk(relaxed = true) }
             provide<PatientService> { mockk(relaxed = true) }
-            provide<EpjPatientService> { mockk(relaxed = true) }
+            provide<EhrPatientService> { mockk(relaxed = true) }
             provide<SessionOrgResolver> { mockk(relaxed = true) }
             provide<SmartKeys> { smartKeys }
             provide<ClientAssertionVerifier> {

@@ -21,13 +21,13 @@ type Props = {
 };
 
 const variants: Record<AppErrorCode, MessageBoxVariant> = {
-  NO_ACTIVE_PATIENT: "advarsel",
-  NO_ACTIVE_ENCOUNTER: "advarsel",
-  PATIENT_MISMATCH: "advarsel",
-  UNKNOWN_APP: "feil",
-  FRAMING_REFUSED: "advarsel",
-  SESSION_EXPIRED: "feil",
-  NETWORK: "feil",
+  NO_ACTIVE_PATIENT: "warning",
+  NO_ACTIVE_ENCOUNTER: "warning",
+  PATIENT_MISMATCH: "warning",
+  UNKNOWN_APP: "error",
+  FRAMING_REFUSED: "warning",
+  SESSION_EXPIRED: "error",
+  NETWORK: "error",
 };
 
 function titleOf(dialog: ErrorDialog) {

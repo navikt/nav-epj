@@ -3,7 +3,7 @@ import { copy } from "./copy";
 import type { LaunchChoice } from "./launchModeStore";
 import { findApp, popOutApp, startApp } from "./launchApp";
 import { useShell } from "./shellContext";
-import type { App } from "../utils/mapping/epj";
+import type { App } from "../utils/mapping/ehr";
 
 export function useStartApp() {
   const { announce } = useShell();

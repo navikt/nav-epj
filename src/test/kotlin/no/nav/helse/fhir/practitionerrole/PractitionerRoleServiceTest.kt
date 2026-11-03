@@ -9,13 +9,13 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.runBlocking
-import no.nav.helse.epj.clinic.Clinic
-import no.nav.helse.epj.clinic.ClinicId
-import no.nav.helse.epj.clinic.ClinicRepository
-import no.nav.helse.epj.practitioner.Practitioner
-import no.nav.helse.epj.practitioner.PractitionerHpr
-import no.nav.helse.epj.practitioner.PractitionerService
-import no.nav.helse.epj.sessionorg.FastlegelisteRepository
+import no.nav.helse.ehr.clinic.Clinic
+import no.nav.helse.ehr.clinic.ClinicId
+import no.nav.helse.ehr.clinic.ClinicRepository
+import no.nav.helse.ehr.practitioner.Practitioner
+import no.nav.helse.ehr.practitioner.PractitionerHpr
+import no.nav.helse.ehr.practitioner.PractitionerService
+import no.nav.helse.ehr.sessionorg.FastlegelisteRepository
 
 class PractitionerRoleServiceTest {
     private val practitionerService = mockk<PractitionerService>()

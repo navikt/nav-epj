@@ -1,7 +1,7 @@
 import { MessageBox } from "./MessageBox";
 import { copy } from "./copy";
 import { fullName } from "./patientInfo";
-import type { Patient } from "../utils/mapping/epj";
+import type { Patient } from "../utils/mapping/ehr";
 
 type Props = {
   patient: Patient;
@@ -15,7 +15,7 @@ export function FinishDialog({ patient, unsaved, onConfirm, onCancel }: Props) {
     <MessageBox
       title={copy["s4.finishDlg.title"]}
       heading={copy["s4.finishDlg.head"](fullName(patient))}
-      variant="sporsmal"
+      variant="question"
       onClose={onCancel}
       buttons={[
         { label: copy["s4.finish"], onClick: onConfirm, isDefault: true },

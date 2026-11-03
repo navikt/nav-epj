@@ -9,10 +9,10 @@ import com.google.fhir.model.r4.Enumeration
 import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.Uri
 import no.nav.helse.core.utils.oid
-import no.nav.helse.epj.consultation.Consultation
-import no.nav.helse.epj.consultation.ConsultationId
-import no.nav.helse.epj.consultation.ConsultationService
-import no.nav.helse.epj.patient.PatientId
+import no.nav.helse.ehr.consultation.Consultation
+import no.nav.helse.ehr.consultation.ConsultationId
+import no.nav.helse.ehr.consultation.ConsultationService
+import no.nav.helse.ehr.patient.PatientId
 import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
 import no.nav.tsm.diagnoser.Diagnose

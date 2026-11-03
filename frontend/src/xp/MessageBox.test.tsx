@@ -21,7 +21,7 @@ function renderBox(props: Partial<Parameters<typeof MessageBox>[0]> = {}) {
     <MessageBox
       title="nav-epj"
       heading="Kunne ikke lagre"
-      variant="feil"
+      variant="error"
       buttons={[
         { label: "Avbryt", onClick: onCancel },
         { label: "Prøv igjen", onClick: onOk, isDefault: true },
@@ -36,7 +36,7 @@ function renderBox(props: Partial<Parameters<typeof MessageBox>[0]> = {}) {
 }
 
 describe("MessageBox", () => {
-  it.each(["feil", "advarsel", "sporsmal"] as const)(
+  it.each(["error", "warning", "question"] as const)(
     "uses alertdialog for %s",
     (variant) => {
       renderBox({ variant });

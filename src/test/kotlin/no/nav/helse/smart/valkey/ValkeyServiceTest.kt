@@ -193,11 +193,11 @@ class ValkeyServiceTest : WithValkey() {
     @Test
     fun `refreshing the session org re-arms its expiry`() = runTest {
         valkeyService.setSessionOrg("hpr-org-3", "311111116")
-        glideClient.expire("epj:session-org:hpr-org-3", 100).get()
+        glideClient.expire("ehr:session-org:hpr-org-3", 100).get()
 
         valkeyService.refreshSessionOrg("hpr-org-3")
 
-        val ttl = glideClient.ttl("epj:session-org:hpr-org-3").get()
+        val ttl = glideClient.ttl("ehr:session-org:hpr-org-3").get()
         assertTrue(ttl > 8 * 60 * 60 - 60, "$ttl")
     }
 
@@ -207,7 +207,7 @@ class ValkeyServiceTest : WithValkey() {
 
         assertEquals("311111116", valkeyService.getSessionOrg("hpr-org-1"))
         assertNull(valkeyService.getSessionOrg("hpr-org-2"))
-        val ttl = glideClient.ttl("epj:session-org:hpr-org-1").get()
+        val ttl = glideClient.ttl("ehr:session-org:hpr-org-1").get()
         assertTrue(ttl in (8 * 60 * 60 - 60)..(8 * 60 * 60), "$ttl")
     }
 }

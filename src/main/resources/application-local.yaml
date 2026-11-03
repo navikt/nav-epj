@@ -14,7 +14,7 @@ database:
   password: "postgres"
   seedTestdata: true
 
-epj:
+ehr:
   baseUrl: "http://localhost:8080"
 
 smart:

@@ -1,9 +1,9 @@
 package no.nav.helse.core.db
 
 import no.nav.helse.core.utils.ConsultationStatus
-import no.nav.helse.epj.measurement.MeasurementStatus
-import no.nav.helse.epj.patient.AdministrativeGender
-import no.nav.helse.epj.patient.PersonidentType
+import no.nav.helse.ehr.measurement.MeasurementStatus
+import no.nav.helse.ehr.patient.AdministrativeGender
+import no.nav.helse.ehr.patient.PersonidentType
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.javatime.date
 import org.jetbrains.exposed.v1.javatime.datetime

@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TabAppDialog } from "./TabAppDialog";
-import { kari, nyFane, ola, seedApps, seedJournal } from "./appFixtures";
+import { kari, newTab, ola, seedApps, seedJournal } from "./appFixtures";
 import { useAppRunStore } from "./appRunStore";
 import { expectNoSeriousViolations } from "./axeHelper";
 import { copy } from "./copy";
@@ -25,7 +25,7 @@ function seedTabApp() {
 
 describe("TabAppDialog", () => {
   beforeEach(() => {
-    seedApps([nyFane]);
+    seedApps([newTab]);
     seedJournal();
     seedTabApp();
   });

@@ -7,7 +7,7 @@ import {
   SessionOrgSchema,
   type Practitioner,
   type SessionOrg,
-} from "../utils/mapping/epj";
+} from "../utils/mapping/ehr";
 
 export type PractitionerState =
   | { status: "loading" }

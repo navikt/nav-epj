@@ -91,7 +91,7 @@ class SecurityHeadersTest {
                         privateKeyJwk = simpleTestEnvironment.smart.privateKeyJwk,
                     ),
                 valkey = simpleTestEnvironment.valkey,
-                epj = simpleTestEnvironment.epj,
+                ehr = simpleTestEnvironment.ehr,
             )
         application {
             dependencies { provide<Environment> { environment } }

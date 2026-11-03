@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { PatientsPage } from "./PatientsPage";
 import { usePatientsStore } from "./patientsStore";
 import { expectNoSeriousViolations } from "./axeHelper";
-import type { PatientListItem } from "../utils/mapping/epj";
+import type { PatientListItem } from "../utils/mapping/ehr";
 
 const make = (i: number): PatientListItem => ({
   id: String(i),

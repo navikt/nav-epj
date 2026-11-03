@@ -2,7 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppsTab } from "./AppsTab";
-import { nyFane, ola, seedApps, seedJournal, seedRun, sykInn, validator } from "./appFixtures";
+import { newTab, ola, seedApps, seedJournal, seedRun, sykInn, validator } from "./appFixtures";
 import { useAppRunStore } from "./appRunStore";
 import { useAppsStore } from "./appsStore";
 import { expectNoSeriousViolations } from "./axeHelper";
@@ -11,7 +11,7 @@ import { useJournalStore } from "./journalStore";
 
 describe("AppsTab", () => {
   beforeEach(() => {
-    seedApps([sykInn, validator, nyFane]);
+    seedApps([sykInn, validator, newTab]);
     seedJournal();
   });
 

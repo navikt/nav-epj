@@ -64,7 +64,7 @@ data class SmartClient(
     val grantTypes: Set<GrantType> = setOf(GrantType.AUTHORIZATION_CODE),
 ) {
     /**
-     * The safe subset of this registration a future EPJ launch picker can show a clinician: no
+     * The safe subset of this registration a future EHR launch picker can show a clinician: no
      * secret, no JWK material, and only launch URIs already registered (never an arbitrary URL).
      */
     fun toDisplay(): SmartClientDisplay =

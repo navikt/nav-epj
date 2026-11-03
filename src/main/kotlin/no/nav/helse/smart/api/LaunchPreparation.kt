@@ -3,11 +3,11 @@ package no.nav.helse.smart.api
 import io.ktor.http.URLBuilder
 import java.util.UUID
 import kotlin.uuid.Uuid
-import no.nav.helse.epj.patient.PatientId
-import no.nav.helse.epj.patient.PatientService as EpjPatientService
-import no.nav.helse.epj.practitioner.PractitionerHpr
-import no.nav.helse.epj.sessionorg.SessionOrgResolution
-import no.nav.helse.epj.sessionorg.SessionOrgResolver
+import no.nav.helse.ehr.patient.PatientId
+import no.nav.helse.ehr.patient.PatientService as EhrPatientService
+import no.nav.helse.ehr.practitioner.PractitionerHpr
+import no.nav.helse.ehr.sessionorg.SessionOrgResolution
+import no.nav.helse.ehr.sessionorg.SessionOrgResolver
 import no.nav.helse.fhir.encounter.EncounterService
 import no.nav.helse.fhir.patient.PatientInputId
 import no.nav.helse.fhir.patient.PatientService
@@ -48,7 +48,7 @@ class LaunchPreparer(
     private val patientService: PatientService,
     private val encounterService: EncounterService,
     private val sessionOrgResolver: SessionOrgResolver,
-    private val epjPatientService: EpjPatientService,
+    private val ehrPatientService: EhrPatientService,
 ) {
     /**
      * If [expectedPatientId] is set, launch only proceeds when it matches the clinician's active
@@ -66,7 +66,7 @@ class LaunchPreparer(
         if (expectedPatientId != null && Uuid.parseOrNull(expectedPatientId) != active) {
             return LaunchPreparation.PatientMismatch
         }
-        if (!epjPatientService.isListedAt(PatientId(active), orgNumber)) {
+        if (!ehrPatientService.isListedAt(PatientId(active), orgNumber)) {
             return LaunchPreparation.NoActivePatient
         }
         return prepareFor(PatientInputId(active), hpr, orgNumber)

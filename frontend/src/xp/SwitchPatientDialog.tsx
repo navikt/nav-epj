@@ -32,7 +32,7 @@ export function SwitchPatientDialog({
     <MessageBox
       title={copy["s7.title"]}
       heading={copy["s7.head"](from, to)}
-      variant="advarsel"
+      variant="warning"
       onClose={onCancel}
       buttons={[
         {

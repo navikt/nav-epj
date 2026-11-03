@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SwitchPatientDialog } from "./SwitchPatientDialog";
-import { kari, nyFane, ola, seedApps, seedJournal, seedRun } from "./appFixtures";
+import { kari, newTab, ola, seedApps, seedJournal, seedRun } from "./appFixtures";
 import { useAppRunStore } from "./appRunStore";
 import { expectNoSeriousViolations } from "./axeHelper";
 import { copy } from "./copy";
@@ -52,7 +52,7 @@ describe("SwitchPatientDialog with apps", () => {
   it("warns that tab apps cannot be closed by the host", () => {
     useAppRunStore.getState().addTabApp({
       id: "smart-ny-fane-1",
-      clientId: nyFane.clientId,
+      clientId: newTab.clientId,
       navn: "Fanen",
       patient: ola,
       startedAt: new Date(),
@@ -69,7 +69,7 @@ describe("SwitchPatientDialog with apps", () => {
   it("ignores tab apps that belong to another patient", () => {
     useAppRunStore.getState().addTabApp({
       id: "smart-ny-fane-1",
-      clientId: nyFane.clientId,
+      clientId: newTab.clientId,
       navn: "Fanen",
       patient: kari,
       startedAt: new Date(),
@@ -105,7 +105,7 @@ describe("SwitchPatientDialog with apps", () => {
     seedRun();
     useAppRunStore.getState().addTabApp({
       id: "smart-ny-fane-1",
-      clientId: nyFane.clientId,
+      clientId: newTab.clientId,
       navn: "Fanen",
       patient: ola,
       startedAt: new Date(),

@@ -65,10 +65,10 @@ export function routeForTab(tab: Tab): TabRoute | null {
     case "journal":
       return currentJournalRoute();
     case "app":
-    case "kontrollpanel":
+    case "control-panel":
     case "sysinfo":
-    case "hjelp":
-    case "hendelseslogg":
+    case "help":
+    case "event-log":
       return null;
     default:
       return assertNever(tab);

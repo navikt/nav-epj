@@ -1,17 +1,17 @@
 import { Activity, type ReactNode } from "react";
 import { AppTabView } from "./AppTabView";
 import { DocumentTabs } from "./DocumentTabs";
-import { HjelpPage } from "./HjelpPage";
-import { KontrollpanelPage } from "./KontrollpanelPage";
+import { HelpPage } from "./HelpPage";
+import { ControlPanelPage } from "./ControlPanelPage";
 import { SysinfoPage } from "./SysinfoPage";
 import { APP_TAB_PREFIX } from "./appInfo";
 import { WORK_PANEL_ID } from "./shellContext";
 import { useWorkspaceStore, type Tab, type TabKind } from "./workspaceStore";
 
 const SYSTEM_PAGES: readonly (TabKind | undefined)[] = [
-  "kontrollpanel",
+  "control-panel",
   "sysinfo",
-  "hjelp",
+  "help",
 ];
 
 function isSystemPage(kind: TabKind | undefined) {
@@ -49,9 +49,9 @@ export function Workspace({
         <div className="xp-keep" hidden={keepHidden}>
           <Activity mode={keepHidden ? "hidden" : "visible"}>{children}</Activity>
         </div>
-        {systemCurrent === "kontrollpanel" && <KontrollpanelPage />}
+        {systemCurrent === "control-panel" && <ControlPanelPage />}
         {systemCurrent === "sysinfo" && <SysinfoPage />}
-        {systemCurrent === "hjelp" && <HjelpPage />}
+        {systemCurrent === "help" && <HelpPage />}
         {tabs.map((tab) =>
           tab.kind === "app" ? (
             <div

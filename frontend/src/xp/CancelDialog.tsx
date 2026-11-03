@@ -1,7 +1,7 @@
 import { MessageBox } from "./MessageBox";
 import { copy } from "./copy";
 import { fullName } from "./patientInfo";
-import type { Patient } from "../utils/mapping/epj";
+import type { Patient } from "../utils/mapping/ehr";
 
 type Props = {
   patient: Patient;
@@ -15,7 +15,7 @@ export function CancelDialog({ patient, unsaved, onConfirm, onCancel }: Props) {
     <MessageBox
       title={copy["s4.cancelDlg.title"]}
       heading={copy["s4.cancelDlg.head"](fullName(patient))}
-      variant="advarsel"
+      variant="warning"
       onClose={onCancel}
       buttons={[
         { label: copy["common.cancel"], onClick: onCancel, isDefault: true },

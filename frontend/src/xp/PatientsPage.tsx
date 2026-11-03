@@ -22,7 +22,7 @@ import {
   type PatientsView,
 } from "./patientsStore";
 import { useNow } from "./useNow";
-import type { Patient } from "../utils/mapping/epj";
+import type { Patient } from "../utils/mapping/ehr";
 
 type Props = {
   canCreate: boolean;

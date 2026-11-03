@@ -6,7 +6,7 @@ import { copy } from "./copy";
 import { fullName } from "./patientInfo";
 import { useJournalStore } from "./journalStore";
 import { useShell } from "./shellContext";
-import type { Patient } from "../utils/mapping/epj";
+import type { Patient } from "../utils/mapping/ehr";
 
 type Props = { patient: Patient };
 

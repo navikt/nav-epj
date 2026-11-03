@@ -6,11 +6,11 @@ import com.google.fhir.model.r4.Identifier
 import com.google.fhir.model.r4.Meta
 import com.google.fhir.model.r4.Practitioner as FhirPractitioner
 import com.google.fhir.model.r4.Uri
-import no.nav.helse.epj.practitioner.Practitioner
-import no.nav.helse.epj.practitioner.PractitionerHpr
-import no.nav.helse.epj.practitioner.PractitionerService as EpjPractitionerService
+import no.nav.helse.ehr.practitioner.Practitioner
+import no.nav.helse.ehr.practitioner.PractitionerHpr
+import no.nav.helse.ehr.practitioner.PractitionerService as EhrPractitionerService
 
-class PractitionerService(val practitionerService: EpjPractitionerService) {
+class PractitionerService(val practitionerService: EhrPractitionerService) {
 
     suspend fun getPractitioner(practitionerId: PractitionerId): FhirPractitioner? {
         val practitioner =

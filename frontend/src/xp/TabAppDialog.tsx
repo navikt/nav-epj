@@ -34,7 +34,7 @@ export function TabAppDialog({ tabId, onClose }: Props) {
       <MessageBox
         title={copy["s7.staleDlg.title"](tabApp.navn)}
         heading={copy["s7.staleDlg.head"](tabApp.navn, owner)}
-        variant="advarsel"
+        variant="warning"
         buttons={[
           { label: copy["s7.staleDlg.done"], onClick: remove, isDefault: true },
           { label: copy["common.close"], onClick: onClose },

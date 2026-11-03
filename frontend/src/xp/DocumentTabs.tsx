@@ -9,10 +9,10 @@ const icons: Record<TabKind, IconName> = {
   patients: "patients",
   journal: "journal",
   app: "vindu",
-  kontrollpanel: "kontrollpanel",
+  "control-panel": "kontrollpanel",
   sysinfo: "systeminfo",
-  hjelp: "hjelp",
-  hendelseslogg: "hendelseslogg",
+  help: "hjelp",
+  "event-log": "hendelseslogg",
 };
 
 type Props = {

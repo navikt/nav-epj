@@ -7,12 +7,12 @@ import com.google.fhir.model.r4.Meta
 import com.google.fhir.model.r4.PractitionerRole
 import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.Uri
-import no.nav.helse.epj.clinic.ClinicId
-import no.nav.helse.epj.clinic.ClinicRepository
-import no.nav.helse.epj.practitioner.Practitioner
-import no.nav.helse.epj.practitioner.PractitionerHpr
-import no.nav.helse.epj.practitioner.PractitionerService
-import no.nav.helse.epj.sessionorg.FastlegelisteRepository
+import no.nav.helse.ehr.clinic.ClinicId
+import no.nav.helse.ehr.clinic.ClinicRepository
+import no.nav.helse.ehr.practitioner.Practitioner
+import no.nav.helse.ehr.practitioner.PractitionerHpr
+import no.nav.helse.ehr.practitioner.PractitionerService
+import no.nav.helse.ehr.sessionorg.FastlegelisteRepository
 
 class PractitionerRoleService(
     val practitionerService: PractitionerService,

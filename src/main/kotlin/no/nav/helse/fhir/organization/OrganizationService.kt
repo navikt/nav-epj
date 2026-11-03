@@ -8,9 +8,9 @@ import com.google.fhir.model.r4.Meta
 import com.google.fhir.model.r4.Organization
 import com.google.fhir.model.r4.Uri
 import no.nav.helse.core.utils.logger
-import no.nav.helse.epj.clinic.Clinic
-import no.nav.helse.epj.clinic.ClinicId
-import no.nav.helse.epj.clinic.ClinicService
+import no.nav.helse.ehr.clinic.Clinic
+import no.nav.helse.ehr.clinic.ClinicId
+import no.nav.helse.ehr.clinic.ClinicService
 
 class OrganizationService(val clinicService: ClinicService) {
     val log = logger()

@@ -17,13 +17,13 @@ import com.google.fhir.model.r4.terminologies.DocumentReferenceStatus
 import kotlin.text.substringAfter
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.logger
-import no.nav.helse.epj.consultation.ClinicalNote
-import no.nav.helse.epj.consultation.ClinicalNoteId
-import no.nav.helse.epj.consultation.ConsultationId
-import no.nav.helse.epj.consultation.ConsultationService
-import no.nav.helse.epj.consultation.CreateClinicalNoteRequest
-import no.nav.helse.epj.patient.PatientId
-import no.nav.helse.epj.practitioner.PractitionerHpr
+import no.nav.helse.ehr.consultation.ClinicalNote
+import no.nav.helse.ehr.consultation.ClinicalNoteId
+import no.nav.helse.ehr.consultation.ConsultationId
+import no.nav.helse.ehr.consultation.ConsultationService
+import no.nav.helse.ehr.consultation.CreateClinicalNoteRequest
+import no.nav.helse.ehr.patient.PatientId
+import no.nav.helse.ehr.practitioner.PractitionerHpr
 import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
 

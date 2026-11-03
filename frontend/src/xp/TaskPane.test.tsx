@@ -66,9 +66,9 @@ describe("TaskPane", () => {
   });
 
   it.each([
-    ["kontrollpanel", "pane.system.kontroll"],
+    ["control-panel", "pane.system.kontroll"],
     ["sysinfo", "pane.system.sysinfo"],
-    ["hjelp", "pane.system.hjelp"],
+    ["help", "pane.system.hjelp"],
   ] as const)("opens %s as a document tab", async (kind, label) => {
     renderPane();
     const link = screen.getByRole("button", { name: copy[label] });
@@ -93,8 +93,8 @@ describe("TaskPane", () => {
     );
     await userEvent.click(link);
     const { tabs, current } = useWorkspaceStore.getState();
-    expect(tabs.map((t) => t.kind)).toEqual(["start", "hjelp", "sysinfo"]);
-    expect(current).toBe("hjelp");
+    expect(tabs.map((t) => t.kind)).toEqual(["start", "help", "sysinfo"]);
+    expect(current).toBe("help");
   });
 
   it("disables Hendelseslogg with the Fase 2 badge", () => {

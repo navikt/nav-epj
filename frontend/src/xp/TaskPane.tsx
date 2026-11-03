@@ -19,7 +19,7 @@ import { TaskLink } from "./TaskLink";
 import { TaskPanel } from "./TaskPanel";
 import { TASK_PANE_ID } from "./shellContext";
 
-type SystemKind = Extract<TabKind, "kontrollpanel" | "sysinfo" | "hjelp">;
+type SystemKind = Extract<TabKind, "control-panel" | "sysinfo" | "help">;
 
 function openSystemTab(kind: SystemKind, label: string) {
   useWorkspaceStore.getState().openTab({ kind, label });
@@ -103,9 +103,9 @@ export function TaskPane({
         <TaskLink
           icon="kontrollpanel"
           label={copy["pane.system.kontroll"]}
-          current={current === "kontrollpanel"}
+          current={current === "control-panel"}
           onActivate={() =>
-            openSystemTab("kontrollpanel", copy["pane.system.kontroll"])
+            openSystemTab("control-panel", copy["pane.system.kontroll"])
           }
         />
         <TaskLink
@@ -125,8 +125,8 @@ export function TaskPane({
         <TaskLink
           icon="hjelp"
           label={copy["pane.system.hjelp"]}
-          current={current === "hjelp"}
-          onActivate={() => openSystemTab("hjelp", copy["pane.system.hjelp"])}
+          current={current === "help"}
+          onActivate={() => openSystemTab("help", copy["pane.system.hjelp"])}
         />
         {userName && (
           <TaskLink

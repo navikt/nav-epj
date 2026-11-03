@@ -15,11 +15,11 @@ import kotlinx.datetime.UtcOffset
 import kotlinx.datetime.toKotlinLocalDateTime
 import no.nav.helse.core.utils.ConsultationStatus
 import no.nav.helse.core.utils.oid
-import no.nav.helse.epj.consultation.Consultation
-import no.nav.helse.epj.consultation.ConsultationId
-import no.nav.helse.epj.consultation.ConsultationService
-import no.nav.helse.epj.patient.PatientId
-import no.nav.helse.epj.practitioner.PractitionerHpr
+import no.nav.helse.ehr.consultation.Consultation
+import no.nav.helse.ehr.consultation.ConsultationId
+import no.nav.helse.ehr.consultation.ConsultationService
+import no.nav.helse.ehr.patient.PatientId
+import no.nav.helse.ehr.practitioner.PractitionerHpr
 import no.nav.helse.fhir.condition.conditionFhirId
 import no.nav.helse.fhir.patient.PatientInputId
 

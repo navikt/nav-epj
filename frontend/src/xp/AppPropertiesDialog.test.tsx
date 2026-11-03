@@ -5,7 +5,7 @@ import { AppPropertiesDialog } from "./AppPropertiesDialog";
 import { sykInn, validator } from "./appFixtures";
 import { expectNoSeriousViolations } from "./axeHelper";
 import { copy } from "./copy";
-import type { App } from "../utils/mapping/epj";
+import type { App } from "../utils/mapping/ehr";
 
 const jwtApp: App = {
   ...validator,

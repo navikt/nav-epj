@@ -3,7 +3,7 @@ import {
   kari,
   ongoingConsultation,
   launchOk,
-  nyFane,
+  newTab,
   ola,
   seedApps,
   seedJournal,
@@ -42,7 +42,7 @@ describe("startApp", () => {
   beforeEach(() => {
     open = vi.fn().mockReturnValue({});
     vi.stubGlobal("open", open);
-    seedApps([sykInn, validator, nyFane]);
+    seedApps([sykInn, validator, newTab]);
     seedJournal();
   });
 
@@ -98,7 +98,7 @@ describe("startApp", () => {
 
   it("opens browser-tab apps with noopener and records them", async () => {
     stubLaunch([launchOk()]);
-    expect(await startApp(nyFane)).toBe("tab");
+    expect(await startApp(newTab)).toBe("tab");
     expect(open).toHaveBeenCalledWith(
       expect.stringContaining("launch=id-1"),
       expect.stringMatching(/^smart-ny-fane-\d+$/),
@@ -116,7 +116,7 @@ describe("startApp", () => {
   it("adds the popup hint to the balloon when the browser gives no window", async () => {
     open.mockReturnValue(null);
     stubLaunch([launchOk()]);
-    await startApp(nyFane);
+    await startApp(newTab);
     expect(useBalloonStore.getState().balloon?.body).toBe(
       `${copy["s5.tab.balloon.body"]("Ola Nordmann")} ${copy["s5.tab.balloon.blocked"]}`,
     );
@@ -124,9 +124,9 @@ describe("startApp", () => {
 
   it("keeps a tab app per launch so an older patient's tab is not overwritten", async () => {
     stubLaunch([launchOk(1), launchOk(2)]);
-    await startApp(nyFane);
+    await startApp(newTab);
     seedJournal(kari, [{ ...ongoingConsultation, id: "k2", patientId: "p2" }]);
-    await startApp(nyFane);
+    await startApp(newTab);
     const { tabApps } = useAppRunStore.getState();
     expect(tabApps.map((a) => a.patient.id)).toEqual(["p1", "p2"]);
     expect(new Set(tabApps.map((a) => a.id)).size).toBe(2);
@@ -212,7 +212,7 @@ describe("startApp", () => {
 
   it("leaves browser-tab failures without a tab or record", async () => {
     stubLaunch([{ status: 409, body: { code: "NO_ACTIVE_ENCOUNTER", message: "x" } }]);
-    await startApp(nyFane);
+    await startApp(newTab);
     expect(errorDialog().code).toBe("NO_ACTIVE_ENCOUNTER");
     expect(useAppRunStore.getState().tabApps).toEqual([]);
     expect(open).not.toHaveBeenCalled();
@@ -235,7 +235,7 @@ describe("startApp", () => {
           }),
       ),
     );
-    const started = startApp(nyFane);
+    const started = startApp(newTab);
     seedJournal(kari);
     resolve({ ok: true, status: 200, json: async () => launchOk().body });
     expect(await started).toBeNull();
@@ -284,7 +284,7 @@ describe("startApp", () => {
 describe("running apps", () => {
   beforeEach(async () => {
     vi.stubGlobal("open", vi.fn().mockReturnValue({}));
-    seedApps([sykInn, nyFane]);
+    seedApps([sykInn, newTab]);
     seedJournal();
     stubLaunch([launchOk(1)]);
     await startApp(sykInn);
