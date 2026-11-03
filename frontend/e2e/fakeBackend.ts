@@ -71,7 +71,7 @@ export function fakeBackend({ withHistory = false, ongoing = true } = {}) {
                   id: `k-${known.id}`,
                   patientId: known.id,
                   hpr: ["9144889"],
-                  journalnotat: [],
+                  clinicalNotes: [],
                   diagnoses: [],
                   startedAt: "2026-09-30T09:14:00",
                   endedAt: null,
@@ -86,8 +86,8 @@ export function fakeBackend({ withHistory = false, ongoing = true } = {}) {
                   id: `h-${known.id}`,
                   patientId: known.id,
                   hpr: ["9144889"],
-                  journalnotat: [
-                    { id: "n1", consultationId: `h-${known.id}`, patientId: known.id, journalnotat: "Kontroll, ingen funn." },
+                  clinicalNotes: [
+                    { id: "n1", consultationId: `h-${known.id}`, patientId: known.id, clinicalNote: "Kontroll, ingen funn." },
                   ],
                   diagnoses: [{ code: "L87", system: "ICPC-2", text: "Hypertensjon" }],
                   startedAt: "2026-08-12T09:40:00",

@@ -40,7 +40,7 @@ class ConsultationRepositoryUpdateTest : ConsultationRepositoryTestBase() {
                             listOf(
                                 CreateDiagnosisRequest(code = "A01", system = DiagnoseType.ICPC2)
                             ),
-                        journalNotat = "notat",
+                        clinicalNote = "notat",
                         finalize = true,
                     ),
                     otherPatientId,
@@ -51,7 +51,7 @@ class ConsultationRepositoryUpdateTest : ConsultationRepositoryTestBase() {
         }
 
     @Test
-    fun `update adds a new journalnotat, stores diagnosis and completes consultation`() = runTest {
+    fun `update adds a new clinical note, stores diagnosis and completes consultation`() = runTest {
         val hpr = PractitionerHpr("123")
         val patientId = createPatient(hpr = hpr)
         val consultationId =
@@ -70,7 +70,7 @@ class ConsultationRepositoryUpdateTest : ConsultationRepositoryTestBase() {
                     consultationId = consultationId,
                     diagnoses =
                         listOf(CreateDiagnosisRequest(code = "A01", system = DiagnoseType.ICPC2)),
-                    journalNotat = "oppdatert notat",
+                    clinicalNote = "oppdatert notat",
                     finalize = true,
                 ),
                 patientId,
@@ -84,8 +84,8 @@ class ConsultationRepositoryUpdateTest : ConsultationRepositoryTestBase() {
         assertNotNull(consultation)
         assertEquals(ConsultationStatus.FINISHED, consultation.status)
         assertNotNull(consultation.endedAt)
-        assertEquals(1, consultation.journalnotat.size)
-        assertEquals("oppdatert notat", consultation.journalnotat.last().journalnotat)
+        assertEquals(1, consultation.clinicalNotes.size)
+        assertEquals("oppdatert notat", consultation.clinicalNotes.last().clinicalNote)
         assertEquals(1, consultation.diagnoses.size)
         val savedDiagnosis = consultation.diagnoses.single()
         assertEquals(DiagnoseType.ICPC2, savedDiagnosis.system)
@@ -116,7 +116,7 @@ class ConsultationRepositoryUpdateTest : ConsultationRepositoryTestBase() {
                         CreateDiagnosisRequest(code = "A01", system = DiagnoseType.ICPC2),
                         CreateDiagnosisRequest(code = "A02", system = DiagnoseType.ICPC2),
                     ),
-                journalNotat = null,
+                clinicalNote = null,
                 finalize = false,
             ),
             patientId,
@@ -128,7 +128,7 @@ class ConsultationRepositoryUpdateTest : ConsultationRepositoryTestBase() {
                 consultationId = consultationId,
                 diagnoses =
                     listOf(CreateDiagnosisRequest(code = "A02", system = DiagnoseType.ICPC2)),
-                journalNotat = null,
+                clinicalNote = null,
                 finalize = false,
             ),
             patientId,
@@ -162,7 +162,7 @@ class ConsultationRepositoryUpdateTest : ConsultationRepositoryTestBase() {
                 consultationId = consultationId,
                 diagnoses =
                     listOf(CreateDiagnosisRequest(code = "A01", system = DiagnoseType.ICPC2)),
-                journalNotat = null,
+                clinicalNote = null,
                 finalize = false,
             ),
             patientId,
@@ -173,7 +173,7 @@ class ConsultationRepositoryUpdateTest : ConsultationRepositoryTestBase() {
             UpdateConsultationRequest(
                 consultationId = consultationId,
                 diagnoses = emptyList(),
-                journalNotat = null,
+                clinicalNote = null,
                 finalize = false,
             ),
             patientId,
@@ -206,7 +206,7 @@ class ConsultationRepositoryUpdateTest : ConsultationRepositoryTestBase() {
                 consultationId = consultationId,
                 diagnoses =
                     listOf(CreateDiagnosisRequest(code = "A01", system = DiagnoseType.ICPC2)),
-                journalNotat = null,
+                clinicalNote = null,
                 finalize = false,
             ),
             patientId,
@@ -224,7 +224,7 @@ class ConsultationRepositoryUpdateTest : ConsultationRepositoryTestBase() {
                                 system = DiagnoseType.ICPC2,
                             )
                         ),
-                    journalNotat = null,
+                    clinicalNote = null,
                     finalize = false,
                 ),
                 patientId,
@@ -350,7 +350,7 @@ class ConsultationRepositoryUpdateTest : ConsultationRepositoryTestBase() {
     }
 
     @Test
-    fun `update saving the same journalnotat text twice does not create a duplicate row`() =
+    fun `update saving the same clinical note text twice does not create a duplicate row`() =
         runTest {
             val hpr = PractitionerHpr("123")
             val patientId = createPatient(hpr = hpr)
@@ -373,12 +373,12 @@ class ConsultationRepositoryUpdateTest : ConsultationRepositoryTestBase() {
             val consultation =
                 consultationRepository.findByConsultationId(consultationId, DEFAULT_ORG_NUMBER)
             assertNotNull(consultation)
-            assertEquals(1, consultation.journalnotat.size)
-            assertEquals("notat", consultation.journalnotat.single().journalnotat)
+            assertEquals(1, consultation.clinicalNotes.size)
+            assertEquals("notat", consultation.clinicalNotes.single().clinicalNote)
         }
 
     @Test
-    fun `update saving a changed journalnotat text updates the existing row instead of adding one`() =
+    fun `update saving a changed clinical note text updates the existing row instead of adding one`() =
         runTest {
             val hpr = PractitionerHpr("123")
             val patientId = createPatient(hpr = hpr)
@@ -417,7 +417,7 @@ class ConsultationRepositoryUpdateTest : ConsultationRepositoryTestBase() {
             val consultation =
                 consultationRepository.findByConsultationId(consultationId, DEFAULT_ORG_NUMBER)
             assertNotNull(consultation)
-            assertEquals(1, consultation.journalnotat.size)
-            assertEquals("oppdatert notat", consultation.journalnotat.single().journalnotat)
+            assertEquals(1, consultation.clinicalNotes.size)
+            assertEquals("oppdatert notat", consultation.clinicalNotes.single().clinicalNote)
         }
 }

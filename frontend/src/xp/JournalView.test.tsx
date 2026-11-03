@@ -22,7 +22,7 @@ function consultation(overrides: Record<string, unknown> = {}) {
     id: "k1",
     patientId: "p1",
     hpr: ["9144889"],
-    journalnotat: [],
+    clinicalNotes: [],
     diagnoses: [],
     startedAt: "2026-09-30T09:00:00",
     endedAt: null,
@@ -77,7 +77,7 @@ const savedNote = {
   id: "n1",
   consultationId: "k1",
   patientId: "p1",
-  journalnotat: "Hei",
+  clinicalNote: "Hei",
 };
 
 describe("JournalView", () => {
@@ -101,7 +101,7 @@ describe("JournalView", () => {
     });
     const count = () =>
       calls.filter((c) => c.key === "GET /api/patients/p1/consultations").length;
-    served = [consultation({ journalnotat: [savedNote] })];
+    served = [consultation({ clinicalNotes: [savedNote] })];
     const before = count();
     await act(async () => {
       window.dispatchEvent(new Event("focus"));
@@ -171,7 +171,7 @@ describe("JournalView", () => {
 
   it("preloads saved diagnoses and note and passes axe", async () => {
     const { container } = await openJournal([
-      consultation({ diagnoses: [diag], journalnotat: [savedNote] }),
+      consultation({ diagnoses: [diag], clinicalNotes: [savedNote] }),
     ]);
     expect(await screen.findByLabelText("Journalnotat")).toHaveValue("Hei");
     const chips = screen.getByRole("list", { name: "Valgte diagnoser" });
@@ -194,7 +194,7 @@ describe("JournalView", () => {
     await userEvent.clear(note);
     await userEvent.click(screen.getByRole("button", { name: "Lagre" }));
     const patch = calls.find((c) => c.key.startsWith("PATCH"));
-    expect(patch?.body).toMatchObject({ consultationId: "k1", journalNotat: null, finalize: false });
+    expect(patch?.body).toMatchObject({ consultationId: "k1", clinicalNote: null, finalize: false });
   });
 
   it("reports a save error with a retry that saves again", async () => {
@@ -240,7 +240,7 @@ describe("JournalView", () => {
 
   it("asks for confirmation before finishing and shows the read-only summary afterwards", async () => {
     const { calls } = await openJournal(
-      [consultation({ diagnoses: [diag], journalnotat: [savedNote] })],
+      [consultation({ diagnoses: [diag], clinicalNotes: [savedNote] })],
       {
         "PATCH /api/patients/p1/consultations": () => ({ body: {} }),
       },
@@ -269,7 +269,7 @@ describe("JournalView", () => {
 
   it("asks for confirmation before cancelling and returns to the no-consultation state afterwards", async () => {
     const { calls } = await openJournal(
-      [consultation({ diagnoses: [diag], journalnotat: [savedNote] })],
+      [consultation({ diagnoses: [diag], clinicalNotes: [savedNote] })],
       {
         "POST /api/patients/p1/consultations/k1/cancel": () => ({ body: {} }),
       },
@@ -295,7 +295,7 @@ describe("JournalView", () => {
             status: "CANCELLED",
             endedAt: "2026-09-30T09:20:00",
             diagnoses: [diag],
-            journalnotat: [savedNote],
+            clinicalNotes: [savedNote],
           }),
         ],
       }),
@@ -331,7 +331,7 @@ describe("JournalView", () => {
         startedAt: "2026-09-01T09:00:00",
         endedAt: "2026-09-01T09:30:00",
         diagnoses: [diag],
-        journalnotat: [{ ...savedNote, id: "n0", consultationId: "k0", journalnotat: "Gammelt notat" }],
+        clinicalNotes: [{ ...savedNote, id: "n0", consultationId: "k0", clinicalNote: "Gammelt notat" }],
       }),
     ]);
     await userEvent.click(await screen.findByRole("tab", { name: "Tidligere konsultasjoner (1)" }));
@@ -378,7 +378,7 @@ function stubFinished() {
           status: "FINISHED",
           endedAt: "2026-09-30T09:20:00",
           diagnoses: [diag],
-          journalnotat: [{ ...savedNote, journalnotat: "Hei!" }],
+          clinicalNotes: [{ ...savedNote, clinicalNote: "Hei!" }],
         }),
       ],
     }),

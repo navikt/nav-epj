@@ -17,24 +17,24 @@ import com.google.fhir.model.r4.terminologies.DocumentReferenceStatus
 import kotlin.text.substringAfter
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.logger
+import no.nav.helse.epj.consultation.ClinicalNote
+import no.nav.helse.epj.consultation.ClinicalNoteId
 import no.nav.helse.epj.consultation.ConsultationId
 import no.nav.helse.epj.consultation.ConsultationService
-import no.nav.helse.epj.consultation.Journalnotat
-import no.nav.helse.epj.consultation.JournalnotatId
-import no.nav.helse.epj.consultation.OpprettJournalnotatRequest
+import no.nav.helse.epj.consultation.CreateClinicalNoteRequest
 import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
 
-private const val JOURNALNOTAT_TYPE_SYSTEM = "urn:oid:2.16.578.1.12.4.1.1.9602"
-private const val JOURNALNOTAT_TYPE_CODE = "J01-2"
-private const val JOURNALNOTAT_TYPE_DISPLAY = "Sykmeldinger og trygdesaker"
-private const val JOURNALNOTAT_CONTENT_TYPE = "application/pdf"
+private const val CLINICAL_NOTE_TYPE_SYSTEM = "urn:oid:2.16.578.1.12.4.1.1.9602"
+private const val CLINICAL_NOTE_TYPE_CODE = "J01-2"
+private const val CLINICAL_NOTE_TYPE_DISPLAY = "Sykmeldinger og trygdesaker"
+private const val CLINICAL_NOTE_CONTENT_TYPE = "application/pdf"
 
 /**
  * Raised when an incoming DocumentReference does not fit the narrow journal-note shape backed by
- * [Journalnotat]. Carries the FHIR [OperationOutcome.IssueType] so the route can turn it into a
+ * [ClinicalNote]. Carries the FHIR [OperationOutcome.IssueType] so the route can turn it into a
  * matching OperationOutcome without re-deriving the classification.
  */
 class InvalidDocumentReferenceException(
@@ -47,11 +47,11 @@ class DocumentReferenceService(val consultationService: ConsultationService) {
     val log = logger()
 
     suspend fun createDocumentReference(
-        request: OpprettJournalnotatRequest,
+        request: CreateClinicalNoteRequest,
         orgNumber: kotlin.String,
     ): DocumentReference {
-        val journalnotat = consultationService.opprettJournalnotat(request, orgNumber)
-        return journalnotat.toDocumentReference(authors(journalnotat.consultationId, orgNumber))
+        val clinicalNote = consultationService.createClinicalNote(request, orgNumber)
+        return clinicalNote.toDocumentReference(authors(clinicalNote.consultationId, orgNumber))
     }
 
     private suspend fun authors(
@@ -67,8 +67,8 @@ class DocumentReferenceService(val consultationService: ConsultationService) {
         encounterId: EncounterId?,
         orgNumber: kotlin.String?,
     ): Bundle {
-        val journalnotater =
-            consultationService.getJournalnotater(
+        val clinicalNotes =
+            consultationService.getClinicalNotes(
                 PatientId(patientId.value),
                 encounterId?.let { ConsultationId(it.value) },
                 orgNumber,
@@ -81,10 +81,10 @@ class DocumentReferenceService(val consultationService: ConsultationService) {
         return Bundle(
             type = Enumeration(value = Bundle.BundleType.Searchset),
             entry =
-                journalnotater.map { journalnotat ->
+                clinicalNotes.map { clinicalNote ->
                     val documentReference =
-                        journalnotat.toDocumentReference(
-                            hprByConsultation[journalnotat.consultationId].orEmpty()
+                        clinicalNote.toDocumentReference(
+                            hprByConsultation[clinicalNote.consultationId].orEmpty()
                         )
                     Bundle.Entry(
                         fullUrl = Uri(value = "DocumentReference/${documentReference.id}"),
@@ -107,10 +107,10 @@ class DocumentReferenceService(val consultationService: ConsultationService) {
                 ?.substringAfter("Encounter/")
         val patientId = documentReference.subject?.reference?.value?.substringAfter("Patient/")
 
-        val createJournalnotat =
-            Journalnotat(
+        val clinicalNote =
+            ClinicalNote(
                 id =
-                    JournalnotatId(
+                    ClinicalNoteId(
                         Uuid.parse(
                             requireNotNull(documentReference.id) { "DocumentReference mangler id" }
                         )
@@ -131,39 +131,39 @@ class DocumentReferenceService(val consultationService: ConsultationService) {
                             }
                         )
                     ),
-                journalnotat =
+                clinicalNote =
                     requireNotNull(documentReference.description?.value) {
                         "DocumentReference mangler description"
                     },
             )
 
-        return consultationService.createJournalnotat(createJournalnotat, orgNumber)
+        return consultationService.insertClinicalNote(clinicalNote, orgNumber)
     }
 
     suspend fun getDocumentReferences(
         documentReferenceId: DocumentReferenceId,
         orgNumber: kotlin.String?,
     ): DocumentReference? {
-        val journalnotat =
-            consultationService.getJournalnotat(
-                JournalnotatId(documentReferenceId.value),
+        val clinicalNote =
+            consultationService.getClinicalNote(
+                ClinicalNoteId(documentReferenceId.value),
                 orgNumber,
             ) ?: return null
-        return journalnotat.toDocumentReference(authors(journalnotat.consultationId, orgNumber))
+        return clinicalNote.toDocumentReference(authors(clinicalNote.consultationId, orgNumber))
     }
 
-    fun Journalnotat.toDocumentReference(hpr: List<PractitionerHpr>): DocumentReference {
+    fun ClinicalNote.toDocumentReference(hpr: List<PractitionerHpr>): DocumentReference {
         return DocumentReference(
             id = this.id.value.toString(),
-            description = String(value = this.journalnotat),
+            description = String(value = this.clinicalNote),
             type =
                 CodeableConcept(
                     coding =
                         listOf(
                             Coding(
-                                system = Uri(value = JOURNALNOTAT_TYPE_SYSTEM),
-                                code = Code(value = JOURNALNOTAT_TYPE_CODE),
-                                display = String(value = JOURNALNOTAT_TYPE_DISPLAY),
+                                system = Uri(value = CLINICAL_NOTE_TYPE_SYSTEM),
+                                code = Code(value = CLINICAL_NOTE_TYPE_CODE),
+                                display = String(value = CLINICAL_NOTE_TYPE_DISPLAY),
                             )
                         )
                 ),
@@ -174,7 +174,7 @@ class DocumentReferenceService(val consultationService: ConsultationService) {
                             Attachment(
                                 title = String(value = "tittel generert av Nav"),
                                 language = Enumeration(value = CommonLanguages.No_No),
-                                contentType = Code(value = JOURNALNOTAT_CONTENT_TYPE),
+                                contentType = Code(value = CLINICAL_NOTE_CONTENT_TYPE),
                                 data = Base64Binary(value = "base64 PDF"),
                             )
                     )
@@ -200,12 +200,12 @@ private fun invalid(issueType: OperationOutcome.IssueType, message: kotlin.Strin
 
 /**
  * Validates and maps an incoming create request to the narrow journal-note shape backed by
- * [Journalnotat]. The client-supplied `id`, if any, is intentionally never read here: create always
+ * [ClinicalNote]. The client-supplied `id`, if any, is intentionally never read here: create always
  * assigns a server-generated id, per FHIR create semantics. `status`, `type` and `content` are not
  * persisted; they are always regenerated on read, so they are validated against the only shape the
  * server can honestly reproduce rather than silently discarded.
  */
-fun DocumentReference.toOpprettJournalnotatRequest(): OpprettJournalnotatRequest {
+fun DocumentReference.toCreateClinicalNoteRequest(): CreateClinicalNoteRequest {
     rejectUnsupportedFields(this)
 
     if (this.status.value != DocumentReferenceStatus.Current) {
@@ -227,13 +227,13 @@ fun DocumentReference.toOpprettJournalnotatRequest(): OpprettJournalnotatRequest
     }
     val typeCoding = typeCodings.single()
     if (
-        typeCoding.system?.value != JOURNALNOTAT_TYPE_SYSTEM ||
-            typeCoding.code?.value != JOURNALNOTAT_TYPE_CODE
+        typeCoding.system?.value != CLINICAL_NOTE_TYPE_SYSTEM ||
+            typeCoding.code?.value != CLINICAL_NOTE_TYPE_CODE
     ) {
         invalid(
             OperationOutcome.IssueType.Not_Supported,
-            "DocumentReference.type støtter kun system '$JOURNALNOTAT_TYPE_SYSTEM' " +
-                "og kode '$JOURNALNOTAT_TYPE_CODE'",
+            "DocumentReference.type støtter kun system '$CLINICAL_NOTE_TYPE_SYSTEM' " +
+                "og kode '$CLINICAL_NOTE_TYPE_CODE'",
         )
     }
 
@@ -256,11 +256,11 @@ fun DocumentReference.toOpprettJournalnotatRequest(): OpprettJournalnotatRequest
         )
     }
     val attachment = content.attachment
-    if (attachment.contentType?.value != JOURNALNOTAT_CONTENT_TYPE) {
+    if (attachment.contentType?.value != CLINICAL_NOTE_CONTENT_TYPE) {
         invalid(
             OperationOutcome.IssueType.Value,
             "DocumentReference.content.attachment.contentType må være " +
-                "'$JOURNALNOTAT_CONTENT_TYPE'",
+                "'$CLINICAL_NOTE_CONTENT_TYPE'",
         )
     }
     val unsupportedAttachmentFields = buildList {
@@ -315,17 +315,17 @@ fun DocumentReference.toOpprettJournalnotatRequest(): OpprettJournalnotatRequest
             "context.encounter",
         )
 
-    val journalnotat =
+    val clinicalNote =
         this.description?.value?.takeIf { it.isNotBlank() }
             ?: invalid(
                 OperationOutcome.IssueType.Required,
                 "DocumentReference.description er påkrevd",
             )
 
-    return OpprettJournalnotatRequest(
+    return CreateClinicalNoteRequest(
         patientId = PatientId(patientId),
         consultationId = ConsultationId(consultationId),
-        journalnotat = journalnotat,
+        clinicalNote = clinicalNote,
     )
 }
 
@@ -355,7 +355,7 @@ private fun parseReferenceId(
 }
 
 /**
- * Rejects every DocumentReference element that [Journalnotat] cannot represent, so unsupported
+ * Rejects every DocumentReference element that [ClinicalNote] cannot represent, so unsupported
  * content is never silently discarded on create.
  */
 private fun rejectUnsupportedFields(documentReference: DocumentReference) {

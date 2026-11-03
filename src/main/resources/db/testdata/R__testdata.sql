@@ -144,7 +144,7 @@ FROM dagsplan d
            ('APd', 'ICD10', 'Z00.0'),
            ('APe', 'ICPC2', 'L84'),
            ('APe', 'ICD10', 'M54.5')),
-     notatmaler (prefix, tekster) AS (
+     note_templates (prefix, texts) AS (
     VALUES ('FR', ARRAY['Overvekt og høy livsstilsrisiko. HbA1c i øvre normalområde, kostholdsråd og tilbud om gruppekurs.',
                         'Vekten stiger. HbA1c litt høyere, avtalt mål for aktivitet.',
                         'HbA1c i prediabetesområdet. Fokus på kosthold og daglig gange.',
@@ -183,11 +183,11 @@ FROM dagsplan d
            ('APc', ARRAY['Sår hals og feber. Strep A-test positiv, behandlet med penicillin V.']),
            ('APd', ARRAY['Rutinemessig helsekontroll. Normale funn.']),
            ('APe', ARRAY['Korsryggsmerter etter flytting. Ingen utstråling, råd om aktivitet og smertestillende ved behov.'])),
-     notat (key, tekst) AS (
-SELECT p.key, n.tekster[CASE WHEN p.seq = 1 OR cardinality(n.tekster) = 1 THEN 1
-                              ELSE 2 + (p.seq - 2) % (cardinality(n.tekster) - 1) END]
+     note_plan (key, note_text) AS (
+SELECT p.key, n.texts[CASE WHEN p.seq = 1 OR cardinality(n.texts) = 1 THEN 1
+                            ELSE 2 + (p.seq - 2) % (cardinality(n.texts) - 1) END]
 FROM plan p
-         JOIN notatmaler n ON n.prefix = p.prefix
+         JOIN note_templates n ON n.prefix = p.prefix
 WHERE p.status NOT IN ('PLANNED', 'CANCELLED')),
      loinc (loinc_code, visningsnavn, unit_code, unit_display, desimaler) AS (
     VALUES ('8480-6', 'Systolic blood pressure', 'mm[Hg]', 'mm Hg', 0),
@@ -323,10 +323,10 @@ FROM inserted k
          JOIN diagnosekoder d ON d.prefix = p.prefix
 WHERE k.status NOT IN ('PLANNED', 'CANCELLED')
 RETURNING consultation_id),
-     notater AS (
+     clinical_notes AS (
 INSERT INTO clinical_note (id, consultation_id, patient_id, clinical_note)
-SELECT md5('testdata-journalnotat-' || n.key)::uuid, k.id, k.patient_id, n.tekst
-FROM notat n
+SELECT md5('testdata-journalnotat-' || n.key)::uuid, k.id, k.patient_id, n.note_text
+FROM note_plan n
          JOIN inserted k ON k.id = md5('testdata-konsultasjon-' || n.key)::uuid
 RETURNING id)
 INSERT INTO measurement (id, patient_id, consultation_id, hpr, loinc_code, loinc_display, value, unit_code,

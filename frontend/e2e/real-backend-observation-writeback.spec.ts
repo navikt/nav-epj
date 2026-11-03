@@ -16,8 +16,8 @@ const FHIR_JSON = "application/fhir+json";
 
 type Patient = { id: string; givenName: string; familyName: string };
 type Consultation = { id: string };
-type Notat = { id: string; journalnotat: string };
-type ConsultationWithNotes = Consultation & { journalnotat: Notat[] };
+type ClinicalNote = { id: string; clinicalNote: string };
+type ConsultationWithNotes = Consultation & { clinicalNotes: ClinicalNote[] };
 type Maaling = { id: string; verdi: number; enhetKode: string; enhetVisningsnavn: string };
 type Token = { access_token: string; patient?: string; encounter?: string; scope: string; token_type: string };
 
@@ -137,9 +137,9 @@ test.describe("FHIR write-back against the real backend", () => {
     return json<Maaling[]>(api.get(`/api/patient/${patientId}/maalinger`));
   }
 
-  async function notater(patientId: string): Promise<Notat[]> {
+  async function clinicalNotes(patientId: string): Promise<ClinicalNote[]> {
     const list = await json<ConsultationWithNotes[]>(api.get(`/api/patients/${patientId}/consultations`));
-    return list.flatMap((k) => k.journalnotat);
+    return list.flatMap((k) => k.clinicalNotes);
   }
 
   async function smartToken(patientId: string, scope: string): Promise<Token> {
@@ -365,8 +365,8 @@ test.describe("FHIR write-back against the real backend", () => {
     const other = await createPatient("Annennotat");
     const otherConsultation = await startConsultation(other);
     const consultation = await startConsultation(target);
-    expect(await notater(target.id)).toEqual([]);
-    expect(await notater(other.id)).toEqual([]);
+    expect(await clinicalNotes(target.id)).toEqual([]);
+    expect(await clinicalNotes(other.id)).toEqual([]);
 
     const writeToken = await smartToken(target.id, DOC_WRITE_SCOPE);
     expect(writeToken.encounter).toBe(consultation.id);
@@ -413,9 +413,9 @@ test.describe("FHIR write-back against the real backend", () => {
     expect(bundle.resourceType).toBe("Bundle");
     expect((bundle.entry ?? []).map((e) => e.resource.id)).toContain(createdBody.id);
 
-    const stored = await notater(target.id);
+    const stored = await clinicalNotes(target.id);
     expect(stored).toHaveLength(1);
-    expect(stored[0]).toMatchObject({ id: createdBody.id, journalnotat: text });
+    expect(stored[0]).toMatchObject({ id: createdBody.id, clinicalNote: text });
 
     const draft = "ulagret utkast";
     await editor.fill(draft);
@@ -432,7 +432,7 @@ test.describe("FHIR write-back against the real backend", () => {
     await page.getByRole("tab", { name: /^Journal/ }).click();
     await expect(page.getByRole("textbox", { name: "Journalnotat" })).toHaveValue(text);
 
-    const countsBefore = [(await notater(target.id)).length, (await notater(other.id)).length];
+    const countsBefore = [(await clinicalNotes(target.id)).length, (await clinicalNotes(other.id)).length];
     const readOnly = await api.post("/fhir/DocumentReference", {
       headers: fhirHeaders(readToken),
       data: documentReference(target.id, consultation.id, `${text} read-only`),
@@ -455,8 +455,8 @@ test.describe("FHIR write-back against the real backend", () => {
       issue: [{ severity: "error", code: "not-found", diagnostics: "Not found" }],
     });
 
-    expect([(await notater(target.id)).length, (await notater(other.id)).length]).toEqual(countsBefore);
+    expect([(await clinicalNotes(target.id)).length, (await clinicalNotes(other.id)).length]).toEqual(countsBefore);
     expect(countsBefore).toEqual([1, 0]);
-    expect(await notater(target.id)).toEqual(stored);
+    expect(await clinicalNotes(target.id)).toEqual(stored);
   });
 });

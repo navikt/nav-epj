@@ -51,7 +51,7 @@ class ConditionRoutesTest {
             patientId = patientId,
             clinicId = ClinicId(Uuid.generateV4()),
             hpr = emptyList(),
-            journalnotat = emptyList(),
+            clinicalNotes = emptyList(),
             diagnoses =
                 listOf(Diagnose(system = DiagnoseType.ICPC2, code = code, text = "Diagnose $code")),
             startedAt = LocalDateTime.now().minusHours(1),

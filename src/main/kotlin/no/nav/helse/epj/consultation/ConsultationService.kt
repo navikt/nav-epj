@@ -43,31 +43,31 @@ class ConsultationService(private val consultationRepository: ConsultationReposi
         return consultationRepository.listDiagnoses(consultationId, orgNumber)
     }
 
-    suspend fun getJournalnotat(journalnotatId: JournalnotatId, orgNumber: String?): Journalnotat? {
-        return consultationRepository.findJournalnotat(journalnotatId, orgNumber)
+    suspend fun getClinicalNote(clinicalNoteId: ClinicalNoteId, orgNumber: String?): ClinicalNote? {
+        return consultationRepository.findClinicalNote(clinicalNoteId, orgNumber)
     }
 
-    suspend fun createJournalnotat(journalnotat: Journalnotat, orgNumber: String): Boolean {
-        val insertedRows = consultationRepository.insertJournalnotat(journalnotat, orgNumber)
+    suspend fun insertClinicalNote(clinicalNote: ClinicalNote, orgNumber: String): Boolean {
+        val insertedRows = consultationRepository.insertClinicalNote(clinicalNote, orgNumber)
 
         return insertedRows == 1
     }
 
-    suspend fun getJournalnotater(
+    suspend fun getClinicalNotes(
         patientId: PatientId,
         consultationId: ConsultationId?,
         orgNumber: String?,
-    ): List<Journalnotat> {
-        return consultationRepository.listJournalnotat(patientId, consultationId, orgNumber)
+    ): List<ClinicalNote> {
+        return consultationRepository.listClinicalNotes(patientId, consultationId, orgNumber)
     }
 
     @OptIn(ExperimentalUuidApi::class)
-    suspend fun opprettJournalnotat(
-        request: OpprettJournalnotatRequest,
+    suspend fun createClinicalNote(
+        request: CreateClinicalNoteRequest,
         orgNumber: String,
-    ): Journalnotat {
-        val id = JournalnotatId(Uuid.generateV4())
-        return consultationRepository.opprettJournalnotat(id, request, orgNumber)
+    ): ClinicalNote {
+        val id = ClinicalNoteId(Uuid.generateV4())
+        return consultationRepository.createClinicalNote(id, request, orgNumber)
     }
 
     suspend fun createConsultation(request: CreateConsultation): Consultation {

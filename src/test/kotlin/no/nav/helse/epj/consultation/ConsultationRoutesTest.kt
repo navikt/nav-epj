@@ -87,7 +87,7 @@ class ConsultationRoutesTest {
             patientId = patientId,
             hpr = emptyList(),
             clinicId = ClinicId(Uuid.generateV4()),
-            journalnotat = emptyList(),
+            clinicalNotes = emptyList(),
             diagnoses = emptyList(),
             startedAt = LocalDateTime.now().minusDays(1),
             endedAt = null,

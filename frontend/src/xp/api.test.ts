@@ -34,7 +34,7 @@ const consultation = {
   id: "k1",
   patientId: "p1",
   hpr: ["123"],
-  journalnotat: [],
+  clinicalNotes: [],
   diagnoses: [{ code: "A02", system: "ICPC2", text: "Frysninger" }],
   startedAt: "2026-09-30T09:00:00",
   endedAt: null,
@@ -103,7 +103,7 @@ describe("api", () => {
     await saveConsultation("p1", {
       consultationId: "k1",
       diagnoses: [{ code: "A02", system: "ICPC2" }],
-      journalNotat: null,
+      clinicalNote: null,
       finalize: false,
     });
     const [, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
@@ -111,7 +111,7 @@ describe("api", () => {
     expect(JSON.parse(init.body as string)).toEqual({
       consultationId: "k1",
       diagnoses: [{ code: "A02", system: "ICPC2" }],
-      journalNotat: null,
+      clinicalNote: null,
       finalize: false,
     });
   });

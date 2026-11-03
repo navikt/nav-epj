@@ -379,7 +379,7 @@ FROM dagsplan d
            ('SAb', 'ICD10', 'J06.9'),
            ('BOa', 'ICPC2', 'L90'),
            ('BOa', 'ICD10', 'M17.9')),
-     notatmaler (prefix, tekster) AS (
+     note_templates (prefix, texts) AS (
     VALUES ('BBh', ARRAY['Gjentatt forhøyet blodtrykk. Starter amlodipin 5 mg, kontroll om fem måneder.',
                          'Blodtrykket fortsatt over mål. Dosen økt til 10 mg, livsstilsråd gitt.',
                          'Noe lavere blodtrykk. Fortsetter dagens behandling.',
@@ -507,20 +507,20 @@ FROM dagsplan d
            ('SAa', ARRAY['Magesmerter og diaré i to døgn. Antatt viral gastroenteritt, råd om væske.']),
            ('SAb', ARRAY['Forkjølelse med hoste. Symptomatisk behandling.']),
            ('BOa', ARRAY['Smerter i høyre kne ved gange i trapper. Kneartrose, råd om trening og enkel smertestillende.'])),
-     notat (key, tekst) AS (
-SELECT p.key, n.tekster[CASE WHEN p.seq = 1 OR cardinality(n.tekster) = 1 THEN 1
-                              ELSE 2 + (p.seq - 2) % (cardinality(n.tekster) - 1) END]
+     note_plan (key, note_text) AS (
+SELECT p.key, n.texts[CASE WHEN p.seq = 1 OR cardinality(n.texts) = 1 THEN 1
+                            ELSE 2 + (p.seq - 2) % (cardinality(n.texts) - 1) END]
 FROM plan p
-         JOIN notatmaler n ON n.prefix = p.prefix
-WHERE p.seq % 6 <> 0 OR cardinality(n.tekster) = 1
+         JOIN note_templates n ON n.prefix = p.prefix
+WHERE p.seq % 6 <> 0 OR cardinality(n.texts) = 1
 UNION ALL
-SELECT v.key, v.tekst
+SELECT v.key, v.note_text
 FROM (VALUES ('BB3', 'Blodtrykk synkende på amlodipin. Fortsetter dagens dose, ny kontroll om tre måneder.'),
              ('IB4', 'HbA1c nær målverdi. Fortsetter metformin og kostholdsråd.'),
              ('JS1', 'Akutte korsryggsmerter uten utstråling. Råd om aktivitet, kontroll ved manglende bedring.'),
              ('HN2', 'Bedring etter oppstart samtaleterapi. Fortsatt sykmeldt 50 prosent.'),
              ('AF1', 'Forkjølelse uten tegn til bakteriell infeksjon. Symptomatisk behandling.'),
-             ('LK1', 'God astmakontroll. Videreføres uendret.')) AS v (key, tekst)),
+             ('LK1', 'God astmakontroll. Videreføres uendret.')) AS v (key, note_text)),
      loinc (loinc_code, visningsnavn, unit_code, unit_display, desimaler) AS (
     VALUES ('8480-6', 'Systolic blood pressure', 'mm[Hg]', 'mm Hg', 0),
            ('8462-4', 'Diastolic blood pressure', 'mm[Hg]', 'mm Hg', 0),
@@ -780,10 +780,10 @@ FROM inserted k
          JOIN diagnosekoder d ON d.prefix = p.prefix
 WHERE k.status NOT IN ('PLANNED', 'CANCELLED')
 RETURNING consultation_id),
-     notater AS (
+     clinical_notes AS (
 INSERT INTO clinical_note (id, consultation_id, patient_id, clinical_note)
-SELECT md5('hackathon-journalnotat-' || n.key)::uuid, k.id, k.patient_id, n.tekst
-FROM notat n
+SELECT md5('hackathon-journalnotat-' || n.key)::uuid, k.id, k.patient_id, n.note_text
+FROM note_plan n
          JOIN inserted k ON k.id = md5('hackathon-konsultasjon-' || n.key)::uuid
 RETURNING id)
 INSERT INTO measurement (id, patient_id, consultation_id, hpr, loinc_code, loinc_display, value, unit_code,
