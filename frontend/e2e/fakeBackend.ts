@@ -92,7 +92,7 @@ export function fakeBackend({ withHistory = false, ongoing = true } = {}) {
                   diagnoses: [{ code: "L87", system: "ICPC-2", text: "Hypertensjon" }],
                   startedAt: "2026-08-12T09:40:00",
                   endedAt: "2026-08-12T10:05:00",
-                  status: "AVSLUTTET",
+                  status: "FINISHED",
                   reasonForVisit: "Kontroll",
                 },
               ]
