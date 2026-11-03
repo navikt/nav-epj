@@ -89,7 +89,7 @@ class DocumentReferenceCreateValidationTest {
         val request = documentReference.toOpprettJournalnotatRequest()
 
         assertEquals(patientId, request.patientId.value)
-        assertEquals(encounterId, request.konsultasjonId.value)
+        assertEquals(encounterId, request.consultationId.value)
         assertEquals("Journalnotat tekst", request.journalnotat)
     }
 

@@ -13,8 +13,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.SerializationException
 import no.nav.helse.core.utils.ConsultationBelongsToOtherPatientException
+import no.nav.helse.core.utils.ConsultationNotFoundException
 import no.nav.helse.core.utils.DuplikatJournalnotatException
-import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.core.utils.logger
 import no.nav.helse.fhir.documentReferenceId
 import no.nav.helse.fhir.encounterReferenceId
@@ -133,7 +133,7 @@ fun Route.documentReferenceRoutes(
                         request,
                         principal.requireClinicalOrgNumber(),
                     )
-                } catch (exception: KonsultasjonNotFoundException) {
+                } catch (exception: ConsultationNotFoundException) {
                     return@post call.respondOperationOutcome(
                         fhirjson,
                         fhirContentType,
@@ -197,7 +197,7 @@ fun Route.documentReferenceRoutes(
                         documentReference,
                         principal.requireClinicalOrgNumber(),
                     )
-                } catch (exception: KonsultasjonNotFoundException) {
+                } catch (exception: ConsultationNotFoundException) {
                     return@put call.respondOperationOutcome(
                         fhirjson,
                         fhirContentType,

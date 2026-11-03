@@ -19,7 +19,7 @@ export function CancelDialog({ patient, unsaved, onConfirm, onCancel }: Props) {
       onClose={onCancel}
       buttons={[
         { label: copy["common.cancel"], onClick: onCancel, isDefault: true },
-        { label: copy["s4.cancelKons"], onClick: onConfirm },
+        { label: copy["s4.cancelConsultation"], onClick: onConfirm },
       ]}
     >
       <p>{copy["s4.cancelDlg.body"]}</p>

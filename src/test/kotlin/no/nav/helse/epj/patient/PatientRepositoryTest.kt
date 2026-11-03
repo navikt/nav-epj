@@ -14,11 +14,11 @@ import no.nav.helse.core.db.ClinicTable
 import no.nav.helse.core.db.FastlegelistePatientTable
 import no.nav.helse.core.db.FastlegelisteTable
 import no.nav.helse.core.db.dbQuery
+import no.nav.helse.core.utils.ConsultationStatus
 import no.nav.helse.core.utils.DuplicatePatientException
 import no.nav.helse.core.utils.IngenFastlegelisteException
-import no.nav.helse.core.utils.KonsultasjonStatus
-import no.nav.helse.epj.konsultasjon.KonsultasjonRepository
-import no.nav.helse.epj.konsultasjon.OpprettKonsultasjon
+import no.nav.helse.epj.consultation.ConsultationRepository
+import no.nav.helse.epj.consultation.CreateConsultation
 import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.utils.WithPostgresql
 import org.jetbrains.exposed.v1.core.eq
@@ -193,27 +193,27 @@ class PatientRepositoryTest : WithPostgresql() {
         }
     }
 
-    private suspend fun startKonsultasjonAt(patient: Patient, orgNumber: String) =
-        KonsultasjonRepository()
+    private suspend fun startConsultationAt(patient: Patient, orgNumber: String) =
+        ConsultationRepository()
             .insert(
-                OpprettKonsultasjon(
+                CreateConsultation(
                     patient.id,
                     listOf(PractitionerHpr("123")),
                     LocalDateTime.now(),
-                    KonsultasjonStatus.PAAGAAENDE,
+                    ConsultationStatus.IN_PROGRESS,
                     orgNumber,
                 )
             )
 
-    private suspend fun startKonsultasjon(
+    private suspend fun startConsultation(
         patient: Patient,
         orgNumber: String,
         startet: LocalDateTime,
-        status: KonsultasjonStatus,
+        status: ConsultationStatus,
     ) =
-        KonsultasjonRepository()
+        ConsultationRepository()
             .insert(
-                OpprettKonsultasjon(
+                CreateConsultation(
                     patient.id,
                     listOf(PractitionerHpr("123")),
                     startet,
@@ -251,7 +251,7 @@ class PatientRepositoryTest : WithPostgresql() {
     }
 
     @Test
-    fun `a patient with konsultasjoner at the org but no list there is listed as not selectable`() =
+    fun `a patient with consultations at the org but no list there is listed as not selectable`() =
         runTest {
             ensureOrgs()
             val ownHpr = "own-${Uuid.generateV4()}"
@@ -261,7 +261,7 @@ class PatientRepositoryTest : WithPostgresql() {
             listOf(listed, lapsed, movedAway).forEach { patientRepository.insert(it) }
             putOnList(listed, listFor(ownHpr, "311111116"))
             putOnList(movedAway, listFor("abroad-${Uuid.generateV4()}", "311111124"))
-            listOf(lapsed, movedAway).forEach { startKonsultasjonAt(it, "311111116") }
+            listOf(lapsed, movedAway).forEach { startConsultationAt(it, "311111116") }
 
             val liste =
                 patientRepository.listAtClinic("311111116", PractitionerHpr(ownHpr)).filter {
@@ -270,12 +270,12 @@ class PatientRepositoryTest : WithPostgresql() {
 
             assertEquals(listOf(listed.id, lapsed.id, movedAway.id), liste.map { it.patient.id })
             assertEquals(listOf(true, false, false), liste.map { it.selectable })
-            assertTrue(patientRepository.hasKonsultasjonAt(lapsed.id.value, "311111116"))
-            assertFalse(patientRepository.hasKonsultasjonAt(lapsed.id.value, "311111124"))
+            assertTrue(patientRepository.hasConsultationAt(lapsed.id.value, "311111116"))
+            assertFalse(patientRepository.hasConsultationAt(lapsed.id.value, "311111124"))
         }
 
     @Test
-    fun `listAtClinic includes the latest konsultasjon at the org only`() = runTest {
+    fun `listAtClinic includes the latest consultation at the org only`() = runTest {
         ensureOrgs()
         val ownHpr = "own-${Uuid.generateV4()}"
         val ongoing = newPatient()
@@ -288,21 +288,16 @@ class PatientRepositoryTest : WithPostgresql() {
             putOnList(it, listId)
         }
         val now = LocalDateTime.now()
-        startKonsultasjon(ongoing, "311111116", now.minusDays(2), KonsultasjonStatus.FULLFOERT)
-        startKonsultasjon(ongoing, "311111116", now, KonsultasjonStatus.PAAGAAENDE)
-        startKonsultasjon(
+        startConsultation(ongoing, "311111116", now.minusDays(2), ConsultationStatus.FINISHED)
+        startConsultation(ongoing, "311111116", now, ConsultationStatus.IN_PROGRESS)
+        startConsultation(
             completedLast,
             "311111116",
             now.minusDays(3),
-            KonsultasjonStatus.PAAGAAENDE,
+            ConsultationStatus.IN_PROGRESS,
         )
-        startKonsultasjon(
-            completedLast,
-            "311111116",
-            now.minusDays(1),
-            KonsultasjonStatus.FULLFOERT,
-        )
-        startKonsultasjon(otherOrgOnly, "311111124", now, KonsultasjonStatus.PAAGAAENDE)
+        startConsultation(completedLast, "311111116", now.minusDays(1), ConsultationStatus.FINISHED)
+        startConsultation(otherOrgOnly, "311111124", now, ConsultationStatus.IN_PROGRESS)
 
         val liste =
             patientRepository.listAtClinic("311111116", PractitionerHpr(ownHpr)).associateBy {
@@ -310,11 +305,11 @@ class PatientRepositoryTest : WithPostgresql() {
             }
 
         assertEquals(
-            KonsultasjonStatus.PAAGAAENDE,
+            ConsultationStatus.IN_PROGRESS,
             liste.getValue(ongoing.id).latestConsultation?.status,
         )
         assertEquals(
-            KonsultasjonStatus.FULLFOERT,
+            ConsultationStatus.FINISHED,
             liste.getValue(completedLast.id).latestConsultation?.status,
         )
         assertNull(liste.getValue(none.id).latestConsultation)
@@ -378,18 +373,18 @@ class PatientRepositoryTest : WithPostgresql() {
             patientRepository.insert(patient)
             val oldList = listFor("a-${Uuid.generateV4()}", "311111116")
             putOnList(patient, oldList)
-            val konsultasjonId = startKonsultasjonAt(patient, "311111116")
+            val consultationId = startConsultationAt(patient, "311111116")
 
             dbQuery { FastlegelistePatientTable.deleteWhere { patientId eq patient.id.value } }
             putOnList(patient, listFor("b-${Uuid.generateV4()}", "311111124"))
 
-            val konsultasjoner = KonsultasjonRepository()
+            val consultations = ConsultationRepository()
             assertEquals(
-                konsultasjonId,
-                konsultasjoner.findByKonsultasjonId(konsultasjonId, "311111116")?.id,
+                consultationId,
+                consultations.findByConsultationId(consultationId, "311111116")?.id,
             )
-            assertNull(konsultasjoner.findByKonsultasjonId(konsultasjonId, "311111124"))
-            assertTrue(konsultasjoner.listByPatientId(patient.id, "311111124").isEmpty())
+            assertNull(consultations.findByConsultationId(consultationId, "311111124"))
+            assertTrue(consultations.listByPatientId(patient.id, "311111124").isEmpty())
 
             val atFirst =
                 patientRepository.listAtClinic("311111116", PractitionerHpr("a")).single {

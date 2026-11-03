@@ -13,22 +13,22 @@ import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.Uri
 import kotlinx.datetime.UtcOffset
 import kotlinx.datetime.toKotlinLocalDateTime
-import no.nav.helse.core.utils.KonsultasjonStatus
+import no.nav.helse.core.utils.ConsultationStatus
 import no.nav.helse.core.utils.oid
-import no.nav.helse.epj.konsultasjon.Konsultasjon
-import no.nav.helse.epj.konsultasjon.KonsultasjonId
-import no.nav.helse.epj.konsultasjon.KonsultasjonService
+import no.nav.helse.epj.consultation.Consultation
+import no.nav.helse.epj.consultation.ConsultationId
+import no.nav.helse.epj.consultation.ConsultationService
 import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.fhir.condition.conditionFhirId
 import no.nav.helse.fhir.patient.PatientInputId
 
-class EncounterService(val konsultasjonService: KonsultasjonService) {
+class EncounterService(val consultationService: ConsultationService) {
 
     suspend fun getEncounterById(encounterId: EncounterId, orgNumber: String?): Encounter {
-        val konsultasjon =
-            konsultasjonService.getKonsultasjon(KonsultasjonId(encounterId.value), orgNumber)
-        return konsultasjon.toEncounter()
+        val consultation =
+            consultationService.getConsultation(ConsultationId(encounterId.value), orgNumber)
+        return consultation.toEncounter()
     }
 
     suspend fun getActiveEncounterByPatient(
@@ -36,22 +36,22 @@ class EncounterService(val konsultasjonService: KonsultasjonService) {
         hpr: PractitionerHpr,
         orgNumber: String?,
     ): Encounter? {
-        val konsultasjon =
-            konsultasjonService.getAktivKonsultasjon(PatientId(patientId.value), hpr, orgNumber)
-        return konsultasjon?.toEncounter()
+        val consultation =
+            consultationService.getActiveConsultation(PatientId(patientId.value), hpr, orgNumber)
+        return consultation?.toEncounter()
     }
 
     suspend fun getEncountersByPatient(patientId: PatientInputId, orgNumber: String?): Bundle {
-        val konsultasjoner =
-            konsultasjonService.getKonsultasjoner(PatientId(patientId.value), orgNumber)
-        if (konsultasjoner.isEmpty()) {
+        val consultations =
+            consultationService.getConsultations(PatientId(patientId.value), orgNumber)
+        if (consultations.isEmpty()) {
             return Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
         }
         return Bundle(
             type = Enumeration(value = Bundle.BundleType.Searchset),
             entry =
-                konsultasjoner.map { konsultasjon ->
-                    val encounter = konsultasjon.toEncounter()
+                consultations.map { consultation ->
+                    val encounter = consultation.toEncounter()
                     Bundle.Entry(
                         fullUrl = Uri(value = "Encounter/${encounter.id}"),
                         resource = encounter,
@@ -60,13 +60,13 @@ class EncounterService(val konsultasjonService: KonsultasjonService) {
         )
     }
 
-    fun Konsultasjon.toEncounter(): Encounter {
+    fun Consultation.toEncounter(): Encounter {
         val status =
             when (this.status) {
-                KonsultasjonStatus.PLANLAGT -> Encounter.EncounterStatus.Planned
-                KonsultasjonStatus.PAAGAAENDE -> Encounter.EncounterStatus.In_Progress
-                KonsultasjonStatus.FULLFOERT -> Encounter.EncounterStatus.Finished
-                KonsultasjonStatus.AVLYST -> Encounter.EncounterStatus.Cancelled
+                ConsultationStatus.PLANNED -> Encounter.EncounterStatus.Planned
+                ConsultationStatus.IN_PROGRESS -> Encounter.EncounterStatus.In_Progress
+                ConsultationStatus.FINISHED -> Encounter.EncounterStatus.Finished
+                ConsultationStatus.CANCELLED -> Encounter.EncounterStatus.Cancelled
             }
         return Encounter(
             id = this.id.value.toString(),
@@ -86,26 +86,27 @@ class EncounterService(val konsultasjonService: KonsultasjonService) {
                     )
                 },
             reasonCode =
-                this.diagnoser.map { diagnose ->
+                this.diagnoses.map { diagnosis ->
                     CodeableConcept(
                         coding =
                             listOf(
                                 Coding(
-                                    system = Uri(value = "urn:oid:" + diagnose.system.oid()),
-                                    code = Code(value = diagnose.code),
-                                    display = com.google.fhir.model.r4.String(value = diagnose.text),
+                                    system = Uri(value = "urn:oid:" + diagnosis.system.oid()),
+                                    code = Code(value = diagnosis.code),
+                                    display =
+                                        com.google.fhir.model.r4.String(value = diagnosis.text),
                                 )
                             )
                     )
                 },
             diagnosis =
-                this.diagnoser.map { diagnose ->
+                this.diagnoses.map { diagnosis ->
                     Encounter.Diagnosis(
                         condition =
                             Reference(
                                 reference =
                                     com.google.fhir.model.r4.String(
-                                        value = "Condition/${conditionFhirId(this.id, diagnose)}"
+                                        value = "Condition/${conditionFhirId(this.id, diagnosis)}"
                                     )
                             )
                     )
@@ -116,12 +117,12 @@ class EncounterService(val konsultasjonService: KonsultasjonService) {
                         DateTime(
                             value =
                                 FhirDateTime.DateTime(
-                                    this.startetTidspunkt.toKotlinLocalDateTime(),
+                                    this.startedAt.toKotlinLocalDateTime(),
                                     UtcOffset.ZERO,
                                 )
                         ),
                     end =
-                        this.avsluttetTidspunkt?.let {
+                        this.endedAt?.let {
                             DateTime(
                                 value =
                                     FhirDateTime.DateTime(

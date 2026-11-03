@@ -18,7 +18,7 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import no.nav.helse.epj.clinic.Clinic
 import no.nav.helse.epj.clinic.ClinicId
-import no.nav.helse.epj.konsultasjon.KonsultasjonId
+import no.nav.helse.epj.consultation.ConsultationId
 import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.epj.sessionorg.SessionOrgResolution
 import no.nav.helse.epj.sessionorg.SessionOrgResolver
@@ -69,7 +69,7 @@ class MaalingRoutesTest {
         Maaling(
             id = MaalingId(Uuid.generateV4()),
             patientId = patientId,
-            konsultasjonId = KonsultasjonId(Uuid.generateV4()),
+            consultationId = ConsultationId(Uuid.generateV4()),
             hpr = null,
             loincKode = loincKode,
             loincVisningsnavn = "Body temperature",

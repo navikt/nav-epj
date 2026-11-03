@@ -5,7 +5,7 @@ CREATE TABLE consultation
     clinic_id        UUID        NOT NULL REFERENCES clinic (id),
     started_at       TIMESTAMPTZ NOT NULL,
     ended_at         TIMESTAMPTZ,
-    status           TEXT        NOT NULL, -- planlagt, pågående, fullført, avlyst
+    status           TEXT        NOT NULL, -- PLANNED, IN_PROGRESS, FINISHED, CANCELLED
     reason_for_visit TEXT,
     created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at       TIMESTAMPTZ NOT NULL DEFAULT now()

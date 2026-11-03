@@ -13,8 +13,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.SerializationException
 import no.nav.helse.core.utils.ConsultationBelongsToOtherPatientException
+import no.nav.helse.core.utils.ConsultationNotFoundException
 import no.nav.helse.core.utils.DuplikatMaalingException
-import no.nav.helse.core.utils.KonsultasjonNotFoundException
 import no.nav.helse.fhir.encounterReferenceId
 import no.nav.helse.fhir.observationId
 import no.nav.helse.fhir.patientOrSubjectReferenceInputId
@@ -134,7 +134,7 @@ fun Route.observationRoutes(
                         request,
                         principal.requireClinicalOrgNumber(),
                     )
-                } catch (exception: KonsultasjonNotFoundException) {
+                } catch (exception: ConsultationNotFoundException) {
                     return@post call.respondOperationOutcome(
                         fhirR4Json,
                         fhirContentType,

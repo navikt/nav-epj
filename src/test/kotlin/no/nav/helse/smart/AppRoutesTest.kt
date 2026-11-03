@@ -24,12 +24,12 @@ import no.nav.helse.core.Environment
 import no.nav.helse.core.EpjConfig
 import no.nav.helse.core.SmartConfig
 import no.nav.helse.core.ValkeyConfig
-import no.nav.helse.core.utils.KonsultasjonStatus
+import no.nav.helse.core.utils.ConsultationStatus
 import no.nav.helse.epj.clinic.Clinic
 import no.nav.helse.epj.clinic.ClinicId
-import no.nav.helse.epj.konsultasjon.Konsultasjon
-import no.nav.helse.epj.konsultasjon.KonsultasjonId
-import no.nav.helse.epj.konsultasjon.KonsultasjonService
+import no.nav.helse.epj.consultation.Consultation
+import no.nav.helse.epj.consultation.ConsultationId
+import no.nav.helse.epj.consultation.ConsultationService
 import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.epj.patient.PatientService as EpjPatientService
 import no.nav.helse.epj.practitioner.PractitionerHpr
@@ -177,22 +177,22 @@ class AppRoutesTest : WithValkey() {
     private fun encounterWithId(encounterId: String) =
         mockk<Encounter> { every { id } returns encounterId }
 
-    private fun konsultasjon(patientId: PatientId, hpr: String) =
-        Konsultasjon(
-            id = KonsultasjonId(kotlin.uuid.Uuid.generateV4()),
+    private fun consultation(patientId: PatientId, hpr: String) =
+        Consultation(
+            id = ConsultationId(kotlin.uuid.Uuid.generateV4()),
             patientId = patientId,
             clinicId = ClinicId(kotlin.uuid.Uuid.generateV4()),
             hpr = listOf(hpr),
             journalnotat = emptyList(),
-            diagnoser = emptyList(),
-            startetTidspunkt = LocalDateTime.now().minusHours(1),
-            avsluttetTidspunkt = null,
-            status = KonsultasjonStatus.PAAGAAENDE,
-            problemstilling = null,
+            diagnoses = emptyList(),
+            startedAt = LocalDateTime.now().minusHours(1),
+            endedAt = null,
+            status = ConsultationStatus.IN_PROGRESS,
+            reasonForVisit = null,
         )
 
-    private fun useRealEncounterService(konsultasjonService: KonsultasjonService) {
-        val real = EncounterService(konsultasjonService)
+    private fun useRealEncounterService(consultationService: ConsultationService) {
+        val real = EncounterService(consultationService)
         coEvery {
             encounterService.getActiveEncounterByPatient(
                 any<PatientInputId>(),
@@ -518,12 +518,12 @@ class AppRoutesTest : WithValkey() {
             val patientId = PatientId(kotlin.uuid.Uuid.parse(activePatient()))
             coEvery { patientService.getPatient(any<PatientInputId>()) } returns
                 patientWithId("patient-1")
-            val own = konsultasjon(patientId, HPR)
-            val other = konsultasjon(patientId, "222")
+            val own = consultation(patientId, HPR)
+            val other = consultation(patientId, "222")
             useRealEncounterService(
                 mockk {
-                    coEvery { getAktivKonsultasjon(patientId, ORG) } returns other
-                    coEvery { getAktivKonsultasjon(patientId, PractitionerHpr(HPR), ORG) } returns
+                    coEvery { getActiveConsultation(patientId, ORG) } returns other
+                    coEvery { getActiveConsultation(patientId, PractitionerHpr(HPR), ORG) } returns
                         own
                 }
             )
@@ -540,16 +540,16 @@ class AppRoutesTest : WithValkey() {
         }
 
     @Test
-    fun `POST api launch without an ongoing konsultasjon for the hpr returns 409 NO_ACTIVE_ENCOUNTER`() =
+    fun `POST api launch without an ongoing consultation for the hpr returns 409 NO_ACTIVE_ENCOUNTER`() =
         testApp {
             val patientId = PatientId(kotlin.uuid.Uuid.parse(activePatient()))
             coEvery { patientService.getPatient(any<PatientInputId>()) } returns
                 patientWithId("patient-1")
             useRealEncounterService(
                 mockk {
-                    coEvery { getAktivKonsultasjon(patientId, ORG) } returns
-                        konsultasjon(patientId, "222")
-                    coEvery { getAktivKonsultasjon(patientId, PractitionerHpr(HPR), ORG) } returns
+                    coEvery { getActiveConsultation(patientId, ORG) } returns
+                        consultation(patientId, "222")
+                    coEvery { getActiveConsultation(patientId, PractitionerHpr(HPR), ORG) } returns
                         null
                 }
             )

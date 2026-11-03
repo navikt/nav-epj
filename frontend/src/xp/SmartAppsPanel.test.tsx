@@ -40,7 +40,7 @@ describe("SmartAppsPanel", () => {
     vi.unstubAllGlobals();
   });
 
-  it("disables apps without a konsultasjon and points at the reason", () => {
+  it("disables apps without a consultation and points at the reason", () => {
     seedJournal(ola, []);
     render(<SmartAppsPanel />);
     const link = screen.getByRole("button", { name: /Sykmelding/ });

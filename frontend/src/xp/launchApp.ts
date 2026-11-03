@@ -11,11 +11,11 @@ import { useLaunchModeStore, type LaunchChoice } from "./launchModeStore";
 import { fullName } from "./patientInfo";
 import { createSession } from "./session";
 import { useWorkspaceStore } from "./workspaceStore";
-import type { App, Konsultasjon, Patient } from "../utils/mapping/epj";
+import type { App, Consultation, Patient } from "../utils/mapping/epj";
 
 type LaunchContext = {
   patient: Patient;
-  konsultasjon: Pick<Konsultasjon, "id" | "startetTidspunkt">;
+  consultation: Pick<Consultation, "id" | "startedAt">;
 };
 
 export type LaunchResult = "iframe" | "tab" | null;
@@ -90,19 +90,19 @@ async function requestLaunch(clientId: string, patientId: string) {
 }
 
 function readContext(app: App): LaunchContext | null {
-  const { patient, konsultasjoner } = useJournalStore.getState();
+  const { patient, consultations } = useJournalStore.getState();
   if (!patient) {
     showError("NO_ACTIVE_PATIENT", app, "");
     return null;
   }
-  const ongoing = ongoingOf(konsultasjoner);
+  const ongoing = ongoingOf(consultations);
   if (!ongoing) {
     showError("NO_ACTIVE_ENCOUNTER", app, fullName(patient));
     return null;
   }
   return {
     patient,
-    konsultasjon: { id: ongoing.id, startetTidspunkt: ongoing.startetTidspunkt },
+    consultation: { id: ongoing.id, startedAt: ongoing.startedAt },
   };
 }
 
@@ -126,7 +126,7 @@ async function launchInFrame(app: App, context: LaunchContext) {
     clientId: app.clientId,
     navn: app.navn,
     patient: context.patient,
-    konsultasjon: context.konsultasjon,
+    consultation: context.consultation,
     startedAt: new Date(),
   });
   useWorkspaceStore.getState().openTab({
@@ -261,7 +261,7 @@ export async function popOutApp(clientId: string): Promise<LaunchResult> {
   closeApp(clientId);
   return launchInTab(
     app,
-    { patient: run.patient, konsultasjon: run.konsultasjon },
+    { patient: run.patient, consultation: run.consultation },
     copy["s5.popout.balloon.body"],
   );
 }

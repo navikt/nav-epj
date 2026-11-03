@@ -9,26 +9,26 @@ import {
   type FocusEvent,
   type KeyboardEvent,
 } from "react";
-import { epjDiagnoser } from "@data/diagnoses";
+import { epjDiagnoses } from "@data/diagnoses";
 import { copy } from "./copy";
-import { systemLabel } from "./diagnoseSystem";
-import { diagnoseKey, type DiagnoseItem } from "./journalStore";
+import { systemLabel } from "./diagnosisSystem";
+import { diagnosisKey, type DiagnosisItem } from "./journalStore";
 
 type Props = {
-  selected: DiagnoseItem[];
+  selected: DiagnosisItem[];
   savedKeys: ReadonlySet<string>;
   disabled?: boolean;
-  onAdd: (diagnose: DiagnoseItem) => void;
+  onAdd: (diagnosis: DiagnosisItem) => void;
   onRemove: (code: string, system: string) => void;
 };
 
-const catalogue = epjDiagnoser.map((d) => ({
-  key: diagnoseKey({ code: d.kode, system: d.diagnosesystem }),
-  item: { code: d.kode, system: d.diagnosesystem, text: d.beskrivelse },
-  label: `${d.kode} ${d.beskrivelse} · ${systemLabel(d.diagnosesystem)}`,
+const catalogue = epjDiagnoses.map((d) => ({
+  key: diagnosisKey({ code: d.code, system: d.diagnosisSystem }),
+  item: { code: d.code, system: d.diagnosisSystem, text: d.description },
+  label: `${d.code} ${d.description} · ${systemLabel(d.diagnosisSystem)}`,
 }));
 
-export function DiagnoseCombobox({
+export function DiagnosisCombobox({
   selected,
   savedKeys,
   disabled,
@@ -47,7 +47,7 @@ export function DiagnoseCombobox({
   const selectedOptions = useMemo(
     () =>
       selected.map((d) => ({
-        value: diagnoseKey(d),
+        value: diagnosisKey(d),
         label: `${d.code} ${d.text}`,
       })),
     [selected],
@@ -160,12 +160,12 @@ export function DiagnoseCombobox({
         <ul id={chipsId} className="xp-chips" aria-label={copy["s4.diag.chips"]}>
           {selected.map((d) => (
             <li
-              key={diagnoseKey(d)}
-              className={savedKeys.has(diagnoseKey(d)) ? "xp-chip is-saved" : "xp-chip"}
+              key={diagnosisKey(d)}
+              className={savedKeys.has(diagnosisKey(d)) ? "xp-chip is-saved" : "xp-chip"}
             >
               <code>{d.code}</code>
               <span>{d.text}</span>
-              {savedKeys.has(diagnoseKey(d)) && (
+              {savedKeys.has(diagnosisKey(d)) && (
                 <span>{copy["s4.diag.saved"]}</span>
               )}
               <button

@@ -7,8 +7,8 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.uuid.ExperimentalUuidApi
 import kotlinx.coroutines.test.runTest
-import no.nav.helse.core.utils.KonsultasjonStatus
-import no.nav.helse.epj.konsultasjon.KonsultasjonRepository
+import no.nav.helse.core.utils.ConsultationStatus
+import no.nav.helse.epj.consultation.ConsultationRepository
 import no.nav.helse.epj.maaling.MaalingRepository
 import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.epj.patient.PatientRepository
@@ -21,7 +21,7 @@ import org.junit.Test
 class HackathonClinicalSeedTest : WithPostgresql() {
 
     private val seedConfig = config.postgres.copy(seedTestdata = true)
-    private val konsultasjonRepository = KonsultasjonRepository()
+    private val consultationRepository = ConsultationRepository()
     private val maalingRepository = MaalingRepository()
     private val patientRepository = PatientRepository()
 
@@ -81,17 +81,17 @@ class HackathonClinicalSeedTest : WithPostgresql() {
     }
 
     @Test
-    fun `seeded konsultasjoner, diagnoses and trend series are read at the list org`() = runTest {
+    fun `seeded consultations, diagnoses and trend series are read at the list org`() = runTest {
         val gunnar = patientId("23895710156")
 
-        val konsultasjoner = konsultasjonRepository.listByPatientId(gunnar, orgWithGunnar)
-        assertEquals(10, konsultasjoner.size)
-        assertEquals(1, konsultasjoner.count { it.status == KonsultasjonStatus.PLANLAGT })
+        val consultations = consultationRepository.listByPatientId(gunnar, orgWithGunnar)
+        assertEquals(10, consultations.size)
+        assertEquals(1, consultations.count { it.status == ConsultationStatus.PLANNED })
         assertEquals(
             setOf("K86", "I10", "T90", "E11.9"),
-            konsultasjoner.flatMap { it.diagnoser }.map { it.code }.toSet(),
+            consultations.flatMap { it.diagnoses }.map { it.code }.toSet(),
         )
-        assertTrue(konsultasjoner.all { it.hpr == listOf("900000103") })
+        assertTrue(consultations.all { it.hpr == listOf("900000103") })
 
         val hba1c =
             maalingRepository.listByPatientId(gunnar, orgWithGunnar).filter {
@@ -110,16 +110,16 @@ class HackathonClinicalSeedTest : WithPostgresql() {
     fun `seeded clinical data is invisible at another org`() = runTest {
         val gunnar = patientId("23895710156")
 
-        assertTrue(konsultasjonRepository.listByPatientId(gunnar, orgWithBjarne).isEmpty())
+        assertTrue(consultationRepository.listByPatientId(gunnar, orgWithBjarne).isEmpty())
         assertTrue(maalingRepository.listByPatientId(gunnar, orgWithBjarne).isEmpty())
     }
 
     @Test
-    fun `active konsultasjon is seeded for some patients`() = runTest {
+    fun `active consultation is seeded for some patients`() = runTest {
         val bjarne = patientId("20856210112")
 
-        assertNotNull(konsultasjonRepository.findActiveByPatientId(bjarne, orgWithBjarne))
-        assertNull(konsultasjonRepository.findActiveByPatientId(bjarne, orgWithGunnar))
+        assertNotNull(consultationRepository.findActiveByPatientId(bjarne, orgWithBjarne))
+        assertNull(consultationRepository.findActiveByPatientId(bjarne, orgWithGunnar))
     }
 
     @Test
@@ -128,7 +128,7 @@ class HackathonClinicalSeedTest : WithPostgresql() {
         assertTrue(before.all { it.toInt() > 0 })
         execute(
             "UPDATE consultation SET reason_for_visit = 'Endret av bruker' " +
-                "WHERE status = 'PÅGÅENDE'"
+                "WHERE status = 'IN_PROGRESS'"
         )
         val sql =
             checkNotNull(javaClass.classLoader.getResource("db/testdata/R__hackathon_testdata.sql"))
@@ -140,7 +140,7 @@ class HackathonClinicalSeedTest : WithPostgresql() {
         val bjarne = patientId("20856210112")
         assertEquals(
             "Endret av bruker",
-            konsultasjonRepository.findActiveByPatientId(bjarne, orgWithBjarne)?.problemstilling,
+            consultationRepository.findActiveByPatientId(bjarne, orgWithBjarne)?.reasonForVisit,
         )
     }
 
@@ -195,9 +195,9 @@ class HackathonClinicalSeedTest : WithPostgresql() {
     }
 
     @Test
-    fun `started planned konsultasjon receives no diagnoses when the seed is applied again`() {
+    fun `started planned consultation receives no diagnoses when the seed is applied again`() {
         val gf5 = "md5('hackathon-konsultasjon-GF5')::uuid"
-        execute("UPDATE consultation SET status = 'PÅGÅENDE' WHERE id = $gf5")
+        execute("UPDATE consultation SET status = 'IN_PROGRESS' WHERE id = $gf5")
 
         applySeed()
 
@@ -226,7 +226,7 @@ class HackathonClinicalSeedTest : WithPostgresql() {
             "JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id WHERE fl.hpr LIKE '9000001%'"
 
     @Test
-    fun `every event patient has at least three konsultasjoner over two years or more`() {
+    fun `every event patient has at least three consultations over two years or more`() {
         val perPatient =
             queryInts(
                 "SELECT count(k.id)::int FROM ($eventPatients) e " +
@@ -239,31 +239,31 @@ class HackathonClinicalSeedTest : WithPostgresql() {
             queryInts(
                 "SELECT (max(k.started_at)::date - min(k.started_at)::date)::int " +
                     "FROM consultation k WHERE k.patient_id IN ($eventPatients) " +
-                    "AND k.status <> 'PLANLAGT' GROUP BY k.patient_id"
+                    "AND k.status <> 'PLANNED' GROUP BY k.patient_id"
             )
         assertTrue(spanDays.all { it >= 700 }, spanDays.toString())
         assertEquals(
             0,
             count(
-                "SELECT count(*) FROM consultation WHERE status <> 'PLANLAGT' " +
+                "SELECT count(*) FROM consultation WHERE status <> 'PLANNED' " +
                     "AND started_at >= '2026-10-21'::timestamptz"
             ),
         )
     }
 
     @Test
-    fun `every completed konsultasjon has a diagnosis and most have a journal note`() {
+    fun `every completed consultation has a diagnosis and most have a journal note`() {
         assertEquals(
             0,
             count(
-                "SELECT count(*) FROM consultation k WHERE k.status = 'FULLFØRT' AND NOT EXISTS " +
+                "SELECT count(*) FROM consultation k WHERE k.status = 'FINISHED' AND NOT EXISTS " +
                     "(SELECT 1 FROM consultation_diagnosis_code d WHERE d.consultation_id = k.id)"
             ),
         )
-        val completed = count("SELECT count(*) FROM consultation WHERE status = 'FULLFØRT'")
+        val completed = count("SELECT count(*) FROM consultation WHERE status = 'FINISHED'")
         val withNote =
             count(
-                "SELECT count(*) FROM consultation k WHERE k.status = 'FULLFØRT' AND EXISTS " +
+                "SELECT count(*) FROM consultation k WHERE k.status = 'FINISHED' AND EXISTS " +
                     "(SELECT 1 FROM clinical_note j WHERE j.consultation_id = k.id)"
             )
         assertTrue(withNote * 100 >= completed * 75, "$withNote of $completed")

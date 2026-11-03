@@ -15,13 +15,13 @@ fun DiagnoseType.oid(): String =
         ICD10.OID
     }
 
-enum class KonsultasjonStatus(@get:JsonValue val label: String) {
-    PLANLAGT("PLANLAGT"),
-    PAAGAAENDE("PÅGÅENDE"),
-    FULLFOERT("FULLFØRT"),
-    AVLYST("AVLYST");
+enum class ConsultationStatus(@get:JsonValue val label: String) {
+    PLANNED("PLANNED"),
+    IN_PROGRESS("IN_PROGRESS"),
+    FINISHED("FINISHED"),
+    CANCELLED("CANCELLED");
 
     companion object {
-        fun fromLabel(label: String): KonsultasjonStatus = entries.first { it.label == label }
+        fun fromLabel(label: String): ConsultationStatus = entries.first { it.label == label }
     }
 }

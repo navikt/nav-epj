@@ -1,10 +1,10 @@
 import { create } from "zustand";
 import {
-  cancelKonsultasjon,
-  fetchKonsultasjoner,
+  cancelConsultation,
+  fetchConsultations,
   fetchPatient,
-  saveKonsultasjon,
-  startKonsultasjon,
+  saveConsultation,
+  startConsultation,
 } from "./api";
 import { useActivePatientStore } from "./activePatientStore";
 import { useBalloonStore } from "./balloonStore";
@@ -13,60 +13,60 @@ import { fullName } from "./patientInfo";
 import { usePatientsStore } from "./patientsStore";
 import { createSession } from "./session";
 import { useWorkspaceStore } from "./workspaceStore";
-import type { Konsultasjon, Patient } from "../utils/mapping/epj";
+import type { Consultation, Patient } from "../utils/mapping/epj";
 
-export type DiagnoseItem = Konsultasjon["diagnoser"][number];
-export const JOURNAL_SUB_TABS = ["konsultasjon", "tidligere", "maalinger", "apper"] as const;
+export type DiagnosisItem = Consultation["diagnoses"][number];
+export const JOURNAL_SUB_TABS = ["consultation", "previous", "maalinger", "apper"] as const;
 export type JournalSubTab = (typeof JOURNAL_SUB_TABS)[number];
 export type LoadStatus = "idle" | "loading" | "ready" | "error";
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
 
-type Draft = { diagnoser: DiagnoseItem[]; notat: string };
+type Draft = { diagnoses: DiagnosisItem[]; notat: string };
 
 type JournalState = {
   patientId: string | null;
   patient: Patient | null;
-  konsultasjoner: Konsultasjon[];
+  consultations: Consultation[];
   status: LoadStatus;
-  loadError: "patient" | "kons" | null;
-  selectedKonsultasjonId: string | null;
+  loadError: "patient" | "consultation" | null;
+  selectedConsultationId: string | null;
   subTab: JournalSubTab;
   draft: Draft;
   baseline: Draft;
-  draftKonsultasjonId: string | null;
+  draftConsultationId: string | null;
   saveStatus: SaveStatus;
   savedAt: Date | null;
   starting: boolean;
   startFailed: boolean;
   refreshing: boolean;
   refreshFailed: boolean;
-  open: (patientId: string, konsultasjonId?: string) => Promise<void>;
+  open: (patientId: string, consultationId?: string) => Promise<void>;
   refresh: () => Promise<void>;
   setSubTab: (subTab: JournalSubTab) => void;
   setNotat: (notat: string) => void;
-  addDiagnose: (diagnose: DiagnoseItem) => void;
-  removeDiagnose: (code: string, system: string) => void;
+  addDiagnosis: (diagnosis: DiagnosisItem) => void;
+  removeDiagnosis: (code: string, system: string) => void;
   start: () => Promise<void>;
-  save: (options?: { ferdigstill?: boolean }) => Promise<boolean>;
+  save: (options?: { finalize?: boolean }) => Promise<boolean>;
   cancel: () => Promise<boolean>;
   discardDraft: () => void;
   clear: () => void;
 };
 
-const emptyDraft = (): Draft => ({ diagnoser: [], notat: "" });
+const emptyDraft = (): Draft => ({ diagnoses: [], notat: "" });
 
 function initialState() {
   return {
     patientId: null as string | null,
     patient: null as Patient | null,
-    konsultasjoner: [] as Konsultasjon[],
+    consultations: [] as Consultation[],
     status: "idle" as LoadStatus,
-    loadError: null as "patient" | "kons" | null,
-    selectedKonsultasjonId: null as string | null,
-    subTab: "konsultasjon" as JournalSubTab,
+    loadError: null as "patient" | "consultation" | null,
+    selectedConsultationId: null as string | null,
+    subTab: "consultation" as JournalSubTab,
     draft: emptyDraft(),
     baseline: emptyDraft(),
-    draftKonsultasjonId: null as string | null,
+    draftConsultationId: null as string | null,
     saveStatus: "idle" as SaveStatus,
     savedAt: null as Date | null,
     starting: false,
@@ -76,31 +76,31 @@ function initialState() {
   };
 }
 
-export const diagnoseKey = (d: { code: string; system: string }) =>
+export const diagnosisKey = (d: { code: string; system: string }) =>
   `${d.system}:${d.code}`;
 
-export function noteOf(konsultasjon: Konsultasjon) {
-  return konsultasjon.journalnotat.at(-1)?.journalnotat ?? "";
+export function noteOf(consultation: Consultation) {
+  return consultation.journalnotat.at(-1)?.journalnotat ?? "";
 }
 
-export function ongoingOf(konsultasjoner: Konsultasjon[]) {
-  return konsultasjoner.find((k) => k.status === "PÅGÅENDE") ?? null;
+export function ongoingOf(consultations: Consultation[]) {
+  return consultations.find((k) => k.status === "IN_PROGRESS") ?? null;
 }
 
-function draftOf(konsultasjon: Konsultasjon | null): Draft {
-  if (!konsultasjon) return emptyDraft();
+function draftOf(consultation: Consultation | null): Draft {
+  if (!consultation) return emptyDraft();
   return {
-    diagnoser: konsultasjon.diagnoser.map((d) => ({ ...d })),
-    notat: noteOf(konsultasjon),
+    diagnoses: consultation.diagnoses.map((d) => ({ ...d })),
+    notat: noteOf(consultation),
   };
 }
 
 function sameDraft(a: Draft, b: Draft) {
-  if (a.notat !== b.notat || a.diagnoser.length !== b.diagnoser.length) {
+  if (a.notat !== b.notat || a.diagnoses.length !== b.diagnoses.length) {
     return false;
   }
-  const keys = new Set(b.diagnoser.map(diagnoseKey));
-  return a.diagnoser.every((d) => keys.has(diagnoseKey(d)));
+  const keys = new Set(b.diagnoses.map(diagnosisKey));
+  return a.diagnoses.every((d) => keys.has(diagnosisKey(d)));
 }
 
 export function isDirty(state: Pick<JournalState, "draft" | "baseline">) {
@@ -108,12 +108,12 @@ export function isDirty(state: Pick<JournalState, "draft" | "baseline">) {
 }
 
 function applySaved(
-  konsultasjoner: Konsultasjon[],
+  consultations: Consultation[],
   id: string,
   draft: Draft,
-  ferdigstill: boolean,
-): Konsultasjon[] {
-  return konsultasjoner.map((k) => {
+  finalize: boolean,
+): Consultation[] {
+  return consultations.map((k) => {
     if (k.id !== id) return k;
     const existing = k.journalnotat.at(-1);
     const journalnotat =
@@ -122,45 +122,45 @@ function applySaved(
         : [
             {
               id: existing?.id ?? `${id}:note`,
-              konsultasjonId: id,
+              consultationId: id,
               patientId: k.patientId,
               journalnotat: draft.notat,
             },
           ];
     return {
       ...k,
-      diagnoser: draft.diagnoser.map((d) => ({ ...d })),
+      diagnoses: draft.diagnoses.map((d) => ({ ...d })),
       journalnotat,
-      status: ferdigstill ? "FULLFØRT" : k.status,
-      avsluttetTidspunkt: ferdigstill
+      status: finalize ? "FINISHED" : k.status,
+      endedAt: finalize
         ? new Date().toISOString()
-        : k.avsluttetTidspunkt,
+        : k.endedAt,
     };
   });
 }
 
-function applyCancelled(konsultasjoner: Konsultasjon[], id: string): Konsultasjon[] {
-  return konsultasjoner.map((k) =>
+function applyCancelled(consultations: Consultation[], id: string): Consultation[] {
+  return consultations.map((k) =>
     k.id === id
-      ? { ...k, status: "AVLYST", avsluttetTidspunkt: new Date().toISOString() }
+      ? { ...k, status: "CANCELLED", endedAt: new Date().toISOString() }
       : k,
   );
 }
 
-function latestOf(konsultasjoner: Konsultasjon[]) {
-  return [...konsultasjoner].sort((a, b) =>
-    b.startetTidspunkt.localeCompare(a.startetTidspunkt),
+function latestOf(consultations: Consultation[]) {
+  return [...consultations].sort((a, b) =>
+    b.startedAt.localeCompare(a.startedAt),
   )[0];
 }
 
-function publishLatest(patientId: string, konsultasjoner: Konsultasjon[]) {
-  const latest = latestOf(konsultasjoner);
-  usePatientsStore.getState().setLastKonsultasjon(
+function publishLatest(patientId: string, consultations: Consultation[]) {
+  const latest = latestOf(consultations);
+  usePatientsStore.getState().setLastConsultation(
     patientId,
     latest
       ? {
           status: latest.status,
-          timestamp: latest.avsluttetTidspunkt ?? latest.startetTidspunkt,
+          timestamp: latest.endedAt ?? latest.startedAt,
         }
       : null,
   );
@@ -181,25 +181,25 @@ export const useJournalStore = create<JournalState>((set, get) => {
     });
   }
 
-  function applyKonsultasjoner(konsultasjoner: Konsultasjon[]) {
-    const ongoing = ongoingOf(konsultasjoner);
+  function applyConsultations(consultations: Consultation[]) {
+    const ongoing = ongoingOf(consultations);
     const draft = draftOf(ongoing);
     commit({
-      konsultasjoner,
+      consultations,
       draft,
       baseline: draftOf(ongoing),
-      draftKonsultasjonId: ongoing?.id ?? null,
+      draftConsultationId: ongoing?.id ?? null,
     });
   }
 
   return {
     ...initialState(),
 
-    open: async (patientId, konsultasjonId) => {
+    open: async (patientId, consultationId) => {
       const current = get();
       const selection = {
-        selectedKonsultasjonId: konsultasjonId ?? null,
-        ...(konsultasjonId ? { subTab: "konsultasjon" as const } : {}),
+        selectedConsultationId: consultationId ?? null,
+        ...(consultationId ? { subTab: "consultation" as const } : {}),
       };
       if (
         current.patientId === patientId &&
@@ -212,14 +212,14 @@ export const useJournalStore = create<JournalState>((set, get) => {
       const isCurrent = session.capture();
       commit({
         ...initialState(),
-        subTab: current.patientId === patientId ? current.subTab : "konsultasjon",
+        subTab: current.patientId === patientId ? current.subTab : "consultation",
         ...selection,
         patientId,
         status: "loading",
       });
-      const [patient, konsultasjoner, active] = await Promise.allSettled([
+      const [patient, consultations, active] = await Promise.allSettled([
         fetchPatient(patientId),
-        fetchKonsultasjoner(patientId),
+        fetchConsultations(patientId),
         useActivePatientStore.getState().claim(patientId),
       ]);
       if (!isCurrent()) return;
@@ -227,14 +227,14 @@ export const useJournalStore = create<JournalState>((set, get) => {
         commit({ status: "error", loadError: "patient" });
         return;
       }
-      if (konsultasjoner.status === "rejected") {
-        commit({ patient: patient.value, status: "error", loadError: "kons" });
+      if (consultations.status === "rejected") {
+        commit({ patient: patient.value, status: "error", loadError: "consultation" });
         return;
       }
       usePatientsStore.getState().markOpened(patientId);
-      publishLatest(patientId, konsultasjoner.value);
+      publishLatest(patientId, consultations.value);
       commit({ patient: patient.value, status: "ready", loadError: null });
-      applyKonsultasjoner(konsultasjoner.value);
+      applyConsultations(consultations.value);
     },
 
     refresh: async () => {
@@ -251,11 +251,11 @@ export const useJournalStore = create<JournalState>((set, get) => {
         return;
       }
       const isCurrent = session.capture();
-      const before = start.konsultasjoner;
+      const before = start.consultations;
       commit({ refreshing: true });
-      let fetched: Konsultasjon[];
+      let fetched: Consultation[];
       try {
-        fetched = await fetchKonsultasjoner(patientId);
+        fetched = await fetchConsultations(patientId);
       } catch {
         if (isCurrent()) commit({ refreshing: false, refreshFailed: true });
         return;
@@ -266,14 +266,14 @@ export const useJournalStore = create<JournalState>((set, get) => {
         now.saveStatus === "saving" ||
         now.starting ||
         isDirty(now) ||
-        now.konsultasjoner !== before
+        now.consultations !== before
       ) {
         commit({ refreshing: false });
         return;
       }
       publishLatest(patientId, fetched);
       commit({ refreshing: false, refreshFailed: false });
-      applyKonsultasjoner(fetched);
+      applyConsultations(fetched);
     },
 
     setSubTab: (subTab) => commit({ subTab }),
@@ -284,21 +284,21 @@ export const useJournalStore = create<JournalState>((set, get) => {
         saveStatus: get().saveStatus === "saved" ? "idle" : get().saveStatus,
       }),
 
-    addDiagnose: (diagnose) => {
+    addDiagnosis: (diagnosis) => {
       const { draft } = get();
-      if (draft.diagnoser.some((d) => diagnoseKey(d) === diagnoseKey(diagnose))) {
+      if (draft.diagnoses.some((d) => diagnosisKey(d) === diagnosisKey(diagnosis))) {
         return;
       }
-      commit({ draft: { ...draft, diagnoser: [...draft.diagnoser, diagnose] } });
+      commit({ draft: { ...draft, diagnoses: [...draft.diagnoses, diagnosis] } });
     },
 
-    removeDiagnose: (code, system) => {
+    removeDiagnosis: (code, system) => {
       const { draft } = get();
       commit({
         draft: {
           ...draft,
-          diagnoser: draft.diagnoser.filter(
-            (d) => diagnoseKey(d) !== diagnoseKey({ code, system }),
+          diagnoses: draft.diagnoses.filter(
+            (d) => diagnosisKey(d) !== diagnosisKey({ code, system }),
           ),
         },
       });
@@ -310,20 +310,20 @@ export const useJournalStore = create<JournalState>((set, get) => {
       const isCurrent = session.capture();
       commit({ starting: true, startFailed: false });
       try {
-        const started = await startKonsultasjon(patientId);
+        const started = await startConsultation(patientId);
         if (!isCurrent()) return;
-        const rest = get().konsultasjoner.filter((k) => k.id !== started.id);
-        const konsultasjoner = [started, ...rest];
+        const rest = get().consultations.filter((k) => k.id !== started.id);
+        const consultations = [started, ...rest];
         useActivePatientStore.getState().setActive(patientId);
-        publishLatest(patientId, konsultasjoner);
+        publishLatest(patientId, consultations);
         commit({
           starting: false,
-          selectedKonsultasjonId: null,
-          subTab: "konsultasjon",
+          selectedConsultationId: null,
+          subTab: "consultation",
           saveStatus: "idle",
           savedAt: null,
         });
-        applyKonsultasjoner(konsultasjoner);
+        applyConsultations(consultations);
       } catch {
         if (isCurrent()) {
           commit({ starting: false, startFailed: true });
@@ -331,21 +331,21 @@ export const useJournalStore = create<JournalState>((set, get) => {
       }
     },
 
-    save: async ({ ferdigstill = false } = {}) => {
-      const { patientId, patient, draft, draftKonsultasjonId } = get();
-      if (!patientId || !patient || !draftKonsultasjonId) return false;
+    save: async ({ finalize = false } = {}) => {
+      const { patientId, patient, draft, draftConsultationId } = get();
+      if (!patientId || !patient || !draftConsultationId) return false;
       if (get().saveStatus === "saving") return false;
       const isCurrent = session.capture();
       commit({ saveStatus: "saving" });
       try {
-        await saveKonsultasjon(patientId, {
-          konsultasjonId: draftKonsultasjonId,
-          diagnoser: draft.diagnoser.map((d) => ({
-            kode: d.code,
+        await saveConsultation(patientId, {
+          consultationId: draftConsultationId,
+          diagnoses: draft.diagnoses.map((d) => ({
+            code: d.code,
             system: d.system,
           })),
           journalNotat: draft.notat.trim() === "" ? null : draft.notat,
-          ferdigstill,
+          finalize,
         });
       } catch {
         if (isCurrent()) {
@@ -353,15 +353,15 @@ export const useJournalStore = create<JournalState>((set, get) => {
         }
         return false;
       }
-      let refreshed: Konsultasjon[];
+      let refreshed: Consultation[];
       try {
-        refreshed = await fetchKonsultasjoner(patientId);
+        refreshed = await fetchConsultations(patientId);
       } catch {
         refreshed = applySaved(
-          get().konsultasjoner,
-          draftKonsultasjonId,
+          get().consultations,
+          draftConsultationId,
           draft,
-          ferdigstill,
+          finalize,
         );
       }
       if (!isCurrent()) return true;
@@ -369,12 +369,12 @@ export const useJournalStore = create<JournalState>((set, get) => {
       commit({
         saveStatus: "saved",
         savedAt: new Date(),
-        ...(ferdigstill ? { selectedKonsultasjonId: draftKonsultasjonId } : {}),
+        ...(finalize ? { selectedConsultationId: draftConsultationId } : {}),
       });
-      applyKonsultasjoner(refreshed);
+      applyConsultations(refreshed);
       const name = fullName(patient);
       useBalloonStore.getState().show(
-        ferdigstill
+        finalize
           ? {
               title: copy["s4.done.balloon.title"],
               body: copy["s4.done.balloon.body"](name),
@@ -388,29 +388,29 @@ export const useJournalStore = create<JournalState>((set, get) => {
     },
 
     cancel: async () => {
-      const { patientId, patient, draftKonsultasjonId } = get();
-      if (!patientId || !patient || !draftKonsultasjonId) return false;
+      const { patientId, patient, draftConsultationId } = get();
+      if (!patientId || !patient || !draftConsultationId) return false;
       if (get().saveStatus === "saving") return false;
       const isCurrent = session.capture();
       commit({ saveStatus: "saving" });
       try {
-        await cancelKonsultasjon(patientId, draftKonsultasjonId);
+        await cancelConsultation(patientId, draftConsultationId);
       } catch {
         if (isCurrent()) {
           commit({ saveStatus: "error" });
         }
         return false;
       }
-      let refreshed: Konsultasjon[];
+      let refreshed: Consultation[];
       try {
-        refreshed = await fetchKonsultasjoner(patientId);
+        refreshed = await fetchConsultations(patientId);
       } catch {
-        refreshed = applyCancelled(get().konsultasjoner, draftKonsultasjonId);
+        refreshed = applyCancelled(get().consultations, draftConsultationId);
       }
       if (!isCurrent()) return true;
       publishLatest(patientId, refreshed);
       commit({ saveStatus: "idle", savedAt: null });
-      applyKonsultasjoner(refreshed);
+      applyConsultations(refreshed);
       useBalloonStore.getState().show({
         title: copy["s4.cancelDlg.balloon.title"],
         body: copy["s4.cancelDlg.balloon.body"](fullName(patient)),

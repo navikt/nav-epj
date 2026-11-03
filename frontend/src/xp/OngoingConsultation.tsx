@@ -3,25 +3,25 @@ import { Badge } from "./Badge";
 import { Button } from "./Button";
 import { CancelDialog } from "./CancelDialog";
 import { Card } from "./Card";
-import { DiagnoseCombobox } from "./DiagnoseCombobox";
+import { DiagnosisCombobox } from "./DiagnosisCombobox";
 import { FinishDialog } from "./FinishDialog";
 import { Note } from "./Note";
 import { Progress } from "./Progress";
 import { TextArea } from "./TextArea";
 import { copy } from "./copy";
 import { useCurrentUser } from "./currentUser";
-import { diagnoseKey, isDirty, useJournalStore } from "./journalStore";
+import { diagnosisKey, isDirty, useJournalStore } from "./journalStore";
 import { formatDateTime, formatTime, minutesSince } from "./patientInfo";
 import { useShell } from "./shellContext";
 import { useNow } from "./useNow";
-import type { Konsultasjon, Patient } from "../utils/mapping/epj";
+import type { Consultation, Patient } from "../utils/mapping/epj";
 
 type Props = {
   patient: Patient;
-  konsultasjon: Konsultasjon;
+  consultation: Consultation;
 };
 
-export function OngoingKonsultasjon({ patient, konsultasjon }: Props) {
+export function OngoingConsultation({ patient, consultation }: Props) {
   const titleId = useId();
   const infoId = useId();
   const user = useCurrentUser();
@@ -35,24 +35,24 @@ export function OngoingKonsultasjon({ patient, konsultasjon }: Props) {
   const savedAt = useJournalStore((s) => s.savedAt);
   const dirty = isDirty({ draft, baseline });
   const saving = saveStatus === "saving";
-  const minutes = minutesSince(konsultasjon.startetTidspunkt, now);
+  const minutes = minutesSince(consultation.startedAt, now);
   const savedKeys = useMemo(
-    () => new Set(baseline.diagnoser.map(diagnoseKey)),
-    [baseline.diagnoser],
+    () => new Set(baseline.diagnoses.map(diagnosisKey)),
+    [baseline.diagnoses],
   );
-  const { addDiagnose, removeDiagnose, setNotat, save, cancel } =
+  const { addDiagnosis, removeDiagnosis, setNotat, save, cancel } =
     useJournalStore.getState();
 
   async function confirmFinish() {
     setFinishing(false);
-    const ok = await save({ ferdigstill: true });
-    if (ok) announce(copy["live.konsDone"]);
+    const ok = await save({ finalize: true });
+    if (ok) announce(copy["live.consultationDone"]);
   }
 
   async function confirmCancel() {
     setCancelling(false);
     const ok = await cancel();
-    if (ok) announce(copy["live.konsCancelled"]);
+    if (ok) announce(copy["live.consultationCancelled"]);
   }
 
   return (
@@ -62,12 +62,12 @@ export function OngoingKonsultasjon({ patient, konsultasjon }: Props) {
           <div>
             <Badge tone="info">{copy["s4.ongoing.badge"](minutes)}</Badge>
           </div>
-          <DiagnoseCombobox
-            selected={draft.diagnoser}
+          <DiagnosisCombobox
+            selected={draft.diagnoses}
             savedKeys={savedKeys}
             disabled={saving}
-            onAdd={addDiagnose}
-            onRemove={removeDiagnose}
+            onAdd={addDiagnosis}
+            onRemove={removeDiagnosis}
           />
           <TextArea
             label={copy["s4.note.label"]}
@@ -98,7 +98,7 @@ export function OngoingKonsultasjon({ patient, konsultasjon }: Props) {
                 if (!saving) setCancelling(true);
               }}
             >
-              {copy["s4.cancelKons"]}
+              {copy["s4.cancelConsultation"]}
             </Button>
             <span className="xp-status-text" role="status">
               {saveStatus === "error"
@@ -125,7 +125,7 @@ export function OngoingKonsultasjon({ patient, konsultasjon }: Props) {
         <Card heading={copy["s4.info.title"]} headingId={infoId}>
           <dl className="xp-dl">
             <dt>{copy["s4.info.started"]}</dt>
-            <dd>{formatDateTime(konsultasjon.startetTidspunkt)}</dd>
+            <dd>{formatDateTime(consultation.startedAt)}</dd>
             <dt>{copy["s4.info.duration"]}</dt>
             <dd>{copy["s4.info.minutes"](minutes)}</dd>
             <dt>{copy["s4.info.doctor"]}</dt>

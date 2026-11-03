@@ -28,7 +28,7 @@ export function DevPanel({ run, hidden, onClose }: Props) {
     ],
     [copy["dev.iss"], parts.iss || "–"],
     [copy["dev.patient"], `Patient/${run.patient.id}`],
-    [copy["dev.encounter"], `Encounter/${run.konsultasjon.id}`],
+    [copy["dev.encounter"], `Encounter/${run.consultation.id}`],
     [copy["dev.started"], formatTime(run.startedAt)],
     [copy["dev.expires"], formatTime(accessExpiry(run.startedAt))],
     [copy["dev.sandbox"], IFRAME_SANDBOX],
@@ -47,7 +47,7 @@ export function DevPanel({ run, hidden, onClose }: Props) {
 
   function copyAll() {
     const text = [
-      `${run.navn} (${fullName(run.patient)}, ${formatTime(parseISO(run.konsultasjon.startetTidspunkt))})`,
+      `${run.navn} (${fullName(run.patient)}, ${formatTime(parseISO(run.consultation.startedAt))})`,
       ...rows.map(([key, value]) => `${key}: ${value}`),
       ...events.map((event) => event.text),
     ].join("\n");

@@ -14,8 +14,8 @@ class PatientService(private val patientRepository: PatientRepository) {
         return patientRepository.isListedAt(id.value, orgNumber)
     }
 
-    suspend fun hasKonsultasjonAt(id: PatientId, orgNumber: String): Boolean {
-        return patientRepository.hasKonsultasjonAt(id.value, orgNumber)
+    suspend fun hasConsultationAt(id: PatientId, orgNumber: String): Boolean {
+        return patientRepository.hasConsultationAt(id.value, orgNumber)
     }
 
     suspend fun getPatientById(id: PatientId): Patient? {

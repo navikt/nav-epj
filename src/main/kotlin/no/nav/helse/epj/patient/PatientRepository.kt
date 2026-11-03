@@ -3,12 +3,12 @@ package no.nav.helse.epj.patient
 import java.time.LocalDateTime
 import kotlin.uuid.Uuid
 import no.nav.helse.core.db.ClinicTable
+import no.nav.helse.core.db.ConsultationTable
 import no.nav.helse.core.db.FastlegelistePatientTable
 import no.nav.helse.core.db.FastlegelisteTable
-import no.nav.helse.core.db.KonsultasjonTable
 import no.nav.helse.core.db.PatientTable
+import no.nav.helse.core.db.consultationAtOrg
 import no.nav.helse.core.db.dbQuery
-import no.nav.helse.core.db.konsultasjonAtOrg
 import no.nav.helse.core.utils.DuplicatePatientException
 import no.nav.helse.core.utils.IngenFastlegelisteException
 import no.nav.helse.core.utils.logger
@@ -68,7 +68,7 @@ class PatientRepository {
             val lapsedRows =
                 PatientTable.selectAll()
                     .where {
-                        (PatientTable.id inSubQuery konsultasjonPatientIdsAtOrg(orgNumber)) and
+                        (PatientTable.id inSubQuery consultationPatientIdsAtOrg(orgNumber)) and
                             (PatientTable.id notInList listedIds)
                     }
                     .toList()
@@ -110,32 +110,32 @@ class PatientRepository {
         }
 
     private fun latestConsultationByPatient(orgNumber: String): Map<Uuid, LatestConsultation> =
-        KonsultasjonTable.select(
-                KonsultasjonTable.patientId,
-                KonsultasjonTable.status,
-                KonsultasjonTable.startetTidspunkt,
-                KonsultasjonTable.avsluttetTidspunkt,
+        ConsultationTable.select(
+                ConsultationTable.patientId,
+                ConsultationTable.status,
+                ConsultationTable.startedAt,
+                ConsultationTable.endedAt,
             )
-            .where { konsultasjonAtOrg(orgNumber) }
-            .orderBy(KonsultasjonTable.startetTidspunkt, SortOrder.DESC)
-            .groupBy { it[KonsultasjonTable.patientId] }
-            .mapValues { (_, konsultasjoner) ->
-                val siste = konsultasjoner.first()
-                val avsluttet: LocalDateTime? = siste[KonsultasjonTable.avsluttetTidspunkt]
+            .where { consultationAtOrg(orgNumber) }
+            .orderBy(ConsultationTable.startedAt, SortOrder.DESC)
+            .groupBy { it[ConsultationTable.patientId] }
+            .mapValues { (_, consultations) ->
+                val siste = consultations.first()
+                val avsluttet: LocalDateTime? = siste[ConsultationTable.endedAt]
                 LatestConsultation(
-                    status = siste[KonsultasjonTable.status],
-                    timestamp = avsluttet ?: siste[KonsultasjonTable.startetTidspunkt],
+                    status = siste[ConsultationTable.status],
+                    timestamp = avsluttet ?: siste[ConsultationTable.startedAt],
                 )
             }
 
-    suspend fun hasKonsultasjonAt(patientId: Uuid, orgNumber: String): Boolean = dbQuery {
-        KonsultasjonTable.select(KonsultasjonTable.id)
-            .where { (KonsultasjonTable.patientId eq patientId) and konsultasjonAtOrg(orgNumber) }
+    suspend fun hasConsultationAt(patientId: Uuid, orgNumber: String): Boolean = dbQuery {
+        ConsultationTable.select(ConsultationTable.id)
+            .where { (ConsultationTable.patientId eq patientId) and consultationAtOrg(orgNumber) }
             .any()
     }
 
-    private fun konsultasjonPatientIdsAtOrg(orgNumber: String) =
-        KonsultasjonTable.select(KonsultasjonTable.patientId).where { konsultasjonAtOrg(orgNumber) }
+    private fun consultationPatientIdsAtOrg(orgNumber: String) =
+        ConsultationTable.select(ConsultationTable.patientId).where { consultationAtOrg(orgNumber) }
 
     suspend fun isListedAt(patientId: Uuid, orgNumber: String): Boolean = dbQuery {
         FastlegelistePatientTable.join(

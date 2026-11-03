@@ -5,23 +5,23 @@ import org.junit.Test
 import tools.jackson.module.kotlin.jacksonObjectMapper
 import tools.jackson.module.kotlin.readValue
 
-class KonsultasjonStatusTest {
+class ConsultationStatusTest {
     private val mapper = jacksonObjectMapper()
     private val wireValues =
         mapOf(
-            KonsultasjonStatus.PLANLAGT to "PLANLAGT",
-            KonsultasjonStatus.PAAGAAENDE to "PÅGÅENDE",
-            KonsultasjonStatus.FULLFOERT to "FULLFØRT",
-            KonsultasjonStatus.AVLYST to "AVLYST",
+            ConsultationStatus.PLANNED to "PLANNED",
+            ConsultationStatus.IN_PROGRESS to "IN_PROGRESS",
+            ConsultationStatus.FINISHED to "FINISHED",
+            ConsultationStatus.CANCELLED to "CANCELLED",
         )
 
     @Test
     fun `every status keeps its original wire value`() {
-        assertEquals(KonsultasjonStatus.entries.toSet(), wireValues.keys)
+        assertEquals(ConsultationStatus.entries.toSet(), wireValues.keys)
         wireValues.forEach { (status, value) ->
             assertEquals("\"$value\"", mapper.writeValueAsString(status))
-            assertEquals(status, mapper.readValue<KonsultasjonStatus>("\"$value\""))
-            assertEquals(status, KonsultasjonStatus.fromLabel(value))
+            assertEquals(status, mapper.readValue<ConsultationStatus>("\"$value\""))
+            assertEquals(status, ConsultationStatus.fromLabel(value))
             assertEquals(value, status.label)
         }
     }

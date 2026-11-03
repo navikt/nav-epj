@@ -1,12 +1,12 @@
 import { useEffect, useRef } from "react";
 import { Button } from "./Button";
 import { AppsTab } from "./AppsTab";
-import { KonsultasjonTab } from "./KonsultasjonTab";
+import { ConsultationTab } from "./ConsultationTab";
 import { Maalinger } from "./Maalinger";
 import { Note } from "./Note";
 import { PatientContext } from "./PatientContext";
 import { SubTabs } from "./SubTabs";
-import { TidligereKonsultasjoner } from "./TidligereKonsultasjoner";
+import { PreviousConsultations } from "./PreviousConsultations";
 import { copy } from "./copy";
 import { fullName } from "./patientInfo";
 import { useShell } from "./shellContext";
@@ -20,9 +20,9 @@ export function JournalView() {
   const loadError = useJournalStore((s) => s.loadError);
   const patientId = useJournalStore((s) => s.patientId);
   const patient = useJournalStore((s) => s.patient);
-  const konsultasjoner = useJournalStore((s) => s.konsultasjoner);
-  const tidligereKonsultasjoner = konsultasjoner.filter(
-    (k) => k.status !== "PÅGÅENDE",
+  const consultations = useJournalStore((s) => s.consultations);
+  const previousConsultations = consultations.filter(
+    (k) => k.status !== "IN_PROGRESS",
   );
   const subTab = useJournalStore((s) => s.subTab);
   const dirty = useJournalStore((s) => isDirty(s));
@@ -56,8 +56,8 @@ export function JournalView() {
     return (
       <div className="xp-note error" role="alert">
         <span>
-          {loadError === "kons"
-            ? copy["s4.loadError.kons"]
+          {loadError === "consultation"
+            ? copy["s4.loadError.consultation"]
             : copy["s4.loadError.patient"]}
         </span>
         {patientId && (
@@ -65,7 +65,7 @@ export function JournalView() {
             onClick={() =>
               void open(
                 patientId,
-                useJournalStore.getState().selectedKonsultasjonId ?? undefined,
+                useJournalStore.getState().selectedConsultationId ?? undefined,
               )
             }
           >
@@ -100,20 +100,20 @@ export function JournalView() {
         onSelect={setSubTab}
         tabs={[
           {
-            id: "konsultasjon",
-            label: dirty ? copy["s4.tab.konsDirty"] : copy["s4.tab.kons"],
+            id: "consultation",
+            label: dirty ? copy["s4.tab.consultationDirty"] : copy["s4.tab.consultation"],
           },
           {
-            id: "tidligere",
-            label: copy["s4.tab.tidl"](tidligereKonsultasjoner.length),
+            id: "previous",
+            label: copy["s4.tab.previous"](previousConsultations.length),
           },
           { id: "maalinger", label: copy["s4.tab.maalinger"] },
           { id: "apper", label: copy["s4.tab.apper"](appCount) },
         ]}
       >
-        {subTab === "konsultasjon" && <KonsultasjonTab patient={patient} />}
-        {subTab === "tidligere" && (
-          <TidligereKonsultasjoner konsultasjoner={tidligereKonsultasjoner} />
+        {subTab === "consultation" && <ConsultationTab patient={patient} />}
+        {subTab === "previous" && (
+          <PreviousConsultations consultations={previousConsultations} />
         )}
         {subTab === "maalinger" && <Maalinger patientId={patient.id} />}
         {subTab === "apper" && <AppsTab />}

@@ -10,11 +10,11 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.utils.ConsultationBelongsToOtherPatientException
+import no.nav.helse.core.utils.ConsultationStatus
 import no.nav.helse.core.utils.DuplikatMaalingException
-import no.nav.helse.core.utils.KonsultasjonStatus
-import no.nav.helse.epj.konsultasjon.KonsultasjonId
-import no.nav.helse.epj.konsultasjon.KonsultasjonRepository
-import no.nav.helse.epj.konsultasjon.OpprettKonsultasjon
+import no.nav.helse.epj.consultation.ConsultationId
+import no.nav.helse.epj.consultation.ConsultationRepository
+import no.nav.helse.epj.consultation.CreateConsultation
 import no.nav.helse.epj.patient.Patient
 import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.epj.patient.PatientRepository
@@ -33,12 +33,12 @@ class MaalingRepositoryTest : WithPostgresql() {
 
     val maalingRepository = MaalingRepository()
     val patientRepository = PatientRepository()
-    val konsultasjonRepository = KonsultasjonRepository()
+    val consultationRepository = ConsultationRepository()
 
     @OptIn(ExperimentalUuidApi::class)
-    private suspend fun createPatientMedKonsultasjon(
+    private suspend fun createPatientWithConsultation(
         hpr: PractitionerHpr = PractitionerHpr("123")
-    ): Pair<PatientId, KonsultasjonId> {
+    ): Pair<PatientId, ConsultationId> {
         val patientId = PatientId(Uuid.generateV4())
         patientRepository.insert(
             Patient(
@@ -48,23 +48,23 @@ class MaalingRepositoryTest : WithPostgresql() {
                 personident = "personident-${patientId.value}",
             )
         )
-        val konsultasjonId =
-            konsultasjonRepository.insert(
-                OpprettKonsultasjon(
+        val consultationId =
+            consultationRepository.insert(
+                CreateConsultation(
                     patientId,
                     listOf(hpr),
                     LocalDateTime.now(),
-                    KonsultasjonStatus.PAAGAAENDE,
+                    ConsultationStatus.IN_PROGRESS,
                     orgNumber = DEFAULT_ORG_NUMBER,
                 )
             )
-        return patientId to konsultasjonId
+        return patientId to consultationId
     }
 
     @OptIn(ExperimentalUuidApi::class)
     private fun nyMaaling(
         patientId: PatientId,
-        konsultasjonId: KonsultasjonId,
+        consultationId: ConsultationId,
         id: MaalingId = MaalingId(Uuid.generateV4()),
         hpr: PractitionerHpr? = PractitionerHpr("123"),
         loincKode: String = "8310-5",
@@ -78,7 +78,7 @@ class MaalingRepositoryTest : WithPostgresql() {
         Maaling(
             id = id,
             patientId = patientId,
-            konsultasjonId = konsultasjonId,
+            consultationId = consultationId,
             hpr = hpr,
             loincKode = loincKode,
             loincVisningsnavn = loincVisningsnavn,
@@ -97,15 +97,15 @@ class MaalingRepositoryTest : WithPostgresql() {
 
     @Test
     fun `insert stores a complete round trip of a maaling`() = runTest {
-        val (patientId, konsultasjonId) = createPatientMedKonsultasjon()
-        val maaling = nyMaaling(patientId, konsultasjonId)
+        val (patientId, consultationId) = createPatientWithConsultation()
+        val maaling = nyMaaling(patientId, consultationId)
 
         maalingRepository.insert(maaling, DEFAULT_ORG_NUMBER)
         val funnet = maalingRepository.findById(maaling.id, DEFAULT_ORG_NUMBER)
 
         assertEquals(maaling.id, funnet?.id)
         assertEquals(maaling.patientId, funnet?.patientId)
-        assertEquals(maaling.konsultasjonId, funnet?.konsultasjonId)
+        assertEquals(maaling.consultationId, funnet?.consultationId)
         assertEquals(maaling.hpr, funnet?.hpr)
         assertEquals(maaling.loincKode, funnet?.loincKode)
         assertEquals(maaling.loincVisningsnavn, funnet?.loincVisningsnavn)
@@ -118,11 +118,11 @@ class MaalingRepositoryTest : WithPostgresql() {
 
     @Test
     fun `insert preserves decimal precision, unit, code and status values`() = runTest {
-        val (patientId, konsultasjonId) = createPatientMedKonsultasjon()
+        val (patientId, consultationId) = createPatientWithConsultation()
         val maaling =
             nyMaaling(
                 patientId,
-                konsultasjonId,
+                consultationId,
                 loincKode = "2339-0",
                 loincVisningsnavn = "Glucose",
                 verdi = BigDecimal("5.6789"),
@@ -143,8 +143,8 @@ class MaalingRepositoryTest : WithPostgresql() {
 
     @Test
     fun `insert without a performer stores a null hpr`() = runTest {
-        val (patientId, konsultasjonId) = createPatientMedKonsultasjon()
-        val maaling = nyMaaling(patientId, konsultasjonId, hpr = null)
+        val (patientId, consultationId) = createPatientWithConsultation()
+        val maaling = nyMaaling(patientId, consultationId, hpr = null)
 
         maalingRepository.insert(maaling, DEFAULT_ORG_NUMBER)
         val funnet = maalingRepository.findById(maaling.id, DEFAULT_ORG_NUMBER)
@@ -155,24 +155,24 @@ class MaalingRepositoryTest : WithPostgresql() {
     @Test
     fun `listByPatientId returns only maalinger for the correct patient ordered by effektivTidspunkt`() =
         runTest {
-            val (patientId, konsultasjonId) = createPatientMedKonsultasjon()
-            val (otherPatientId, annenKonsultasjonId) = createPatientMedKonsultasjon()
+            val (patientId, consultationId) = createPatientWithConsultation()
+            val (otherPatientId, otherConsultationId) = createPatientWithConsultation()
 
             val eldst =
                 nyMaaling(
                     patientId,
-                    konsultasjonId,
+                    consultationId,
                     effektivTidspunkt = LocalDateTime.now().minusDays(2),
                 )
             val nyest =
-                nyMaaling(patientId, konsultasjonId, effektivTidspunkt = LocalDateTime.now())
+                nyMaaling(patientId, consultationId, effektivTidspunkt = LocalDateTime.now())
             val mellom =
                 nyMaaling(
                     patientId,
-                    konsultasjonId,
+                    consultationId,
                     effektivTidspunkt = LocalDateTime.now().minusDays(1),
                 )
-            val otherPatientMaaling = nyMaaling(otherPatientId, annenKonsultasjonId)
+            val otherPatientMaaling = nyMaaling(otherPatientId, otherConsultationId)
 
             listOf(nyest, eldst, mellom, otherPatientMaaling).forEach {
                 maalingRepository.insert(it, DEFAULT_ORG_NUMBER)
@@ -184,16 +184,16 @@ class MaalingRepositoryTest : WithPostgresql() {
         }
 
     @Test
-    fun `listByKonsultasjonId returns only maalinger for the correct konsultasjon ordered by effektivTidspunkt`() =
+    fun `listByConsultationId returns only maalinger for the correct consultation ordered by effektivTidspunkt`() =
         runTest {
-            val (patientId, konsultasjonId) = createPatientMedKonsultasjon()
-            val annenKonsultasjonId =
-                konsultasjonRepository.insert(
-                    OpprettKonsultasjon(
+            val (patientId, consultationId) = createPatientWithConsultation()
+            val otherConsultationId =
+                consultationRepository.insert(
+                    CreateConsultation(
                         patientId,
                         emptyList(),
                         LocalDateTime.now(),
-                        KonsultasjonStatus.PAAGAAENDE,
+                        ConsultationStatus.IN_PROGRESS,
                         orgNumber = DEFAULT_ORG_NUMBER,
                     )
                 )
@@ -201,19 +201,19 @@ class MaalingRepositoryTest : WithPostgresql() {
             val eldst =
                 nyMaaling(
                     patientId,
-                    konsultasjonId,
+                    consultationId,
                     effektivTidspunkt = LocalDateTime.now().minusDays(1),
                 )
             val nyest =
-                nyMaaling(patientId, konsultasjonId, effektivTidspunkt = LocalDateTime.now())
-            val annenKonsultasjonMaaling = nyMaaling(patientId, annenKonsultasjonId)
+                nyMaaling(patientId, consultationId, effektivTidspunkt = LocalDateTime.now())
+            val otherConsultationMaaling = nyMaaling(patientId, otherConsultationId)
 
-            listOf(nyest, eldst, annenKonsultasjonMaaling).forEach {
+            listOf(nyest, eldst, otherConsultationMaaling).forEach {
                 maalingRepository.insert(it, DEFAULT_ORG_NUMBER)
             }
 
             val maalinger =
-                maalingRepository.listByKonsultasjonId(konsultasjonId, DEFAULT_ORG_NUMBER)
+                maalingRepository.listByConsultationId(consultationId, DEFAULT_ORG_NUMBER)
 
             assertEquals(listOf(eldst.id, nyest.id), maalinger.map { it.id })
         }
@@ -221,8 +221,8 @@ class MaalingRepositoryTest : WithPostgresql() {
     @Test
     fun `insert with the same id twice throws DuplikatMaalingException and leaves data unchanged`() =
         runTest {
-            val (patientId, konsultasjonId) = createPatientMedKonsultasjon()
-            val maaling = nyMaaling(patientId, konsultasjonId, loincKode = "8310-5")
+            val (patientId, consultationId) = createPatientWithConsultation()
+            val maaling = nyMaaling(patientId, consultationId, loincKode = "8310-5")
 
             maalingRepository.insert(maaling, DEFAULT_ORG_NUMBER)
 
@@ -235,10 +235,10 @@ class MaalingRepositoryTest : WithPostgresql() {
         }
 
     @Test
-    fun `insert rejects a maaling whose konsultasjon belongs to another patient`() = runTest {
-        val (_, konsultasjonId) = createPatientMedKonsultasjon()
-        val (otherPatientId, _) = createPatientMedKonsultasjon()
-        val maaling = nyMaaling(otherPatientId, konsultasjonId)
+    fun `insert rejects a maaling whose consultation belongs to another patient`() = runTest {
+        val (_, consultationId) = createPatientWithConsultation()
+        val (otherPatientId, _) = createPatientWithConsultation()
+        val maaling = nyMaaling(otherPatientId, consultationId)
 
         assertFailsWith<ConsultationBelongsToOtherPatientException> {
             maalingRepository.insert(maaling, DEFAULT_ORG_NUMBER)
@@ -250,25 +250,25 @@ class MaalingRepositoryTest : WithPostgresql() {
     @Test
     fun `maalinger recorded at one org are invisible at another`() = runTest {
         ensureOrg(OTHER_ORG_NUMBER)
-        val (patientId, konsultasjonId) = createPatientMedKonsultasjon()
-        val maaling = nyMaaling(patientId, konsultasjonId)
+        val (patientId, consultationId) = createPatientWithConsultation()
+        val maaling = nyMaaling(patientId, consultationId)
         maalingRepository.insert(maaling, DEFAULT_ORG_NUMBER)
 
         assertNull(maalingRepository.findById(maaling.id, OTHER_ORG_NUMBER))
         assertEquals(0, maalingRepository.listByPatientId(patientId, OTHER_ORG_NUMBER).size)
         assertEquals(
             0,
-            maalingRepository.listByKonsultasjonId(konsultasjonId, OTHER_ORG_NUMBER).size,
+            maalingRepository.listByConsultationId(consultationId, OTHER_ORG_NUMBER).size,
         )
         assertEquals(1, maalingRepository.listByPatientId(patientId, DEFAULT_ORG_NUMBER).size)
         assertEquals(maaling.id, maalingRepository.findById(maaling.id, null)?.id)
     }
 
     @Test
-    fun `insert rejects a maaling for a konsultasjon at another org`() = runTest {
+    fun `insert rejects a maaling for a consultation at another org`() = runTest {
         ensureOrg(OTHER_ORG_NUMBER)
-        val (patientId, konsultasjonId) = createPatientMedKonsultasjon()
-        val maaling = nyMaaling(patientId, konsultasjonId)
+        val (patientId, consultationId) = createPatientWithConsultation()
+        val maaling = nyMaaling(patientId, consultationId)
 
         assertTrue(runCatching { maalingRepository.insert(maaling, OTHER_ORG_NUMBER) }.isFailure)
         assertNull(maalingRepository.findById(maaling.id, null))

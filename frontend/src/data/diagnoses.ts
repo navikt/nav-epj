@@ -1,35 +1,35 @@
 
 
-export type NavEpjDiagnose = {
-    kode: string;
-    beskrivelse: string;
-    diagnosesystem: 'ICPC2' | 'ICD10'
+export type NavEpjDiagnosis = {
+    code: string;
+    description: string;
+    diagnosisSystem: 'ICPC2' | 'ICD10'
 }
 
-export const epjDiagnoser: NavEpjDiagnose[] = [
+export const epjDiagnoses: NavEpjDiagnosis[] = [
     {
-        kode: 'A01',
-        beskrivelse: 'Smerte generell/flere steder',
-        diagnosesystem: 'ICPC2'
+        code: 'A01',
+        description: 'Smerte generell/flere steder',
+        diagnosisSystem: 'ICPC2'
     },
     {
-        kode: 'A02',
-        beskrivelse: 'Frysninger',
-        diagnosesystem: 'ICPC2'
+        code: 'A02',
+        description: 'Frysninger',
+        diagnosisSystem: 'ICPC2'
     },
     {
-        kode: 'A03',
-        beskrivelse: 'Feber',
-        diagnosesystem: 'ICPC2'
+        code: 'A03',
+        description: 'Feber',
+        diagnosisSystem: 'ICPC2'
     },
     {
-        kode: 'B00.0',
-        beskrivelse: 'Eczema herpeticum',
-        diagnosesystem: 'ICD10',
+        code: 'B00.0',
+        description: 'Eczema herpeticum',
+        diagnosisSystem: 'ICD10',
     },
     {
-        kode: 'B03',
-        beskrivelse: 'Kopper',
-        diagnosesystem: 'ICD10'
+        code: 'B03',
+        description: 'Kopper',
+        diagnosisSystem: 'ICD10'
     }
 ]

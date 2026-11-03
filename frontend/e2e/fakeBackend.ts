@@ -63,7 +63,7 @@ export function fakeBackend({ withHistory = false, ongoing = true } = {}) {
       if (key === "GET /api/patient") return json(route, patients);
       if (key === "GET /api/apps") return json(route, [app, validator]);
       if (key === `GET /api/patient/${patientId}` && known) return json(route, known);
-      if (key === `GET /api/patients/${patientId}/konsultasjoner` && known) {
+      if (key === `GET /api/patients/${patientId}/consultations` && known) {
         return json(route, [
           ...(ongoing
             ? [
@@ -72,11 +72,11 @@ export function fakeBackend({ withHistory = false, ongoing = true } = {}) {
                   patientId: known.id,
                   hpr: ["9144889"],
                   journalnotat: [],
-                  diagnoser: [],
-                  startetTidspunkt: "2026-09-30T09:14:00",
-                  avsluttetTidspunkt: null,
-                  status: "PÅGÅENDE",
-                  problemstilling: null,
+                  diagnoses: [],
+                  startedAt: "2026-09-30T09:14:00",
+                  endedAt: null,
+                  status: "IN_PROGRESS",
+                  reasonForVisit: null,
                 },
               ]
             : []),
@@ -87,13 +87,13 @@ export function fakeBackend({ withHistory = false, ongoing = true } = {}) {
                   patientId: known.id,
                   hpr: ["9144889"],
                   journalnotat: [
-                    { id: "n1", konsultasjonId: `h-${known.id}`, patientId: known.id, journalnotat: "Kontroll, ingen funn." },
+                    { id: "n1", consultationId: `h-${known.id}`, patientId: known.id, journalnotat: "Kontroll, ingen funn." },
                   ],
-                  diagnoser: [{ code: "L87", system: "ICPC-2", text: "Hypertensjon" }],
-                  startetTidspunkt: "2026-08-12T09:40:00",
-                  avsluttetTidspunkt: "2026-08-12T10:05:00",
+                  diagnoses: [{ code: "L87", system: "ICPC-2", text: "Hypertensjon" }],
+                  startedAt: "2026-08-12T09:40:00",
+                  endedAt: "2026-08-12T10:05:00",
                   status: "AVSLUTTET",
-                  problemstilling: "Kontroll",
+                  reasonForVisit: "Kontroll",
                 },
               ]
             : []),

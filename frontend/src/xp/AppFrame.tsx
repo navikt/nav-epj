@@ -168,7 +168,7 @@ export function AppFrame({
       />
     );
   } else if (status === "starting") {
-    const time = formatTime(parseISO(run.konsultasjon.startetTidspunkt));
+    const time = formatTime(parseISO(run.consultation.startedAt));
     overlay = (
       <div className="xp-frame-over">
         <section className="xp-card" role="status">

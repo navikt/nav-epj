@@ -2,7 +2,7 @@ import { vi } from "vitest";
 import { useAppRunStore } from "./appRunStore";
 import { useAppsStore } from "./appsStore";
 import { useJournalStore } from "./journalStore";
-import type { App, Konsultasjon, Patient, PatientListItem } from "../utils/mapping/epj";
+import type { App, Consultation, Patient, PatientListItem } from "../utils/mapping/epj";
 
 export const sykInn: App = {
   clientId: "syk-inn",
@@ -51,26 +51,26 @@ export const kari: PatientListItem = {
   familyName: "Hansen",
 };
 
-export const ongoingKonsultasjon: Konsultasjon = {
+export const ongoingConsultation: Consultation = {
   id: "k1",
   patientId: "p1",
   hpr: ["9144889"],
   journalnotat: [],
-  diagnoser: [],
-  startetTidspunkt: "2026-09-30T09:14:00",
-  avsluttetTidspunkt: null,
-  status: "PÅGÅENDE",
-  problemstilling: null,
+  diagnoses: [],
+  startedAt: "2026-09-30T09:14:00",
+  endedAt: null,
+  status: "IN_PROGRESS",
+  reasonForVisit: null,
 };
 
 export function seedJournal(
   patient: Patient = ola,
-  konsultasjoner: Konsultasjon[] = [ongoingKonsultasjon],
+  consultations: Consultation[] = [ongoingConsultation],
 ) {
   useJournalStore.setState({
     patientId: patient.id,
     patient,
-    konsultasjoner,
+    consultations,
     status: "ready",
   });
 }
@@ -84,9 +84,9 @@ export function seedRun(patient: Patient = ola, app: App = sykInn) {
     clientId: app.clientId,
     navn: app.navn,
     patient,
-    konsultasjon: {
-      id: ongoingKonsultasjon.id,
-      startetTidspunkt: ongoingKonsultasjon.startetTidspunkt,
+    consultation: {
+      id: ongoingConsultation.id,
+      startedAt: ongoingConsultation.startedAt,
     },
     startedAt: new Date(2026, 8, 30, 9, 14),
   });

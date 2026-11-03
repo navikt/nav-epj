@@ -7,25 +7,25 @@ export type CurrentRoute =
   | {
       kind: "journal";
       patientId: string;
-      konsultasjonId?: string;
+      consultationId?: string;
       tab?: JournalSubTab;
     }
   | { kind: "other" };
 
-type RouteParams = { patientId?: string; konsultasjonId?: string };
+type RouteParams = { patientId?: string; consultationId?: string };
 
 export function useCurrentRoute(): CurrentRoute {
   return useRouterState({
     structuralSharing: true,
     select: (s): CurrentRoute => {
       const match = s.matches.at(-1);
-      const { patientId, konsultasjonId } = (match?.params as RouteParams) ?? {};
+      const { patientId, consultationId } = (match?.params as RouteParams) ?? {};
       if (
         patientId &&
         s.matches.some((m) => m.routeId === "/patients/$patientId")
       ) {
         const { tab } = match?.search as { tab?: JournalSubTab };
-        return { kind: "journal", patientId, konsultasjonId, tab };
+        return { kind: "journal", patientId, consultationId, tab };
       }
       if (match?.routeId === "/") return { kind: "start" };
       if (match?.routeId === "/patients/") return { kind: "patients" };

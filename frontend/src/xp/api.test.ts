@@ -6,7 +6,7 @@ import {
   ApiError,
   createPatient,
   fetchActivePatient,
-  fetchKonsultasjoner,
+  fetchConsultations,
   fetchPatient,
   fetchApps,
   fetchCapabilityStatement,
@@ -16,8 +16,8 @@ import {
   LaunchError,
   launchApp,
   putActivePatient,
-  saveKonsultasjon,
-  startKonsultasjon,
+  saveConsultation,
+  startConsultation,
 } from "./api";
 
 const patient = {
@@ -30,16 +30,16 @@ const patient = {
   gender: "MALE",
 };
 
-const konsultasjon = {
+const consultation = {
   id: "k1",
   patientId: "p1",
   hpr: ["123"],
   journalnotat: [],
-  diagnoser: [{ code: "A02", system: "ICPC2", text: "Frysninger" }],
-  startetTidspunkt: "2026-09-30T09:00:00",
-  avsluttetTidspunkt: null,
-  status: "PÅGÅENDE",
-  problemstilling: null,
+  diagnoses: [{ code: "A02", system: "ICPC2", text: "Frysninger" }],
+  startedAt: "2026-09-30T09:00:00",
+  endedAt: null,
+  status: "IN_PROGRESS",
+  reasonForVisit: null,
 };
 
 function stub(body: unknown, ok = true, status = 200) {
@@ -83,36 +83,36 @@ describe("api", () => {
     });
   });
 
-  it("lists konsultasjoner", async () => {
-    const fn = stub([konsultasjon]);
-    const result = await fetchKonsultasjoner("p1");
-    expect(result[0].diagnoser[0].code).toBe("A02");
-    expect(fn).toHaveBeenCalledWith("/api/patients/p1/konsultasjoner", undefined);
+  it("lists consultations", async () => {
+    const fn = stub([consultation]);
+    const result = await fetchConsultations("p1");
+    expect(result[0].diagnoses[0].code).toBe("A02");
+    expect(fn).toHaveBeenCalledWith("/api/patients/p1/consultations", undefined);
   });
 
-  it("starts a konsultasjon with POST", async () => {
-    const fn = stub(konsultasjon);
-    await startKonsultasjon("p1");
-    expect(fn).toHaveBeenCalledWith("/api/patients/p1/konsultasjoner", {
+  it("starts a consultation with POST", async () => {
+    const fn = stub(consultation);
+    await startConsultation("p1");
+    expect(fn).toHaveBeenCalledWith("/api/patients/p1/consultations", {
       method: "POST",
     });
   });
 
-  it("saves a konsultasjon with PATCH and sends null for an empty note", async () => {
+  it("saves a consultation with PATCH and sends null for an empty note", async () => {
     const fn = stub({});
-    await saveKonsultasjon("p1", {
-      konsultasjonId: "k1",
-      diagnoser: [{ kode: "A02", system: "ICPC2" }],
+    await saveConsultation("p1", {
+      consultationId: "k1",
+      diagnoses: [{ code: "A02", system: "ICPC2" }],
       journalNotat: null,
-      ferdigstill: false,
+      finalize: false,
     });
     const [, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
     expect(init.method).toBe("PATCH");
     expect(JSON.parse(init.body as string)).toEqual({
-      konsultasjonId: "k1",
-      diagnoser: [{ kode: "A02", system: "ICPC2" }],
+      consultationId: "k1",
+      diagnoses: [{ code: "A02", system: "ICPC2" }],
       journalNotat: null,
-      ferdigstill: false,
+      finalize: false,
     });
   });
 

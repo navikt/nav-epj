@@ -1,9 +1,9 @@
-package no.nav.helse.epj.konsultasjon
+package no.nav.helse.epj.consultation
 
 import java.time.LocalDateTime
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
-import no.nav.helse.core.utils.KonsultasjonStatus
+import no.nav.helse.core.utils.ConsultationStatus
 import no.nav.helse.epj.patient.Patient
 import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.epj.patient.PatientRepository
@@ -11,13 +11,13 @@ import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.utils.DEFAULT_ORG_NUMBER
 import no.nav.helse.utils.WithPostgresql
 
-abstract class KonsultasjonRepositoryTestBase : WithPostgresql() {
+abstract class ConsultationRepositoryTestBase : WithPostgresql() {
     init {
         runMigrations(true)
         connect()
     }
 
-    protected val konsultasjonRepository = KonsultasjonRepository()
+    protected val consultationRepository = ConsultationRepository()
     protected val patientRepository = PatientRepository()
 
     @OptIn(ExperimentalUuidApi::class)
@@ -36,13 +36,13 @@ abstract class KonsultasjonRepositoryTestBase : WithPostgresql() {
         return patientId
     }
 
-    protected suspend fun opprettKonsultasjon(patientId: PatientId): KonsultasjonId =
-        konsultasjonRepository.insert(
-            OpprettKonsultasjon(
+    protected suspend fun createConsultation(patientId: PatientId): ConsultationId =
+        consultationRepository.insert(
+            CreateConsultation(
                 patientId,
                 listOf(PractitionerHpr("123")),
                 LocalDateTime.now(),
-                KonsultasjonStatus.PAAGAAENDE,
+                ConsultationStatus.IN_PROGRESS,
                 orgNumber = DEFAULT_ORG_NUMBER,
             )
         )

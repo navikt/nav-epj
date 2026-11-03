@@ -1,20 +1,20 @@
 import { useId } from "react";
 import { Button } from "./Button";
-import { KonsultasjonSummary } from "./KonsultasjonSummary";
+import { ConsultationSummary } from "./ConsultationSummary";
 import { Note } from "./Note";
 import { copy } from "./copy";
 import { fullName } from "./patientInfo";
 import { useJournalStore } from "./journalStore";
 import { useShell } from "./shellContext";
-import type { Konsultasjon, Patient } from "../utils/mapping/epj";
+import type { Consultation, Patient } from "../utils/mapping/epj";
 
 type Props = {
   patient: Patient;
-  konsultasjon: Konsultasjon;
+  consultation: Consultation;
   canStart: boolean;
 };
 
-export function CompletedKonsultasjon({ patient, konsultasjon, canStart }: Props) {
+export function CompletedConsultation({ patient, consultation, canStart }: Props) {
   const headingId = useId();
   const starting = useJournalStore((s) => s.starting);
   const startFailed = useJournalStore((s) => s.startFailed);
@@ -24,20 +24,20 @@ export function CompletedKonsultasjon({ patient, konsultasjon, canStart }: Props
     if (starting) return;
     await useJournalStore.getState().start();
     if (!useJournalStore.getState().startFailed) {
-      announce(copy["live.konsStarted"](fullName(patient)));
+      announce(copy["live.consultationStarted"](fullName(patient)));
     }
   }
 
   return (
-    <KonsultasjonSummary
-      konsultasjon={konsultasjon}
+    <ConsultationSummary
+      consultation={consultation}
       heading={copy["s4.done.title"]}
       headingId={headingId}
     >
       <Note tone="info">{copy["s4.done.note"]}</Note>
       {startFailed && (
         <Note tone="error" role="alert">
-          {copy["s4.loadError.kons"]}
+          {copy["s4.loadError.consultation"]}
         </Note>
       )}
       {canStart && (
@@ -47,6 +47,6 @@ export function CompletedKonsultasjon({ patient, konsultasjon, canStart }: Props
           </Button>
         </div>
       )}
-    </KonsultasjonSummary>
+    </ConsultationSummary>
   );
 }

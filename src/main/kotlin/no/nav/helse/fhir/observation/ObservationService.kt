@@ -19,7 +19,7 @@ import kotlin.uuid.Uuid
 import kotlinx.datetime.UtcOffset
 import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
-import no.nav.helse.epj.konsultasjon.KonsultasjonId
+import no.nav.helse.epj.consultation.ConsultationId
 import no.nav.helse.epj.maaling.Maaling
 import no.nav.helse.epj.maaling.MaalingId
 import no.nav.helse.epj.maaling.MaalingService
@@ -62,7 +62,7 @@ class ObservationService(val maalingService: MaalingService) {
         val maalinger =
             maalingService
                 .getMaalingerForPatient(PatientId(patientId.value), orgNumber)
-                .filter { encounterId == null || it.konsultasjonId.value == encounterId.value }
+                .filter { encounterId == null || it.consultationId.value == encounterId.value }
                 .filter { code == null || it.loincKode == code }
 
         return Bundle(
@@ -103,7 +103,7 @@ class ObservationService(val maalingService: MaalingService) {
                 Reference(
                     reference =
                         com.google.fhir.model.r4.String(
-                            value = "Encounter/${this.konsultasjonId.value}"
+                            value = "Encounter/${this.consultationId.value}"
                         )
                 ),
             performer =
@@ -204,7 +204,7 @@ fun Observation.toOpprettMaalingRequest(): OpprettMaalingRequest {
             )
 
     val patientId = parseReferenceId(this.subject?.reference?.value, "Patient", "subject")
-    val konsultasjonId =
+    val consultationId =
         parseReferenceId(this.encounter?.reference?.value, "Encounter", "encounter")
     val hpr = parsePerformer(this.performer)
     val effektivTidspunkt = parseEffectiveDateTime(this.effective)
@@ -264,7 +264,7 @@ fun Observation.toOpprettMaalingRequest(): OpprettMaalingRequest {
 
     return OpprettMaalingRequest(
         patientId = PatientId(patientId),
-        konsultasjonId = KonsultasjonId(konsultasjonId),
+        consultationId = ConsultationId(consultationId),
         hpr = hpr,
         loincKode = loincKode,
         loincVisningsnavn = loincVisningsnavn,

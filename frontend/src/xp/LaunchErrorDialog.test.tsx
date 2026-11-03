@@ -126,7 +126,7 @@ describe("LaunchErrorDialog", () => {
     expect(navigate).toHaveBeenCalledWith({ to: "/patients" });
   });
 
-  it("NO_ACTIVE_ENCOUNTER starts a konsultasjon, hints with a balloon and opens the journal", async () => {
+  it("NO_ACTIVE_ENCOUNTER starts a consultation, hints with a balloon and opens the journal", async () => {
     const start = vi.fn().mockResolvedValue(undefined);
     useJournalStore.setState({ start });
     useWorkspaceStore.getState().openTab({ kind: "journal", label: "Journal" });

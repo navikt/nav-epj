@@ -12,12 +12,12 @@ const start: CurrentRoute = { kind: "start" };
 const patients: CurrentRoute = { kind: "patients" };
 const journal = (
   patientId: string,
-  konsultasjonId?: string,
+  consultationId?: string,
   tab?: JournalSubTab,
 ): CurrentRoute => ({
   kind: "journal",
   patientId,
-  konsultasjonId,
+  consultationId,
   tab,
 });
 
@@ -128,7 +128,7 @@ function stubJournalApi() {
       ok: true,
       status: 200,
       json: async () =>
-        url.endsWith("/konsultasjoner")
+        url.endsWith("/consultations")
           ? []
           : url === "/api/active-patient"
             ? { patientId: "p1", expiresAt: "2026-09-30T17:14:00Z" }
@@ -151,14 +151,14 @@ describe("useRouteTabSync journal routes", () => {
     vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify([{
       id: "k1",
       patientId: "p1",
-      status: "PÅGÅENDE",
-      startetTidspunkt: "2026-09-30T09:00:00",
-      avsluttetTidspunkt: null,
-      problemstilling: null,
+      status: "IN_PROGRESS",
+      startedAt: "2026-09-30T09:00:00",
+      endedAt: null,
+      reasonForVisit: null,
       hpr: ["9144889"],
-      diagnoser: [],
+      diagnoses: [],
       journalnotat: [{
-        id: "n1", konsultasjonId: "k1", patientId: "p1", journalnotat: "Fra SMART",
+        id: "n1", consultationId: "k1", patientId: "p1", journalnotat: "Fra SMART",
       }],
     }])));
     act(() => store().setCurrent("journal"));
@@ -176,10 +176,10 @@ describe("useRouteTabSync journal routes", () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
-  it("selects the konsultasjon from the route", async () => {
+  it("selects the consultation from the route", async () => {
     renderHook(() => useRouteTabSync(journal("p1", "k7"), vi.fn()));
     await waitFor(() => expect(useJournalStore.getState().status).toBe("ready"));
-    expect(useJournalStore.getState().selectedKonsultasjonId).toBe("k7");
+    expect(useJournalStore.getState().selectedConsultationId).toBe("k7");
   });
 
   it("keeps a single Journal tab across journal routes and leaves the list route to Pasienter", async () => {
@@ -193,10 +193,10 @@ describe("useRouteTabSync journal routes", () => {
     rerender({ route: journal("p1", "k2") });
     expect(store().current).toBe("journal");
     expect(store().tabs.filter((t) => t.kind === "journal")).toHaveLength(1);
-    expect(useJournalStore.getState().selectedKonsultasjonId).toBe("k2");
+    expect(useJournalStore.getState().selectedConsultationId).toBe("k2");
   });
 
-  it("navigates to the open journal, including its konsultasjon, when the Journal tab is activated", async () => {
+  it("navigates to the open journal, including its consultation, when the Journal tab is activated", async () => {
     const navigate = vi.fn();
     const { rerender } = renderHook(
       ({ route }) => useRouteTabSync(route, navigate),
@@ -207,12 +207,12 @@ describe("useRouteTabSync journal routes", () => {
     navigate.mockClear();
     act(() => store().setCurrent("journal"));
     expect(navigate).toHaveBeenCalledExactlyOnceWith({
-      to: "/patients/$patientId/konsultasjon/$konsultasjonId",
-      params: { patientId: "p1", konsultasjonId: "k2" },
+      to: "/patients/$patientId/consultations/$consultationId",
+      params: { patientId: "p1", consultationId: "k2" },
     });
   });
 
-  it("navigates to the plain journal route when no konsultasjon is selected", async () => {
+  it("navigates to the plain journal route when no consultation is selected", async () => {
     const navigate = vi.fn();
     const { rerender } = renderHook(
       ({ route }) => useRouteTabSync(route, navigate),
@@ -238,9 +238,9 @@ describe("useRouteTabSync journal routes", () => {
   });
 
   it("shows the sub-tab named by the route", async () => {
-    renderHook(() => useRouteTabSync(journal("p1", undefined, "tidligere"), vi.fn()));
+    renderHook(() => useRouteTabSync(journal("p1", undefined, "previous"), vi.fn()));
     await waitFor(() => expect(useJournalStore.getState().status).toBe("ready"));
-    expect(useJournalStore.getState().subTab).toBe("tidligere");
+    expect(useJournalStore.getState().subTab).toBe("previous");
   });
 
   it("retries a failed journal load when the URL changes sub-tab", async () => {
@@ -251,31 +251,31 @@ describe("useRouteTabSync journal routes", () => {
     );
     await waitFor(() => expect(useJournalStore.getState().status).toBe("error"));
     stubJournalApi();
-    rerender({ route: journal("p1", undefined, "tidligere") });
+    rerender({ route: journal("p1", undefined, "previous") });
     await waitFor(() => expect(useJournalStore.getState().status).toBe("ready"));
     expect(useJournalStore.getState().patient?.id).toBe("p1");
-    expect(useJournalStore.getState().subTab).toBe("tidligere");
+    expect(useJournalStore.getState().subTab).toBe("previous");
   });
 
-  it("shows Konsultasjon when the route names no sub-tab or a konsultasjon", async () => {
+  it("shows Konsultasjon when the route names no sub-tab or a consultation", async () => {
     const { rerender } = renderHook(
       ({ route }) => useRouteTabSync(route, vi.fn()),
       { initialProps: { route: journal("p1", undefined, "apper") as CurrentRoute } },
     );
     await waitFor(() => expect(useJournalStore.getState().status).toBe("ready"));
     rerender({ route: journal("p1") });
-    expect(useJournalStore.getState().subTab).toBe("konsultasjon");
+    expect(useJournalStore.getState().subTab).toBe("consultation");
     rerender({ route: journal("p1", undefined, "apper") });
     expect(useJournalStore.getState().subTab).toBe("apper");
     rerender({ route: journal("p1", "k2", "apper") });
-    expect(useJournalStore.getState().subTab).toBe("konsultasjon");
+    expect(useJournalStore.getState().subTab).toBe("consultation");
   });
 
   it("keeps the sub-tab of the route when another patient is opened", async () => {
     const navigate = vi.fn();
     const { rerender } = renderHook(
       ({ route }) => useRouteTabSync(route, navigate),
-      { initialProps: { route: journal("p1", undefined, "tidligere") as CurrentRoute } },
+      { initialProps: { route: journal("p1", undefined, "previous") as CurrentRoute } },
     );
     await waitFor(() => expect(useJournalStore.getState().status).toBe("ready"));
     rerender({ route: journal("p2", undefined, "apper") });
@@ -301,7 +301,7 @@ describe("useRouteTabSync journal routes", () => {
     const navigate = vi.fn();
     renderHook(() => useRouteTabSync(journal("p1", undefined, "apper"), navigate));
     await waitFor(() => expect(useJournalStore.getState().status).toBe("ready"));
-    act(() => useJournalStore.getState().setSubTab("konsultasjon"));
+    act(() => useJournalStore.getState().setSubTab("consultation"));
     expect(navigate).toHaveBeenCalledExactlyOnceWith({
       to: "/patients/$patientId",
       params: { patientId: "p1" },

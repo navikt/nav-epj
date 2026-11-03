@@ -11,14 +11,14 @@ const tab = (kind: Tab["kind"]): Tab =>
 afterEach(() => useJournalStore.getState().clear());
 
 describe("journalRoute", () => {
-  it("builds the plain and the konsultasjon variant", () => {
+  it("builds the plain and the consultation variant", () => {
     expect(journalRoute("p1")).toEqual({
       to: "/patients/$patientId",
       params: { patientId: "p1" },
     });
     expect(journalRoute("p1", "k1")).toEqual({
-      to: "/patients/$patientId/konsultasjon/$konsultasjonId",
-      params: { patientId: "p1", konsultasjonId: "k1" },
+      to: "/patients/$patientId/consultations/$consultationId",
+      params: { patientId: "p1", consultationId: "k1" },
     });
     expect(journalRoute("p1", null)).toEqual(journalRoute("p1"));
   });
@@ -29,14 +29,14 @@ describe("journalRoute", () => {
       params: { patientId: "p1" },
       search: { tab: "apper" },
     });
-    expect(journalRoute("p1", null, "konsultasjon")).toEqual(journalRoute("p1"));
+    expect(journalRoute("p1", null, "consultation")).toEqual(journalRoute("p1"));
   });
 
-  it("drops the konsultasjon when another sub-tab is chosen", () => {
-    expect(journalRoute("p1", "k1", "tidligere")).toEqual({
+  it("drops the consultation when another sub-tab is chosen", () => {
+    expect(journalRoute("p1", "k1", "previous")).toEqual({
       to: "/patients/$patientId",
       params: { patientId: "p1" },
-      search: { tab: "tidligere" },
+      search: { tab: "previous" },
     });
   });
 });
@@ -47,9 +47,9 @@ describe("routeForTab", () => {
     expect(routeForTab(tab("patients"))).toEqual({ to: "/patients" });
   });
 
-  it("maps the journal tab to the open patient and selected konsultasjon", () => {
+  it("maps the journal tab to the open patient and selected consultation", () => {
     expect(routeForTab(tab("journal"))).toBeNull();
-    useJournalStore.setState({ patientId: "p1", selectedKonsultasjonId: "k2" });
+    useJournalStore.setState({ patientId: "p1", selectedConsultationId: "k2" });
     expect(routeForTab(tab("journal"))).toEqual(journalRoute("p1", "k2"));
     expect(currentJournalRoute()).toEqual(journalRoute("p1", "k2"));
   });

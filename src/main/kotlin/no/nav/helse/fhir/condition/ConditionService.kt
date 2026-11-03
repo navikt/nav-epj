@@ -9,26 +9,26 @@ import com.google.fhir.model.r4.Enumeration
 import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.Uri
 import no.nav.helse.core.utils.oid
-import no.nav.helse.epj.konsultasjon.Konsultasjon
-import no.nav.helse.epj.konsultasjon.KonsultasjonId
-import no.nav.helse.epj.konsultasjon.KonsultasjonService
+import no.nav.helse.epj.consultation.Consultation
+import no.nav.helse.epj.consultation.ConsultationId
+import no.nav.helse.epj.consultation.ConsultationService
 import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
 import no.nav.tsm.diagnoser.Diagnose
 
-class ConditionService(val konsultasjonService: KonsultasjonService) {
+class ConditionService(val consultationService: ConsultationService) {
 
     suspend fun getConditionsByPatientId(patientId: PatientInputId, orgNumber: String?): Bundle {
-        val konsultasjoner =
-            konsultasjonService.getKonsultasjoner(PatientId(patientId.value), orgNumber)
-        return toBundle(konsultasjoner)
+        val consultations =
+            consultationService.getConsultations(PatientId(patientId.value), orgNumber)
+        return toBundle(consultations)
     }
 
     suspend fun getConditionsByEncounterId(encounterId: EncounterId, orgNumber: String?): Bundle {
-        val konsultasjon =
-            konsultasjonService.getKonsultasjon(KonsultasjonId(encounterId.value), orgNumber)
-        return toBundle(listOf(konsultasjon))
+        val consultation =
+            consultationService.getConsultation(ConsultationId(encounterId.value), orgNumber)
+        return toBundle(listOf(consultation))
     }
 
     suspend fun getConditionsByPatientIdAndEncounterId(
@@ -36,15 +36,15 @@ class ConditionService(val konsultasjonService: KonsultasjonService) {
         encounterId: EncounterId,
         orgNumber: String?,
     ): Bundle {
-        val konsultasjoner =
-            konsultasjonService.getKonsultasjoner(PatientId(patientId.value), orgNumber).filter {
+        val consultations =
+            consultationService.getConsultations(PatientId(patientId.value), orgNumber).filter {
                 it.id.value == encounterId.value
             }
-        return toBundle(konsultasjoner)
+        return toBundle(consultations)
     }
 
-    private fun toBundle(konsultasjoner: List<Konsultasjon>): Bundle {
-        val conditions = konsultasjoner.flatMap { it.toConditions() }
+    private fun toBundle(consultations: List<Consultation>): Bundle {
+        val conditions = consultations.flatMap { it.toConditions() }
         return Bundle(
             type = Enumeration(value = Bundle.BundleType.Searchset),
             entry =
@@ -57,14 +57,14 @@ class ConditionService(val konsultasjonService: KonsultasjonService) {
         )
     }
 
-    private fun Konsultasjon.toConditions(): List<Condition> = diagnoser.map { diagnose ->
-        toCondition(diagnose)
+    private fun Consultation.toConditions(): List<Condition> = diagnoses.map { diagnosis ->
+        toCondition(diagnosis)
     }
 
-    private fun Konsultasjon.toCondition(diagnose: Diagnose): Condition {
-        val oid = "urn:oid:" + diagnose.system.oid()
+    private fun Consultation.toCondition(diagnosis: Diagnose): Condition {
+        val oid = "urn:oid:" + diagnosis.system.oid()
         return Condition(
-            id = conditionFhirId(id, diagnose),
+            id = conditionFhirId(id, diagnosis),
             subject =
                 Reference(
                     reference =
@@ -80,8 +80,8 @@ class ConditionService(val konsultasjonService: KonsultasjonService) {
                         listOf(
                             Coding(
                                 system = Uri(value = oid),
-                                code = Code(value = diagnose.code),
-                                display = com.google.fhir.model.r4.String(value = diagnose.text),
+                                code = Code(value = diagnosis.code),
+                                display = com.google.fhir.model.r4.String(value = diagnosis.text),
                             )
                         )
                 ),

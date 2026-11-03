@@ -75,7 +75,7 @@ describe("StatusBar", () => {
     await expectNoSeriousViolations(container);
   });
 
-  it("shows the active patient and the ongoing konsultasjon time, and opens the journal", async () => {
+  it("shows the active patient and the ongoing consultation time, and opens the journal", async () => {
     vi.useRealTimers();
     useJournalStore.setState({
       patientId: "p1",
@@ -88,17 +88,17 @@ describe("StatusBar", () => {
         birthDate: "1990-01-01",
         gender: "MALE" as const,
       },
-      konsultasjoner: [
+      consultations: [
         {
           id: "k1",
           patientId: "p1",
           hpr: [],
           journalnotat: [],
-          diagnoser: [],
-          startetTidspunkt: new Date(Date.now() - 12 * 60_000).toISOString(),
-          avsluttetTidspunkt: null,
-          status: "PÅGÅENDE",
-          problemstilling: null,
+          diagnoses: [],
+          startedAt: new Date(Date.now() - 12 * 60_000).toISOString(),
+          endedAt: null,
+          status: "IN_PROGRESS",
+          reasonForVisit: null,
         },
       ],
     });

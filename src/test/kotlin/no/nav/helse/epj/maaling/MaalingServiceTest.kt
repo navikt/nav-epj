@@ -10,7 +10,7 @@ import kotlin.test.assertEquals
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
-import no.nav.helse.epj.konsultasjon.KonsultasjonId
+import no.nav.helse.epj.consultation.ConsultationId
 import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.utils.DEFAULT_ORG_NUMBER
@@ -23,11 +23,11 @@ class MaalingServiceTest {
     @OptIn(ExperimentalUuidApi::class)
     private fun request(
         patientId: PatientId = PatientId(Uuid.generateV4()),
-        konsultasjonId: KonsultasjonId = KonsultasjonId(Uuid.generateV4()),
+        consultationId: ConsultationId = ConsultationId(Uuid.generateV4()),
     ) =
         OpprettMaalingRequest(
             patientId = patientId,
-            konsultasjonId = konsultasjonId,
+            consultationId = consultationId,
             hpr = PractitionerHpr("123"),
             loincKode = "8310-5",
             loincVisningsnavn = "Body temperature",
@@ -48,7 +48,7 @@ class MaalingServiceTest {
         val opprettet = service.opprettMaaling(opprettRequest, DEFAULT_ORG_NUMBER)
 
         assertEquals(opprettRequest.patientId, opprettet.patientId)
-        assertEquals(opprettRequest.konsultasjonId, opprettet.konsultasjonId)
+        assertEquals(opprettRequest.consultationId, opprettet.consultationId)
         assertEquals(opprettRequest.loincKode, opprettet.loincKode)
         assertEquals(opprettRequest.verdi, opprettet.verdi)
         assertEquals(opprettet, inserted.captured)
@@ -64,7 +64,7 @@ class MaalingServiceTest {
             Maaling(
                 id = id,
                 patientId = opprettRequest.patientId,
-                konsultasjonId = opprettRequest.konsultasjonId,
+                consultationId = opprettRequest.consultationId,
                 hpr = opprettRequest.hpr,
                 loincKode = opprettRequest.loincKode,
                 loincVisningsnavn = opprettRequest.loincVisningsnavn,
@@ -90,7 +90,7 @@ class MaalingServiceTest {
             Maaling(
                 id = MaalingId(Uuid.generateV4()),
                 patientId = patientId,
-                konsultasjonId = opprettRequest.konsultasjonId,
+                consultationId = opprettRequest.consultationId,
                 hpr = opprettRequest.hpr,
                 loincKode = opprettRequest.loincKode,
                 loincVisningsnavn = opprettRequest.loincVisningsnavn,
@@ -110,14 +110,14 @@ class MaalingServiceTest {
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `getMaalingerForKonsultasjon returns maalinger from the repository`() = runTest {
-        val konsultasjonId = KonsultasjonId(Uuid.generateV4())
-        val opprettRequest = request(konsultasjonId = konsultasjonId)
+    fun `getMaalingerForConsultation returns maalinger from the repository`() = runTest {
+        val consultationId = ConsultationId(Uuid.generateV4())
+        val opprettRequest = request(consultationId = consultationId)
         val maaling =
             Maaling(
                 id = MaalingId(Uuid.generateV4()),
                 patientId = opprettRequest.patientId,
-                konsultasjonId = konsultasjonId,
+                consultationId = consultationId,
                 hpr = opprettRequest.hpr,
                 loincKode = opprettRequest.loincKode,
                 loincVisningsnavn = opprettRequest.loincVisningsnavn,
@@ -127,10 +127,10 @@ class MaalingServiceTest {
                 effektivTidspunkt = opprettRequest.effektivTidspunkt,
                 status = opprettRequest.status,
             )
-        coEvery { repository.listByKonsultasjonId(konsultasjonId, DEFAULT_ORG_NUMBER) } returns
+        coEvery { repository.listByConsultationId(consultationId, DEFAULT_ORG_NUMBER) } returns
             listOf(maaling)
 
-        val resultat = service.getMaalingerForKonsultasjon(konsultasjonId, DEFAULT_ORG_NUMBER)
+        val resultat = service.getMaalingerForConsultation(consultationId, DEFAULT_ORG_NUMBER)
 
         assertEquals(listOf(maaling), resultat)
     }

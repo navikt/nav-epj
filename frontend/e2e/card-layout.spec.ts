@@ -53,7 +53,7 @@ for (const width of [1280, 800]) {
     await expect(panel.getByText("Start en konsultasjon først.")).toBeVisible();
     expect(await gaps(panel)).toEqual([16]);
 
-    await page.goto("/patients/p1?tab=tidligere");
+    await page.goto("/patients/p1?tab=previous");
     await expect(panel.getByRole("table")).toBeVisible();
     expect(await gaps(panel)).toEqual([16]);
   });

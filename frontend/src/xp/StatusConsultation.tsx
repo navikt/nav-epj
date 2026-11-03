@@ -2,13 +2,13 @@ import { copy } from "./copy";
 import { minutesSince } from "./patientInfo";
 import { useNow } from "./useNow";
 
-type Props = { startetTidspunkt: string };
+type Props = { startedAt: string };
 
-export function StatusKons({ startetTidspunkt }: Props) {
+export function StatusConsultation({ startedAt }: Props) {
   const now = useNow();
   return (
     <span className="seg">
-      {copy["status.kons"](minutesSince(startetTidspunkt, now))}
+      {copy["status.consultation"](minutesSince(startedAt, now))}
     </span>
   );
 }
