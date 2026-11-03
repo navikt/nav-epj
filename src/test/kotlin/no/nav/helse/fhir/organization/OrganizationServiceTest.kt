@@ -7,9 +7,9 @@ import kotlin.test.assertTrue
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
-import no.nav.helse.epj.clinic.Clinic
-import no.nav.helse.epj.clinic.ClinicId
-import no.nav.helse.epj.clinic.ClinicService
+import no.nav.helse.ehr.clinic.Clinic
+import no.nav.helse.ehr.clinic.ClinicId
+import no.nav.helse.ehr.clinic.ClinicService
 import no.nav.helse.utils.DEFAULT_ORG_NUMBER
 import org.junit.Test
 

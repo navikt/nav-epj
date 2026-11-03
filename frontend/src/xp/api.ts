@@ -24,7 +24,7 @@ import {
   type Session,
   type SessionOrg,
   type SmartConfiguration,
-} from "../utils/mapping/epj";
+} from "../utils/mapping/ehr";
 
 export class ApiError extends Error {
   readonly status: number;

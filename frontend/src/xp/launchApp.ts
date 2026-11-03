@@ -11,7 +11,7 @@ import { useLaunchModeStore, type LaunchChoice } from "./launchModeStore";
 import { fullName } from "./patientInfo";
 import { createSession } from "./session";
 import { useWorkspaceStore } from "./workspaceStore";
-import type { App, Consultation, Patient } from "../utils/mapping/epj";
+import type { App, Consultation, Patient } from "../utils/mapping/ehr";
 
 type LaunchContext = {
   patient: Patient;

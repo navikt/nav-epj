@@ -67,9 +67,9 @@ describe("workspaceStore", () => {
   });
 
   it("does not duplicate singleton tabs such as Kontrollpanel", () => {
-    state().openTab({ kind: "kontrollpanel", label: "Kontrollpanel" });
-    state().openTab({ kind: "kontrollpanel", label: "Kontrollpanel" });
-    expect(state().tabs.filter((t) => t.kind === "kontrollpanel")).toHaveLength(1);
+    state().openTab({ kind: "control-panel", label: "Kontrollpanel" });
+    state().openTab({ kind: "control-panel", label: "Kontrollpanel" });
+    expect(state().tabs.filter((t) => t.kind === "control-panel")).toHaveLength(1);
   });
 
   it("selects the tab to the left when the current tab is closed", () => {
@@ -95,7 +95,7 @@ describe("workspaceStore", () => {
 
   it("does not close tabs opened as not closable", () => {
     const id = state().openTab({
-      kind: "hjelp",
+      kind: "help",
       label: "Hjelp",
       closable: false,
     });

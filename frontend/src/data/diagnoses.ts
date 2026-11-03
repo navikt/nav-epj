@@ -1,12 +1,12 @@
 
 
-export type NavEpjDiagnosis = {
+export type NavEhrDiagnosis = {
     code: string;
     description: string;
     diagnosisSystem: 'ICPC2' | 'ICD10'
 }
 
-export const epjDiagnoses: NavEpjDiagnosis[] = [
+export const ehrDiagnoses: NavEhrDiagnosis[] = [
     {
         code: 'A01',
         description: 'Smerte generell/flere steder',

@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { broadcastActivePatient } from "./activePatientChannel";
 import { fetchActivePatient, putActivePatient } from "./api";
 import { createSession } from "./session";
-import type { ActivePatient } from "../utils/mapping/epj";
+import type { ActivePatient } from "../utils/mapping/ehr";
 
 type ActivePatientState = {
   activeId: string | null;

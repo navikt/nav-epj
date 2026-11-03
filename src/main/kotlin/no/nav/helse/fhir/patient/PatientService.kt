@@ -15,11 +15,11 @@ import io.ktor.server.plugins.BadRequestException
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.helse.core.utils.logger
-import no.nav.helse.epj.patient.AdministrativeGender
-import no.nav.helse.epj.patient.Patient
-import no.nav.helse.epj.patient.PatientId
-import no.nav.helse.epj.patient.PatientService as EpjPatientService
-import no.nav.helse.epj.patient.PersonidentType
+import no.nav.helse.ehr.patient.AdministrativeGender
+import no.nav.helse.ehr.patient.Patient
+import no.nav.helse.ehr.patient.PatientId
+import no.nav.helse.ehr.patient.PatientService as EhrPatientService
+import no.nav.helse.ehr.patient.PersonidentType
 
 // Norwegian national identifier series
 // (ehelse.no/oid-identifikatorserier-i-helse-og-omsorgstjenesten),
@@ -42,7 +42,7 @@ fun parsePatientIdentifierSearch(token: String): PatientIdentifierSearch {
     return PatientIdentifierSearch(system, value)
 }
 
-class PatientService(val epjPatientService: EpjPatientService) {
+class PatientService(val ehrPatientService: EhrPatientService) {
 
     val log = logger()
 
@@ -50,12 +50,12 @@ class PatientService(val epjPatientService: EpjPatientService) {
     suspend fun getPatient(patientInputId: PatientInputId): FhirPatient? {
         val span = Span.current()
         span.setAttribute("patientId", patientInputId.value.toString())
-        val epjPatient = epjPatientService.getPatientById(PatientId(patientInputId.value))
-        return epjPatient?.toPatient()
+        val ehrPatient = ehrPatientService.getPatientById(PatientId(patientInputId.value))
+        return ehrPatient?.toPatient()
     }
 
     suspend fun findByIdentifier(search: PatientIdentifierSearch): FhirPatient? {
-        val patient = epjPatientService.getPatientByPersonident(search.value) ?: return null
+        val patient = ehrPatientService.getPatientByPersonident(search.value) ?: return null
         if (
             search.system != null && search.system != patient.personidentType.toIdentifierSystem()
         ) {

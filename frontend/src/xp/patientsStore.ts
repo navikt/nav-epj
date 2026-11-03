@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { fetchPatients } from "./api";
-import type { PatientListItem } from "../utils/mapping/epj";
+import type { PatientListItem } from "../utils/mapping/ehr";
 
 export const PAGE_SIZE = 25;
 const LEGACY_RECENT_KEY = "nav-epj:recent";

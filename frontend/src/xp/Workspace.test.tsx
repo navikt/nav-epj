@@ -49,8 +49,8 @@ describe("Workspace", () => {
 
   describe("system tabs", () => {
     it.each([
-      ["kontrollpanel", copy["s9.title"]],
-      ["hjelp", copy["s13.title"]],
+      ["control-panel", copy["s9.title"]],
+      ["help", copy["s13.title"]],
     ] as const)(
       "shows the %s page instead of the routed page",
       (kind, heading) => {
@@ -81,7 +81,7 @@ describe("Workspace", () => {
       act(() => {
         useWorkspaceStore
           .getState()
-          .openTab({ kind: "hjelp", label: copy["s13.title"] });
+          .openTab({ kind: "help", label: copy["s13.title"] });
       });
       act(() => useWorkspaceStore.getState().setCurrent("start"));
       expect(screen.getByText("Sideinnhold")).toBeVisible();
@@ -111,7 +111,7 @@ describe("Workspace", () => {
       act(() => {
         useWorkspaceStore
           .getState()
-          .openTab({ kind: "hjelp", label: copy["s13.title"] });
+          .openTab({ kind: "help", label: copy["s13.title"] });
       });
       expect(active).toEqual([true, false]);
       expect(screen.getByText("Sideinnhold")).toBeInTheDocument();
@@ -129,9 +129,9 @@ describe("Workspace", () => {
       act(() => {
         useWorkspaceStore
           .getState()
-          .openTab({ kind: "hjelp", label: copy["s13.title"] });
+          .openTab({ kind: "help", label: copy["s13.title"] });
       });
-      act(() => useWorkspaceStore.getState().closeTab("hjelp"));
+      act(() => useWorkspaceStore.getState().closeTab("help"));
       expect(screen.getByText("Sideinnhold")).toBeVisible();
       expect(screen.queryByText(copy["s13.test.body"])).not.toBeInTheDocument();
     });

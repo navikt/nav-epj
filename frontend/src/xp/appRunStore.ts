@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Consultation, Patient } from "../utils/mapping/epj";
+import type { Consultation, Patient } from "../utils/mapping/ehr";
 
 export type RunStatus = "starting" | "running" | "timeout" | "error" | "session";
 

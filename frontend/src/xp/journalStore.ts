@@ -13,7 +13,7 @@ import { fullName } from "./patientInfo";
 import { usePatientsStore } from "./patientsStore";
 import { createSession } from "./session";
 import { useWorkspaceStore } from "./workspaceStore";
-import type { Consultation, Patient } from "../utils/mapping/epj";
+import type { Consultation, Patient } from "../utils/mapping/ehr";
 
 export type DiagnosisItem = Consultation["diagnoses"][number];
 export const JOURNAL_SUB_TABS = ["consultation", "previous", "measurements", "apper"] as const;

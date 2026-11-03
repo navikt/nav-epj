@@ -5,7 +5,7 @@ import { Note } from "./Note";
 import { copy } from "./copy";
 import { fetchMeasurements } from "./api";
 import { formatUtcDateTimeInOslo } from "./patientInfo";
-import type { Measurement } from "../utils/mapping/epj";
+import type { Measurement } from "../utils/mapping/ehr";
 
 type Result =
   | { key: string; measurements: Measurement[] }

@@ -2,7 +2,7 @@ import { vi } from "vitest";
 import { useAppRunStore } from "./appRunStore";
 import { useAppsStore } from "./appsStore";
 import { useJournalStore } from "./journalStore";
-import type { App, Consultation, Patient, PatientListItem } from "../utils/mapping/epj";
+import type { App, Consultation, Patient, PatientListItem } from "../utils/mapping/ehr";
 
 export const sykInn: App = {
   clientId: "syk-inn",
@@ -26,7 +26,7 @@ export const validator: App = {
   launchMode: "ask",
 };
 
-export const nyFane: App = {
+export const newTab: App = {
   ...sykInn,
   clientId: "ny-fane",
   navn: "Fanen",

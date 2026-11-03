@@ -6,7 +6,7 @@ import { useJournalStore } from "./journalStore";
 import { useLaunchModeStore, type LaunchChoice } from "./launchModeStore";
 import { fullName } from "./patientInfo";
 import { useStartApp } from "./useStartApp";
-import type { App } from "../utils/mapping/epj";
+import type { App } from "../utils/mapping/ehr";
 
 type Props = {
   app: App;

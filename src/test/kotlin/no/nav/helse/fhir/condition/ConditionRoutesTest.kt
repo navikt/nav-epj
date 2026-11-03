@@ -19,11 +19,11 @@ import kotlin.test.assertTrue
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.ConsultationStatus
-import no.nav.helse.epj.clinic.ClinicId
-import no.nav.helse.epj.consultation.Consultation
-import no.nav.helse.epj.consultation.ConsultationId
-import no.nav.helse.epj.consultation.ConsultationService
-import no.nav.helse.epj.patient.PatientId
+import no.nav.helse.ehr.clinic.ClinicId
+import no.nav.helse.ehr.consultation.Consultation
+import no.nav.helse.ehr.consultation.ConsultationId
+import no.nav.helse.ehr.consultation.ConsultationService
+import no.nav.helse.ehr.patient.PatientId
 import no.nav.helse.plugins.configureStatusPages
 import no.nav.helse.smart.security.Interaction
 import no.nav.helse.smart.security.ScopeContext

@@ -2,7 +2,7 @@ import { CompletedConsultation } from "./CompletedConsultation";
 import { NoConsultation } from "./NoConsultation";
 import { OngoingConsultation } from "./OngoingConsultation";
 import { ongoingOf, useJournalStore } from "./journalStore";
-import type { Patient } from "../utils/mapping/epj";
+import type { Patient } from "../utils/mapping/ehr";
 
 type Props = { patient: Patient };
 

@@ -13,7 +13,7 @@ import {
   maskPersonident,
   personidentTail,
 } from "./patientInfo";
-import type { Patient } from "../utils/mapping/epj";
+import type { Patient } from "../utils/mapping/ehr";
 
 const patient: Patient = {
   id: "1",

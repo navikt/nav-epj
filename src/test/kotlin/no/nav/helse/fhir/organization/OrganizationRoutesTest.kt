@@ -12,9 +12,9 @@ import kotlin.test.assertEquals
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.ClinicNotFoundException
-import no.nav.helse.epj.clinic.Clinic
-import no.nav.helse.epj.clinic.ClinicId
-import no.nav.helse.epj.clinic.ClinicService
+import no.nav.helse.ehr.clinic.Clinic
+import no.nav.helse.ehr.clinic.ClinicId
+import no.nav.helse.ehr.clinic.ClinicService
 import no.nav.helse.plugins.configureStatusPages
 import no.nav.helse.smart.security.SmartPrincipal
 import no.nav.helse.smart.security.SmartScope

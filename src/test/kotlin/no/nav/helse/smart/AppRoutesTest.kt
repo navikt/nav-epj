@@ -20,21 +20,21 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
+import no.nav.helse.core.EhrConfig
 import no.nav.helse.core.Environment
-import no.nav.helse.core.EpjConfig
 import no.nav.helse.core.SmartConfig
 import no.nav.helse.core.ValkeyConfig
 import no.nav.helse.core.utils.ConsultationStatus
-import no.nav.helse.epj.clinic.Clinic
-import no.nav.helse.epj.clinic.ClinicId
-import no.nav.helse.epj.consultation.Consultation
-import no.nav.helse.epj.consultation.ConsultationId
-import no.nav.helse.epj.consultation.ConsultationService
-import no.nav.helse.epj.patient.PatientId
-import no.nav.helse.epj.patient.PatientService as EpjPatientService
-import no.nav.helse.epj.practitioner.PractitionerHpr
-import no.nav.helse.epj.sessionorg.SessionOrgResolution
-import no.nav.helse.epj.sessionorg.SessionOrgResolver
+import no.nav.helse.ehr.clinic.Clinic
+import no.nav.helse.ehr.clinic.ClinicId
+import no.nav.helse.ehr.consultation.Consultation
+import no.nav.helse.ehr.consultation.ConsultationId
+import no.nav.helse.ehr.consultation.ConsultationService
+import no.nav.helse.ehr.patient.PatientId
+import no.nav.helse.ehr.patient.PatientService as EhrPatientService
+import no.nav.helse.ehr.practitioner.PractitionerHpr
+import no.nav.helse.ehr.sessionorg.SessionOrgResolution
+import no.nav.helse.ehr.sessionorg.SessionOrgResolver
 import no.nav.helse.fhir.encounter.EncounterService
 import no.nav.helse.fhir.patient.PatientInputId
 import no.nav.helse.fhir.patient.PatientService
@@ -97,8 +97,8 @@ class AppRoutesTest : WithValkey() {
     private val patientService = mockk<PatientService>()
     private val encounterService = mockk<EncounterService>()
     private val sessionOrgResolver = mockk<SessionOrgResolver>()
-    private val epjPatientService =
-        mockk<EpjPatientService> { coEvery { isListedAt(any(), any()) } returns true }
+    private val ehrPatientService =
+        mockk<EhrPatientService> { coEvery { isListedAt(any(), any()) } returns true }
     private val mapper = jacksonObjectMapper()
 
     private fun testApp(
@@ -116,7 +116,7 @@ class AppRoutesTest : WithValkey() {
                         privateKeyJwk = simpleTestEnvironment.smart.privateKeyJwk,
                     ),
                 valkey = ValkeyConfig("valkey", 8080, false, null, null),
-                epj = EpjConfig(baseUrl = "testurl"),
+                ehr = EhrConfig(baseUrl = "testurl"),
             )
         application {
             configureSerialization()
@@ -125,7 +125,7 @@ class AppRoutesTest : WithValkey() {
                 provide<ValkeyService> { valkeyService }
                 provide<EncounterService> { encounterService }
                 provide<PatientService> { patientService }
-                provide<EpjPatientService> { epjPatientService }
+                provide<EhrPatientService> { ehrPatientService }
                 provide<SessionOrgResolver> { sessionOrgResolver }
                 provide<ClientAssertionVerifier> { mockk(relaxed = true) }
                 provide<SmartKeys> { SmartKeys(environment.smart.privateKeyJwk) }
@@ -502,7 +502,7 @@ class AppRoutesTest : WithValkey() {
             val id = activePatient()
             val before = launchKeys()
             coEvery {
-                epjPatientService.isListedAt(PatientId(kotlin.uuid.Uuid.parse(id)), ORG)
+                ehrPatientService.isListedAt(PatientId(kotlin.uuid.Uuid.parse(id)), ORG)
             } returns false
 
             val response = launch("syk-inn")

@@ -29,9 +29,9 @@ import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.ConsultationBelongsToOtherPatientException
 import no.nav.helse.core.utils.ConsultationNotFoundException
 import no.nav.helse.core.utils.DuplicateClinicalNoteException
-import no.nav.helse.epj.consultation.ConsultationId
-import no.nav.helse.epj.consultation.CreateClinicalNoteRequest
-import no.nav.helse.epj.patient.PatientId
+import no.nav.helse.ehr.consultation.ConsultationId
+import no.nav.helse.ehr.consultation.CreateClinicalNoteRequest
+import no.nav.helse.ehr.patient.PatientId
 import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
 import no.nav.helse.plugins.configureStatusPages

@@ -4,7 +4,7 @@ import type {
   CapabilityStatement,
   Session,
   SmartConfiguration,
-} from "../utils/mapping/epj";
+} from "../utils/mapping/ehr";
 
 export type Row = readonly [label: string, value: string];
 

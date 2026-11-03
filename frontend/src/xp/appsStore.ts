@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { fetchApps } from "./api";
-import type { App } from "../utils/mapping/epj";
+import type { App } from "../utils/mapping/ehr";
 
 type AppsStatus = "idle" | "loading" | "ready" | "error";
 

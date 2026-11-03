@@ -7,10 +7,10 @@ export type TabKind =
   | "patients"
   | "journal"
   | "app"
-  | "kontrollpanel"
+  | "control-panel"
   | "sysinfo"
-  | "hjelp"
-  | "hendelseslogg";
+  | "help"
+  | "event-log";
 
 type TabBase = {
   id: string;

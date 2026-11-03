@@ -12,9 +12,9 @@ import io.ktor.server.routing.*
 import java.util.*
 import no.nav.helse.core.Environment
 import no.nav.helse.core.utils.logger
-import no.nav.helse.epj.patient.PatientService as EpjPatientService
-import no.nav.helse.epj.sessionorg.SessionOrgResolution
-import no.nav.helse.epj.sessionorg.SessionOrgResolver
+import no.nav.helse.ehr.patient.PatientService as EhrPatientService
+import no.nav.helse.ehr.sessionorg.SessionOrgResolution
+import no.nav.helse.ehr.sessionorg.SessionOrgResolver
 import no.nav.helse.fhir.encounter.EncounterService
 import no.nav.helse.fhir.patient.PatientService
 import no.nav.helse.helseId.loggedInUser
@@ -43,7 +43,7 @@ import no.nav.helse.smart.valkey.ValkeyService
 fun Application.configureSmartRouting() {
     val env: Environment by dependencies
     val patientService: PatientService by dependencies
-    val epjPatientService: EpjPatientService by dependencies
+    val ehrPatientService: EhrPatientService by dependencies
     val encounterService: EncounterService by dependencies
     val valkeyService: ValkeyService by dependencies
     val sessionOrgResolver: SessionOrgResolver by dependencies
@@ -59,7 +59,7 @@ fun Application.configureSmartRouting() {
             patientService,
             encounterService,
             sessionOrgResolver,
-            epjPatientService,
+            ehrPatientService,
         )
 
     routing {

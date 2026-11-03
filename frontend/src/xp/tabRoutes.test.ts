@@ -60,7 +60,7 @@ describe("routeForTab", () => {
   });
 
   it("returns no route for tabs that are not URL-addressable", () => {
-    for (const kind of ["app", "kontrollpanel", "sysinfo", "hjelp", "hendelseslogg"] as const) {
+    for (const kind of ["app", "control-panel", "sysinfo", "help", "event-log"] as const) {
       expect(routeForTab(tab(kind))).toBeNull();
     }
   });

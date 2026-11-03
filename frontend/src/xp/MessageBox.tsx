@@ -4,7 +4,7 @@ import { Dialog } from "./Dialog";
 import { TechnicalDetails } from "./TechnicalDetails";
 import { XpIcon, type IconName } from "./XpIcon";
 
-export type MessageBoxVariant = "info" | "advarsel" | "feil" | "sporsmal";
+export type MessageBoxVariant = "info" | "warning" | "error" | "question";
 
 export type MessageBoxButton = {
   label: string;
@@ -28,9 +28,9 @@ type Props = {
 
 const icons: Record<MessageBoxVariant, IconName> = {
   info: "info",
-  advarsel: "advarsel",
-  feil: "feil",
-  sporsmal: "sporsmal",
+  warning: "advarsel",
+  error: "feil",
+  question: "sporsmal",
 };
 
 export function MessageBox({

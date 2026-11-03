@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { filterPatients } from "./patientFilter";
-import type { Patient } from "../utils/mapping/epj";
+import type { Patient } from "../utils/mapping/ehr";
 
 const make = (id: string, givenName: string, familyName: string, personident: string): Patient => ({
   id,

@@ -9,7 +9,7 @@ import {
   type FocusEvent,
   type KeyboardEvent,
 } from "react";
-import { epjDiagnoses } from "@data/diagnoses";
+import { ehrDiagnoses } from "@data/diagnoses";
 import { copy } from "./copy";
 import { systemLabel } from "./diagnosisSystem";
 import { diagnosisKey, type DiagnosisItem } from "./journalStore";
@@ -22,7 +22,7 @@ type Props = {
   onRemove: (code: string, system: string) => void;
 };
 
-const catalogue = epjDiagnoses.map((d) => ({
+const catalogue = ehrDiagnoses.map((d) => ({
   key: diagnosisKey({ code: d.code, system: d.diagnosisSystem }),
   item: { code: d.code, system: d.diagnosisSystem, text: d.description },
   label: `${d.code} ${d.description} · ${systemLabel(d.diagnosisSystem)}`,

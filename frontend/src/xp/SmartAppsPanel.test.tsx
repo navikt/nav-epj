@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SmartAppsPanel } from "./SmartAppsPanel";
-import { kari, nyFane, ola, seedApps, seedJournal, seedRun, sykInn, validator } from "./appFixtures";
+import { kari, newTab, ola, seedApps, seedJournal, seedRun, sykInn, validator } from "./appFixtures";
 import { useActivePatientStore } from "./activePatientStore";
 import { useAppDialogStore } from "./appDialogStore";
 import { useAppRunStore } from "./appRunStore";
@@ -12,7 +12,7 @@ import { useWorkspaceStore } from "./workspaceStore";
 
 describe("SmartAppsPanel", () => {
   beforeEach(() => {
-    seedApps([sykInn, validator, nyFane]);
+    seedApps([sykInn, validator, newTab]);
     seedJournal();
   });
 

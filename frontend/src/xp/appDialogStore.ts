@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { App } from "../utils/mapping/epj";
+import type { App } from "../utils/mapping/ehr";
 
 export type AppErrorCode =
   | "NO_ACTIVE_PATIENT"

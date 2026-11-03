@@ -13,7 +13,7 @@ import {
 import { useShell } from "./shellContext";
 import { useNow } from "./useNow";
 import { XpIcon } from "./XpIcon";
-import type { Patient } from "../utils/mapping/epj";
+import type { Patient } from "../utils/mapping/ehr";
 
 type Props = {
   patient: Patient;

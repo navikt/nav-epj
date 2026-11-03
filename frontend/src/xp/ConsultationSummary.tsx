@@ -4,7 +4,7 @@ import { copy } from "./copy";
 import { systemLabel } from "./diagnosisSystem";
 import { noteOf } from "./journalStore";
 import { formatDateTime } from "./patientInfo";
-import type { Consultation } from "../utils/mapping/epj";
+import type { Consultation } from "../utils/mapping/ehr";
 
 type Props = {
   consultation: Consultation;

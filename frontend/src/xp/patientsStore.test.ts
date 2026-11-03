@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { scopePatients, usePatientsStore } from "./patientsStore";
-import type { PatientListItem } from "../utils/mapping/epj";
+import type { PatientListItem } from "../utils/mapping/ehr";
 
 const patient = (id: string): PatientListItem => ({
   id,

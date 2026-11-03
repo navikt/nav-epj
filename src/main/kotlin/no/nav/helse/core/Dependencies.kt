@@ -4,21 +4,21 @@ import glide.api.GlideClient
 import glide.api.models.configuration.GlideClientConfiguration
 import io.ktor.server.application.*
 import io.ktor.server.plugins.di.*
-import no.nav.helse.epj.clinic.ClinicRepository
-import no.nav.helse.epj.clinic.ClinicService
-import no.nav.helse.epj.consultation.ConsultationRepository
-import no.nav.helse.epj.consultation.ConsultationService
-import no.nav.helse.epj.measurement.MeasurementRepository
-import no.nav.helse.epj.measurement.MeasurementService
-import no.nav.helse.epj.patient.PatientRepository
-import no.nav.helse.epj.patient.PatientService as EpjPatientService
-import no.nav.helse.epj.practitioner.PractitionerRepository
-import no.nav.helse.epj.practitioner.PractitionerService as EpjPractitionerService
-import no.nav.helse.epj.sessionorg.FastlegelisteRepository
-import no.nav.helse.epj.sessionorg.SessionOrgChoiceStore
-import no.nav.helse.epj.sessionorg.SessionOrgResolver
-import no.nav.helse.epj.sessionorg.SessionOrgService
-import no.nav.helse.epj.sessionorg.ValkeySessionOrgChoiceStore
+import no.nav.helse.ehr.clinic.ClinicRepository
+import no.nav.helse.ehr.clinic.ClinicService
+import no.nav.helse.ehr.consultation.ConsultationRepository
+import no.nav.helse.ehr.consultation.ConsultationService
+import no.nav.helse.ehr.measurement.MeasurementRepository
+import no.nav.helse.ehr.measurement.MeasurementService
+import no.nav.helse.ehr.patient.PatientRepository
+import no.nav.helse.ehr.patient.PatientService as EhrPatientService
+import no.nav.helse.ehr.practitioner.PractitionerRepository
+import no.nav.helse.ehr.practitioner.PractitionerService as EhrPractitionerService
+import no.nav.helse.ehr.sessionorg.FastlegelisteRepository
+import no.nav.helse.ehr.sessionorg.SessionOrgChoiceStore
+import no.nav.helse.ehr.sessionorg.SessionOrgResolver
+import no.nav.helse.ehr.sessionorg.SessionOrgService
+import no.nav.helse.ehr.sessionorg.ValkeySessionOrgChoiceStore
 import no.nav.helse.fhir.condition.ConditionService
 import no.nav.helse.fhir.documentreference.DocumentReferenceService
 import no.nav.helse.fhir.encounter.EncounterService
@@ -54,9 +54,9 @@ fun Application.configureDependencies() {
         provide(ClinicRepository::class)
         provide(MeasurementRepository::class)
 
-        provide(EpjPractitionerService::class)
+        provide(EhrPractitionerService::class)
         provide(ConsultationService::class)
-        provide(EpjPatientService::class)
+        provide(EhrPatientService::class)
         provide(ClinicService::class)
         provide(MeasurementService::class)
 

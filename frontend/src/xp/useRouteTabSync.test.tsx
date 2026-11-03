@@ -105,7 +105,7 @@ describe("useRouteTabSync", () => {
     const navigate = vi.fn();
     renderHook(() => useRouteTabSync(patients, navigate));
     act(() => {
-      store().openTab({ kind: "kontrollpanel", label: "Kontrollpanel" });
+      store().openTab({ kind: "control-panel", label: "Kontrollpanel" });
     });
     expect(navigate).not.toHaveBeenCalled();
   });

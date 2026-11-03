@@ -112,4 +112,4 @@ private fun launchKey(launchId: String) = "smart:launch:$launchId"
 private fun activePatientKey(hpr: String, orgNumber: String) =
     "smart:active-patient:$hpr:$orgNumber"
 
-private fun sessionOrgKey(hpr: String) = "epj:session-org:$hpr"
+private fun sessionOrgKey(hpr: String) = "ehr:session-org:$hpr"

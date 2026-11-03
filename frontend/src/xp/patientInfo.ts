@@ -5,7 +5,7 @@ import {
   parseISO,
   startOfMinute,
 } from "date-fns";
-import type { CreatePatientRequest, Patient } from "../utils/mapping/epj";
+import type { CreatePatientRequest, Patient } from "../utils/mapping/ehr";
 import { copy } from "./copy";
 
 type DerivedPersonident = Pick<

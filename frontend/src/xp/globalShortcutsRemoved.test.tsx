@@ -62,7 +62,7 @@ function openTabs() {
   act(() => {
     const store = useWorkspaceStore.getState();
     store.openTab({ kind: "patients", label: "Pasienter" });
-    store.openTab({ kind: "hjelp", label: "Hjelp" });
+    store.openTab({ kind: "help", label: "Hjelp" });
   });
   return useWorkspaceStore.getState().tabs.map((t) => t.id);
 }

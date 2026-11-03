@@ -11,7 +11,7 @@ database:
   password: ${DB_PASSWORD}
   seedTestdata: true
 
-epj:
+ehr:
   baseUrl: "http://localhost:8080"
 
 

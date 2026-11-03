@@ -8,10 +8,10 @@ import kotlin.test.assertTrue
 import kotlin.uuid.ExperimentalUuidApi
 import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.utils.ConsultationStatus
-import no.nav.helse.epj.consultation.ConsultationRepository
-import no.nav.helse.epj.measurement.MeasurementRepository
-import no.nav.helse.epj.patient.PatientId
-import no.nav.helse.epj.patient.PatientRepository
+import no.nav.helse.ehr.consultation.ConsultationRepository
+import no.nav.helse.ehr.measurement.MeasurementRepository
+import no.nav.helse.ehr.patient.PatientId
+import no.nav.helse.ehr.patient.PatientRepository
 import no.nav.helse.utils.WithPostgresql
 import org.junit.After
 import org.junit.Before

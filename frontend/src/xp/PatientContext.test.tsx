@@ -5,7 +5,7 @@ import { CurrentUserContext } from "./currentUser";
 import { PatientContext } from "./PatientContext";
 import { ShellContext } from "./shellContext";
 import { expectNoSeriousViolations } from "./axeHelper";
-import type { Patient } from "../utils/mapping/epj";
+import type { Patient } from "../utils/mapping/ehr";
 
 const patient: Patient = {
   id: "p1",

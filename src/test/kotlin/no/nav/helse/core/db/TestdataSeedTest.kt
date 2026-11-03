@@ -6,8 +6,8 @@ import java.time.LocalDate
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import no.nav.helse.epj.patient.PersonidentType
-import no.nav.helse.epj.patient.PersonidentValidator
+import no.nav.helse.ehr.patient.PersonidentType
+import no.nav.helse.ehr.patient.PersonidentValidator
 import no.nav.helse.utils.WithPostgresql
 import no.nav.tsm.diagnoser.Diagnose
 import org.junit.After

@@ -9,7 +9,7 @@ import { useAppsStore } from "./appsStore";
 import { copy } from "./copy";
 import { useAppsEnabled } from "./useAppsEnabled";
 import { useStartApp } from "./useStartApp";
-import type { App } from "../utils/mapping/epj";
+import type { App } from "../utils/mapping/ehr";
 
 const modeLabels = {
   iframe: copy["pane.apps.mode.iframe"],

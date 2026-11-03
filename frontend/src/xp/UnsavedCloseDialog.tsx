@@ -16,7 +16,7 @@ export function UnsavedCloseDialog({
     <MessageBox
       title={copy["s4.unsavedDlg.title"]}
       heading={copy["s4.unsavedDlg.head"]}
-      variant="advarsel"
+      variant="warning"
       onClose={onCancel}
       buttons={[
         { label: copy["s4.unsavedDlg.saveClose"], onClick: onSaveAndClose, isDefault: true },

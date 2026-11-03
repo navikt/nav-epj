@@ -14,7 +14,7 @@ import { diagnosisKey, isDirty, useJournalStore } from "./journalStore";
 import { formatDateTime, formatTime, minutesSince } from "./patientInfo";
 import { useShell } from "./shellContext";
 import { useNow } from "./useNow";
-import type { Consultation, Patient } from "../utils/mapping/epj";
+import type { Consultation, Patient } from "../utils/mapping/ehr";
 
 type Props = {
   patient: Patient;
