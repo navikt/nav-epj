@@ -493,7 +493,7 @@ class ObservationRoutesTest {
         val encounterId = Uuid.generateV4()
         coEvery { observationService.createObservation(any(), DEFAULT_ORG_NUMBER) } throws
             no.nav.helse.core.utils.ConsultationBelongsToOtherPatientException(
-                no.nav.helse.epj.konsultasjon.KonsultasjonId(encounterId),
+                no.nav.helse.epj.consultation.ConsultationId(encounterId),
                 no.nav.helse.epj.patient.PatientId(patientId),
             )
 
@@ -516,8 +516,8 @@ class ObservationRoutesTest {
         val patientId = Uuid.generateV4()
         val encounterId = Uuid.generateV4()
         coEvery { observationService.createObservation(any(), DEFAULT_ORG_NUMBER) } throws
-            no.nav.helse.core.utils.KonsultasjonNotFoundException(
-                no.nav.helse.epj.konsultasjon.KonsultasjonId(encounterId)
+            no.nav.helse.core.utils.ConsultationNotFoundException(
+                no.nav.helse.epj.consultation.ConsultationId(encounterId)
             )
 
         testApp(scopes = createScope(), boundPatient = patientId.toString()) {

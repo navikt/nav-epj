@@ -18,11 +18,11 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
-import no.nav.helse.core.utils.KonsultasjonStatus
+import no.nav.helse.core.utils.ConsultationStatus
 import no.nav.helse.epj.clinic.ClinicId
-import no.nav.helse.epj.konsultasjon.Konsultasjon
-import no.nav.helse.epj.konsultasjon.KonsultasjonId
-import no.nav.helse.epj.konsultasjon.KonsultasjonService
+import no.nav.helse.epj.consultation.Consultation
+import no.nav.helse.epj.consultation.ConsultationId
+import no.nav.helse.epj.consultation.ConsultationService
 import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.plugins.configureStatusPages
 import no.nav.helse.smart.security.Interaction
@@ -36,35 +36,35 @@ import org.junit.Test
 
 class ConditionRoutesTest {
 
-    private val konsultasjonService = mockk<KonsultasjonService>()
-    private val conditionService = ConditionService(konsultasjonService)
+    private val consultationService = mockk<ConsultationService>()
+    private val conditionService = ConditionService(consultationService)
     private val fhirJson = FhirR4Json()
     private val fhirContentType = ContentType("application", "fhir+json")
 
     private val patientId = PatientId(Uuid.generateV4())
-    private val encounterA = KonsultasjonId(Uuid.generateV4())
-    private val encounterB = KonsultasjonId(Uuid.generateV4())
+    private val encounterA = ConsultationId(Uuid.generateV4())
+    private val encounterB = ConsultationId(Uuid.generateV4())
 
-    private fun konsultasjon(id: KonsultasjonId, patientId: PatientId, code: String) =
-        Konsultasjon(
+    private fun consultation(id: ConsultationId, patientId: PatientId, code: String) =
+        Consultation(
             id = id,
             patientId = patientId,
             clinicId = ClinicId(Uuid.generateV4()),
             hpr = emptyList(),
             journalnotat = emptyList(),
-            diagnoser =
+            diagnoses =
                 listOf(Diagnose(system = DiagnoseType.ICPC2, code = code, text = "Diagnose $code")),
-            startetTidspunkt = LocalDateTime.now().minusHours(1),
-            avsluttetTidspunkt = null,
-            status = KonsultasjonStatus.PAAGAAENDE,
-            problemstilling = null,
+            startedAt = LocalDateTime.now().minusHours(1),
+            endedAt = null,
+            status = ConsultationStatus.IN_PROGRESS,
+            reasonForVisit = null,
         )
 
     private fun givenPatientHasTwoEncounters() {
-        coEvery { konsultasjonService.getKonsultasjoner(patientId, DEFAULT_ORG_NUMBER) } returns
+        coEvery { consultationService.getConsultations(patientId, DEFAULT_ORG_NUMBER) } returns
             listOf(
-                konsultasjon(encounterA, patientId, "A01"),
-                konsultasjon(encounterB, patientId, "B02"),
+                consultation(encounterA, patientId, "A01"),
+                consultation(encounterB, patientId, "B02"),
             )
     }
 
@@ -132,7 +132,7 @@ class ConditionRoutesTest {
 
     @Test
     fun `GET Condition with subject and an encounter of another patient returns an empty bundle`() {
-        val foreignEncounter = KonsultasjonId(Uuid.generateV4())
+        val foreignEncounter = ConsultationId(Uuid.generateV4())
         givenPatientHasTwoEncounters()
 
         testApp {
@@ -148,7 +148,7 @@ class ConditionRoutesTest {
 
     @Test
     fun `GET Condition with subject and an unknown encounter returns an empty bundle`() {
-        val unknownEncounter = KonsultasjonId(Uuid.generateV4())
+        val unknownEncounter = ConsultationId(Uuid.generateV4())
         givenPatientHasTwoEncounters()
 
         testApp {
@@ -210,8 +210,8 @@ class ConditionRoutesTest {
 
     @Test
     fun `GET Condition with encounter only returns that encounter's conditions`() {
-        coEvery { konsultasjonService.getKonsultasjon(encounterA, DEFAULT_ORG_NUMBER) } returns
-            konsultasjon(encounterA, patientId, "A01")
+        coEvery { consultationService.getConsultation(encounterA, DEFAULT_ORG_NUMBER) } returns
+            consultation(encounterA, patientId, "A01")
 
         testApp {
             val response = get("/fhir/Condition?encounter=Encounter/${encounterA.value}")
@@ -223,8 +223,8 @@ class ConditionRoutesTest {
 
     @Test
     fun `GET Condition with encounter only rejects an encounter of another patient`() {
-        coEvery { konsultasjonService.getKonsultasjon(encounterA, DEFAULT_ORG_NUMBER) } returns
-            konsultasjon(encounterA, PatientId(Uuid.generateV4()), "A01")
+        coEvery { consultationService.getConsultation(encounterA, DEFAULT_ORG_NUMBER) } returns
+            consultation(encounterA, PatientId(Uuid.generateV4()), "A01")
 
         testApp {
             val response = get("/fhir/Condition?encounter=Encounter/${encounterA.value}")

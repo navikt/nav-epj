@@ -1,44 +1,44 @@
 import type { ReactNode } from "react";
 import { Card } from "./Card";
 import { copy } from "./copy";
-import { systemLabel } from "./diagnoseSystem";
+import { systemLabel } from "./diagnosisSystem";
 import { noteOf } from "./journalStore";
 import { formatDateTime } from "./patientInfo";
-import type { Konsultasjon } from "../utils/mapping/epj";
+import type { Consultation } from "../utils/mapping/epj";
 
 type Props = {
-  konsultasjon: Konsultasjon;
+  consultation: Consultation;
   heading: string;
   headingId: string;
   children?: ReactNode;
 };
 
-export function KonsultasjonSummary({
-  konsultasjon,
+export function ConsultationSummary({
+  consultation,
   heading,
   headingId,
   children,
 }: Props) {
-  const note = noteOf(konsultasjon);
+  const note = noteOf(consultation);
   return (
     <Card heading={heading} headingId={headingId}>
       {children}
       <dl className="xp-dl">
         <dt>{copy["s4.info.started"]}</dt>
-        <dd>{formatDateTime(konsultasjon.startetTidspunkt)}</dd>
-        {konsultasjon.avsluttetTidspunkt && (
+        <dd>{formatDateTime(consultation.startedAt)}</dd>
+        {consultation.endedAt && (
           <>
             <dt>{copy["s4.done.ended"]}</dt>
-            <dd>{formatDateTime(konsultasjon.avsluttetTidspunkt)}</dd>
+            <dd>{formatDateTime(consultation.endedAt)}</dd>
           </>
         )}
         <dt>{copy["s4.done.diag"]}</dt>
         <dd>
-          {konsultasjon.diagnoser.length === 0 ? (
+          {consultation.diagnoses.length === 0 ? (
             copy["s4.diag.none"]
           ) : (
             <ul>
-              {konsultasjon.diagnoser.map((d) => (
+              {consultation.diagnoses.map((d) => (
                 <li key={`${d.system}:${d.code}`}>
                   <code>{d.code}</code> {d.text} · {systemLabel(d.system)}
                 </li>

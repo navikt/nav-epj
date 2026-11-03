@@ -35,7 +35,7 @@ export function PatientsPage({ canCreate, onNewPatient, onOpenJournal }: Props) 
   const query = usePatientsStore((s) => s.query);
   const view = usePatientsStore((s) => s.view);
   const page = usePatientsStore((s) => s.page);
-  const lastKonsultasjon = usePatientsStore((s) => s.lastKonsultasjon);
+  const lastConsultation = usePatientsStore((s) => s.lastConsultation);
   const patients = usePatientsStore((s) => s.patients);
   const recentIds = usePatientsStore((s) => s.recentIds);
   const scoped = useMemo(
@@ -153,7 +153,7 @@ export function PatientsPage({ canCreate, onNewPatient, onOpenJournal }: Props) 
             <tbody>
               {rows.map((patient) => {
                 const birthDate = birthDateOf(patient);
-                const last = lastKonsultasjon[patient.id];
+                const last = lastConsultation[patient.id];
                 return (
                   <tr key={patient.id}>
                     <td>
@@ -178,7 +178,7 @@ export function PatientsPage({ canCreate, onNewPatient, onOpenJournal }: Props) 
                     <td>
                       {!last
                         ? "–"
-                        : last.status === "PÅGÅENDE"
+                        : last.status === "IN_PROGRESS"
                           ? copy["s3.col.last.ongoing"]
                           : formatDate(last.timestamp)}
                     </td>

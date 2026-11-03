@@ -79,7 +79,7 @@ export function AppTabView({ clientId }: Props) {
         title={copy["s5.title"](
           run.navn,
           patientName,
-          format(parseISO(run.konsultasjon.startetTidspunkt), "dd.MM HH:mm"),
+          format(parseISO(run.consultation.startedAt), "dd.MM HH:mm"),
         )}
         canNavigate={canNavigate}
         canReload={canReload}

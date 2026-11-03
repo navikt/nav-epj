@@ -32,11 +32,11 @@ describe("patientsStore", () => {
     expect(store().patients).toHaveLength(1);
   });
 
-  it("seeds the last konsultasjon per patient from the list response", async () => {
-    const last = { status: "PÅGÅENDE", timestamp: "2026-01-02T03:04:05" };
+  it("seeds the last consultation per patient from the list response", async () => {
+    const last = { status: "IN_PROGRESS", timestamp: "2026-01-02T03:04:05" };
     stubFetch([{ ...patient("1"), latestConsultation: last }, patient("2")]);
     await store().load();
-    expect(store().lastKonsultasjon).toEqual({ "1": last });
+    expect(store().lastConsultation).toEqual({ "1": last });
   });
 
   it("reports error when the request fails", async () => {
@@ -99,11 +99,11 @@ describe("patientsStore", () => {
     expect(store().recentIds[0]).toBe("11");
   });
 
-  it("tracks and clears the last konsultasjon per patient", () => {
-    store().setLastKonsultasjon("1", { status: "FULLFØRT", timestamp: "2026-01-01T10:00:00" });
-    expect(store().lastKonsultasjon["1"].status).toBe("FULLFØRT");
-    store().setLastKonsultasjon("1", null);
-    expect(store().lastKonsultasjon["1"]).toBeUndefined();
+  it("tracks and clears the last consultation per patient", () => {
+    store().setLastConsultation("1", { status: "FINISHED", timestamp: "2026-01-01T10:00:00" });
+    expect(store().lastConsultation["1"].status).toBe("FINISHED");
+    store().setLastConsultation("1", null);
+    expect(store().lastConsultation["1"]).toBeUndefined();
   });
 
   it("scopes to recent patients that still exist, in recent order", () => {

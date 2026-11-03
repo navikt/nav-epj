@@ -27,17 +27,17 @@ const ola = {
   selectable: true,
 };
 
-function kons(overrides: Record<string, unknown> = {}) {
+function consultation(overrides: Record<string, unknown> = {}) {
   return {
     id: "k1",
     patientId: "p1",
     hpr: ["9144889"],
     journalnotat: [],
-    diagnoser: [],
-    startetTidspunkt: "2026-09-30T09:00:00",
-    avsluttetTidspunkt: null,
-    status: "PÅGÅENDE",
-    problemstilling: null,
+    diagnoses: [],
+    startedAt: "2026-09-30T09:00:00",
+    endedAt: null,
+    status: "IN_PROGRESS",
+    reasonForVisit: null,
     ...overrides,
   };
 }
@@ -47,8 +47,8 @@ function api(extra: Parameters<typeof stubApi>[0] = {}) {
     "GET /api/patient": () => ({ body: [ape, ola] }),
     "GET /api/patient/p1": () => ({ body: ape }),
     "GET /api/patient/p2": () => ({ body: ola }),
-    "GET /api/patients/p1/konsultasjoner": () => ({ body: [kons()] }),
-    "GET /api/patients/p2/konsultasjoner": () => ({ body: [] }),
+    "GET /api/patients/p1/consultations": () => ({ body: [consultation()] }),
+    "GET /api/patients/p2/consultations": () => ({ body: [] }),
     ...extra,
   });
 }
@@ -76,15 +76,15 @@ describe("journal deep links", () => {
     expect(screen.queryByRole("tab", { name: "Pasienter" })).not.toBeInTheDocument();
   });
 
-  it("shows the read-only konsultasjon for /patients/$patientId/konsultasjon/$konsultasjonId", async () => {
+  it("shows the read-only consultation for /patients/$patientId/consultations/$consultationId", async () => {
     api({
-      "GET /api/patients/p1/konsultasjoner": () => ({
+      "GET /api/patients/p1/consultations": () => ({
         body: [
-          kons({ id: "k9", status: "FULLFØRT", avsluttetTidspunkt: "2026-09-01T10:00:00", startetTidspunkt: "2026-09-01T09:00:00" }),
+          consultation({ id: "k9", status: "FINISHED", endedAt: "2026-09-01T10:00:00", startedAt: "2026-09-01T09:00:00" }),
         ],
       }),
     });
-    renderApp("/patients/p1/konsultasjon/k9");
+    renderApp("/patients/p1/consultations/k9");
     expect(
       await screen.findByRole("heading", { name: "Fullført konsultasjon" }),
     ).toBeInTheDocument();
@@ -128,54 +128,54 @@ describe("journal deep links", () => {
 });
 
 describe("journal sub-tab in the URL", () => {
-  const done = kons({
+  const done = consultation({
     id: "k9",
-    status: "FULLFØRT",
-    avsluttetTidspunkt: "2026-09-01T10:00:00",
-    startetTidspunkt: "2026-09-01T09:00:00",
+    status: "FINISHED",
+    endedAt: "2026-09-01T10:00:00",
+    startedAt: "2026-09-01T09:00:00",
   });
   const withHistory = () =>
     api({
-      "GET /api/patients/p1/konsultasjoner": () => ({ body: [kons(), done] }),
+      "GET /api/patients/p1/consultations": () => ({ body: [consultation(), done] }),
     });
   const selected = (name: string | RegExp) =>
     expect(screen.getByRole("tab", { name })).toHaveAttribute("aria-selected", "true");
 
   it("opens the URL's sub-tab", async () => {
     withHistory();
-    renderApp("/patients/p1?tab=tidligere");
+    renderApp("/patients/p1?tab=previous");
     await screen.findByRole("heading", { name: "Matematisk Ape" });
     selected(/^Tidligere konsultasjoner/);
     expect(screen.getByRole("table")).toBeInTheDocument();
   });
 
-  it.each(["tidligere", "apper"] as const)("keeps %s selected after retrying a failed load", async (tab) => {
+  it.each(["previous", "apper"] as const)("keeps %s selected after retrying a failed load", async (tab) => {
     let fail = true;
     api({
-      "GET /api/patients/p1/konsultasjoner": () =>
-        fail ? { status: 500 } : { body: [kons(), done] },
+      "GET /api/patients/p1/consultations": () =>
+        fail ? { status: 500 } : { body: [consultation(), done] },
     });
     const { router } = renderApp(`/patients/p1?tab=${tab}`);
     await screen.findByRole("alert");
     fail = false;
     await userEvent.click(screen.getByRole("button", { name: "Prøv igjen" }));
     await screen.findByRole("heading", { name: "Matematisk Ape" });
-    selected(tab === "tidligere" ? /^Tidligere konsultasjoner/ : /^Apper/);
+    selected(tab === "previous" ? /^Tidligere konsultasjoner/ : /^Apper/);
     expect(router.state.location.search).toEqual({ tab });
   });
 
-  it("keeps the deep-linked konsultasjon selected after retrying a failed load", async () => {
+  it("keeps the deep-linked consultation selected after retrying a failed load", async () => {
     let fail = true;
     api({
-      "GET /api/patients/p1/konsultasjoner": () =>
-        fail ? { status: 500 } : { body: [kons(), done] },
+      "GET /api/patients/p1/consultations": () =>
+        fail ? { status: 500 } : { body: [consultation(), done] },
     });
-    const { router } = renderApp("/patients/p1/konsultasjon/k9");
+    const { router } = renderApp("/patients/p1/consultations/k9");
     await screen.findByRole("alert");
     fail = false;
     await userEvent.click(screen.getByRole("button", { name: "Prøv igjen" }));
     expect(await screen.findByRole("heading", { name: "Fullført konsultasjon" })).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe("/patients/p1/konsultasjon/k9");
+    expect(router.state.location.pathname).toBe("/patients/p1/consultations/k9");
   });
 
   it("falls back to Konsultasjon for an unknown tab value", async () => {
@@ -208,7 +208,7 @@ describe("journal sub-tab in the URL", () => {
       void router.navigate({
         to: "/patients/$patientId",
         params: { patientId: "p1" },
-        search: { tab: "tidligere" },
+        search: { tab: "previous" },
       });
     });
     await waitFor(() => selected(/^Tidligere konsultasjoner/));
@@ -216,7 +216,7 @@ describe("journal sub-tab in the URL", () => {
 
   it("restores the sub-tab when reopening Journal", async () => {
     withHistory();
-    const { router } = renderApp("/patients/p1?tab=tidligere");
+    const { router } = renderApp("/patients/p1?tab=previous");
     await screen.findByRole("heading", { name: "Matematisk Ape" });
     act(() => {
       void router.navigate({ to: "/patients" });
@@ -224,79 +224,79 @@ describe("journal sub-tab in the URL", () => {
     await screen.findByRole("heading", { name: "Pasienter" });
     await userEvent.click(docTab("Journal · Matematisk Ape"));
     await waitFor(() => expect(router.state.location.pathname).toBe("/patients/p1"));
-    expect(router.state.location.search).toEqual({ tab: "tidligere" });
+    expect(router.state.location.search).toEqual({ tab: "previous" });
     selected(/^Tidligere konsultasjoner/);
   });
 
-  it("leaves the konsultasjon route when another sub-tab is chosen", async () => {
+  it("leaves the consultation route when another sub-tab is chosen", async () => {
     withHistory();
-    const { router } = renderApp("/patients/p1/konsultasjon/k9");
+    const { router } = renderApp("/patients/p1/consultations/k9");
     await screen.findByRole("heading", { name: "Fullført konsultasjon" });
     await userEvent.click(screen.getByRole("tab", { name: /^Tidligere konsultasjoner/ }));
     await waitFor(() => expect(router.state.location.pathname).toBe("/patients/p1"));
-    expect(router.state.location.search).toEqual({ tab: "tidligere" });
+    expect(router.state.location.search).toEqual({ tab: "previous" });
     expect(screen.getByRole("table")).toBeInTheDocument();
   });
 
-  it("returns to the selected konsultasjon after visiting another sub-tab", async () => {
+  it("returns to the selected consultation after visiting another sub-tab", async () => {
     withHistory();
-    const { router } = renderApp("/patients/p1/konsultasjon/k9");
+    const { router } = renderApp("/patients/p1/consultations/k9");
     await screen.findByRole("heading", { name: "Fullført konsultasjon" });
     await userEvent.click(screen.getByRole("tab", { name: /^Apper/ }));
     await waitFor(() => expect(router.state.location.pathname).toBe("/patients/p1"));
     await userEvent.click(screen.getByRole("tab", { name: "Konsultasjon" }));
     await waitFor(() =>
-      expect(router.state.location.pathname).toBe("/patients/p1/konsultasjon/k9"),
+      expect(router.state.location.pathname).toBe("/patients/p1/consultations/k9"),
     );
     expect(await screen.findByRole("heading", { name: "Fullført konsultasjon" })).toBeInTheDocument();
   });
 
-  it("restores the konsultasjon when reopening Journal", async () => {
+  it("restores the consultation when reopening Journal", async () => {
     withHistory();
-    const { router } = renderApp("/patients/p1/konsultasjon/k9");
+    const { router } = renderApp("/patients/p1/consultations/k9");
     await screen.findByRole("heading", { name: "Fullført konsultasjon" });
     await userEvent.click(screen.getByRole("tab", { name: /^Tidligere konsultasjoner/ }));
-    await waitFor(() => expect(router.state.location.search).toEqual({ tab: "tidligere" }));
+    await waitFor(() => expect(router.state.location.search).toEqual({ tab: "previous" }));
     act(() => {
       void router.navigate({ to: "/patients" });
     });
     await screen.findByRole("heading", { name: "Pasienter" });
     const nav = screen.getByRole("navigation", { name: "Oppgaver" });
     await userEvent.click(within(nav).getByRole("button", { name: "Aktiv journal" }));
-    await waitFor(() => expect(router.state.location.search).toEqual({ tab: "tidligere" }));
+    await waitFor(() => expect(router.state.location.search).toEqual({ tab: "previous" }));
     await userEvent.click(screen.getByRole("tab", { name: "Konsultasjon" }));
     expect(await screen.findByRole("heading", { name: "Fullført konsultasjon" })).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe("/patients/p1/konsultasjon/k9");
+    expect(router.state.location.pathname).toBe("/patients/p1/consultations/k9");
   });
 
-  it("shows the ongoing konsultasjon after going back to the plain journal URL", async () => {
+  it("shows the ongoing consultation after going back to the plain journal URL", async () => {
     withHistory();
     const { router } = renderApp("/patients/p1");
     await screen.findByRole("heading", { name: "Pågående konsultasjon" });
     await act(() =>
       router.navigate({
-        to: "/patients/$patientId/konsultasjon/$konsultasjonId",
-        params: { patientId: "p1", konsultasjonId: "k9" },
+        to: "/patients/$patientId/consultations/$consultationId",
+        params: { patientId: "p1", consultationId: "k9" },
       }),
     );
     await screen.findByRole("heading", { name: "Fullført konsultasjon" });
     await userEvent.click(screen.getByRole("tab", { name: /^Tidligere konsultasjoner/ }));
-    await waitFor(() => expect(router.state.location.search).toEqual({ tab: "tidligere" }));
+    await waitFor(() => expect(router.state.location.search).toEqual({ tab: "previous" }));
     act(() => router.history.back());
     expect(await screen.findByRole("heading", { name: "Pågående konsultasjon" })).toBeInTheDocument();
     expect(router.state.location.href).toBe("/patients/p1");
-    expect(useJournalStore.getState().selectedKonsultasjonId).toBeNull();
+    expect(useJournalStore.getState().selectedConsultationId).toBeNull();
     act(() => router.history.forward());
     await waitFor(() =>
       expect(screen.getByRole("tab", { name: /^Tidligere konsultasjoner/ }))
         .toHaveAttribute("aria-selected", "true"),
     );
-    expect(router.state.location.search).toEqual({ tab: "tidligere" });
+    expect(router.state.location.search).toEqual({ tab: "previous" });
   });
 
   it("loads the new patient without keeping the previous selection", async () => {
     withHistory();
-    const { router } = renderApp("/patients/p1/konsultasjon/k9");
+    const { router } = renderApp("/patients/p1/consultations/k9");
     await screen.findByRole("heading", { name: "Fullført konsultasjon" });
     await userEvent.click(screen.getByRole("tab", { name: /^Apper/ }));
     await waitFor(() => expect(router.state.location.search).toEqual({ tab: "apper" }));
@@ -304,7 +304,7 @@ describe("journal sub-tab in the URL", () => {
       void router.navigate({
         to: "/patients/$patientId",
         params: { patientId: "p2" },
-        search: { tab: "tidligere" },
+        search: { tab: "previous" },
       });
     });
     await userEvent.click(
@@ -314,29 +314,29 @@ describe("journal sub-tab in the URL", () => {
     );
     expect(await screen.findByRole("heading", { name: "Ola Nordmann" })).toBeInTheDocument();
     selected(/^Tidligere konsultasjoner/);
-    expect(useJournalStore.getState().selectedKonsultasjonId).toBeNull();
+    expect(useJournalStore.getState().selectedConsultationId).toBeNull();
     expect(useJournalStore.getState().status).toBe("ready");
-    expect(useJournalStore.getState().konsultasjoner).toEqual([]);
+    expect(useJournalStore.getState().consultations).toEqual([]);
   });
 
-  it("shows a newly started konsultasjon when another sub-tab was selected", async () => {
+  it("shows a newly started consultation when another sub-tab was selected", async () => {
     api({
-      "GET /api/patients/p1/konsultasjoner": () => ({ body: [done] }),
-      "POST /api/patients/p1/konsultasjoner": () => ({ body: kons() }),
+      "GET /api/patients/p1/consultations": () => ({ body: [done] }),
+      "POST /api/patients/p1/consultations": () => ({ body: consultation() }),
     });
-    const { router } = renderApp("/patients/p1/konsultasjon/k9");
+    const { router } = renderApp("/patients/p1/consultations/k9");
     await screen.findByRole("heading", { name: "Fullført konsultasjon" });
     await userEvent.click(screen.getByRole("tab", { name: /^Apper/ }));
     await waitFor(() => expect(router.state.location.search).toEqual({ tab: "apper" }));
     await act(() => useJournalStore.getState().start());
     expect(await screen.findByRole("heading", { name: "Pågående konsultasjon" })).toBeInTheDocument();
     await waitFor(() => expect(router.state.location.href).toBe("/patients/p1"));
-    expect(useJournalStore.getState().selectedKonsultasjonId).toBeNull();
+    expect(useJournalStore.getState().selectedConsultationId).toBeNull();
   });
 
-  it("ignores the tab param on a konsultasjon route", async () => {
+  it("ignores the tab param on a consultation route", async () => {
     withHistory();
-    renderApp("/patients/p1/konsultasjon/k9?tab=apper");
+    renderApp("/patients/p1/consultations/k9?tab=apper");
     expect(await screen.findByRole("heading", { name: "Fullført konsultasjon" })).toBeInTheDocument();
     selected("Konsultasjon");
   });
@@ -345,7 +345,7 @@ describe("journal sub-tab in the URL", () => {
 describe("journal guards", () => {
   it("guards closing the tab with unsaved changes", async () => {
     const calls = api({
-      "PATCH /api/patients/p1/konsultasjoner": () => ({ body: {} }),
+      "PATCH /api/patients/p1/consultations": () => ({ body: {} }),
     });
     const { router } = renderApp("/patients/p1");
     await userEvent.type(await screen.findByLabelText("Journalnotat"), "Hei");
@@ -474,16 +474,16 @@ describe("journal guards", () => {
     expect(router.state.location.pathname).toBe("/patients/p2");
   });
 
-  it("keeps the konsultasjon of a deep link when the switch is confirmed and adds one history entry", async () => {
+  it("keeps the consultation of a deep link when the switch is confirmed and adds one history entry", async () => {
     api({
-      "GET /api/patients/p2/konsultasjoner": () => ({
+      "GET /api/patients/p2/consultations": () => ({
         body: [
-          kons({
+          consultation({
             id: "k9",
             patientId: "p2",
-            status: "FULLFØRT",
-            avsluttetTidspunkt: "2026-09-01T10:00:00",
-            startetTidspunkt: "2026-09-01T09:00:00",
+            status: "FINISHED",
+            endedAt: "2026-09-01T10:00:00",
+            startedAt: "2026-09-01T09:00:00",
           }),
         ],
       }),
@@ -493,16 +493,16 @@ describe("journal guards", () => {
     const length = router.history.length;
     act(() => {
       void router.navigate({
-        to: "/patients/$patientId/konsultasjon/$konsultasjonId",
-        params: { patientId: "p2", konsultasjonId: "k9" },
+        to: "/patients/$patientId/consultations/$consultationId",
+        params: { patientId: "p2", consultationId: "k9" },
       });
     });
     await userEvent.click(
       within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Lukk og bytt pasient" }),
     );
     expect(await screen.findByRole("heading", { name: "Fullført konsultasjon" })).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe("/patients/p2/konsultasjon/k9");
-    expect(useJournalStore.getState().selectedKonsultasjonId).toBe("k9");
+    expect(router.state.location.pathname).toBe("/patients/p2/consultations/k9");
+    expect(useJournalStore.getState().selectedConsultationId).toBe("k9");
     expect(router.history.length).toBe(length + 1);
   });
 

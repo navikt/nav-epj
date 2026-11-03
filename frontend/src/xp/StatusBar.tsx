@@ -4,7 +4,7 @@ import { copy } from "./copy";
 import { ongoingOf, useJournalStore } from "./journalStore";
 import { fullName } from "./patientInfo";
 import { StatusClock } from "./StatusClock";
-import { StatusKons } from "./StatusKons";
+import { StatusConsultation } from "./StatusConsultation";
 import { TestMarker } from "./TestMarker";
 
 type Props = {
@@ -14,8 +14,8 @@ type Props = {
 
 export function StatusBar({ onOpenPatients, onOpenJournal }: Props) {
   const patient = useJournalStore((s) => s.patient);
-  const konsultasjoner = useJournalStore((s) => s.konsultasjoner);
-  const ongoing = patient ? ongoingOf(konsultasjoner) : null;
+  const consultations = useJournalStore((s) => s.consultations);
+  const ongoing = patient ? ongoingOf(consultations) : null;
   const journalPatientId = useJournalStore((s) => s.patientId);
   const tabApps = useAppRunStore((s) => s.tabApps);
   const staleApps = tabApps.filter((a) =>
@@ -53,7 +53,7 @@ export function StatusBar({ onOpenPatients, onOpenJournal }: Props) {
           {copy["status.noPatient"]}
         </button>
       )}
-      {ongoing && <StatusKons startetTidspunkt={ongoing.startetTidspunkt} />}
+      {ongoing && <StatusConsultation startedAt={ongoing.startedAt} />}
       {liveApps.length > 0 && (
         <button
           type="button"

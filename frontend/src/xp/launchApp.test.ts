@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   kari,
-  ongoingKonsultasjon,
+  ongoingConsultation,
   launchOk,
   nyFane,
   ola,
@@ -125,7 +125,7 @@ describe("startApp", () => {
   it("keeps a tab app per launch so an older patient's tab is not overwritten", async () => {
     stubLaunch([launchOk(1), launchOk(2)]);
     await startApp(nyFane);
-    seedJournal(kari, [{ ...ongoingKonsultasjon, id: "k2", patientId: "p2" }]);
+    seedJournal(kari, [{ ...ongoingConsultation, id: "k2", patientId: "p2" }]);
     await startApp(nyFane);
     const { tabApps } = useAppRunStore.getState();
     expect(tabApps.map((a) => a.patient.id)).toEqual(["p1", "p2"]);

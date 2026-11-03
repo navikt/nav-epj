@@ -24,7 +24,7 @@ fun Route.maalingRoutes(maalingService: MaalingService, sessionOrgResolver: Sess
 private data class MaalingResponse(
     val id: String,
     val patientId: String,
-    val konsultasjonId: String,
+    val consultationId: String,
     val hpr: String?,
     val loincKode: String,
     val loincVisningsnavn: String,
@@ -39,7 +39,7 @@ private fun Maaling.toResponse() =
     MaalingResponse(
         id = id.value.toString(),
         patientId = patientId.value.toString(),
-        konsultasjonId = konsultasjonId.value.toString(),
+        consultationId = consultationId.value.toString(),
         hpr = hpr?.value,
         loincKode = loincKode,
         loincVisningsnavn = loincVisningsnavn,

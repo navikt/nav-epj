@@ -48,7 +48,7 @@ describe("StartTab", () => {
     useJournalStore.setState({
       patientId: null,
       patient: null,
-      konsultasjoner: [],
+      consultations: [],
       status: "idle",
     });
     useActivePatientStore.setState({ activeId: null });
@@ -95,12 +95,12 @@ describe("StartTab", () => {
     expect(screen.queryByText(copy["s2.recent.title"])).not.toBeInTheDocument();
   });
 
-  it("lists recently opened patients with birth date and last konsultasjon", () => {
+  it("lists recently opened patients with birth date and last consultation", () => {
     usePatientsStore.setState({
       patients: [ola, kari],
       recentIds: [ola.id, kari.id],
-      lastKonsultasjon: {
-        [ola.id]: { status: "FULLFØRT", timestamp: "2026-09-20T10:00:00" },
+      lastConsultation: {
+        [ola.id]: { status: "FINISHED", timestamp: "2026-09-20T10:00:00" },
       },
     });
     renderPage();
@@ -114,7 +114,7 @@ describe("StartTab", () => {
   });
 
   it("opens a recent patient's journal through the safe journal-open guard", async () => {
-    usePatientsStore.setState({ patients: [ola], recentIds: [ola.id], lastKonsultasjon: {} });
+    usePatientsStore.setState({ patients: [ola], recentIds: [ola.id], lastConsultation: {} });
     const userEv = userEvent.setup();
     renderPage();
     await userEv.click(card(copy["s2.recent.title"]).getByText("Ola Nordmann"));
@@ -128,7 +128,7 @@ describe("StartTab", () => {
   });
 
   it("shows a running note for a tab app bound to the open journal", () => {
-    useJournalStore.setState({ patientId: ola.id, patient: ola, konsultasjoner: [], status: "ready" });
+    useJournalStore.setState({ patientId: ola.id, patient: ola, consultations: [], status: "ready" });
     useAppRunStore.setState({
       tabApps: [
         { id: "t1", clientId: "syk-inn", navn: "Sykmelding", patient: ola, startedAt: new Date() },
@@ -140,7 +140,7 @@ describe("StartTab", () => {
   });
 
   it("shows a stale note for a tab app bound to a different patient than the open journal", () => {
-    useJournalStore.setState({ patientId: kari.id, patient: kari, konsultasjoner: [], status: "ready" });
+    useJournalStore.setState({ patientId: kari.id, patient: kari, consultations: [], status: "ready" });
     useAppRunStore.setState({
       tabApps: [
         { id: "t1", clientId: "syk-inn", navn: "Sykmelding", patient: ola, startedAt: new Date() },
@@ -158,7 +158,7 @@ describe("StartTab", () => {
   });
 
   it("has no serious accessibility violations", async () => {
-    usePatientsStore.setState({ patients: [ola], recentIds: [ola.id], lastKonsultasjon: {} });
+    usePatientsStore.setState({ patients: [ola], recentIds: [ola.id], lastConsultation: {} });
     useAppRunStore.setState({
       tabApps: [
         { id: "t1", clientId: "syk-inn", navn: "Sykmelding", patient: ola, startedAt: new Date() },

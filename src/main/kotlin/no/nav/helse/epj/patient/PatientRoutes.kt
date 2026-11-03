@@ -37,7 +37,7 @@ fun Route.patientRoutes(patientService: PatientService, sessionOrgResolver: Sess
                 val patient =
                     patientService.getPatientById(id)?.takeIf {
                         patientService.isListedAt(id, orgNumber) ||
-                            patientService.hasKonsultasjonAt(id, orgNumber)
+                            patientService.hasConsultationAt(id, orgNumber)
                     } ?: return@get call.respond(HttpStatusCode.NotFound, "Pasient not found")
                 call.respond(patient)
             }

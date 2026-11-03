@@ -15,9 +15,9 @@ const DOC_READ_SCOPE = "launch patient/DocumentReference.rs";
 const FHIR_JSON = "application/fhir+json";
 
 type Patient = { id: string; givenName: string; familyName: string };
-type Konsultasjon = { id: string };
+type Consultation = { id: string };
 type Notat = { id: string; journalnotat: string };
-type KonsultasjonMedNotater = Konsultasjon & { journalnotat: Notat[] };
+type ConsultationWithNotes = Consultation & { journalnotat: Notat[] };
 type Maaling = { id: string; verdi: number; enhetKode: string; enhetVisningsnavn: string };
 type Token = { access_token: string; patient?: string; encounter?: string; scope: string; token_type: string };
 
@@ -89,9 +89,9 @@ test.describe("FHIR write-back against the real backend", () => {
 
   let api: APIRequestContext;
   let previousActive: string | null = null;
-  const created: { patients: Patient[]; konsultasjoner: { patientId: string; id: string }[] } = {
+  const created: { patients: Patient[]; consultations: { patientId: string; id: string }[] } = {
     patients: [],
-    konsultasjoner: [],
+    consultations: [],
   };
 
   async function json<T>(promise: ReturnType<APIRequestContext["get"]>, status = 200): Promise<T> {
@@ -125,12 +125,12 @@ test.describe("FHIR write-back against the real backend", () => {
     throw new Error("POST /api/patient returned 409 (duplicate personident) on every attempt");
   }
 
-  async function startKonsultasjon(patient: Patient): Promise<Konsultasjon> {
-    const konsultasjon = await json<Konsultasjon>(
-      api.post(`/api/patients/${patient.id}/konsultasjoner`),
+  async function startConsultation(patient: Patient): Promise<Consultation> {
+    const consultation = await json<Consultation>(
+      api.post(`/api/patients/${patient.id}/consultations`),
     );
-    created.konsultasjoner.push({ patientId: patient.id, id: konsultasjon.id });
-    return konsultasjon;
+    created.consultations.push({ patientId: patient.id, id: consultation.id });
+    return consultation;
   }
 
   async function maalinger(patientId: string): Promise<Maaling[]> {
@@ -138,7 +138,7 @@ test.describe("FHIR write-back against the real backend", () => {
   }
 
   async function notater(patientId: string): Promise<Notat[]> {
-    const list = await json<KonsultasjonMedNotater[]>(api.get(`/api/patients/${patientId}/konsultasjoner`));
+    const list = await json<ConsultationWithNotes[]>(api.get(`/api/patients/${patientId}/consultations`));
     return list.flatMap((k) => k.journalnotat);
   }
 
@@ -226,8 +226,8 @@ test.describe("FHIR write-back against the real backend", () => {
   test.afterAll(async () => {
     if (!api) return;
     const problems: string[] = [];
-    for (const { patientId, id } of created.konsultasjoner) {
-      const response = await api.post(`/api/patients/${patientId}/konsultasjoner/${id}/avbryt`);
+    for (const { patientId, id } of created.consultations) {
+      const response = await api.post(`/api/patients/${patientId}/consultations/${id}/cancel`);
       if (response.status() !== 200) {
         problems.push(`cancel konsultasjon ${id} failed with ${response.status()}`);
       }
@@ -243,7 +243,7 @@ test.describe("FHIR write-back against the real backend", () => {
       }
     }
     console.log(
-      `E2E test data left in the database (no delete API): patients ${JSON.stringify(created.patients.map((p) => p.id))}, konsultasjoner ${JSON.stringify(created.konsultasjoner)}. ${restoration}.`,
+      `E2E test data left in the database (no delete API): patients ${JSON.stringify(created.patients.map((p) => p.id))}, konsultasjoner ${JSON.stringify(created.consultations)}. ${restoration}.`,
     );
     await api.dispose();
     if (problems.length > 0) throw new Error(`E2E cleanup problems: ${problems.join("; ")}`);
@@ -252,13 +252,13 @@ test.describe("FHIR write-back against the real backend", () => {
   test("writes an Observation through SMART auth and shows it in Målinger", async ({ page }) => {
     const target = await createPatient("Skrivetest");
     const other = await createPatient("Annenpasient");
-    const otherKonsultasjon = await startKonsultasjon(other);
-    const konsultasjon = await startKonsultasjon(target);
+    const otherConsultation = await startConsultation(other);
+    const consultation = await startConsultation(target);
     expect(await maalinger(target.id)).toEqual([]);
     expect(await maalinger(other.id)).toEqual([]);
 
     const writeToken = await smartToken(target.id, WRITE_SCOPE);
-    expect(writeToken.encounter).toBe(konsultasjon.id);
+    expect(writeToken.encounter).toBe(consultation.id);
     expect(writeToken.scope.split(" ")).toContain("patient/Observation.cud");
 
     const effective = new Date(Date.now() - 60_000);
@@ -268,7 +268,7 @@ test.describe("FHIR write-back against the real backend", () => {
 
     const created201 = await api.post("/fhir/Observation", {
       headers: fhirHeaders(writeToken),
-      data: observation(target.id, konsultasjon.id, effectiveIso, value),
+      data: observation(target.id, consultation.id, effectiveIso, value),
     });
     expect(created201.status(), await created201.text()).toBe(201);
     const createdBody = (await created201.json()) as { id: string };
@@ -282,7 +282,7 @@ test.describe("FHIR write-back against the real backend", () => {
       resourceType: "Observation",
       id: createdBody.id,
       subject: { reference: `Patient/${target.id}` },
-      encounter: { reference: `Encounter/${konsultasjon.id}` },
+      encounter: { reference: `Encounter/${consultation.id}` },
       valueQuantity: { value, code: "Cel" },
     });
 
@@ -292,13 +292,13 @@ test.describe("FHIR write-back against the real backend", () => {
 
     const readToken = await smartToken(target.id, READ_SCOPE);
     expect(readToken.scope.split(" ")).not.toContain("patient/Observation.cud");
-    const crossPatientBody = observation(other.id, otherKonsultasjon.id, effectiveIso, 37.1);
+    const crossPatientBody = observation(other.id, otherConsultation.id, effectiveIso, 37.1);
     const malformedBodies: { label: string; data?: unknown; body?: string }[] = [
       { label: "invalid JSON", body: "{not json" },
       {
         label: "wrong code system",
         data: {
-          ...observation(target.id, konsultasjon.id, effectiveIso, 37.5),
+          ...observation(target.id, consultation.id, effectiveIso, 37.5),
           code: { coding: [{ system: "http://example.org", code: "x", display: "x" }] },
         },
       },
@@ -310,7 +310,7 @@ test.describe("FHIR write-back against the real backend", () => {
         label: "read-only token write",
         response: await api.post("/fhir/Observation", {
           headers: fhirHeaders(readToken),
-          data: observation(target.id, konsultasjon.id, effectiveIso, 37.2),
+          data: observation(target.id, consultation.id, effectiveIso, 37.2),
         }),
         status: [403],
       },
@@ -363,13 +363,13 @@ test.describe("FHIR write-back against the real backend", () => {
   test("writes a DocumentReference through SMART auth and shows it in the journal", async ({ page }) => {
     const target = await createPatient("Notattest");
     const other = await createPatient("Annennotat");
-    const otherKonsultasjon = await startKonsultasjon(other);
-    const konsultasjon = await startKonsultasjon(target);
+    const otherConsultation = await startConsultation(other);
+    const consultation = await startConsultation(target);
     expect(await notater(target.id)).toEqual([]);
     expect(await notater(other.id)).toEqual([]);
 
     const writeToken = await smartToken(target.id, DOC_WRITE_SCOPE);
-    expect(writeToken.encounter).toBe(konsultasjon.id);
+    expect(writeToken.encounter).toBe(consultation.id);
     const writeGrants = writeToken.scope.split(" ");
     expect(writeGrants).toContain("patient/DocumentReference.rs");
     expect(writeGrants).toContain("patient/DocumentReference.c");
@@ -377,9 +377,9 @@ test.describe("FHIR write-back against the real backend", () => {
     const readGrants = readToken.scope.split(" ");
     expect(readGrants).toEqual(["launch", "patient/DocumentReference.rs"]);
 
-    const konsultasjonRequests: string[] = [];
+    const consultationRequests: string[] = [];
     page.on("request", (request) => {
-      if (request.url().includes("/konsultasjoner")) konsultasjonRequests.push(request.url());
+      if (request.url().includes("/consultations")) consultationRequests.push(request.url());
     });
 
     await page.goto(`/patients/${target.id}`);
@@ -390,7 +390,7 @@ test.describe("FHIR write-back against the real backend", () => {
     const text = `E2E journalnotat ${randomBytes(4).toString("hex")}`;
     const created201 = await api.post("/fhir/DocumentReference", {
       headers: fhirHeaders(writeToken),
-      data: documentReference(target.id, konsultasjon.id, text),
+      data: documentReference(target.id, consultation.id, text),
     });
     expect(created201.status(), await created201.text()).toBe(201);
     const createdBody = (await created201.json()) as { id: string };
@@ -404,7 +404,7 @@ test.describe("FHIR write-back against the real backend", () => {
       id: createdBody.id,
       description: text,
       subject: { reference: `Patient/${target.id}` },
-      context: { encounter: [{ reference: `Encounter/${konsultasjon.id}` }] },
+      context: { encounter: [{ reference: `Encounter/${consultation.id}` }] },
     });
 
     const searched = await api.get(`/fhir/DocumentReference?patient=${target.id}`, { headers: fhirHeaders(readToken) });
@@ -419,12 +419,12 @@ test.describe("FHIR write-back against the real backend", () => {
 
     const draft = "ulagret utkast";
     await editor.fill(draft);
-    const requestsBeforeReturn = konsultasjonRequests.length;
+    const requestsBeforeReturn = consultationRequests.length;
     await page.evaluate(() => {
       window.dispatchEvent(new Event("focus"));
       document.dispatchEvent(new Event("visibilitychange"));
     });
-    expect(konsultasjonRequests.length).toBe(requestsBeforeReturn);
+    expect(consultationRequests.length).toBe(requestsBeforeReturn);
     await expect(editor).toHaveValue(draft);
 
     await editor.fill("");
@@ -435,7 +435,7 @@ test.describe("FHIR write-back against the real backend", () => {
     const countsBefore = [(await notater(target.id)).length, (await notater(other.id)).length];
     const readOnly = await api.post("/fhir/DocumentReference", {
       headers: fhirHeaders(readToken),
-      data: documentReference(target.id, konsultasjon.id, `${text} read-only`),
+      data: documentReference(target.id, consultation.id, `${text} read-only`),
     });
     expect(readOnly.status(), await readOnly.text()).toBe(403);
     expect(readOnly.headers()["content-type"]).toContain("application/fhir+json");
@@ -446,7 +446,7 @@ test.describe("FHIR write-back against the real backend", () => {
 
     const crossPatient = await api.post("/fhir/DocumentReference", {
       headers: fhirHeaders(writeToken),
-      data: documentReference(other.id, otherKonsultasjon.id, `${text} cross-patient`),
+      data: documentReference(other.id, otherConsultation.id, `${text} cross-patient`),
     });
     expect(crossPatient.status(), await crossPatient.text()).toBe(404);
     expect(crossPatient.headers()["content-type"]).toContain("application/fhir+json");

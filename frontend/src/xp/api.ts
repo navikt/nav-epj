@@ -4,7 +4,7 @@ import {
   ActivePatientSchema,
   AppSchema,
   CapabilityStatementSchema,
-  KonsultasjonSchema,
+  ConsultationSchema,
   LaunchErrorSchema,
   LaunchResponseSchema,
   MaalingSchema,
@@ -16,7 +16,7 @@ import {
   type ActivePatient,
   type App,
   type CapabilityStatement,
-  type Konsultasjon,
+  type Consultation,
   type Maaling,
   type CreatePatientRequest,
   type Patient,
@@ -48,13 +48,13 @@ export class LaunchError extends ApiError {
   }
 }
 
-export type DiagnoseKey = { kode: string; system: string };
+export type DiagnosisKey = { code: string; system: string };
 
-export type SaveKonsultasjonRequest = {
-  konsultasjonId: string;
-  diagnoser: DiagnoseKey[];
+export type SaveConsultationRequest = {
+  consultationId: string;
+  diagnoses: DiagnosisKey[];
   journalNotat: string | null;
-  ferdigstill: boolean;
+  finalize: boolean;
 };
 
 export const callOf = (url: string, init?: RequestInit) =>
@@ -108,13 +108,13 @@ export async function createPatient(
   return PatientSchema.parse(await response.json());
 }
 
-export async function fetchKonsultasjoner(
+export async function fetchConsultations(
   patientId: string,
-): Promise<Konsultasjon[]> {
+): Promise<Consultation[]> {
   const response = await request(
-    `/api/patients/${encodeURIComponent(patientId)}/konsultasjoner`,
+    `/api/patients/${encodeURIComponent(patientId)}/consultations`,
   );
-  return KonsultasjonSchema.array().parse(await response.json());
+  return ConsultationSchema.array().parse(await response.json());
 }
 
 export async function fetchMaalinger(patientId: string): Promise<Maaling[]> {
@@ -124,32 +124,32 @@ export async function fetchMaalinger(patientId: string): Promise<Maaling[]> {
   return MaalingSchema.array().parse(await response.json());
 }
 
-export async function startKonsultasjon(
+export async function startConsultation(
   patientId: string,
-): Promise<Konsultasjon> {
+): Promise<Consultation> {
   const response = await request(
-    `/api/patients/${encodeURIComponent(patientId)}/konsultasjoner`,
+    `/api/patients/${encodeURIComponent(patientId)}/consultations`,
     { method: "POST" },
   );
-  return KonsultasjonSchema.parse(await response.json());
+  return ConsultationSchema.parse(await response.json());
 }
 
-export async function saveKonsultasjon(
+export async function saveConsultation(
   patientId: string,
-  body: SaveKonsultasjonRequest,
+  body: SaveConsultationRequest,
 ): Promise<void> {
   await request(
-    `/api/patients/${encodeURIComponent(patientId)}/konsultasjoner`,
+    `/api/patients/${encodeURIComponent(patientId)}/consultations`,
     jsonInit("PATCH", body),
   );
 }
 
-export async function cancelKonsultasjon(
+export async function cancelConsultation(
   patientId: string,
-  konsultasjonId: string,
+  consultationId: string,
 ): Promise<void> {
   await request(
-    `/api/patients/${encodeURIComponent(patientId)}/konsultasjoner/${encodeURIComponent(konsultasjonId)}/avbryt`,
+    `/api/patients/${encodeURIComponent(patientId)}/consultations/${encodeURIComponent(consultationId)}/cancel`,
     { method: "POST" },
   );
 }

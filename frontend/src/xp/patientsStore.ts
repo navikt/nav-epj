@@ -9,7 +9,7 @@ const RECENT_LIMIT = 10;
 
 export type PatientsView = "mine" | "recent";
 
-export type LastKonsultasjon = {
+export type LastConsultation = {
   status: string;
   timestamp: string;
 };
@@ -24,14 +24,14 @@ type PatientsState = {
   page: number;
   owner: string | null;
   recentIds: string[];
-  lastKonsultasjon: Record<string, LastKonsultasjon>;
+  lastConsultation: Record<string, LastConsultation>;
   load: () => Promise<void>;
   setQuery: (query: string) => void;
   setView: (view: PatientsView) => void;
   setPage: (page: number) => void;
   setOwner: (owner: string | null) => void;
   markOpened: (patientId: string) => void;
-  setLastKonsultasjon: (patientId: string, last: LastKonsultasjon | null) => void;
+  setLastConsultation: (patientId: string, last: LastConsultation | null) => void;
   reset: () => void;
 };
 
@@ -73,7 +73,7 @@ function initialState() {
     page: 1,
     owner: null as string | null,
     recentIds: [] as string[],
-    lastKonsultasjon: {} as Record<string, LastKonsultasjon>,
+    lastConsultation: {} as Record<string, LastConsultation>,
   };
 }
 
@@ -84,11 +84,11 @@ export const usePatientsStore = create<PatientsState>((set, get) => ({
     set({ status: "loading" });
     try {
       const patients = await fetchPatients();
-      const lastKonsultasjon: Record<string, LastKonsultasjon> = {};
+      const lastConsultation: Record<string, LastConsultation> = {};
       for (const { id, latestConsultation } of patients) {
-        if (latestConsultation) lastKonsultasjon[id] = latestConsultation;
+        if (latestConsultation) lastConsultation[id] = latestConsultation;
       }
-      set({ patients, lastKonsultasjon, status: "ready" });
+      set({ patients, lastConsultation, status: "ready" });
     } catch {
       set({ status: "error" });
     }
@@ -110,12 +110,12 @@ export const usePatientsStore = create<PatientsState>((set, get) => ({
     removeLegacyRecent();
     set({ owner, recentIds: owner ? readRecent(owner) : [] });
   },
-  setLastKonsultasjon: (patientId, last) =>
+  setLastConsultation: (patientId, last) =>
     set((s) => {
-      const next = { ...s.lastKonsultasjon };
+      const next = { ...s.lastConsultation };
       if (last) next[patientId] = last;
       else delete next[patientId];
-      return { lastKonsultasjon: next };
+      return { lastConsultation: next };
     }),
   reset: () => set(initialState()),
 }));

@@ -20,7 +20,7 @@ export function StartTab() {
   const openJournal = useOpenJournal();
   const patients = usePatientsStore((s) => s.patients);
   const recentIds = usePatientsStore((s) => s.recentIds);
-  const lastKonsultasjon = usePatientsStore((s) => s.lastKonsultasjon);
+  const lastConsultation = usePatientsStore((s) => s.lastConsultation);
   const tabApps = useAppRunStore((s) => s.tabApps);
   const journalPatientId = useJournalStore((s) => s.patientId);
   const activePatientId = useActivePatientStore((s) => s.activeId);
@@ -60,11 +60,11 @@ export function StartTab() {
             <ul className="xp-recent-list">
               {recent.map((patient) => {
                 const birthDate = birthDateOf(patient);
-                const last = lastKonsultasjon[patient.id];
+                const last = lastConsultation[patient.id];
                 const siste =
                   !last
                     ? "–"
-                    : last.status === "PÅGÅENDE"
+                    : last.status === "IN_PROGRESS"
                       ? copy["s3.col.last.ongoing"]
                       : formatDate(last.timestamp);
                 return (

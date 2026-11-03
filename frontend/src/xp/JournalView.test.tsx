@@ -17,17 +17,17 @@ const patient = {
 
 const diag = { code: "A02", system: "ICPC2", text: "Frysninger" };
 
-function kons(overrides: Record<string, unknown> = {}) {
+function consultation(overrides: Record<string, unknown> = {}) {
   return {
     id: "k1",
     patientId: "p1",
     hpr: ["9144889"],
     journalnotat: [],
-    diagnoser: [],
-    startetTidspunkt: "2026-09-30T09:00:00",
-    avsluttetTidspunkt: null,
-    status: "PÅGÅENDE",
-    problemstilling: null,
+    diagnoses: [],
+    startedAt: "2026-09-30T09:00:00",
+    endedAt: null,
+    status: "IN_PROGRESS",
+    reasonForVisit: null,
     ...overrides,
   };
 }
@@ -60,10 +60,10 @@ const base = {
   "GET /api/patient/p1": () => ({ body: patient }),
 };
 
-async function openJournal(konsultasjoner: unknown[], routes: Record<string, Handler> = {}) {
+async function openJournal(consultations: unknown[], routes: Record<string, Handler> = {}) {
   const calls = stub({
     ...base,
-    "GET /api/patients/p1/konsultasjoner": () => ({ body: konsultasjoner }),
+    "GET /api/patients/p1/consultations": () => ({ body: consultations }),
     ...routes,
   });
   const view = render(<JournalView />);
@@ -75,7 +75,7 @@ async function openJournal(konsultasjoner: unknown[], routes: Record<string, Han
 
 const savedNote = {
   id: "n1",
-  konsultasjonId: "k1",
+  consultationId: "k1",
   patientId: "p1",
   journalnotat: "Hei",
 };
@@ -86,7 +86,7 @@ describe("JournalView", () => {
     vi.unstubAllGlobals();
   });
 
-  it("shows a loading status until the patient and konsultasjoner have loaded", async () => {
+  it("shows a loading status until the patient and consultations have loaded", async () => {
     render(<JournalView />);
     act(() => {
       useJournalStore.setState({ patientId: "p1", status: "loading" });
@@ -95,13 +95,13 @@ describe("JournalView", () => {
   });
 
   it("refreshes on visible return without overlapping requests and stops listening on unmount", async () => {
-    let served: unknown[] = [kons()];
+    let served: unknown[] = [consultation()];
     const { calls, unmount } = await openJournal([], {
-      "GET /api/patients/p1/konsultasjoner": () => ({ body: served }),
+      "GET /api/patients/p1/consultations": () => ({ body: served }),
     });
     const count = () =>
-      calls.filter((c) => c.key === "GET /api/patients/p1/konsultasjoner").length;
-    served = [kons({ journalnotat: [savedNote] })];
+      calls.filter((c) => c.key === "GET /api/patients/p1/consultations").length;
+    served = [consultation({ journalnotat: [savedNote] })];
     const before = count();
     await act(async () => {
       window.dispatchEvent(new Event("focus"));
@@ -117,9 +117,9 @@ describe("JournalView", () => {
 
   it("shows a retryable alert when a focus refresh fails and keeps the journal", async () => {
     let fail = false;
-    await openJournal([kons()], {
-      "GET /api/patients/p1/konsultasjoner": () =>
-        fail ? { ok: false } : { body: [kons()] },
+    await openJournal([consultation()], {
+      "GET /api/patients/p1/consultations": () =>
+        fail ? { ok: false } : { body: [consultation()] },
     });
     fail = true;
     await act(async () => {
@@ -135,7 +135,7 @@ describe("JournalView", () => {
   it("shows a retryable alert when loading failed", async () => {
     const calls = stub({
       "GET /api/patient/p1": () => ({ ok: false }),
-      "GET /api/patients/p1/konsultasjoner": () => ({ body: [] }),
+      "GET /api/patients/p1/consultations": () => ({ body: [] }),
     });
     render(<JournalView />);
     await act(async () => {
@@ -144,16 +144,16 @@ describe("JournalView", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Feil ved lasting av pasient",
     );
-    stub({ ...base, "GET /api/patients/p1/konsultasjoner": () => ({ body: [] }) });
+    stub({ ...base, "GET /api/patients/p1/consultations": () => ({ body: [] }) });
     await userEvent.click(screen.getByRole("button", { name: "Prøv igjen" }));
     expect(await screen.findByRole("region", { name: "Pasientkontekst" })).toBeInTheDocument();
     expect(calls.length).toBeGreaterThan(0);
   });
 
-  it("offers to start a konsultasjon when none is ongoing and shows the form after starting", async () => {
-    const started = kons();
+  it("offers to start a consultation when none is ongoing and shows the form after starting", async () => {
+    const started = consultation();
     const { container } = await openJournal([], {
-      "POST /api/patients/p1/konsultasjoner": () => ({ body: started }),
+      "POST /api/patients/p1/consultations": () => ({ body: started }),
     });
     expect(
       await screen.findByRole("heading", { name: "Ingen pågående konsultasjon" }),
@@ -171,7 +171,7 @@ describe("JournalView", () => {
 
   it("preloads saved diagnoses and note and passes axe", async () => {
     const { container } = await openJournal([
-      kons({ diagnoser: [diag], journalnotat: [savedNote] }),
+      consultation({ diagnoses: [diag], journalnotat: [savedNote] }),
     ]);
     expect(await screen.findByLabelText("Journalnotat")).toHaveValue("Hei");
     const chips = screen.getByRole("list", { name: "Valgte diagnoser" });
@@ -181,8 +181,8 @@ describe("JournalView", () => {
   });
 
   it("marks unsaved changes in the status and the sub-tab, and Lagre sends null for a blank note", async () => {
-    const { calls } = await openJournal([kons()], {
-      "PATCH /api/patients/p1/konsultasjoner": () => ({ body: {} }),
+    const { calls } = await openJournal([consultation()], {
+      "PATCH /api/patients/p1/consultations": () => ({ body: {} }),
     });
     const note = await screen.findByLabelText("Journalnotat");
     await userEvent.type(note, "Ny");
@@ -194,13 +194,13 @@ describe("JournalView", () => {
     await userEvent.clear(note);
     await userEvent.click(screen.getByRole("button", { name: "Lagre" }));
     const patch = calls.find((c) => c.key.startsWith("PATCH"));
-    expect(patch?.body).toMatchObject({ konsultasjonId: "k1", journalNotat: null, ferdigstill: false });
+    expect(patch?.body).toMatchObject({ consultationId: "k1", journalNotat: null, finalize: false });
   });
 
   it("reports a save error with a retry that saves again", async () => {
     let fail = true;
-    await openJournal([kons()], {
-      "PATCH /api/patients/p1/konsultasjoner": () =>
+    await openJournal([consultation()], {
+      "PATCH /api/patients/p1/consultations": () =>
         fail ? { ok: false } : { body: {} },
     });
     await userEvent.type(await screen.findByLabelText("Journalnotat"), "Hei");
@@ -218,8 +218,8 @@ describe("JournalView", () => {
 
   it("does not open the finish dialog while a save is in flight", async () => {
     let releasePatch: () => void = () => {};
-    await openJournal([kons()], {
-      "PATCH /api/patients/p1/konsultasjoner": () => ({ body: {} }),
+    await openJournal([consultation()], {
+      "PATCH /api/patients/p1/consultations": () => ({ body: {} }),
     });
     const fetchMock = vi.mocked(fetch);
     const original = fetchMock.getMockImplementation()!;
@@ -240,9 +240,9 @@ describe("JournalView", () => {
 
   it("asks for confirmation before finishing and shows the read-only summary afterwards", async () => {
     const { calls } = await openJournal(
-      [kons({ diagnoser: [diag], journalnotat: [savedNote] })],
+      [consultation({ diagnoses: [diag], journalnotat: [savedNote] })],
       {
-        "PATCH /api/patients/p1/konsultasjoner": () => ({ body: {} }),
+        "PATCH /api/patients/p1/consultations": () => ({ body: {} }),
       },
     );
     await userEvent.type(await screen.findByLabelText("Journalnotat"), "!");
@@ -267,11 +267,11 @@ describe("JournalView", () => {
     expect(screen.getByRole("button", { name: "Start konsultasjon" })).toBeInTheDocument();
   });
 
-  it("asks for confirmation before cancelling and returns to the no-konsultasjon state afterwards", async () => {
+  it("asks for confirmation before cancelling and returns to the no-consultation state afterwards", async () => {
     const { calls } = await openJournal(
-      [kons({ diagnoser: [diag], journalnotat: [savedNote] })],
+      [consultation({ diagnoses: [diag], journalnotat: [savedNote] })],
       {
-        "POST /api/patients/p1/konsultasjoner/k1/avbryt": () => ({ body: {} }),
+        "POST /api/patients/p1/consultations/k1/cancel": () => ({ body: {} }),
       },
     );
     await userEvent.type(await screen.findByLabelText("Journalnotat"), "!");
@@ -282,19 +282,19 @@ describe("JournalView", () => {
     expect(within(dialog).getByText("Ulagrede endringer går tapt.")).toBeInTheDocument();
     await userEvent.click(within(dialog).getByRole("button", { name: "Avbryt" }));
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
-    expect(calls.some((c) => c.key.includes("avbryt"))).toBe(false);
+    expect(calls.some((c) => c.key.includes("cancel"))).toBe(false);
 
     await userEvent.click(screen.getByRole("button", { name: "Slett" }));
     const again = screen.getByRole("alertdialog");
     stub({
       ...base,
-      "POST /api/patients/p1/konsultasjoner/k1/avbryt": () => ({ body: {} }),
-      "GET /api/patients/p1/konsultasjoner": () => ({
+      "POST /api/patients/p1/consultations/k1/cancel": () => ({ body: {} }),
+      "GET /api/patients/p1/consultations": () => ({
         body: [
-          kons({
-            status: "AVLYST",
-            avsluttetTidspunkt: "2026-09-30T09:20:00",
-            diagnoser: [diag],
+          consultation({
+            status: "CANCELLED",
+            endedAt: "2026-09-30T09:20:00",
+            diagnoses: [diag],
             journalnotat: [savedNote],
           }),
         ],
@@ -307,14 +307,14 @@ describe("JournalView", () => {
     expect(screen.getByRole("button", { name: "Start konsultasjon" })).toBeInTheDocument();
   });
 
-  it("lists a cancelled konsultasjon as Avlyst in Tidligere konsultasjoner", async () => {
+  it("lists a cancelled consultation as Avlyst in Tidligere konsultasjoner", async () => {
     await openJournal([
-      kons(),
-      kons({
+      consultation(),
+      consultation({
         id: "k0",
-        status: "AVLYST",
-        startetTidspunkt: "2026-09-01T09:00:00",
-        avsluttetTidspunkt: "2026-09-01T09:10:00",
+        status: "CANCELLED",
+        startedAt: "2026-09-01T09:00:00",
+        endedAt: "2026-09-01T09:10:00",
       }),
     ]);
     await userEvent.click(await screen.findByRole("tab", { name: "Tidligere konsultasjoner (1)" }));
@@ -322,16 +322,16 @@ describe("JournalView", () => {
     expect(within(table).getByText("✖ Avlyst")).toBeInTheDocument();
   });
 
-  it("lists previous konsultasjoner and shows the selected one read-only", async () => {
+  it("lists previous consultations and shows the selected one read-only", async () => {
     await openJournal([
-      kons(),
-      kons({
+      consultation(),
+      consultation({
         id: "k0",
-        status: "FULLFØRT",
-        startetTidspunkt: "2026-09-01T09:00:00",
-        avsluttetTidspunkt: "2026-09-01T09:30:00",
-        diagnoser: [diag],
-        journalnotat: [{ ...savedNote, id: "n0", konsultasjonId: "k0", journalnotat: "Gammelt notat" }],
+        status: "FINISHED",
+        startedAt: "2026-09-01T09:00:00",
+        endedAt: "2026-09-01T09:30:00",
+        diagnoses: [diag],
+        journalnotat: [{ ...savedNote, id: "n0", consultationId: "k0", journalnotat: "Gammelt notat" }],
       }),
     ]);
     await userEvent.click(await screen.findByRole("tab", { name: "Tidligere konsultasjoner (1)" }));
@@ -345,20 +345,20 @@ describe("JournalView", () => {
     expect(screen.getByText("01.09.2026 09:30")).toBeInTheDocument();
   });
 
-  it("never lists the ongoing konsultasjon under Tidligere konsultasjoner", async () => {
-    await openJournal([kons()]);
+  it("never lists the ongoing consultation under Tidligere konsultasjoner", async () => {
+    await openJournal([consultation()]);
     await userEvent.click(await screen.findByRole("tab", { name: "Tidligere konsultasjoner (0)" }));
     expect(screen.getByText("Ingen tidligere konsultasjoner.")).toBeInTheDocument();
   });
 
-  it("shows an empty state when there are no previous konsultasjoner", async () => {
+  it("shows an empty state when there are no previous consultations", async () => {
     await openJournal([]);
     await userEvent.click(await screen.findByRole("tab", { name: "Tidligere konsultasjoner (0)" }));
     expect(screen.getByText("Ingen tidligere konsultasjoner.")).toBeInTheDocument();
   });
 
   it("keeps the journal usable when the measurements request fails", async () => {
-    await openJournal([kons()], { "GET /api/patient/p1/maalinger": () => ({ ok: false }) });
+    await openJournal([consultation()], { "GET /api/patient/p1/maalinger": () => ({ ok: false }) });
     await userEvent.click(await screen.findByRole("tab", { name: "Målinger" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Feil ved lasting av målinger");
     expect(screen.getByText(/Ape/)).toBeInTheDocument();
@@ -371,13 +371,13 @@ describe("JournalView", () => {
 function stubFinished() {
   stub({
     ...base,
-    "PATCH /api/patients/p1/konsultasjoner": () => ({ body: {} }),
-    "GET /api/patients/p1/konsultasjoner": () => ({
+    "PATCH /api/patients/p1/consultations": () => ({ body: {} }),
+    "GET /api/patients/p1/consultations": () => ({
       body: [
-        kons({
-          status: "FULLFØRT",
-          avsluttetTidspunkt: "2026-09-30T09:20:00",
-          diagnoser: [diag],
+        consultation({
+          status: "FINISHED",
+          endedAt: "2026-09-30T09:20:00",
+          diagnoses: [diag],
           journalnotat: [{ ...savedNote, journalnotat: "Hei!" }],
         }),
       ],

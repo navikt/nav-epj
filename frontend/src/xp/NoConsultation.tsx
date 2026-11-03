@@ -10,7 +10,7 @@ import type { Patient } from "../utils/mapping/epj";
 
 type Props = { patient: Patient };
 
-export function NoKonsultasjon({ patient }: Props) {
+export function NoConsultation({ patient }: Props) {
   const headingId = useId();
   const starting = useJournalStore((s) => s.starting);
   const startFailed = useJournalStore((s) => s.startFailed);
@@ -21,7 +21,7 @@ export function NoKonsultasjon({ patient }: Props) {
     if (starting) return;
     await useJournalStore.getState().start();
     if (!useJournalStore.getState().startFailed) {
-      announce(copy["live.konsStarted"](name));
+      announce(copy["live.consultationStarted"](name));
     }
   }
 
@@ -30,7 +30,7 @@ export function NoKonsultasjon({ patient }: Props) {
       <p>{copy["s4.none.body"](name)}</p>
       {startFailed && (
         <Note tone="error" role="alert">
-          {copy["s4.loadError.kons"]}
+          {copy["s4.loadError.consultation"]}
         </Note>
       )}
       <div className="xp-form-actions">

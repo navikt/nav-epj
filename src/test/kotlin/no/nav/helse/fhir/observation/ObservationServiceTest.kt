@@ -16,8 +16,8 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.UtcOffset
 import kotlinx.datetime.toKotlinLocalDateTime
-import no.nav.helse.core.utils.KonsultasjonNotFoundException
-import no.nav.helse.epj.konsultasjon.KonsultasjonId
+import no.nav.helse.core.utils.ConsultationNotFoundException
+import no.nav.helse.epj.consultation.ConsultationId
 import no.nav.helse.epj.maaling.Maaling
 import no.nav.helse.epj.maaling.MaalingId
 import no.nav.helse.epj.maaling.MaalingService
@@ -39,7 +39,7 @@ class ObservationServiceTest {
     private fun maaling(
         id: MaalingId = MaalingId(Uuid.generateV4()),
         patientId: PatientId = PatientId(Uuid.generateV4()),
-        konsultasjonId: KonsultasjonId = KonsultasjonId(Uuid.generateV4()),
+        consultationId: ConsultationId = ConsultationId(Uuid.generateV4()),
         hpr: PractitionerHpr? = PractitionerHpr("123"),
         loincKode: String = "8310-5",
         loincVisningsnavn: String = "Body temperature",
@@ -52,7 +52,7 @@ class ObservationServiceTest {
         Maaling(
             id = id,
             patientId = patientId,
-            konsultasjonId = konsultasjonId,
+            consultationId = consultationId,
             hpr = hpr,
             loincKode = loincKode,
             loincVisningsnavn = loincVisningsnavn,
@@ -70,7 +70,7 @@ class ObservationServiceTest {
             val request =
                 OpprettMaalingRequest(
                     patientId = PatientId(Uuid.generateV4()),
-                    konsultasjonId = KonsultasjonId(Uuid.generateV4()),
+                    consultationId = ConsultationId(Uuid.generateV4()),
                     hpr = null,
                     loincKode = "8310-5",
                     loincVisningsnavn = "Body temperature",
@@ -83,7 +83,7 @@ class ObservationServiceTest {
             val persisted =
                 maaling(
                     patientId = request.patientId,
-                    konsultasjonId = request.konsultasjonId,
+                    consultationId = request.consultationId,
                     hpr = request.hpr,
                     loincKode = request.loincKode,
                     loincVisningsnavn = request.loincVisningsnavn,
@@ -108,7 +108,7 @@ class ObservationServiceTest {
             val request =
                 OpprettMaalingRequest(
                     patientId = PatientId(Uuid.generateV4()),
-                    konsultasjonId = KonsultasjonId(Uuid.generateV4()),
+                    consultationId = ConsultationId(Uuid.generateV4()),
                     hpr = null,
                     loincKode = "8310-5",
                     loincVisningsnavn = "Body temperature",
@@ -119,9 +119,9 @@ class ObservationServiceTest {
                     status = MaalingStatus.FINAL,
                 )
             coEvery { maalingService.opprettMaaling(request, DEFAULT_ORG_NUMBER) } throws
-                KonsultasjonNotFoundException(request.konsultasjonId)
+                ConsultationNotFoundException(request.consultationId)
 
-            assertFailsWith<KonsultasjonNotFoundException> {
+            assertFailsWith<ConsultationNotFoundException> {
                 observationService.createObservation(request, DEFAULT_ORG_NUMBER)
             }
         }
@@ -139,8 +139,8 @@ class ObservationServiceTest {
     @Test
     fun `getObservationById maps subject, encounter, LOINC code and UCUM quantity`() = runTest {
         val patientId = PatientId(Uuid.generateV4())
-        val konsultasjonId = KonsultasjonId(Uuid.generateV4())
-        val target = maaling(patientId = patientId, konsultasjonId = konsultasjonId)
+        val consultationId = ConsultationId(Uuid.generateV4())
+        val target = maaling(patientId = patientId, consultationId = consultationId)
         coEvery { maalingService.getMaaling(target.id, DEFAULT_ORG_NUMBER) } returns target
 
         val observation =
@@ -152,7 +152,7 @@ class ObservationServiceTest {
         requireNotNull(observation)
         assertEquals(target.id.value.toString(), observation.id)
         assertEquals("Patient/${patientId.value}", observation.subject?.reference?.value)
-        assertEquals("Encounter/${konsultasjonId.value}", observation.encounter?.reference?.value)
+        assertEquals("Encounter/${consultationId.value}", observation.encounter?.reference?.value)
 
         val coding = observation.code.coding.single()
         assertEquals("http://loinc.org", coding.system?.value)
@@ -314,17 +314,17 @@ class ObservationServiceTest {
     @Test
     fun `searchObservations filters by encounter`() = runTest {
         val patientId = PatientId(Uuid.generateV4())
-        val konsultasjonA = KonsultasjonId(Uuid.generateV4())
-        val konsultasjonB = KonsultasjonId(Uuid.generateV4())
-        val maalingA = maaling(patientId = patientId, konsultasjonId = konsultasjonA)
-        val maalingB = maaling(patientId = patientId, konsultasjonId = konsultasjonB)
+        val consultationA = ConsultationId(Uuid.generateV4())
+        val consultationB = ConsultationId(Uuid.generateV4())
+        val maalingA = maaling(patientId = patientId, consultationId = consultationA)
+        val maalingB = maaling(patientId = patientId, consultationId = consultationB)
         coEvery { maalingService.getMaalingerForPatient(patientId, DEFAULT_ORG_NUMBER) } returns
             listOf(maalingA, maalingB)
 
         val bundle =
             observationService.searchObservations(
                 patientId = PatientInputId(patientId.value),
-                encounterId = EncounterId(konsultasjonA.value),
+                encounterId = EncounterId(consultationA.value),
                 code = null,
                 DEFAULT_ORG_NUMBER,
             )
@@ -362,21 +362,21 @@ class ObservationServiceTest {
     @Test
     fun `searchObservations combines encounter and code filters`() = runTest {
         val patientId = PatientId(Uuid.generateV4())
-        val konsultasjonA = KonsultasjonId(Uuid.generateV4())
-        val konsultasjonB = KonsultasjonId(Uuid.generateV4())
+        val consultationA = ConsultationId(Uuid.generateV4())
+        val consultationB = ConsultationId(Uuid.generateV4())
         val match =
-            maaling(patientId = patientId, konsultasjonId = konsultasjonA, loincKode = "8310-5")
+            maaling(patientId = patientId, consultationId = consultationA, loincKode = "8310-5")
         val wrongEncounter =
-            maaling(patientId = patientId, konsultasjonId = konsultasjonB, loincKode = "8310-5")
+            maaling(patientId = patientId, consultationId = consultationB, loincKode = "8310-5")
         val wrongCode =
-            maaling(patientId = patientId, konsultasjonId = konsultasjonA, loincKode = "2339-0")
+            maaling(patientId = patientId, consultationId = consultationA, loincKode = "2339-0")
         coEvery { maalingService.getMaalingerForPatient(patientId, DEFAULT_ORG_NUMBER) } returns
             listOf(match, wrongEncounter, wrongCode)
 
         val bundle =
             observationService.searchObservations(
                 patientId = PatientInputId(patientId.value),
-                encounterId = EncounterId(konsultasjonA.value),
+                encounterId = EncounterId(consultationA.value),
                 code = "8310-5",
                 DEFAULT_ORG_NUMBER,
             )

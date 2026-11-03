@@ -6,8 +6,8 @@ import io.ktor.server.application.*
 import io.ktor.server.plugins.di.*
 import no.nav.helse.epj.clinic.ClinicRepository
 import no.nav.helse.epj.clinic.ClinicService
-import no.nav.helse.epj.konsultasjon.KonsultasjonRepository
-import no.nav.helse.epj.konsultasjon.KonsultasjonService
+import no.nav.helse.epj.consultation.ConsultationRepository
+import no.nav.helse.epj.consultation.ConsultationService
 import no.nav.helse.epj.maaling.MaalingRepository
 import no.nav.helse.epj.maaling.MaalingService
 import no.nav.helse.epj.patient.PatientRepository
@@ -50,12 +50,12 @@ fun Application.configureDependencies() {
         provide(PatientRepository::class)
         provide(PractitionerRepository::class)
         provide(FastlegelisteRepository::class)
-        provide(KonsultasjonRepository::class)
+        provide(ConsultationRepository::class)
         provide(ClinicRepository::class)
         provide(MaalingRepository::class)
 
         provide(EpjPractitionerService::class)
-        provide(KonsultasjonService::class)
+        provide(ConsultationService::class)
         provide(EpjPatientService::class)
         provide(ClinicService::class)
         provide(MaalingService::class)

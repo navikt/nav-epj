@@ -124,20 +124,20 @@ class TestdataSeedTest : WithPostgresql() {
     }
 
     @Test
-    fun `avlyst and fullfort konsultasjoner have an end time while open ones do not`() {
-        val avsluttetMangler =
-            "SELECT count(*) FROM consultation WHERE status IN ('AVLYST', 'FULLFØRT') " +
+    fun `cancelled and finished consultations have an end time while open ones do not`() {
+        val endedAtMissing =
+            "SELECT count(*) FROM consultation WHERE status IN ('CANCELLED', 'FINISHED') " +
                 "AND ended_at IS NULL"
-        assertEquals("0", queryStrings(avsluttetMangler).single().single())
+        assertEquals("0", queryStrings(endedAtMissing).single().single())
         assertTrue(
-            queryStrings("SELECT count(*) FROM consultation WHERE status = 'AVLYST'")
+            queryStrings("SELECT count(*) FROM consultation WHERE status = 'CANCELLED'")
                 .single()
                 .single()!!
                 .toInt() > 0
         )
         assertTrue(
             queryStrings(
-                    "SELECT count(*) FROM consultation WHERE status IN ('PLANLAGT', 'PÅGÅENDE') " +
+                    "SELECT count(*) FROM consultation WHERE status IN ('PLANNED', 'IN_PROGRESS') " +
                         "AND ended_at IS NULL"
                 )
                 .single()
@@ -147,10 +147,10 @@ class TestdataSeedTest : WithPostgresql() {
     }
 
     @Test
-    fun `existing avlyst konsultasjoner without end time get one when the seed is applied again`() {
+    fun `existing cancelled consultations without end time get one when the seed is applied again`() {
         withConnection { connection ->
             connection.createStatement().use {
-                it.execute("UPDATE consultation SET ended_at = NULL WHERE status = 'AVLYST'")
+                it.execute("UPDATE consultation SET ended_at = NULL WHERE status = 'CANCELLED'")
             }
         }
 
@@ -159,7 +159,7 @@ class TestdataSeedTest : WithPostgresql() {
         assertEquals(
             "0",
             queryStrings(
-                    "SELECT count(*) FROM consultation WHERE status = 'AVLYST' " +
+                    "SELECT count(*) FROM consultation WHERE status = 'CANCELLED' " +
                         "AND ended_at IS NULL"
                 )
                 .single()
@@ -274,13 +274,13 @@ class TestdataSeedTest : WithPostgresql() {
 
     @Test
     fun `applying the seed again is idempotent and leaves clinical data untouched`() {
-        val konsultasjonId = UUID.randomUUID()
+        val consultationId = UUID.randomUUID()
         withConnection { connection ->
             connection.createStatement().use {
                 it.execute(
                     """
                     INSERT INTO consultation (id, patient_id, clinic_id, started_at, status)
-                    SELECT '$konsultasjonId', p.id, fl.clinic_id, now(), 'planlagt'
+                    SELECT '$consultationId', p.id, fl.clinic_id, now(), 'PLANNED'
                     FROM patient p
                              JOIN fastlegeliste_patient flp ON flp.patient_id = p.id
                              JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
@@ -301,8 +301,8 @@ class TestdataSeedTest : WithPostgresql() {
                 .map { count(it) }
         assertEquals(before, after)
         assertEquals(
-            listOf(listOf(konsultasjonId.toString())),
-            queryStrings("SELECT id FROM consultation WHERE id = '$konsultasjonId'"),
+            listOf(listOf(consultationId.toString())),
+            queryStrings("SELECT id FROM consultation WHERE id = '$consultationId'"),
         )
     }
 
@@ -331,7 +331,7 @@ class TestdataSeedTest : WithPostgresql() {
     }
 
     @Test
-    fun `every patient on an everyday list has an active konsultasjon at the list office`() {
+    fun `every patient on an everyday list has an active consultation at the list office`() {
         val withoutActive =
             queryStrings(
                 """
@@ -344,7 +344,7 @@ class TestdataSeedTest : WithPostgresql() {
                                   FROM consultation k
                                   WHERE k.patient_id = p.id
                                     AND k.clinic_id = fl.clinic_id
-                                    AND k.status = 'PÅGÅENDE')
+                                    AND k.status = 'IN_PROGRESS')
                 """
                     .trimIndent()
             )
@@ -366,7 +366,7 @@ class TestdataSeedTest : WithPostgresql() {
         assertEquals(
             "0",
             queryStrings(
-                    "SELECT count(*) FROM consultation k WHERE k.status = 'FULLFØRT' AND NOT EXISTS " +
+                    "SELECT count(*) FROM consultation k WHERE k.status = 'FINISHED' AND NOT EXISTS " +
                         "(SELECT 1 FROM consultation_diagnosis_code d WHERE d.consultation_id = k.id)"
                 )
                 .single()
@@ -384,7 +384,7 @@ class TestdataSeedTest : WithPostgresql() {
         assertEquals(
             "0",
             queryStrings(
-                    "SELECT count(*) FROM consultation WHERE status = 'PLANLAGT' " +
+                    "SELECT count(*) FROM consultation WHERE status = 'PLANNED' " +
                         "AND started_at < '2026-10-21'::timestamptz"
                 )
                 .single()

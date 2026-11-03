@@ -29,7 +29,7 @@ describe("AppsTab", () => {
     expect(within(cards[2]).getByText(copy["pane.apps.mode.tab"])).toBeInTheDocument();
   });
 
-  it("starts an app when a konsultasjon is ongoing", async () => {
+  it("starts an app when a consultation is ongoing", async () => {
     const fetchMock = vi.fn(async () => ({
       ok: true,
       status: 200,
@@ -44,7 +44,7 @@ describe("AppsTab", () => {
     vi.unstubAllGlobals();
   });
 
-  it("disables starting without a konsultasjon and explains why", async () => {
+  it("disables starting without a consultation and explains why", async () => {
     seedJournal(ola, []);
     render(<AppsTab />);
     const starts = screen.getAllByRole("button", { name: copy["s4.apps.start"] });
@@ -98,7 +98,7 @@ describe("AppsTab", () => {
   it("has no serious accessibility violations enabled and disabled", async () => {
     const { container, rerender } = render(<AppsTab />);
     await expectNoSeriousViolations(container);
-    useJournalStore.setState({ konsultasjoner: [] });
+    useJournalStore.setState({ consultations: [] });
     rerender(<AppsTab />);
     await expectNoSeriousViolations(container);
   });

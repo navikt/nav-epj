@@ -15,9 +15,9 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import no.nav.helse.core.utils.ConsultationStatus
 import no.nav.helse.core.utils.DuplicatePatientException
 import no.nav.helse.core.utils.IngenFastlegelisteException
-import no.nav.helse.core.utils.KonsultasjonStatus
 import no.nav.helse.core.utils.UgyldigPersonidentException
 import no.nav.helse.epj.clinic.Clinic
 import no.nav.helse.epj.clinic.ClinicId
@@ -163,7 +163,7 @@ class PatientRoutesTest {
                     selectable = false,
                     latestConsultation =
                         LatestConsultation(
-                            KonsultasjonStatus.PAAGAAENDE,
+                            ConsultationStatus.IN_PROGRESS,
                             LocalDateTime.parse("2026-01-02T03:04:05"),
                         ),
                 )
@@ -174,7 +174,7 @@ class PatientRoutesTest {
         assertEquals(HttpStatusCode.OK, response.status)
         assertTrue(response.bodyAsText().contains("Nordmann"))
         assertTrue(response.bodyAsText().contains("\"selectable\" : false"))
-        assertTrue(response.bodyAsText().contains("\"status\" : \"PÅGÅENDE\""))
+        assertTrue(response.bodyAsText().contains("\"status\" : \"IN_PROGRESS\""))
         assertTrue(response.bodyAsText().contains("\"timestamp\" : \"2026-01-02T03:04:05\""))
     }
 
@@ -210,13 +210,13 @@ class PatientRoutesTest {
     }
 
     @Test
-    fun `GET patient by id returns a patient with konsultasjoner at the session org that is no longer listed`() =
+    fun `GET patient by id returns a patient with consultations at the session org that is no longer listed`() =
         testApp {
             val id = PatientId(Uuid.generateV4())
             coEvery { patientService.getPatientById(id) } returns
                 Patient(id, "Kari", "Nordmann", "15068500017")
             coEvery { patientService.isListedAt(id, "311111116") } returns false
-            coEvery { patientService.hasKonsultasjonAt(id, "311111116") } returns true
+            coEvery { patientService.hasConsultationAt(id, "311111116") } returns true
 
             assertEquals(HttpStatusCode.OK, get("/api/patient/${id.value}").status)
         }
@@ -227,7 +227,7 @@ class PatientRoutesTest {
         coEvery { patientService.getPatientById(id) } returns
             Patient(id, "Kari", "Nordmann", "15068500017")
         coEvery { patientService.isListedAt(id, "311111116") } returns false
-        coEvery { patientService.hasKonsultasjonAt(id, "311111116") } returns false
+        coEvery { patientService.hasConsultationAt(id, "311111116") } returns false
 
         assertEquals(HttpStatusCode.NotFound, get("/api/patient/${id.value}").status)
     }

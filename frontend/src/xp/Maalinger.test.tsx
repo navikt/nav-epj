@@ -7,7 +7,7 @@ import { expectNoSeriousViolations } from "./axeHelper";
 const maaling = (overrides: Record<string, unknown> = {}) => ({
   id: "m1",
   patientId: "p1",
-  konsultasjonId: "k1",
+  consultationId: "k1",
   hpr: null,
   loincKode: "8310-5",
   loincVisningsnavn: "Body temperature",

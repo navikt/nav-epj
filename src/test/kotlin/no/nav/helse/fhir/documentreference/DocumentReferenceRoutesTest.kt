@@ -27,10 +27,10 @@ import kotlin.test.assertEquals
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.ConsultationBelongsToOtherPatientException
+import no.nav.helse.core.utils.ConsultationNotFoundException
 import no.nav.helse.core.utils.DuplikatJournalnotatException
-import no.nav.helse.core.utils.KonsultasjonNotFoundException
-import no.nav.helse.epj.konsultasjon.KonsultasjonId
-import no.nav.helse.epj.konsultasjon.OpprettJournalnotatRequest
+import no.nav.helse.epj.consultation.ConsultationId
+import no.nav.helse.epj.consultation.OpprettJournalnotatRequest
 import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
@@ -446,7 +446,7 @@ class DocumentReferenceRoutesTest {
             documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>(), ORG)
         } throws
             ConsultationBelongsToOtherPatientException(
-                KonsultasjonId(encounterId),
+                ConsultationId(encounterId),
                 PatientId(patientId),
             )
 
@@ -469,7 +469,7 @@ class DocumentReferenceRoutesTest {
         val encounterId = Uuid.generateV4()
         coEvery {
             documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>(), ORG)
-        } throws KonsultasjonNotFoundException(KonsultasjonId(encounterId))
+        } throws ConsultationNotFoundException(ConsultationId(encounterId))
 
         testApp(scopes = createScope(), boundPatient = patientId.toString()) {
             val response =
@@ -658,7 +658,7 @@ class DocumentReferenceRoutesTest {
             documentReferenceService.createDocumentReference(any<DocumentReference>(), ORG)
         } throws
             ConsultationBelongsToOtherPatientException(
-                KonsultasjonId(Uuid.generateV4()),
+                ConsultationId(Uuid.generateV4()),
                 PatientId(Uuid.parse(patientId)),
             )
 

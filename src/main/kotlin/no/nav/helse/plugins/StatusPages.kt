@@ -10,17 +10,17 @@ import io.ktor.server.plugins.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.path
 import io.ktor.server.response.*
-import no.nav.helse.core.utils.AktivKonsultasjonNotFoundException
+import no.nav.helse.core.utils.ActiveConsultationNotFoundException
 import no.nav.helse.core.utils.ClinicNotFoundException
+import no.nav.helse.core.utils.ConsultationNotFoundException
+import no.nav.helse.core.utils.ConsultationNotFoundForPatientException
 import no.nav.helse.core.utils.DuplicatePatientException
 import no.nav.helse.core.utils.IngenFastlegelisteException
-import no.nav.helse.core.utils.KonsultasjonNotFoundException
-import no.nav.helse.core.utils.KonsultasjonNotFoundForPatientException
+import no.nav.helse.core.utils.InvalidDiagnosisException
 import no.nav.helse.core.utils.PatientCreationException
 import no.nav.helse.core.utils.PractitionerForPatientNotFoundException
 import no.nav.helse.core.utils.PractitionerNotFoundException
 import no.nav.helse.core.utils.SessionOrgRequiredException
-import no.nav.helse.core.utils.UgyldigDiagnoseException
 import no.nav.helse.core.utils.UgyldigPersonidentException
 import no.nav.helse.core.utils.logger
 import no.nav.helse.fhir.security.InsufficientScopeException
@@ -30,19 +30,19 @@ import no.nav.helse.fhir.security.PatientMismatchException
 fun Application.configureStatusPages() {
     val log = logger()
     install(StatusPages) {
-        exception<KonsultasjonNotFoundException> { call, cause ->
+        exception<ConsultationNotFoundException> { call, cause ->
             call.respondText(
                 text = "Konsultasjon not found: ${cause.message}",
                 status = HttpStatusCode.NotFound,
             )
         }
-        exception<KonsultasjonNotFoundForPatientException> { call, cause ->
+        exception<ConsultationNotFoundForPatientException> { call, cause ->
             call.respondText(
                 text = "Konsultasjon not found for patient: ${cause.message}",
                 status = HttpStatusCode.NotFound,
             )
         }
-        exception<AktivKonsultasjonNotFoundException> { call, cause ->
+        exception<ActiveConsultationNotFoundException> { call, cause ->
             call.respondText(
                 text = "Aktiv konsultasjon not found: ${cause.message}",
                 status = HttpStatusCode.NotFound,
@@ -69,7 +69,7 @@ fun Application.configureStatusPages() {
                 status = HttpStatusCode.Conflict,
             )
         }
-        exception<UgyldigDiagnoseException> { call, cause ->
+        exception<InvalidDiagnosisException> { call, cause ->
             call.respondText(
                 text = "Ugyldig diagnose: ${cause.message}",
                 status = HttpStatusCode.BadRequest,

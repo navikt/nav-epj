@@ -1,23 +1,23 @@
 import { useId, useState } from "react";
 import { Card } from "./Card";
-import { KonsultasjonSummary } from "./KonsultasjonSummary";
+import { ConsultationSummary } from "./ConsultationSummary";
 import { copy } from "./copy";
-import { systemLabel } from "./diagnoseSystem";
+import { systemLabel } from "./diagnosisSystem";
 import { formatDateTime } from "./patientInfo";
-import type { Konsultasjon } from "../utils/mapping/epj";
+import type { Consultation } from "../utils/mapping/epj";
 
-type Props = { konsultasjoner: Konsultasjon[] };
+type Props = { consultations: Consultation[] };
 
-export function TidligereKonsultasjoner({ konsultasjoner }: Props) {
+export function PreviousConsultations({ consultations }: Props) {
   const headingId = useId();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const selected = konsultasjoner.find((k) => k.id === selectedId) ?? null;
+  const selected = consultations.find((k) => k.id === selectedId) ?? null;
 
-  if (konsultasjoner.length === 0) {
+  if (consultations.length === 0) {
     return (
       <div className="xp-card xp-empty">
         <p>
-          <b>{copy["s4.tidl.empty"]}</b>
+          <b>{copy["s4.previous.empty"]}</b>
         </p>
       </div>
     );
@@ -26,22 +26,22 @@ export function TidligereKonsultasjoner({ konsultasjoner }: Props) {
   return (
     <>
       <div className="xp-card xp-tablewrap">
-        <table className="xp-list" aria-label={copy["s4.tab.tidl"](konsultasjoner.length)}>
+        <table className="xp-list" aria-label={copy["s4.tab.previous"](consultations.length)}>
           <thead>
             <tr>
               <th scope="col">
-                <span className="h">{copy["s4.tidl.col.date"]}</span>
+                <span className="h">{copy["s4.previous.col.date"]}</span>
               </th>
               <th scope="col">
-                <span className="h">{copy["s4.tidl.col.status"]}</span>
+                <span className="h">{copy["s4.previous.col.status"]}</span>
               </th>
               <th scope="col">
-                <span className="h">{copy["s4.tidl.col.diag"]}</span>
+                <span className="h">{copy["s4.previous.col.diag"]}</span>
               </th>
             </tr>
           </thead>
           <tbody>
-            {konsultasjoner.map((k) => (
+            {consultations.map((k) => (
               <tr key={k.id} aria-selected={k.id === selectedId}>
                 <td>
                   <button
@@ -50,18 +50,18 @@ export function TidligereKonsultasjoner({ konsultasjoner }: Props) {
                     aria-pressed={k.id === selectedId}
                     onClick={() => setSelectedId(k.id)}
                   >
-                    {formatDateTime(k.startetTidspunkt)}
+                    {formatDateTime(k.startedAt)}
                   </button>
                 </td>
                 <td>
-                  {k.status === "AVLYST"
-                    ? copy["s4.tidl.cancelled"]
-                    : copy["s4.tidl.done"]}
+                  {k.status === "CANCELLED"
+                    ? copy["s4.previous.cancelled"]
+                    : copy["s4.previous.done"]}
                 </td>
                 <td>
-                  {k.diagnoser.length === 0
+                  {k.diagnoses.length === 0
                     ? copy["s4.empty.value"]
-                    : k.diagnoser
+                    : k.diagnoses
                         .map((d) => `${d.code} (${systemLabel(d.system)})`)
                         .join(", ")}
                 </td>
@@ -71,14 +71,14 @@ export function TidligereKonsultasjoner({ konsultasjoner }: Props) {
         </table>
       </div>
       {selected ? (
-        <KonsultasjonSummary
-          konsultasjon={selected}
-          heading={`${copy["s4.tidl.detail"](formatDateTime(selected.startetTidspunkt))} ${copy["s4.tidl.readonly"]}`}
+        <ConsultationSummary
+          consultation={selected}
+          heading={`${copy["s4.previous.detail"](formatDateTime(selected.startedAt))} ${copy["s4.previous.readonly"]}`}
           headingId={`${headingId}-detail`}
         />
       ) : (
         <Card>
-          <p>{copy["s4.tidl.pick"]}</p>
+          <p>{copy["s4.previous.pick"]}</p>
         </Card>
       )}
     </>

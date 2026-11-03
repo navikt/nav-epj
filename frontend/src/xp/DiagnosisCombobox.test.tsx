@@ -2,30 +2,30 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { DiagnoseCombobox } from "./DiagnoseCombobox";
-import { diagnoseKey, type DiagnoseItem } from "./journalStore";
+import { DiagnosisCombobox } from "./DiagnosisCombobox";
+import { diagnosisKey, type DiagnosisItem } from "./journalStore";
 import { expectNoSeriousViolations } from "./axeHelper";
 
-const a02: DiagnoseItem = { code: "A02", system: "ICPC2", text: "Frysninger" };
+const a02: DiagnosisItem = { code: "A02", system: "ICPC2", text: "Frysninger" };
 
 function Harness({
   initial = [],
   saved = new Set<string>(),
   onRemoved,
 }: {
-  initial?: DiagnoseItem[];
+  initial?: DiagnosisItem[];
   saved?: Set<string>;
   onRemoved?: (code: string) => void;
 }) {
   const [selected, setSelected] = useState(initial);
   return (
-    <DiagnoseCombobox
+    <DiagnosisCombobox
       selected={selected}
       savedKeys={saved}
       onAdd={(d) => setSelected((s) => [...s, d])}
       onRemove={(code, system) => {
         onRemoved?.(code);
-        setSelected((s) => s.filter((d) => diagnoseKey(d) !== `${system}:${code}`));
+        setSelected((s) => s.filter((d) => diagnosisKey(d) !== `${system}:${code}`));
       }}
     />
   );
@@ -35,7 +35,7 @@ const input = () => screen.getByRole("combobox");
 const toggle = () =>
   screen.getByRole("button", { name: /diagnoseliste/ });
 
-describe("DiagnoseCombobox", () => {
+describe("DiagnosisCombobox", () => {
   it("exposes a labelled combobox with a description and a toggle button", async () => {
     const { container } = render(<Harness />);
     expect(input()).toHaveAccessibleName("Diagnoser (ICPC-2 eller ICD-10)");
@@ -136,7 +136,7 @@ describe("DiagnoseCombobox", () => {
     render(
       <Harness
         initial={[a02, { code: "A03", system: "ICPC2", text: "Feber" }]}
-        saved={new Set([diagnoseKey(a02)])}
+        saved={new Set([diagnosisKey(a02)])}
         onRemoved={onRemoved}
       />,
     );
@@ -152,7 +152,7 @@ describe("DiagnoseCombobox", () => {
 
   it("can be disabled", () => {
     const { rerender } = render(
-      <DiagnoseCombobox selected={[a02]} savedKeys={new Set()} disabled onAdd={() => {}} onRemove={() => {}} />,
+      <DiagnosisCombobox selected={[a02]} savedKeys={new Set()} disabled onAdd={() => {}} onRemove={() => {}} />,
     );
     expect(input()).toBeDisabled();
     expect(toggle()).toBeDisabled();

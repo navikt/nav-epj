@@ -10,12 +10,12 @@ import kotlin.uuid.Uuid
 import no.nav.helse.epj.clinic.ClinicId
 import no.nav.helse.epj.clinic.ClinicService
 import no.nav.helse.epj.clinic.clinicRoutes
-import no.nav.helse.epj.konsultasjon.JournalnotatId
-import no.nav.helse.epj.konsultasjon.KonsultasjonId
-import no.nav.helse.epj.konsultasjon.KonsultasjonService
-import no.nav.helse.epj.konsultasjon.routes.diagnoseRoutes
-import no.nav.helse.epj.konsultasjon.routes.journalnotatRoutes
-import no.nav.helse.epj.konsultasjon.routes.konsultasjonRoutes
+import no.nav.helse.epj.consultation.ConsultationId
+import no.nav.helse.epj.consultation.ConsultationService
+import no.nav.helse.epj.consultation.JournalnotatId
+import no.nav.helse.epj.consultation.routes.consultationRoutes
+import no.nav.helse.epj.consultation.routes.diagnosisRoutes
+import no.nav.helse.epj.consultation.routes.journalnotatRoutes
 import no.nav.helse.epj.maaling.MaalingService
 import no.nav.helse.epj.maaling.maalingRoutes
 import no.nav.helse.epj.patient.ActivePatientService
@@ -35,7 +35,7 @@ import no.nav.helse.smart.valkey.ValkeyService
 fun Application.configureEpjModule() {
     val patientService: PatientService by dependencies
     val practitionerService: PractitionerService by dependencies
-    val konsultasjonService: KonsultasjonService by dependencies
+    val consultationService: ConsultationService by dependencies
     val clinicService: ClinicService by dependencies
     val maalingService: MaalingService by dependencies
     val valkeyService: ValkeyService by dependencies
@@ -56,10 +56,10 @@ fun Application.configureEpjModule() {
             patientRoutes(patientService, sessionOrgResolver)
             activePatientRoutes(activePatientService)
             practitionerRoutes(practitionerService)
-            konsultasjonRoutes(konsultasjonService, activePatientService, sessionOrgResolver)
+            consultationRoutes(consultationService, activePatientService, sessionOrgResolver)
             clinicRoutes(clinicService, sessionOrgResolver)
-            diagnoseRoutes(konsultasjonService, sessionOrgResolver)
-            journalnotatRoutes(konsultasjonService, sessionOrgResolver)
+            diagnosisRoutes(consultationService, sessionOrgResolver)
+            journalnotatRoutes(consultationService, sessionOrgResolver)
             maalingRoutes(maalingService, sessionOrgResolver)
         }
     }
@@ -74,8 +74,8 @@ fun ApplicationCall.practitionerHpr(): PractitionerHpr = PractitionerHpr(stringP
 
 fun ApplicationCall.clinicId(): ClinicId = ClinicId(uuidParameter("clinicId"))
 
-fun ApplicationCall.konsultasjonId(): KonsultasjonId =
-    KonsultasjonId(uuidParameter("konsultasjonId"))
+fun ApplicationCall.consultationId(): ConsultationId =
+    ConsultationId(uuidParameter("consultationId"))
 
 private fun ApplicationCall.uuidParameter(name: String): Uuid {
     val value = parameters[name] ?: throw BadRequestException("Mangler parameteren '$name'")

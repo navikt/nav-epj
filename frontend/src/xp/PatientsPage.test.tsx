@@ -161,11 +161,11 @@ describe("PatientsPage", () => {
     expect(screen.getByText("Du har ikke åpnet noen journaler ennå.")).toBeInTheDocument();
   });
 
-  it("shows the last konsultasjon when known", () => {
+  it("shows the last consultation when known", () => {
     seed(2);
     act(() => {
-      usePatientsStore.getState().setLastKonsultasjon("1", { status: "PÅGÅENDE", timestamp: "2026-01-02T10:00:00" });
-      usePatientsStore.getState().setLastKonsultasjon("2", { status: "FULLFØRT", timestamp: "2026-01-03T10:00:00" });
+      usePatientsStore.getState().setLastConsultation("1", { status: "IN_PROGRESS", timestamp: "2026-01-02T10:00:00" });
+      usePatientsStore.getState().setLastConsultation("2", { status: "FINISHED", timestamp: "2026-01-03T10:00:00" });
     });
     setup();
     expect(screen.getByText("Pågår nå")).toBeInTheDocument();

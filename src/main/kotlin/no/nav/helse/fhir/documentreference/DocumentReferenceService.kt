@@ -17,11 +17,11 @@ import com.google.fhir.model.r4.terminologies.DocumentReferenceStatus
 import kotlin.text.substringAfter
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.logger
-import no.nav.helse.epj.konsultasjon.Journalnotat
-import no.nav.helse.epj.konsultasjon.JournalnotatId
-import no.nav.helse.epj.konsultasjon.KonsultasjonId
-import no.nav.helse.epj.konsultasjon.KonsultasjonService
-import no.nav.helse.epj.konsultasjon.OpprettJournalnotatRequest
+import no.nav.helse.epj.consultation.ConsultationId
+import no.nav.helse.epj.consultation.ConsultationService
+import no.nav.helse.epj.consultation.Journalnotat
+import no.nav.helse.epj.consultation.JournalnotatId
+import no.nav.helse.epj.consultation.OpprettJournalnotatRequest
 import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.fhir.encounter.EncounterId
@@ -42,7 +42,7 @@ class InvalidDocumentReferenceException(
     message: kotlin.String,
 ) : RuntimeException(message)
 
-class DocumentReferenceService(val konsultasjonService: KonsultasjonService) {
+class DocumentReferenceService(val consultationService: ConsultationService) {
 
     val log = logger()
 
@@ -50,15 +50,15 @@ class DocumentReferenceService(val konsultasjonService: KonsultasjonService) {
         request: OpprettJournalnotatRequest,
         orgNumber: kotlin.String,
     ): DocumentReference {
-        val journalnotat = konsultasjonService.opprettJournalnotat(request, orgNumber)
-        return journalnotat.toDocumentReference(authors(journalnotat.konsultasjonId, orgNumber))
+        val journalnotat = consultationService.opprettJournalnotat(request, orgNumber)
+        return journalnotat.toDocumentReference(authors(journalnotat.consultationId, orgNumber))
     }
 
     private suspend fun authors(
-        konsultasjonId: KonsultasjonId,
+        consultationId: ConsultationId,
         orgNumber: kotlin.String?,
     ): List<PractitionerHpr> =
-        konsultasjonService.getKonsultasjon(konsultasjonId, orgNumber).hpr.map {
+        consultationService.getConsultation(consultationId, orgNumber).hpr.map {
             PractitionerHpr(it)
         }
 
@@ -68,13 +68,13 @@ class DocumentReferenceService(val konsultasjonService: KonsultasjonService) {
         orgNumber: kotlin.String?,
     ): Bundle {
         val journalnotater =
-            konsultasjonService.getJournalnotater(
+            consultationService.getJournalnotater(
                 PatientId(patientId.value),
-                encounterId?.let { KonsultasjonId(it.value) },
+                encounterId?.let { ConsultationId(it.value) },
                 orgNumber,
             )
-        val hprByKonsultasjon =
-            konsultasjonService.getKonsultasjoner(PatientId(patientId.value), orgNumber).associate {
+        val hprByConsultation =
+            consultationService.getConsultations(PatientId(patientId.value), orgNumber).associate {
                 it.id to it.hpr.map { hpr -> PractitionerHpr(hpr) }
             }
 
@@ -84,7 +84,7 @@ class DocumentReferenceService(val konsultasjonService: KonsultasjonService) {
                 journalnotater.map { journalnotat ->
                     val documentReference =
                         journalnotat.toDocumentReference(
-                            hprByKonsultasjon[journalnotat.konsultasjonId].orEmpty()
+                            hprByConsultation[journalnotat.consultationId].orEmpty()
                         )
                     Bundle.Entry(
                         fullUrl = Uri(value = "DocumentReference/${documentReference.id}"),
@@ -98,7 +98,7 @@ class DocumentReferenceService(val konsultasjonService: KonsultasjonService) {
         documentReference: DocumentReference,
         orgNumber: kotlin.String,
     ): Boolean {
-        val konsultasjonId =
+        val consultationId =
             documentReference.context
                 ?.encounter
                 ?.first()
@@ -115,10 +115,10 @@ class DocumentReferenceService(val konsultasjonService: KonsultasjonService) {
                             requireNotNull(documentReference.id) { "DocumentReference mangler id" }
                         )
                     ),
-                konsultasjonId =
-                    KonsultasjonId(
+                consultationId =
+                    ConsultationId(
                         Uuid.parse(
-                            requireNotNull(konsultasjonId) {
+                            requireNotNull(consultationId) {
                                 "DocumentReference mangler context.encounter.reference"
                             }
                         )
@@ -137,7 +137,7 @@ class DocumentReferenceService(val konsultasjonService: KonsultasjonService) {
                     },
             )
 
-        return konsultasjonService.createJournalnotat(createJournalnotat, orgNumber)
+        return consultationService.createJournalnotat(createJournalnotat, orgNumber)
     }
 
     suspend fun getDocumentReferences(
@@ -145,11 +145,11 @@ class DocumentReferenceService(val konsultasjonService: KonsultasjonService) {
         orgNumber: kotlin.String?,
     ): DocumentReference? {
         val journalnotat =
-            konsultasjonService.getJournalnotat(
+            consultationService.getJournalnotat(
                 JournalnotatId(documentReferenceId.value),
                 orgNumber,
             ) ?: return null
-        return journalnotat.toDocumentReference(authors(journalnotat.konsultasjonId, orgNumber))
+        return journalnotat.toDocumentReference(authors(journalnotat.consultationId, orgNumber))
     }
 
     fun Journalnotat.toDocumentReference(hpr: List<PractitionerHpr>): DocumentReference {
@@ -186,7 +186,7 @@ class DocumentReferenceService(val konsultasjonService: KonsultasjonService) {
                     encounter =
                         listOf(
                             Reference(
-                                reference = String(value = "Encounter/${this.konsultasjonId.value}")
+                                reference = String(value = "Encounter/${this.consultationId.value}")
                             )
                         )
                 ),
@@ -308,7 +308,7 @@ fun DocumentReference.toOpprettJournalnotatRequest(): OpprettJournalnotatRequest
             "DocumentReference.context.encounter må inneholde nøyaktig én referanse",
         )
     }
-    val konsultasjonId =
+    val consultationId =
         parseReferenceId(
             context.encounter.single().reference?.value,
             "Encounter",
@@ -324,7 +324,7 @@ fun DocumentReference.toOpprettJournalnotatRequest(): OpprettJournalnotatRequest
 
     return OpprettJournalnotatRequest(
         patientId = PatientId(patientId),
-        konsultasjonId = KonsultasjonId(konsultasjonId),
+        consultationId = ConsultationId(consultationId),
         journalnotat = journalnotat,
     )
 }

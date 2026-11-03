@@ -72,30 +72,30 @@ WITH stories (prefix, personident, first_date, offsets, tid, minutter, reason_fo
            ('SE', '65819210459', '2024-01-16', '{0,60,120,200,290,380,480,590}', '14:00', 45, 'Depresjon, oppfølging'),
            ('RL', '49886810767', '2023-01-17', '{0,150,300,450,600,750,900,1050,1200,1350}', '08:30', 30, 'Diabetes og høyt blodtrykk, kontroll')),
      enkeltvis (key, prefix, seq, personident, dato, tid, minutter, status, reason_for_visit) AS (
-    VALUES ('FRa', 'FR', 9, '14838510036', '2026-10-20', '09:30', 30, 'PÅGÅENDE', 'Overvekt og forhøyet blodsukker, kontroll'),
-           ('TFa', 'TF', 11, '02867910193', '2026-10-20', '10:30', 30, 'PÅGÅENDE', 'Høyt blodtrykk, kontroll'),
-           ('TFp', 'TFp', 1, '02867910193', '2026-11-17', '10:00', 30, 'PLANLAGT', 'Høyt blodtrykk, kontroll'),
-           ('GVa', 'GV', 8, '30898110431', '2026-10-20', '13:30', 30, 'PÅGÅENDE', 'Hypotyreose, kontroll'),
-           ('MVa', 'MVa', 1, '03920150631', '2024-09-10', '16:00', 20, 'FULLFØRT', 'Prevensjon'),
-           ('MVavl', 'MVavl', 1, '03920150631', '2025-07-01', '16:00', 20, 'AVLYST', 'Helsekontroll, avlyst av pasient'),
-           ('MVb', 'MVb', 1, '03920150631', '2025-03-18', '16:00', 20, 'FULLFØRT', 'Svie ved vannlating'),
-           ('MVc', 'MVc', 1, '03920150631', '2025-11-11', '16:00', 30, 'FULLFØRT', 'Hodepine'),
-           ('MVd', 'MVd', 1, '03920150631', '2026-04-14', '16:00', 20, 'FULLFØRT', 'Sår hals og feber'),
-           ('MVe', 'MVe', 1, '03920150631', '2026-10-20', '14:30', 30, 'PÅGÅENDE', 'Hodepine og tretthet'),
-           ('APa', 'APa', 1, '21914897936', '2024-03-12', '11:00', 20, 'FULLFØRT', 'Magesmerter og diaré'),
-           ('APb', 'APb', 1, '21914897936', '2025-02-04', '11:00', 20, 'FULLFØRT', 'Forkjølelse og hoste'),
-           ('APc', 'APc', 1, '21914897936', '2025-11-25', '11:00', 20, 'FULLFØRT', 'Sår hals og feber'),
-           ('APd', 'APd', 1, '21914897936', '2026-05-19', '11:00', 30, 'FULLFØRT', 'Helsekontroll'),
-           ('APe', 'APe', 1, '21914897936', '2026-10-20', '11:30', 30, 'PÅGÅENDE', 'Ryggsmerter'),
-           ('LFa', 'LF', 10, '17841250397', '2026-10-20', '15:30', 20, 'PÅGÅENDE', 'Astma, kontroll'),
-           ('LFp', 'LFp', 1, '17841250397', '2026-12-08', '15:30', 20, 'PLANLAGT', 'Astma, kontroll'),
-           ('SEa', 'SE', 9, '65819210459', '2026-10-20', '12:00', 45, 'PÅGÅENDE', 'Depresjon, oppfølging'),
-           ('RLa', 'RL', 11, '49886810767', '2026-10-20', '08:30', 30, 'PÅGÅENDE', 'Diabetes og høyt blodtrykk, kontroll'),
-           ('RLavl', 'RLavl', 1, '49886810767', '2026-03-10', '08:30', 30, 'AVLYST', 'Diabetes type 2, kontroll'),
-           ('RLp', 'RLp', 1, '49886810767', '2026-11-10', '08:30', 30, 'PLANLAGT', 'Diabetes og høyt blodtrykk, kontroll')),
+    VALUES ('FRa', 'FR', 9, '14838510036', '2026-10-20', '09:30', 30, 'IN_PROGRESS', 'Overvekt og forhøyet blodsukker, kontroll'),
+           ('TFa', 'TF', 11, '02867910193', '2026-10-20', '10:30', 30, 'IN_PROGRESS', 'Høyt blodtrykk, kontroll'),
+           ('TFp', 'TFp', 1, '02867910193', '2026-11-17', '10:00', 30, 'PLANNED', 'Høyt blodtrykk, kontroll'),
+           ('GVa', 'GV', 8, '30898110431', '2026-10-20', '13:30', 30, 'IN_PROGRESS', 'Hypotyreose, kontroll'),
+           ('MVa', 'MVa', 1, '03920150631', '2024-09-10', '16:00', 20, 'FINISHED', 'Prevensjon'),
+           ('MVavl', 'MVavl', 1, '03920150631', '2025-07-01', '16:00', 20, 'CANCELLED', 'Helsekontroll, avlyst av pasient'),
+           ('MVb', 'MVb', 1, '03920150631', '2025-03-18', '16:00', 20, 'FINISHED', 'Svie ved vannlating'),
+           ('MVc', 'MVc', 1, '03920150631', '2025-11-11', '16:00', 30, 'FINISHED', 'Hodepine'),
+           ('MVd', 'MVd', 1, '03920150631', '2026-04-14', '16:00', 20, 'FINISHED', 'Sår hals og feber'),
+           ('MVe', 'MVe', 1, '03920150631', '2026-10-20', '14:30', 30, 'IN_PROGRESS', 'Hodepine og tretthet'),
+           ('APa', 'APa', 1, '21914897936', '2024-03-12', '11:00', 20, 'FINISHED', 'Magesmerter og diaré'),
+           ('APb', 'APb', 1, '21914897936', '2025-02-04', '11:00', 20, 'FINISHED', 'Forkjølelse og hoste'),
+           ('APc', 'APc', 1, '21914897936', '2025-11-25', '11:00', 20, 'FINISHED', 'Sår hals og feber'),
+           ('APd', 'APd', 1, '21914897936', '2026-05-19', '11:00', 30, 'FINISHED', 'Helsekontroll'),
+           ('APe', 'APe', 1, '21914897936', '2026-10-20', '11:30', 30, 'IN_PROGRESS', 'Ryggsmerter'),
+           ('LFa', 'LF', 10, '17841250397', '2026-10-20', '15:30', 20, 'IN_PROGRESS', 'Astma, kontroll'),
+           ('LFp', 'LFp', 1, '17841250397', '2026-12-08', '15:30', 20, 'PLANNED', 'Astma, kontroll'),
+           ('SEa', 'SE', 9, '65819210459', '2026-10-20', '12:00', 45, 'IN_PROGRESS', 'Depresjon, oppfølging'),
+           ('RLa', 'RL', 11, '49886810767', '2026-10-20', '08:30', 30, 'IN_PROGRESS', 'Diabetes og høyt blodtrykk, kontroll'),
+           ('RLavl', 'RLavl', 1, '49886810767', '2026-03-10', '08:30', 30, 'CANCELLED', 'Diabetes type 2, kontroll'),
+           ('RLp', 'RLp', 1, '49886810767', '2026-11-10', '08:30', 30, 'PLANNED', 'Diabetes og høyt blodtrykk, kontroll')),
      dagsplan AS (
 SELECT s.prefix || o.seq AS key, s.prefix, o.seq::int AS seq, s.personident,
-       s.first_date::date + o.dagoffset AS dag, s.tid, s.minutter, 'FULLFØRT' AS status, s.reason_for_visit
+       s.first_date::date + o.dagoffset AS dag, s.tid, s.minutter, 'FINISHED' AS status, s.reason_for_visit
 FROM stories s
          CROSS JOIN LATERAL unnest(s.offsets::int[]) WITH ORDINALITY AS o (dagoffset, seq)
 UNION ALL
@@ -104,7 +104,7 @@ FROM enkeltvis),
      plan AS (
 SELECT d.key, d.prefix, d.seq, d.personident,
        v.virkedag + d.tid::time AS startet,
-       CASE WHEN d.status IN ('PLANLAGT', 'PÅGÅENDE') THEN NULL
+       CASE WHEN d.status IN ('PLANNED', 'IN_PROGRESS') THEN NULL
             ELSE v.virkedag + d.tid::time + make_interval(mins => d.minutter) END AS avsluttet,
        d.status, d.reason_for_visit
 FROM dagsplan d
@@ -188,7 +188,7 @@ SELECT p.key, n.tekster[CASE WHEN p.seq = 1 OR cardinality(n.tekster) = 1 THEN 1
                               ELSE 2 + (p.seq - 2) % (cardinality(n.tekster) - 1) END]
 FROM plan p
          JOIN notatmaler n ON n.prefix = p.prefix
-WHERE p.status NOT IN ('PLANLAGT', 'AVLYST')),
+WHERE p.status NOT IN ('PLANNED', 'CANCELLED')),
      loinc (loinc_code, visningsnavn, unit_code, unit_display, desimaler) AS (
     VALUES ('8480-6', 'Systolic blood pressure', 'mm[Hg]', 'mm Hg', 0),
            ('8462-4', 'Diastolic blood pressure', 'mm[Hg]', 'mm Hg', 0),
@@ -315,13 +315,13 @@ FROM inserted i
          JOIN fastlegeliste_patient flp ON flp.patient_id = i.patient_id
          JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
 RETURNING consultation_id),
-     diagnoser AS (
+     diagnoses AS (
 INSERT INTO consultation_diagnosis_code (consultation_id, diagnosis_system, diagnosis_code)
 SELECT k.id, d.diagnosis_system, d.diagnosis_code
 FROM inserted k
          JOIN plan p ON md5('testdata-konsultasjon-' || p.key)::uuid = k.id
          JOIN diagnosekoder d ON d.prefix = p.prefix
-WHERE k.status NOT IN ('PLANLAGT', 'AVLYST')
+WHERE k.status NOT IN ('PLANNED', 'CANCELLED')
 RETURNING consultation_id),
      notater AS (
 INSERT INTO clinical_note (id, consultation_id, patient_id, clinical_note)
@@ -365,5 +365,5 @@ WHERE diagnosis_system = 'ICD10'
 
 UPDATE consultation
 SET ended_at = started_at
-WHERE status = 'AVLYST'
+WHERE status = 'CANCELLED'
   AND ended_at IS NULL;

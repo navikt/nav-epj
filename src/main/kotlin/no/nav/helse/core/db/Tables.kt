@@ -1,6 +1,6 @@
 package no.nav.helse.core.db
 
-import no.nav.helse.core.utils.KonsultasjonStatus
+import no.nav.helse.core.utils.ConsultationStatus
 import no.nav.helse.epj.maaling.MaalingStatus
 import no.nav.helse.epj.patient.AdministrativeGender
 import no.nav.helse.epj.patient.PersonidentType
@@ -39,15 +39,15 @@ object PractitionerTable : Table("practitioner") {
     val updated = datetime("updated_at")
 }
 
-object KonsultasjonTable : Table("consultation") {
+object ConsultationTable : Table("consultation") {
     val id = uuid("id")
     val patientId = reference("patient_id", refColumn = PatientTable.id)
     val clinicId = reference("clinic_id", refColumn = ClinicTable.id)
-    val startetTidspunkt = datetime("started_at")
-    val avsluttetTidspunkt = datetime("ended_at")
+    val startedAt = datetime("started_at")
+    val endedAt = datetime("ended_at")
     val status =
-        varchar("status", 20).transform(KonsultasjonStatus::fromLabel, KonsultasjonStatus::label)
-    val problemstilling = text("reason_for_visit").nullable()
+        varchar("status", 20).transform(ConsultationStatus::fromLabel, ConsultationStatus::label)
+    val reasonForVisit = text("reason_for_visit").nullable()
     val created = datetime("created_at")
     val updated = datetime("updated_at")
 
@@ -58,7 +58,7 @@ object KonsultasjonTable : Table("consultation") {
 
 object JournalnotatTable : Table("clinical_note") {
     val id = uuid("id")
-    val konsultasjonId = reference("consultation_id", refColumn = KonsultasjonTable.id)
+    val consultationId = reference("consultation_id", refColumn = ConsultationTable.id)
     val patientId = reference("patient_id", refColumn = PatientTable.id)
     val journalnotat = text("clinical_note").nullable()
 
@@ -67,23 +67,23 @@ object JournalnotatTable : Table("clinical_note") {
     }
 }
 
-object KonsultasjonDiagnosekodeTable : Table("consultation_diagnosis_code") {
-    val konsultasjonId = reference("consultation_id", refColumn = KonsultasjonTable.id)
-    val diagnosesystem = text("diagnosis_system")
-    val diagnosekode = text("diagnosis_code")
+object ConsultationDiagnosisCodeTable : Table("consultation_diagnosis_code") {
+    val consultationId = reference("consultation_id", refColumn = ConsultationTable.id)
+    val diagnosisSystem = text("diagnosis_system")
+    val diagnosisCode = text("diagnosis_code")
 
-    override val primaryKey = PrimaryKey(konsultasjonId, diagnosesystem, diagnosekode)
+    override val primaryKey = PrimaryKey(consultationId, diagnosisSystem, diagnosisCode)
 }
 
-object KonsultasjonPractitioner : Table("consultation_practitioner") {
-    val konsultasjonId = reference("consultation_id", refColumn = KonsultasjonTable.id)
+object ConsultationPractitioner : Table("consultation_practitioner") {
+    val consultationId = reference("consultation_id", refColumn = ConsultationTable.id)
     val hpr = text("hpr")
 }
 
 object MaalingTable : Table("measurement") {
     val id = uuid("id")
     val patientId = reference("patient_id", refColumn = PatientTable.id)
-    val konsultasjonId = reference("consultation_id", refColumn = KonsultasjonTable.id)
+    val consultationId = reference("consultation_id", refColumn = ConsultationTable.id)
     val hpr = text("hpr").nullable()
     val loincKode = text("loinc_code")
     val loincVisningsnavn = text("loinc_display")

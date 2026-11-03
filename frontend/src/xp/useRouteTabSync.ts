@@ -11,7 +11,7 @@ import {
 
 function subTabOf(route: CurrentRoute) {
   if (route.kind !== "journal") return null;
-  return route.konsultasjonId ? "konsultasjon" : (route.tab ?? "konsultasjon");
+  return route.consultationId ? "consultation" : (route.tab ?? "consultation");
 }
 
 export function useRouteTabSync(
@@ -22,8 +22,8 @@ export function useRouteTabSync(
   const applyingRoute = useRef(false);
   const navigateRef = useRef(navigate);
   const patientId = route.kind === "journal" ? route.patientId : undefined;
-  const konsultasjonId =
-    route.kind === "journal" ? route.konsultasjonId : undefined;
+  const consultationId =
+    route.kind === "journal" ? route.consultationId : undefined;
   const subTab = subTabOf(route);
 
   useEffect(() => {
@@ -45,24 +45,24 @@ export function useRouteTabSync(
       else openTab({ kind: "journal", label: copy["s4.tabs.label"] });
       const journal = useJournalStore.getState();
       const keepSelection =
-        !konsultasjonId &&
-        subTab !== "konsultasjon" &&
+        !consultationId &&
+        subTab !== "consultation" &&
         journal.patientId === patientId &&
         journal.status !== "error";
       if (!keepSelection) {
         applyingRoute.current = true;
-        void journal.open(patientId, konsultasjonId);
+        void journal.open(patientId, consultationId);
         applyingRoute.current = false;
       }
     }
-  }, [route.kind, patientId, konsultasjonId, subTab]);
+  }, [route.kind, patientId, consultationId, subTab]);
 
   useEffect(() => {
     if (!subTab) return;
     applyingRoute.current = true;
     useJournalStore.getState().setSubTab(subTab);
     applyingRoute.current = false;
-  }, [patientId, konsultasjonId, subTab]);
+  }, [patientId, consultationId, subTab]);
 
   useEffect(
     () =>
@@ -76,7 +76,7 @@ export function useRouteTabSync(
         navigateRef.current({
           ...journalRoute(
             current.patientId,
-            state.selectedKonsultasjonId,
+            state.selectedConsultationId,
             state.subTab,
           ),
           replace: true,

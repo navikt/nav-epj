@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonUnwrapped
 import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.uuid.Uuid
-import no.nav.helse.core.utils.KonsultasjonStatus
+import no.nav.helse.core.utils.ConsultationStatus
 
 @JvmInline value class PatientId(val value: Uuid)
 
@@ -18,7 +18,7 @@ data class Patient(
     val gender: AdministrativeGender? = null,
 )
 
-data class LatestConsultation(val status: KonsultasjonStatus, val timestamp: LocalDateTime)
+data class LatestConsultation(val status: ConsultationStatus, val timestamp: LocalDateTime)
 
 data class PatientListItem(
     @JsonUnwrapped val patient: Patient,

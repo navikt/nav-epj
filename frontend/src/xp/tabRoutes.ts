@@ -11,8 +11,8 @@ export type TabRoute = (
       search?: { tab: JournalSubTab };
     }
   | {
-      to: "/patients/$patientId/konsultasjon/$konsultasjonId";
-      params: { patientId: string; konsultasjonId: string };
+      to: "/patients/$patientId/consultations/$consultationId";
+      params: { patientId: string; consultationId: string };
     }
 ) & { replace?: boolean };
 
@@ -26,29 +26,29 @@ export function openPatientsTab(navigate: (target: TabRoute) => void) {
 
 export function journalRoute(
   patientId: string,
-  konsultasjonId?: string | null,
-  tab: JournalSubTab = "konsultasjon",
+  consultationId?: string | null,
+  tab: JournalSubTab = "consultation",
 ): TabRoute {
-  if (tab !== "konsultasjon") {
+  if (tab !== "consultation") {
     return {
       to: "/patients/$patientId",
       params: { patientId },
       search: { tab },
     };
   }
-  return konsultasjonId
+  return consultationId
     ? {
-        to: "/patients/$patientId/konsultasjon/$konsultasjonId",
-        params: { patientId, konsultasjonId },
+        to: "/patients/$patientId/consultations/$consultationId",
+        params: { patientId, consultationId },
       }
     : { to: "/patients/$patientId", params: { patientId } };
 }
 
 export function currentJournalRoute(): TabRoute | null {
-  const { patientId, selectedKonsultasjonId, subTab } =
+  const { patientId, selectedConsultationId, subTab } =
     useJournalStore.getState();
   return patientId
-    ? journalRoute(patientId, selectedKonsultasjonId, subTab)
+    ? journalRoute(patientId, selectedConsultationId, subTab)
     : null;
 }
 

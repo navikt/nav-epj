@@ -70,34 +70,34 @@ export type CreatePatientRequest = z.infer<typeof CreatePatientSchema>;
 
 export const JournalnotatEntrySchema = z.object({
     id: z.string(),
-    konsultasjonId: z.string(),
+    consultationId: z.string(),
     patientId: z.string(),
     journalnotat: z.string().nullable(),
 });
 
 export type JournalnotatEntry = z.infer<typeof JournalnotatEntrySchema>;
 
-export const DiagnoseSchema = z.object({
+export const DiagnosisSchema = z.object({
     code: z.string(),
     system: z.string(),
     text: z.string(),
 });
 
-export const KonsultasjonSchema = z.object({
+export const ConsultationSchema = z.object({
     id: z.string(),
     patientId: z.string(),
     hpr: z.array(z.string()),
     journalnotat: z.array(JournalnotatEntrySchema),
-    diagnoser: z.array(DiagnoseSchema),
-    startetTidspunkt: z.string(),
-    avsluttetTidspunkt: z.string().nullable(),
+    diagnoses: z.array(DiagnosisSchema),
+    startedAt: z.string(),
+    endedAt: z.string().nullable(),
     status: z.string(),
-    problemstilling: z.string().nullable(),
+    reasonForVisit: z.string().nullable(),
 });
 
-export type Konsultasjon = z.infer<typeof KonsultasjonSchema>;
+export type Consultation = z.infer<typeof ConsultationSchema>;
 
-export type Diagnose = z.infer<typeof DiagnoseSchema>;
+export type Diagnosis = z.infer<typeof DiagnosisSchema>;
 
 export const MaalingStatusSchema = z.enum([
     "REGISTERED",
@@ -113,7 +113,7 @@ export const MaalingStatusSchema = z.enum([
 export const MaalingSchema = z.object({
     id: z.string(),
     patientId: z.string(),
-    konsultasjonId: z.string(),
+    consultationId: z.string(),
     loincKode: z.string(),
     loincVisningsnavn: z.string(),
     verdi: z.number(),

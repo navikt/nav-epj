@@ -96,7 +96,7 @@ class ObservationCreateValidationTest {
         val request = observation.toOpprettMaalingRequest()
 
         assertEquals(patientId, request.patientId.value)
-        assertEquals(encounterId, request.konsultasjonId.value)
+        assertEquals(encounterId, request.consultationId.value)
         assertEquals("999", request.hpr?.value)
         assertEquals("8310-5", request.loincKode)
         assertEquals("Body temperature", request.loincVisningsnavn)

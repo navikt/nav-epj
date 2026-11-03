@@ -11,12 +11,12 @@ import kotlin.test.assertTrue
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
-import no.nav.helse.core.utils.KonsultasjonNotFoundException
-import no.nav.helse.core.utils.KonsultasjonStatus
+import no.nav.helse.core.utils.ConsultationNotFoundException
+import no.nav.helse.core.utils.ConsultationStatus
 import no.nav.helse.epj.clinic.ClinicId
-import no.nav.helse.epj.konsultasjon.Konsultasjon
-import no.nav.helse.epj.konsultasjon.KonsultasjonId
-import no.nav.helse.epj.konsultasjon.KonsultasjonService
+import no.nav.helse.epj.consultation.Consultation
+import no.nav.helse.epj.consultation.ConsultationId
+import no.nav.helse.epj.consultation.ConsultationService
 import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
@@ -29,42 +29,42 @@ import org.junit.Test
 
 class ConditionServiceTest {
 
-    private val konsultasjonService = mockk<KonsultasjonService>()
-    private val conditionService = ConditionService(konsultasjonService)
+    private val consultationService = mockk<ConsultationService>()
+    private val conditionService = ConditionService(consultationService)
 
     @OptIn(ExperimentalUuidApi::class)
-    private fun konsultasjon(
-        id: KonsultasjonId = KonsultasjonId(Uuid.generateV4()),
+    private fun consultation(
+        id: ConsultationId = ConsultationId(Uuid.generateV4()),
         patientId: PatientId = PatientId(Uuid.generateV4()),
-        diagnoser: List<Diagnose> = emptyList(),
+        diagnoses: List<Diagnose> = emptyList(),
     ) =
-        Konsultasjon(
+        Consultation(
             id = id,
             patientId = patientId,
             clinicId = ClinicId(Uuid.generateV4()),
             hpr = emptyList(),
             journalnotat = emptyList(),
-            diagnoser = diagnoser,
-            startetTidspunkt = LocalDateTime.now().minusHours(1),
-            avsluttetTidspunkt = null,
-            status = KonsultasjonStatus.PAAGAAENDE,
-            problemstilling = null,
+            diagnoses = diagnoses,
+            startedAt = LocalDateTime.now().minusHours(1),
+            endedAt = null,
+            status = ConsultationStatus.IN_PROGRESS,
+            reasonForVisit = null,
         )
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `getConditionsByPatientId returns a Condition per diagnose with subject and encounter references`() =
+    fun `getConditionsByPatientId returns a Condition per diagnosis with subject and encounter references`() =
         runTest {
             val patientId = PatientId(Uuid.generateV4())
-            val konsultasjonId = KonsultasjonId(Uuid.generateV4())
-            val diagnoser =
+            val consultationId = ConsultationId(Uuid.generateV4())
+            val diagnoses =
                 listOf(
                     Diagnose(system = DiagnoseType.ICPC2, code = "A01", text = "Diagnose A01"),
                     Diagnose(system = DiagnoseType.ICD10, code = "A00", text = "Diagnose A00"),
                 )
-            coEvery { konsultasjonService.getKonsultasjoner(patientId, DEFAULT_ORG_NUMBER) } returns
+            coEvery { consultationService.getConsultations(patientId, DEFAULT_ORG_NUMBER) } returns
                 listOf(
-                    konsultasjon(id = konsultasjonId, patientId = patientId, diagnoser = diagnoser)
+                    consultation(id = consultationId, patientId = patientId, diagnoses = diagnoses)
                 )
 
             val bundle =
@@ -78,7 +78,7 @@ class ConditionServiceTest {
             conditions.forEach { condition ->
                 assertEquals("Patient/${patientId.value}", condition.subject.reference?.value)
                 assertEquals(
-                    "Encounter/${konsultasjonId.value}",
+                    "Encounter/${consultationId.value}",
                     condition.encounter?.reference?.value,
                 )
             }
@@ -94,10 +94,10 @@ class ConditionServiceTest {
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `getConditionsByPatientId returns an empty bundle when the patient has no konsultasjoner`() =
+    fun `getConditionsByPatientId returns an empty bundle when the patient has no consultations`() =
         runTest {
             val patientId = PatientId(Uuid.generateV4())
-            coEvery { konsultasjonService.getKonsultasjoner(patientId, DEFAULT_ORG_NUMBER) } returns
+            coEvery { consultationService.getConsultations(patientId, DEFAULT_ORG_NUMBER) } returns
                 emptyList()
 
             val bundle =
@@ -113,55 +113,55 @@ class ConditionServiceTest {
     @Test
     fun `getConditionsByEncounterId returns a Condition with the encounter reference`() = runTest {
         val patientId = PatientId(Uuid.generateV4())
-        val konsultasjonId = KonsultasjonId(Uuid.generateV4())
-        val diagnose = Diagnose(system = DiagnoseType.ICPC2, code = "A01", text = "Diagnose A01")
-        coEvery { konsultasjonService.getKonsultasjon(konsultasjonId, DEFAULT_ORG_NUMBER) } returns
-            konsultasjon(id = konsultasjonId, patientId = patientId, diagnoser = listOf(diagnose))
+        val consultationId = ConsultationId(Uuid.generateV4())
+        val diagnosis = Diagnose(system = DiagnoseType.ICPC2, code = "A01", text = "Diagnose A01")
+        coEvery { consultationService.getConsultation(consultationId, DEFAULT_ORG_NUMBER) } returns
+            consultation(id = consultationId, patientId = patientId, diagnoses = listOf(diagnosis))
 
         val bundle =
             conditionService.getConditionsByEncounterId(
-                EncounterId(konsultasjonId.value),
+                EncounterId(consultationId.value),
                 DEFAULT_ORG_NUMBER,
             )
 
         val condition = (bundle.entry.single().resource as Condition)
         assertEquals("Patient/${patientId.value}", condition.subject.reference?.value)
-        assertEquals("Encounter/${konsultasjonId.value}", condition.encounter?.reference?.value)
+        assertEquals("Encounter/${consultationId.value}", condition.encounter?.reference?.value)
     }
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `getConditionsByEncounterId propagates KonsultasjonNotFoundException for an unknown encounter`() =
+    fun `getConditionsByEncounterId propagates ConsultationNotFoundException for an unknown encounter`() =
         runTest {
-            val konsultasjonId = KonsultasjonId(Uuid.generateV4())
+            val consultationId = ConsultationId(Uuid.generateV4())
             coEvery {
-                konsultasjonService.getKonsultasjon(konsultasjonId, DEFAULT_ORG_NUMBER)
-            } throws KonsultasjonNotFoundException(konsultasjonId)
+                consultationService.getConsultation(consultationId, DEFAULT_ORG_NUMBER)
+            } throws ConsultationNotFoundException(consultationId)
 
             try {
                 conditionService.getConditionsByEncounterId(
-                    EncounterId(konsultasjonId.value),
+                    EncounterId(consultationId.value),
                     DEFAULT_ORG_NUMBER,
                 )
-                error("Expected KonsultasjonNotFoundException")
-            } catch (e: KonsultasjonNotFoundException) {
+                error("Expected ConsultationNotFoundException")
+            } catch (e: ConsultationNotFoundException) {
                 assertNotNull(e)
             }
         }
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `Condition id is deterministic across repeated lookups of the same diagnose`() = runTest {
+    fun `Condition id is deterministic across repeated lookups of the same diagnosis`() = runTest {
         val patientId = PatientId(Uuid.generateV4())
-        val konsultasjonId = KonsultasjonId(Uuid.generateV4())
-        val diagnose = Diagnose(system = DiagnoseType.ICPC2, code = "A01", text = "Diagnose A01")
-        coEvery { konsultasjonService.getKonsultasjon(konsultasjonId, DEFAULT_ORG_NUMBER) } returns
-            konsultasjon(id = konsultasjonId, patientId = patientId, diagnoser = listOf(diagnose))
+        val consultationId = ConsultationId(Uuid.generateV4())
+        val diagnosis = Diagnose(system = DiagnoseType.ICPC2, code = "A01", text = "Diagnose A01")
+        coEvery { consultationService.getConsultation(consultationId, DEFAULT_ORG_NUMBER) } returns
+            consultation(id = consultationId, patientId = patientId, diagnoses = listOf(diagnosis))
 
         val firstId =
             (conditionService
                     .getConditionsByEncounterId(
-                        EncounterId(konsultasjonId.value),
+                        EncounterId(consultationId.value),
                         DEFAULT_ORG_NUMBER,
                     )
                     .entry
@@ -171,7 +171,7 @@ class ConditionServiceTest {
         val secondId =
             (conditionService
                     .getConditionsByEncounterId(
-                        EncounterId(konsultasjonId.value),
+                        EncounterId(consultationId.value),
                         DEFAULT_ORG_NUMBER,
                     )
                     .entry
@@ -184,20 +184,20 @@ class ConditionServiceTest {
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `Condition id differs between diagnoses on the same konsultasjon`() = runTest {
+    fun `Condition id differs between diagnoses on the same consultation`() = runTest {
         val patientId = PatientId(Uuid.generateV4())
-        val konsultasjonId = KonsultasjonId(Uuid.generateV4())
-        val diagnoser =
+        val consultationId = ConsultationId(Uuid.generateV4())
+        val diagnoses =
             listOf(
                 Diagnose(system = DiagnoseType.ICPC2, code = "A01", text = "Diagnose A01"),
                 Diagnose(system = DiagnoseType.ICPC2, code = "A02", text = "Diagnose A02"),
             )
-        coEvery { konsultasjonService.getKonsultasjon(konsultasjonId, DEFAULT_ORG_NUMBER) } returns
-            konsultasjon(id = konsultasjonId, patientId = patientId, diagnoser = diagnoser)
+        coEvery { consultationService.getConsultation(consultationId, DEFAULT_ORG_NUMBER) } returns
+            consultation(id = consultationId, patientId = patientId, diagnoses = diagnoses)
 
         val conditions =
             conditionService
-                .getConditionsByEncounterId(EncounterId(konsultasjonId.value), DEFAULT_ORG_NUMBER)
+                .getConditionsByEncounterId(EncounterId(consultationId.value), DEFAULT_ORG_NUMBER)
                 .entry
                 .map { it.resource as Condition }
 

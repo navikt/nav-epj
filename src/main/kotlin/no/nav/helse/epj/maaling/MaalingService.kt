@@ -2,7 +2,7 @@ package no.nav.helse.epj.maaling
 
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
-import no.nav.helse.epj.konsultasjon.KonsultasjonId
+import no.nav.helse.epj.consultation.ConsultationId
 import no.nav.helse.epj.patient.PatientId
 
 class MaalingService(private val maalingRepository: MaalingRepository) {
@@ -13,7 +13,7 @@ class MaalingService(private val maalingRepository: MaalingRepository) {
             Maaling(
                 id = MaalingId(Uuid.generateV4()),
                 patientId = request.patientId,
-                konsultasjonId = request.konsultasjonId,
+                consultationId = request.consultationId,
                 hpr = request.hpr,
                 loincKode = request.loincKode,
                 loincVisningsnavn = request.loincVisningsnavn,
@@ -36,10 +36,10 @@ class MaalingService(private val maalingRepository: MaalingRepository) {
         return maalingRepository.listByPatientId(patientId, orgNumber)
     }
 
-    suspend fun getMaalingerForKonsultasjon(
-        konsultasjonId: KonsultasjonId,
+    suspend fun getMaalingerForConsultation(
+        consultationId: ConsultationId,
         orgNumber: String?,
     ): List<Maaling> {
-        return maalingRepository.listByKonsultasjonId(konsultasjonId, orgNumber)
+        return maalingRepository.listByConsultationId(consultationId, orgNumber)
     }
 }

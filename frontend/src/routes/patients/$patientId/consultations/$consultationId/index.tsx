@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute(
-  "/patients/$patientId/konsultasjon/$konsultasjonId/",
+  "/patients/$patientId/consultations/$consultationId/",
 )({
   component: () => null,
 });
