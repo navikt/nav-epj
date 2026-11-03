@@ -37,7 +37,7 @@ class ConsultationServiceTest {
             patientId = patientId,
             clinicId = ClinicId(Uuid.generateV4()),
             hpr = emptyList(),
-            journalnotat = emptyList(),
+            clinicalNotes = emptyList(),
             diagnoses = emptyList(),
             startedAt = java.time.LocalDateTime.now().minusHours(1),
             endedAt = null,
@@ -183,7 +183,7 @@ class ConsultationServiceTest {
                 UpdateConsultationRequest(
                     consultationId = ConsultationId(Uuid.generateV4()),
                     diagnoses = emptyList(),
-                    journalNotat = null,
+                    clinicalNote = null,
                     finalize = false,
                 )
             coEvery {
@@ -203,7 +203,7 @@ class ConsultationServiceTest {
             UpdateConsultationRequest(
                 consultationId = ConsultationId(Uuid.generateV4()),
                 diagnoses = emptyList(),
-                journalNotat = "notat",
+                clinicalNote = "notat",
                 finalize = true,
             )
         coEvery { consultationRepository.update(request, patientId, DEFAULT_ORG_NUMBER) } returns 2
@@ -265,100 +265,100 @@ class ConsultationServiceTest {
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `createJournalnotat returns true when exactly one row is inserted`() = runTest {
-        val journalnotat =
-            Journalnotat(
-                id = JournalnotatId(Uuid.generateV4()),
+    fun `insertClinicalNote returns true when exactly one row is inserted`() = runTest {
+        val clinicalNote =
+            ClinicalNote(
+                id = ClinicalNoteId(Uuid.generateV4()),
                 consultationId = ConsultationId(Uuid.generateV4()),
                 patientId = PatientId(Uuid.generateV4()),
-                journalnotat = "notat",
+                clinicalNote = "notat",
             )
         coEvery {
-            consultationRepository.insertJournalnotat(journalnotat, DEFAULT_ORG_NUMBER)
+            consultationRepository.insertClinicalNote(clinicalNote, DEFAULT_ORG_NUMBER)
         } returns 1
 
-        assertEquals(true, consultationService.createJournalnotat(journalnotat, DEFAULT_ORG_NUMBER))
+        assertEquals(true, consultationService.insertClinicalNote(clinicalNote, DEFAULT_ORG_NUMBER))
     }
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `createJournalnotat returns false when no row is inserted`() = runTest {
-        val journalnotat =
-            Journalnotat(
-                id = JournalnotatId(Uuid.generateV4()),
+    fun `insertClinicalNote returns false when no row is inserted`() = runTest {
+        val clinicalNote =
+            ClinicalNote(
+                id = ClinicalNoteId(Uuid.generateV4()),
                 consultationId = ConsultationId(Uuid.generateV4()),
                 patientId = PatientId(Uuid.generateV4()),
-                journalnotat = "notat",
+                clinicalNote = "notat",
             )
         coEvery {
-            consultationRepository.insertJournalnotat(journalnotat, DEFAULT_ORG_NUMBER)
+            consultationRepository.insertClinicalNote(clinicalNote, DEFAULT_ORG_NUMBER)
         } returns 0
 
         assertEquals(
             false,
-            consultationService.createJournalnotat(journalnotat, DEFAULT_ORG_NUMBER),
+            consultationService.insertClinicalNote(clinicalNote, DEFAULT_ORG_NUMBER),
         )
     }
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `opprettJournalnotat assigns a server-generated id and delegates to the repository`() =
+    fun `createClinicalNote assigns a server-generated id and delegates to the repository`() =
         runTest {
             val request =
-                OpprettJournalnotatRequest(
+                CreateClinicalNoteRequest(
                     patientId = PatientId(Uuid.generateV4()),
                     consultationId = ConsultationId(Uuid.generateV4()),
-                    journalnotat = "notat",
+                    clinicalNote = "notat",
                 )
-            val slot = mutableListOf<JournalnotatId>()
+            val slot = mutableListOf<ClinicalNoteId>()
             coEvery {
-                consultationRepository.opprettJournalnotat(
+                consultationRepository.createClinicalNote(
                     capture(slot),
                     request,
                     DEFAULT_ORG_NUMBER,
                 )
             } answers
                 {
-                    Journalnotat(
+                    ClinicalNote(
                         id = slot.single(),
                         consultationId = request.consultationId,
                         patientId = request.patientId,
-                        journalnotat = request.journalnotat,
+                        clinicalNote = request.clinicalNote,
                     )
                 }
 
-            val resultat = consultationService.opprettJournalnotat(request, DEFAULT_ORG_NUMBER)
+            val resultat = consultationService.createClinicalNote(request, DEFAULT_ORG_NUMBER)
 
             assertEquals(slot.single(), resultat.id)
             assertEquals(request.patientId, resultat.patientId)
             assertEquals(request.consultationId, resultat.consultationId)
-            assertEquals(request.journalnotat, resultat.journalnotat)
+            assertEquals(request.clinicalNote, resultat.clinicalNote)
         }
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `getJournalnotater delegates to the repository with the given patient and encounter filter`() =
+    fun `getClinicalNotes delegates to the repository with the given patient and encounter filter`() =
         runTest {
             val patientId = PatientId(Uuid.generateV4())
             val consultationId = ConsultationId(Uuid.generateV4())
-            val journalnotat =
-                Journalnotat(
-                    id = JournalnotatId(Uuid.generateV4()),
+            val clinicalNote =
+                ClinicalNote(
+                    id = ClinicalNoteId(Uuid.generateV4()),
                     consultationId = consultationId,
                     patientId = patientId,
-                    journalnotat = "notat",
+                    clinicalNote = "notat",
                 )
             coEvery {
-                consultationRepository.listJournalnotat(
+                consultationRepository.listClinicalNotes(
                     patientId,
                     consultationId,
                     DEFAULT_ORG_NUMBER,
                 )
-            } returns listOf(journalnotat)
+            } returns listOf(clinicalNote)
 
             val resultat =
-                consultationService.getJournalnotater(patientId, consultationId, DEFAULT_ORG_NUMBER)
+                consultationService.getClinicalNotes(patientId, consultationId, DEFAULT_ORG_NUMBER)
 
-            assertEquals(listOf(journalnotat), resultat)
+            assertEquals(listOf(clinicalNote), resultat)
         }
 }

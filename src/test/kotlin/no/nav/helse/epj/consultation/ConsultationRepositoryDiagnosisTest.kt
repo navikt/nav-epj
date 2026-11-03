@@ -64,7 +64,7 @@ class ConsultationRepositoryDiagnosisTest : ConsultationRepositoryTestBase() {
                                 system = DiagnoseType.ICPC2,
                             )
                         ),
-                    journalNotat = "notat",
+                    clinicalNote = "notat",
                     finalize = false,
                 ),
                 patientId,

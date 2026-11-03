@@ -32,7 +32,7 @@ function consultation(overrides: Record<string, unknown> = {}) {
     id: "k1",
     patientId: "p1",
     hpr: ["9144889"],
-    journalnotat: [],
+    clinicalNotes: [],
     diagnoses: [],
     startedAt: "2026-09-30T09:00:00",
     endedAt: null,

@@ -56,11 +56,11 @@ object ConsultationTable : Table("consultation") {
     }
 }
 
-object JournalnotatTable : Table("clinical_note") {
+object ClinicalNoteTable : Table("clinical_note") {
     val id = uuid("id")
     val consultationId = reference("consultation_id", refColumn = ConsultationTable.id)
     val patientId = reference("patient_id", refColumn = PatientTable.id)
-    val journalnotat = text("clinical_note").nullable()
+    val clinicalNote = text("clinical_note").nullable()
 
     init {
         index(isUnique = true, id)

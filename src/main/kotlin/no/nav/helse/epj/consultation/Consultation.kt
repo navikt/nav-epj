@@ -11,14 +11,14 @@ import no.nav.tsm.diagnoser.DiagnoseType
 
 @JvmInline value class ConsultationId(val value: Uuid)
 
-@JvmInline value class JournalnotatId(val value: Uuid)
+@JvmInline value class ClinicalNoteId(val value: Uuid)
 
 data class Consultation(
     val id: ConsultationId,
     val patientId: PatientId,
     val clinicId: ClinicId,
     val hpr: List<String>,
-    val journalnotat: List<Journalnotat>,
+    val clinicalNotes: List<ClinicalNote>,
     val diagnoses: List<Diagnose>,
     val startedAt: LocalDateTime,
     val endedAt: LocalDateTime?,
@@ -26,17 +26,17 @@ data class Consultation(
     val reasonForVisit: String?,
 )
 
-data class Journalnotat(
-    val id: JournalnotatId,
+data class ClinicalNote(
+    val id: ClinicalNoteId,
     val consultationId: ConsultationId,
     val patientId: PatientId,
-    val journalnotat: String?,
+    val clinicalNote: String?,
 )
 
-data class OpprettJournalnotatRequest(
+data class CreateClinicalNoteRequest(
     val patientId: PatientId,
     val consultationId: ConsultationId,
-    val journalnotat: String,
+    val clinicalNote: String,
 )
 
 data class CreateConsultation(
@@ -50,7 +50,7 @@ data class CreateConsultation(
 data class UpdateConsultationRequest(
     val consultationId: ConsultationId,
     val diagnoses: List<CreateDiagnosisRequest>,
-    val journalNotat: String?,
+    val clinicalNote: String?,
     val finalize: Boolean,
 )
 

@@ -13,10 +13,10 @@ import no.nav.helse.epj.practitioner.PractitionerHpr
 import no.nav.helse.utils.DEFAULT_ORG_NUMBER
 import org.junit.Test
 
-class ConsultationRepositoryJournalnotatTest : ConsultationRepositoryTestBase() {
+class ConsultationRepositoryClinicalNoteTest : ConsultationRepositoryTestBase() {
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `opprettJournalnotat stores a complete round trip of a journalnotat`() = runTest {
+    fun `createClinicalNote stores a complete round trip of a clinical note`() = runTest {
         val hpr = PractitionerHpr("123")
         val patientId = createPatient(hpr = hpr)
         val consultationId =
@@ -29,39 +29,39 @@ class ConsultationRepositoryJournalnotatTest : ConsultationRepositoryTestBase() 
                     orgNumber = DEFAULT_ORG_NUMBER,
                 )
             )
-        val id = JournalnotatId(Uuid.generateV4())
+        val id = ClinicalNoteId(Uuid.generateV4())
         val request =
-            OpprettJournalnotatRequest(
+            CreateClinicalNoteRequest(
                 patientId = patientId,
                 consultationId = consultationId,
-                journalnotat = "notat",
+                clinicalNote = "notat",
             )
 
-        val opprettet = consultationRepository.opprettJournalnotat(id, request, DEFAULT_ORG_NUMBER)
+        val opprettet = consultationRepository.createClinicalNote(id, request, DEFAULT_ORG_NUMBER)
 
         assertEquals(id, opprettet.id)
         assertEquals(patientId, opprettet.patientId)
         assertEquals(consultationId, opprettet.consultationId)
-        assertEquals("notat", opprettet.journalnotat)
-        val lagret = consultationRepository.findJournalnotat(id, DEFAULT_ORG_NUMBER)
-        assertEquals("notat", lagret?.journalnotat)
+        assertEquals("notat", opprettet.clinicalNote)
+        val lagret = consultationRepository.findClinicalNote(id, DEFAULT_ORG_NUMBER)
+        assertEquals("notat", lagret?.clinicalNote)
     }
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `opprettJournalnotat throws ConsultationNotFoundException for an unknown encounter`() =
+    fun `createClinicalNote throws ConsultationNotFoundException for an unknown encounter`() =
         runTest {
             val patientId = createPatient()
             val request =
-                OpprettJournalnotatRequest(
+                CreateClinicalNoteRequest(
                     patientId = patientId,
                     consultationId = ConsultationId(Uuid.generateV4()),
-                    journalnotat = "notat",
+                    clinicalNote = "notat",
                 )
 
             assertFailsWith<no.nav.helse.core.utils.ConsultationNotFoundException> {
-                consultationRepository.opprettJournalnotat(
-                    JournalnotatId(Uuid.generateV4()),
+                consultationRepository.createClinicalNote(
+                    ClinicalNoteId(Uuid.generateV4()),
                     request,
                     DEFAULT_ORG_NUMBER,
                 )
@@ -70,7 +70,7 @@ class ConsultationRepositoryJournalnotatTest : ConsultationRepositoryTestBase() 
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `opprettJournalnotat throws ConsultationBelongsToOtherPatientException when the encounter belongs to another patient`() =
+    fun `createClinicalNote throws ConsultationBelongsToOtherPatientException when the encounter belongs to another patient`() =
         runTest {
             val hpr = PractitionerHpr("123")
             val eier = createPatient(hpr = hpr)
@@ -86,22 +86,22 @@ class ConsultationRepositoryJournalnotatTest : ConsultationRepositoryTestBase() 
                 )
             val otherPatient = createPatient(hpr = hpr)
             val request =
-                OpprettJournalnotatRequest(
+                CreateClinicalNoteRequest(
                     patientId = otherPatient,
                     consultationId = consultationId,
-                    journalnotat = "notat",
+                    clinicalNote = "notat",
                 )
 
             assertFailsWith<no.nav.helse.core.utils.ConsultationBelongsToOtherPatientException> {
-                consultationRepository.opprettJournalnotat(
-                    JournalnotatId(Uuid.generateV4()),
+                consultationRepository.createClinicalNote(
+                    ClinicalNoteId(Uuid.generateV4()),
                     request,
                     DEFAULT_ORG_NUMBER,
                 )
             }
             assertNull(
-                consultationRepository.findJournalnotat(
-                    JournalnotatId(Uuid.generateV4()),
+                consultationRepository.findClinicalNote(
+                    ClinicalNoteId(Uuid.generateV4()),
                     DEFAULT_ORG_NUMBER,
                 )
             )
@@ -109,7 +109,7 @@ class ConsultationRepositoryJournalnotatTest : ConsultationRepositoryTestBase() 
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `opprettJournalnotat with a colliding id throws DuplikatJournalnotatException and leaves data unchanged`() =
+    fun `createClinicalNote with a colliding id throws DuplicateClinicalNoteException and leaves data unchanged`() =
         runTest {
             val hpr = PractitionerHpr("123")
             val patientId = createPatient(hpr = hpr)
@@ -123,32 +123,32 @@ class ConsultationRepositoryJournalnotatTest : ConsultationRepositoryTestBase() 
                         orgNumber = DEFAULT_ORG_NUMBER,
                     )
                 )
-            val id = JournalnotatId(Uuid.generateV4())
+            val id = ClinicalNoteId(Uuid.generateV4())
             val request =
-                OpprettJournalnotatRequest(
+                CreateClinicalNoteRequest(
                     patientId = patientId,
                     consultationId = consultationId,
-                    journalnotat = "original",
+                    clinicalNote = "original",
                 )
-            consultationRepository.opprettJournalnotat(id, request, DEFAULT_ORG_NUMBER)
+            consultationRepository.createClinicalNote(id, request, DEFAULT_ORG_NUMBER)
 
-            assertFailsWith<no.nav.helse.core.utils.DuplikatJournalnotatException> {
-                consultationRepository.opprettJournalnotat(
+            assertFailsWith<no.nav.helse.core.utils.DuplicateClinicalNoteException> {
+                consultationRepository.createClinicalNote(
                     id,
-                    request.copy(journalnotat = "endret"),
+                    request.copy(clinicalNote = "endret"),
                     DEFAULT_ORG_NUMBER,
                 )
             }
 
             assertEquals(
                 "original",
-                consultationRepository.findJournalnotat(id, DEFAULT_ORG_NUMBER)?.journalnotat,
+                consultationRepository.findClinicalNote(id, DEFAULT_ORG_NUMBER)?.clinicalNote,
             )
         }
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `listJournalnotat by patientId only returns journalnotater for the correct patient`() =
+    fun `listClinicalNotes by patientId only returns clinical notes for the correct patient`() =
         runTest {
             val hpr = PractitionerHpr("123")
             val patientA = createPatient(hpr = hpr)
@@ -173,27 +173,27 @@ class ConsultationRepositoryJournalnotatTest : ConsultationRepositoryTestBase() 
                         orgNumber = DEFAULT_ORG_NUMBER,
                     )
                 )
-            consultationRepository.opprettJournalnotat(
-                JournalnotatId(Uuid.generateV4()),
-                OpprettJournalnotatRequest(patientA, consultationA, "for A"),
+            consultationRepository.createClinicalNote(
+                ClinicalNoteId(Uuid.generateV4()),
+                CreateClinicalNoteRequest(patientA, consultationA, "for A"),
                 DEFAULT_ORG_NUMBER,
             )
-            consultationRepository.opprettJournalnotat(
-                JournalnotatId(Uuid.generateV4()),
-                OpprettJournalnotatRequest(patientB, consultationB, "for B"),
+            consultationRepository.createClinicalNote(
+                ClinicalNoteId(Uuid.generateV4()),
+                CreateClinicalNoteRequest(patientB, consultationB, "for B"),
                 DEFAULT_ORG_NUMBER,
             )
 
             val notaterForA =
-                consultationRepository.listJournalnotat(patientA, null, DEFAULT_ORG_NUMBER)
+                consultationRepository.listClinicalNotes(patientA, null, DEFAULT_ORG_NUMBER)
 
             assertEquals(1, notaterForA.size)
-            assertEquals("for A", notaterForA.single().journalnotat)
+            assertEquals("for A", notaterForA.single().clinicalNote)
         }
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `listJournalnotat filters by encounter when both patient and encounter are given`() =
+    fun `listClinicalNotes filters by encounter when both patient and encounter are given`() =
         runTest {
             val hpr = PractitionerHpr("123")
             val patientId = createPatient(hpr = hpr)
@@ -217,106 +217,106 @@ class ConsultationRepositoryJournalnotatTest : ConsultationRepositoryTestBase() 
                         orgNumber = DEFAULT_ORG_NUMBER,
                     )
                 )
-            consultationRepository.opprettJournalnotat(
-                JournalnotatId(Uuid.generateV4()),
-                OpprettJournalnotatRequest(patientId, consultationA, "for A"),
+            consultationRepository.createClinicalNote(
+                ClinicalNoteId(Uuid.generateV4()),
+                CreateClinicalNoteRequest(patientId, consultationA, "for A"),
                 DEFAULT_ORG_NUMBER,
             )
-            consultationRepository.opprettJournalnotat(
-                JournalnotatId(Uuid.generateV4()),
-                OpprettJournalnotatRequest(patientId, consultationB, "for B"),
+            consultationRepository.createClinicalNote(
+                ClinicalNoteId(Uuid.generateV4()),
+                CreateClinicalNoteRequest(patientId, consultationB, "for B"),
                 DEFAULT_ORG_NUMBER,
             )
 
             val notater =
-                consultationRepository.listJournalnotat(
+                consultationRepository.listClinicalNotes(
                     patientId,
                     consultationA,
                     DEFAULT_ORG_NUMBER,
                 )
 
             assertEquals(1, notater.size)
-            assertEquals("for A", notater.single().journalnotat)
+            assertEquals("for A", notater.single().clinicalNote)
         }
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `listJournalnotat returns an empty list when the patient has no journalnotater`() =
+    fun `listClinicalNotes returns an empty list when the patient has no clinical notes`() =
         runTest {
             val patientId = createPatient()
 
             val notater =
-                consultationRepository.listJournalnotat(patientId, null, DEFAULT_ORG_NUMBER)
+                consultationRepository.listClinicalNotes(patientId, null, DEFAULT_ORG_NUMBER)
 
             assertTrue(notater.isEmpty())
         }
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `insertJournalnotat rejects an encounter that belongs to another patient`() = runTest {
+    fun `insertClinicalNote rejects an encounter that belongs to another patient`() = runTest {
         val eier = createPatient()
         val consultationId = createConsultation(eier)
         val otherPatient = createPatient()
-        val id = JournalnotatId(Uuid.generateV4())
+        val id = ClinicalNoteId(Uuid.generateV4())
 
         assertFailsWith<no.nav.helse.core.utils.ConsultationBelongsToOtherPatientException> {
-            consultationRepository.insertJournalnotat(
-                Journalnotat(id, consultationId, otherPatient, "notat"),
+            consultationRepository.insertClinicalNote(
+                ClinicalNote(id, consultationId, otherPatient, "notat"),
                 DEFAULT_ORG_NUMBER,
             )
         }
-        assertNull(consultationRepository.findJournalnotat(id, DEFAULT_ORG_NUMBER))
+        assertNull(consultationRepository.findClinicalNote(id, DEFAULT_ORG_NUMBER))
     }
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `insertJournalnotat does not move an existing journalnotat to another consultation`() =
+    fun `insertClinicalNote does not move an existing clinical note to another consultation`() =
         runTest {
             val eier = createPatient()
             val ownerConsultation = createConsultation(eier)
-            val id = JournalnotatId(Uuid.generateV4())
-            consultationRepository.insertJournalnotat(
-                Journalnotat(id, ownerConsultation, eier, "original"),
+            val id = ClinicalNoteId(Uuid.generateV4())
+            consultationRepository.insertClinicalNote(
+                ClinicalNote(id, ownerConsultation, eier, "original"),
                 DEFAULT_ORG_NUMBER,
             )
             val angriper = createPatient()
             val attackerConsultation = createConsultation(angriper)
 
             val rows =
-                consultationRepository.insertJournalnotat(
-                    Journalnotat(id, attackerConsultation, angriper, "overskrevet"),
+                consultationRepository.insertClinicalNote(
+                    ClinicalNote(id, attackerConsultation, angriper, "overskrevet"),
                     DEFAULT_ORG_NUMBER,
                 )
 
             assertEquals(0, rows)
-            val lagret = consultationRepository.findJournalnotat(id, DEFAULT_ORG_NUMBER)
-            assertEquals("original", lagret?.journalnotat)
+            val lagret = consultationRepository.findClinicalNote(id, DEFAULT_ORG_NUMBER)
+            assertEquals("original", lagret?.clinicalNote)
             assertEquals(eier, lagret?.patientId)
             assertEquals(ownerConsultation, lagret?.consultationId)
         }
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `insertJournalnotat updates the text of an existing journalnotat in the same consultation`() =
+    fun `insertClinicalNote updates the text of an existing clinical note in the same consultation`() =
         runTest {
             val patientId = createPatient()
             val consultationId = createConsultation(patientId)
-            val id = JournalnotatId(Uuid.generateV4())
-            consultationRepository.insertJournalnotat(
-                Journalnotat(id, consultationId, patientId, "første"),
+            val id = ClinicalNoteId(Uuid.generateV4())
+            consultationRepository.insertClinicalNote(
+                ClinicalNote(id, consultationId, patientId, "første"),
                 DEFAULT_ORG_NUMBER,
             )
 
             val rows =
-                consultationRepository.insertJournalnotat(
-                    Journalnotat(id, consultationId, patientId, "andre"),
+                consultationRepository.insertClinicalNote(
+                    ClinicalNote(id, consultationId, patientId, "andre"),
                     DEFAULT_ORG_NUMBER,
                 )
 
             assertEquals(1, rows)
             assertEquals(
                 "andre",
-                consultationRepository.findJournalnotat(id, DEFAULT_ORG_NUMBER)?.journalnotat,
+                consultationRepository.findClinicalNote(id, DEFAULT_ORG_NUMBER)?.clinicalNote,
             )
         }
 }

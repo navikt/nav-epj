@@ -70,7 +70,7 @@ class DocumentReferenceCreateValidationTest {
         )
 
     @Test
-    fun `toOpprettJournalnotatRequest maps a fully valid DocumentReference`() {
+    fun `toCreateClinicalNoteRequest maps a fully valid DocumentReference`() {
         val patientId = Uuid.generateV4()
         val encounterId = Uuid.generateV4()
         val documentReference =
@@ -86,74 +86,74 @@ class DocumentReferenceCreateValidationTest {
                 description = "Journalnotat tekst",
             )
 
-        val request = documentReference.toOpprettJournalnotatRequest()
+        val request = documentReference.toCreateClinicalNoteRequest()
 
         assertEquals(patientId, request.patientId.value)
         assertEquals(encounterId, request.consultationId.value)
-        assertEquals("Journalnotat tekst", request.journalnotat)
+        assertEquals("Journalnotat tekst", request.clinicalNote)
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest ignores a client-supplied id`() {
+    fun `toCreateClinicalNoteRequest ignores a client-supplied id`() {
         val documentReference = validDocumentReference(id = "client-chosen-id")
 
-        documentReference.toOpprettJournalnotatRequest()
+        documentReference.toCreateClinicalNoteRequest()
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects a missing status`() {
+    fun `toCreateClinicalNoteRequest rejects a missing status`() {
         val documentReference = validDocumentReference(status = null)
 
         val exception =
             assertFailsWith<InvalidDocumentReferenceException> {
-                documentReference.toOpprettJournalnotatRequest()
+                documentReference.toCreateClinicalNoteRequest()
             }
         assertEquals(OperationOutcome.IssueType.Not_Supported, exception.issueType)
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects an unsupported status value`() {
+    fun `toCreateClinicalNoteRequest rejects an unsupported status value`() {
         val documentReference = validDocumentReference(status = DocumentReferenceStatus.Superseded)
 
         assertFailsWith<InvalidDocumentReferenceException> {
-            documentReference.toOpprettJournalnotatRequest()
+            documentReference.toCreateClinicalNoteRequest()
         }
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects a missing type`() {
+    fun `toCreateClinicalNoteRequest rejects a missing type`() {
         val documentReference = validDocumentReference(type = null)
 
         val exception =
             assertFailsWith<InvalidDocumentReferenceException> {
-                documentReference.toOpprettJournalnotatRequest()
+                documentReference.toCreateClinicalNoteRequest()
             }
         assertEquals(OperationOutcome.IssueType.Required, exception.issueType)
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects zero type codings`() {
+    fun `toCreateClinicalNoteRequest rejects zero type codings`() {
         val documentReference = validDocumentReference(type = CodeableConcept(coding = emptyList()))
 
         assertFailsWith<InvalidDocumentReferenceException> {
-            documentReference.toOpprettJournalnotatRequest()
+            documentReference.toCreateClinicalNoteRequest()
         }
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects multiple type codings`() {
+    fun `toCreateClinicalNoteRequest rejects multiple type codings`() {
         val documentReference =
             validDocumentReference(
                 type = CodeableConcept(coding = validTypeCoding() + validTypeCoding())
             )
 
         assertFailsWith<InvalidDocumentReferenceException> {
-            documentReference.toOpprettJournalnotatRequest()
+            documentReference.toCreateClinicalNoteRequest()
         }
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects an unsupported type system or code`() {
+    fun `toCreateClinicalNoteRequest rejects an unsupported type system or code`() {
         val documentReference =
             validDocumentReference(
                 type =
@@ -170,62 +170,62 @@ class DocumentReferenceCreateValidationTest {
 
         val exception =
             assertFailsWith<InvalidDocumentReferenceException> {
-                documentReference.toOpprettJournalnotatRequest()
+                documentReference.toCreateClinicalNoteRequest()
             }
         assertEquals(OperationOutcome.IssueType.Not_Supported, exception.issueType)
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects a missing subject`() {
+    fun `toCreateClinicalNoteRequest rejects a missing subject`() {
         val documentReference = validDocumentReference(subjectReference = null)
 
         assertFailsWith<InvalidDocumentReferenceException> {
-            documentReference.toOpprettJournalnotatRequest()
+            documentReference.toCreateClinicalNoteRequest()
         }
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects a subject reference to the wrong resource type`() {
+    fun `toCreateClinicalNoteRequest rejects a subject reference to the wrong resource type`() {
         val documentReference =
             validDocumentReference(subjectReference = "Group/${Uuid.generateV4()}")
 
         assertFailsWith<InvalidDocumentReferenceException> {
-            documentReference.toOpprettJournalnotatRequest()
+            documentReference.toCreateClinicalNoteRequest()
         }
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects a subject reference with a malformed UUID`() {
+    fun `toCreateClinicalNoteRequest rejects a subject reference with a malformed UUID`() {
         val documentReference = validDocumentReference(subjectReference = "Patient/not-a-uuid")
 
         assertFailsWith<InvalidDocumentReferenceException> {
-            documentReference.toOpprettJournalnotatRequest()
+            documentReference.toCreateClinicalNoteRequest()
         }
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects a missing context`() {
+    fun `toCreateClinicalNoteRequest rejects a missing context`() {
         val documentReference = validDocumentReference(context = null)
 
         val exception =
             assertFailsWith<InvalidDocumentReferenceException> {
-                documentReference.toOpprettJournalnotatRequest()
+                documentReference.toCreateClinicalNoteRequest()
             }
         assertEquals(OperationOutcome.IssueType.Required, exception.issueType)
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects a missing encounter`() {
+    fun `toCreateClinicalNoteRequest rejects a missing encounter`() {
         val documentReference =
             validDocumentReference(context = DocumentReference.Context(encounter = emptyList()))
 
         assertFailsWith<InvalidDocumentReferenceException> {
-            documentReference.toOpprettJournalnotatRequest()
+            documentReference.toCreateClinicalNoteRequest()
         }
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects more than one encounter`() {
+    fun `toCreateClinicalNoteRequest rejects more than one encounter`() {
         val documentReference =
             validDocumentReference(
                 context =
@@ -243,12 +243,12 @@ class DocumentReferenceCreateValidationTest {
             )
 
         assertFailsWith<InvalidDocumentReferenceException> {
-            documentReference.toOpprettJournalnotatRequest()
+            documentReference.toCreateClinicalNoteRequest()
         }
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects an encounter reference with a malformed UUID`() {
+    fun `toCreateClinicalNoteRequest rejects an encounter reference with a malformed UUID`() {
         val documentReference =
             validDocumentReference(
                 context =
@@ -261,12 +261,12 @@ class DocumentReferenceCreateValidationTest {
             )
 
         assertFailsWith<InvalidDocumentReferenceException> {
-            documentReference.toOpprettJournalnotatRequest()
+            documentReference.toCreateClinicalNoteRequest()
         }
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects an unsupported context field`() {
+    fun `toCreateClinicalNoteRequest rejects an unsupported context field`() {
         val documentReference =
             validDocumentReference(
                 context =
@@ -283,51 +283,51 @@ class DocumentReferenceCreateValidationTest {
 
         val exception =
             assertFailsWith<InvalidDocumentReferenceException> {
-                documentReference.toOpprettJournalnotatRequest()
+                documentReference.toCreateClinicalNoteRequest()
             }
         assertEquals(OperationOutcome.IssueType.Not_Supported, exception.issueType)
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects a missing description`() {
+    fun `toCreateClinicalNoteRequest rejects a missing description`() {
         val documentReference = validDocumentReference(description = null)
 
         val exception =
             assertFailsWith<InvalidDocumentReferenceException> {
-                documentReference.toOpprettJournalnotatRequest()
+                documentReference.toCreateClinicalNoteRequest()
             }
         assertEquals(OperationOutcome.IssueType.Required, exception.issueType)
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects a blank description`() {
+    fun `toCreateClinicalNoteRequest rejects a blank description`() {
         val documentReference = validDocumentReference(description = "   ")
 
         assertFailsWith<InvalidDocumentReferenceException> {
-            documentReference.toOpprettJournalnotatRequest()
+            documentReference.toCreateClinicalNoteRequest()
         }
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects zero content entries`() {
+    fun `toCreateClinicalNoteRequest rejects zero content entries`() {
         val documentReference = validDocumentReference(content = emptyList())
 
         assertFailsWith<InvalidDocumentReferenceException> {
-            documentReference.toOpprettJournalnotatRequest()
+            documentReference.toCreateClinicalNoteRequest()
         }
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects more than one content entry`() {
+    fun `toCreateClinicalNoteRequest rejects more than one content entry`() {
         val documentReference = validDocumentReference(content = validContent() + validContent())
 
         assertFailsWith<InvalidDocumentReferenceException> {
-            documentReference.toOpprettJournalnotatRequest()
+            documentReference.toCreateClinicalNoteRequest()
         }
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects a content format`() {
+    fun `toCreateClinicalNoteRequest rejects a content format`() {
         val documentReference =
             validDocumentReference(
                 content =
@@ -341,7 +341,7 @@ class DocumentReferenceCreateValidationTest {
 
         val exception =
             assertFailsWith<InvalidDocumentReferenceException> {
-                documentReference.toOpprettJournalnotatRequest()
+                documentReference.toCreateClinicalNoteRequest()
             }
         assertEquals(OperationOutcome.IssueType.Not_Supported, exception.issueType)
     }
@@ -355,13 +355,13 @@ class DocumentReferenceCreateValidationTest {
     private fun assertNotSupported(documentReference: DocumentReference) {
         val exception =
             assertFailsWith<InvalidDocumentReferenceException> {
-                documentReference.toOpprettJournalnotatRequest()
+                documentReference.toCreateClinicalNoteRequest()
             }
         assertEquals(OperationOutcome.IssueType.Not_Supported, exception.issueType)
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects a content extension`() {
+    fun `toCreateClinicalNoteRequest rejects a content extension`() {
         assertNotSupported(
             validDocumentReference(
                 content =
@@ -376,7 +376,7 @@ class DocumentReferenceCreateValidationTest {
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects a content modifierExtension`() {
+    fun `toCreateClinicalNoteRequest rejects a content modifierExtension`() {
         assertNotSupported(
             validDocumentReference(
                 content =
@@ -391,7 +391,7 @@ class DocumentReferenceCreateValidationTest {
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects an attachment extension`() {
+    fun `toCreateClinicalNoteRequest rejects an attachment extension`() {
         assertNotSupported(
             validDocumentReference(
                 content =
@@ -406,18 +406,18 @@ class DocumentReferenceCreateValidationTest {
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects a missing attachment contentType`() {
+    fun `toCreateClinicalNoteRequest rejects a missing attachment contentType`() {
         val documentReference = validDocumentReference(content = validContent(Attachment()))
 
         val exception =
             assertFailsWith<InvalidDocumentReferenceException> {
-                documentReference.toOpprettJournalnotatRequest()
+                documentReference.toCreateClinicalNoteRequest()
             }
         assertEquals(OperationOutcome.IssueType.Value, exception.issueType)
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects an unsupported attachment contentType`() {
+    fun `toCreateClinicalNoteRequest rejects an unsupported attachment contentType`() {
         val documentReference =
             validDocumentReference(
                 content = validContent(Attachment(contentType = Code(value = "text/plain")))
@@ -425,13 +425,13 @@ class DocumentReferenceCreateValidationTest {
 
         val exception =
             assertFailsWith<InvalidDocumentReferenceException> {
-                documentReference.toOpprettJournalnotatRequest()
+                documentReference.toCreateClinicalNoteRequest()
             }
         assertEquals(OperationOutcome.IssueType.Value, exception.issueType)
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects client-supplied attachment data instead of discarding it silently`() {
+    fun `toCreateClinicalNoteRequest rejects client-supplied attachment data instead of discarding it silently`() {
         val documentReference =
             validDocumentReference(
                 content =
@@ -445,13 +445,13 @@ class DocumentReferenceCreateValidationTest {
 
         val exception =
             assertFailsWith<InvalidDocumentReferenceException> {
-                documentReference.toOpprettJournalnotatRequest()
+                documentReference.toCreateClinicalNoteRequest()
             }
         assertEquals(OperationOutcome.IssueType.Not_Supported, exception.issueType)
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects a client-supplied attachment title`() {
+    fun `toCreateClinicalNoteRequest rejects a client-supplied attachment title`() {
         val documentReference =
             validDocumentReference(
                 content =
@@ -464,12 +464,12 @@ class DocumentReferenceCreateValidationTest {
             )
 
         assertFailsWith<InvalidDocumentReferenceException> {
-            documentReference.toOpprettJournalnotatRequest()
+            documentReference.toCreateClinicalNoteRequest()
         }
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects identifiers`() {
+    fun `toCreateClinicalNoteRequest rejects identifiers`() {
         val documentReference =
             validDocumentReference(
                 identifier = listOf(Identifier(value = FhirString(value = "123")))
@@ -477,13 +477,13 @@ class DocumentReferenceCreateValidationTest {
 
         val exception =
             assertFailsWith<InvalidDocumentReferenceException> {
-                documentReference.toOpprettJournalnotatRequest()
+                documentReference.toCreateClinicalNoteRequest()
             }
         assertEquals(OperationOutcome.IssueType.Not_Supported, exception.issueType)
     }
 
     @Test
-    fun `toOpprettJournalnotatRequest rejects a client-supplied author`() {
+    fun `toCreateClinicalNoteRequest rejects a client-supplied author`() {
         val documentReference =
             validDocumentReference(
                 author = listOf(Reference(reference = FhirString(value = "Practitioner/999")))
@@ -491,7 +491,7 @@ class DocumentReferenceCreateValidationTest {
 
         val exception =
             assertFailsWith<InvalidDocumentReferenceException> {
-                documentReference.toOpprettJournalnotatRequest()
+                documentReference.toCreateClinicalNoteRequest()
             }
         assertEquals(OperationOutcome.IssueType.Not_Supported, exception.issueType)
     }

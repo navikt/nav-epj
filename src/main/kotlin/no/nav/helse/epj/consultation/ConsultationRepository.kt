@@ -3,10 +3,10 @@ package no.nav.helse.epj.consultation
 import java.time.LocalDateTime
 import kotlin.uuid.Uuid
 import no.nav.helse.core.db.ClinicTable
+import no.nav.helse.core.db.ClinicalNoteTable
 import no.nav.helse.core.db.ConsultationDiagnosisCodeTable
 import no.nav.helse.core.db.ConsultationPractitioner
 import no.nav.helse.core.db.ConsultationTable
-import no.nav.helse.core.db.JournalnotatTable
 import no.nav.helse.core.db.consultationAtOrg
 import no.nav.helse.core.db.consultationIdsAtOrg
 import no.nav.helse.core.db.dbQuery
@@ -14,7 +14,7 @@ import no.nav.helse.core.utils.ClinicNotFoundException
 import no.nav.helse.core.utils.ConsultationBelongsToOtherPatientException
 import no.nav.helse.core.utils.ConsultationNotFoundException
 import no.nav.helse.core.utils.ConsultationStatus
-import no.nav.helse.core.utils.DuplikatJournalnotatException
+import no.nav.helse.core.utils.DuplicateClinicalNoteException
 import no.nav.helse.core.utils.InvalidDiagnosisException
 import no.nav.helse.core.utils.logger
 import no.nav.helse.epj.clinic.ClinicId
@@ -57,12 +57,12 @@ class ConsultationRepository {
                     valueTransform = { it[ConsultationPractitioner.hpr] },
                 )
 
-        val journalnotatByConsultationId =
-            JournalnotatTable.selectAll()
-                .where { JournalnotatTable.consultationId inList consultationIds }
+        val clinicalNotesByConsultationId =
+            ClinicalNoteTable.selectAll()
+                .where { ClinicalNoteTable.consultationId inList consultationIds }
                 .groupBy(
-                    keySelector = { it[JournalnotatTable.consultationId] },
-                    valueTransform = { it.toJournalnotat() },
+                    keySelector = { it[ClinicalNoteTable.consultationId] },
+                    valueTransform = { it.toClinicalNote() },
                 )
 
         val diagnosesByConsultationId =
@@ -76,9 +76,9 @@ class ConsultationRepository {
         consultations.map { row ->
             val consultationId = row[ConsultationTable.id]
             val hprListe = hprByConsultationId[consultationId].orEmpty()
-            val journalnotatListe = journalnotatByConsultationId[consultationId].orEmpty()
+            val clinicalNotes = clinicalNotesByConsultationId[consultationId].orEmpty()
             val diagnosisList = diagnosesByConsultationId[consultationId].orEmpty()
-            row.toConsultationWithHprAndJournalnotat(hprListe, journalnotatListe, diagnosisList)
+            row.toConsultationWithHprAndClinicalNotes(hprListe, clinicalNotes, diagnosisList)
         }
     }
 
@@ -233,12 +233,12 @@ class ConsultationRepository {
 
         logger.info("Oppdaterert diagnosetabell med rows: {}", updatedRows)
 
-        updateConsultation.journalNotat?.let { journalnotat ->
+        updateConsultation.clinicalNote?.let { clinicalNote ->
             updatedRows +=
-                updateJournalnotat(
+                updateClinicalNote(
                     consultationId = updateConsultation.consultationId,
                     patientId = patientId,
-                    journalnotat = journalnotat,
+                    clinicalNote = clinicalNote,
                 )
         }
 
@@ -283,57 +283,57 @@ class ConsultationRepository {
         }
     }
 
-    suspend fun updateJournalnotat(
+    suspend fun updateClinicalNote(
         consultationId: ConsultationId,
         patientId: PatientId,
-        journalnotat: String,
+        clinicalNote: String,
     ): Int = dbQuery {
         val eksisterendeId =
-            JournalnotatTable.select(JournalnotatTable.id)
-                .where { JournalnotatTable.consultationId eq consultationId.value }
+            ClinicalNoteTable.select(ClinicalNoteTable.id)
+                .where { ClinicalNoteTable.consultationId eq consultationId.value }
                 .limit(1)
                 .singleOrNull()
-                ?.get(JournalnotatTable.id)
+                ?.get(ClinicalNoteTable.id)
 
         if (eksisterendeId != null) {
-            JournalnotatTable.update({ JournalnotatTable.id eq eksisterendeId }) {
-                it[JournalnotatTable.journalnotat] = journalnotat
+            ClinicalNoteTable.update({ ClinicalNoteTable.id eq eksisterendeId }) {
+                it[ClinicalNoteTable.clinicalNote] = clinicalNote
             }
         } else {
-            JournalnotatTable.insert {
-                    it[JournalnotatTable.consultationId] = consultationId.value
-                    it[JournalnotatTable.patientId] = patientId.value
-                    it[JournalnotatTable.journalnotat] = journalnotat
+            ClinicalNoteTable.insert {
+                    it[ClinicalNoteTable.consultationId] = consultationId.value
+                    it[ClinicalNoteTable.patientId] = patientId.value
+                    it[ClinicalNoteTable.clinicalNote] = clinicalNote
                 }
                 .insertedCount
         }
     }
 
-    suspend fun insertJournalnotat(journalnotat: Journalnotat, orgNumber: String): Int = dbQuery {
+    suspend fun insertClinicalNote(clinicalNote: ClinicalNote, orgNumber: String): Int = dbQuery {
         val consultationPatientId =
             ConsultationTable.select(ConsultationTable.patientId)
                 .where {
-                    (ConsultationTable.id eq journalnotat.consultationId.value) and
+                    (ConsultationTable.id eq clinicalNote.consultationId.value) and
                         consultationAtOrg(orgNumber)
                 }
                 .singleOrNull()
                 ?.get(ConsultationTable.patientId)
-                ?: throw ConsultationNotFoundException(journalnotat.consultationId)
-        if (consultationPatientId != journalnotat.patientId.value) {
+                ?: throw ConsultationNotFoundException(clinicalNote.consultationId)
+        if (consultationPatientId != clinicalNote.patientId.value) {
             throw ConsultationBelongsToOtherPatientException(
-                journalnotat.consultationId,
-                journalnotat.patientId,
+                clinicalNote.consultationId,
+                clinicalNote.patientId,
             )
         }
 
-        JournalnotatTable.upsert(
-                onUpdateExclude = listOf(JournalnotatTable.id),
-                where = { JournalnotatTable.consultationId eq journalnotat.consultationId.value },
+        ClinicalNoteTable.upsert(
+                onUpdateExclude = listOf(ClinicalNoteTable.id),
+                where = { ClinicalNoteTable.consultationId eq clinicalNote.consultationId.value },
             ) {
-                it[JournalnotatTable.id] = journalnotat.id.value
-                it[JournalnotatTable.consultationId] = journalnotat.consultationId.value
-                it[JournalnotatTable.patientId] = journalnotat.patientId.value
-                it[JournalnotatTable.journalnotat] = journalnotat.journalnotat
+                it[ClinicalNoteTable.id] = clinicalNote.id.value
+                it[ClinicalNoteTable.consultationId] = clinicalNote.consultationId.value
+                it[ClinicalNoteTable.patientId] = clinicalNote.patientId.value
+                it[ClinicalNoteTable.clinicalNote] = clinicalNote.clinicalNote
             }
             .insertedCount
     }
@@ -398,10 +398,10 @@ class ConsultationRepository {
                 }
                 .map { it[ConsultationPractitioner.hpr] }
 
-        val journalnotatListe =
-            JournalnotatTable.selectAll()
-                .where { (JournalnotatTable.consultationId eq consultation[ConsultationTable.id]) }
-                .map { it.toJournalnotat() }
+        val clinicalNotes =
+            ClinicalNoteTable.selectAll()
+                .where { (ClinicalNoteTable.consultationId eq consultation[ConsultationTable.id]) }
+                .map { it.toClinicalNote() }
 
         val diagnosisList =
             ConsultationDiagnosisCodeTable.selectAll()
@@ -411,51 +411,51 @@ class ConsultationRepository {
                 }
                 .map { it.toDiagnosis() }
 
-        return consultation.toConsultationWithHprAndJournalnotat(
+        return consultation.toConsultationWithHprAndClinicalNotes(
             hprListe,
-            journalnotatListe,
+            clinicalNotes,
             diagnosisList,
         )
     }
 
-    suspend fun findJournalnotat(
-        journalnotatId: JournalnotatId,
+    suspend fun findClinicalNote(
+        clinicalNoteId: ClinicalNoteId,
         orgNumber: String?,
-    ): Journalnotat? = dbQuery {
-        JournalnotatTable.selectAll()
+    ): ClinicalNote? = dbQuery {
+        ClinicalNoteTable.selectAll()
             .where {
-                (JournalnotatTable.id eq journalnotatId.value) and
-                    (JournalnotatTable.consultationId inSubQuery consultationIdsAtOrg(orgNumber))
+                (ClinicalNoteTable.id eq clinicalNoteId.value) and
+                    (ClinicalNoteTable.consultationId inSubQuery consultationIdsAtOrg(orgNumber))
             }
             .singleOrNull()
-            ?.toJournalnotat()
+            ?.toClinicalNote()
     }
 
-    suspend fun listJournalnotat(
+    suspend fun listClinicalNotes(
         patientId: PatientId,
         consultationId: ConsultationId?,
         orgNumber: String?,
-    ): List<Journalnotat> = dbQuery {
-        JournalnotatTable.selectAll()
+    ): List<ClinicalNote> = dbQuery {
+        ClinicalNoteTable.selectAll()
             .where {
                 val atOrg =
-                    JournalnotatTable.consultationId inSubQuery consultationIdsAtOrg(orgNumber)
+                    ClinicalNoteTable.consultationId inSubQuery consultationIdsAtOrg(orgNumber)
                 if (consultationId != null) {
-                    (JournalnotatTable.patientId eq patientId.value) and
-                        (JournalnotatTable.consultationId eq consultationId.value) and
+                    (ClinicalNoteTable.patientId eq patientId.value) and
+                        (ClinicalNoteTable.consultationId eq consultationId.value) and
                         atOrg
                 } else {
-                    (JournalnotatTable.patientId eq patientId.value) and atOrg
+                    (ClinicalNoteTable.patientId eq patientId.value) and atOrg
                 }
             }
-            .map { it.toJournalnotat() }
+            .map { it.toClinicalNote() }
     }
 
-    suspend fun opprettJournalnotat(
-        id: JournalnotatId,
-        request: OpprettJournalnotatRequest,
+    suspend fun createClinicalNote(
+        id: ClinicalNoteId,
+        request: CreateClinicalNoteRequest,
         orgNumber: String,
-    ): Journalnotat = dbQuery {
+    ): ClinicalNote = dbQuery {
         val consultationPatientId =
             ConsultationTable.select(ConsultationTable.patientId)
                 .where {
@@ -474,37 +474,37 @@ class ConsultationRepository {
         }
 
         val insertedCount =
-            JournalnotatTable.insertIgnore {
-                    it[JournalnotatTable.id] = id.value
-                    it[JournalnotatTable.consultationId] = request.consultationId.value
-                    it[JournalnotatTable.patientId] = request.patientId.value
-                    it[JournalnotatTable.journalnotat] = request.journalnotat
+            ClinicalNoteTable.insertIgnore {
+                    it[ClinicalNoteTable.id] = id.value
+                    it[ClinicalNoteTable.consultationId] = request.consultationId.value
+                    it[ClinicalNoteTable.patientId] = request.patientId.value
+                    it[ClinicalNoteTable.clinicalNote] = request.clinicalNote
                 }
                 .insertedCount
 
         if (insertedCount == 0) {
-            throw DuplikatJournalnotatException()
+            throw DuplicateClinicalNoteException()
         }
 
-        Journalnotat(
+        ClinicalNote(
             id = id,
             consultationId = request.consultationId,
             patientId = request.patientId,
-            journalnotat = request.journalnotat,
+            clinicalNote = request.clinicalNote,
         )
     }
 
-    fun ResultRow.toJournalnotat(): Journalnotat =
-        Journalnotat(
-            id = JournalnotatId(this[JournalnotatTable.id]),
-            consultationId = ConsultationId(this[JournalnotatTable.consultationId]),
-            patientId = PatientId(this[JournalnotatTable.patientId]),
-            journalnotat = this[JournalnotatTable.journalnotat],
+    fun ResultRow.toClinicalNote(): ClinicalNote =
+        ClinicalNote(
+            id = ClinicalNoteId(this[ClinicalNoteTable.id]),
+            consultationId = ConsultationId(this[ClinicalNoteTable.consultationId]),
+            patientId = PatientId(this[ClinicalNoteTable.patientId]),
+            clinicalNote = this[ClinicalNoteTable.clinicalNote],
         )
 
-    fun ResultRow.toConsultationWithHprAndJournalnotat(
+    fun ResultRow.toConsultationWithHprAndClinicalNotes(
         hprListe: List<String>,
-        journalnotatListe: List<Journalnotat>,
+        clinicalNotes: List<ClinicalNote>,
         diagnosisList: List<Diagnose>,
     ): Consultation =
         Consultation(
@@ -516,7 +516,7 @@ class ConsultationRepository {
             endedAt = this[ConsultationTable.endedAt],
             status = this[ConsultationTable.status],
             reasonForVisit = this[ConsultationTable.reasonForVisit],
-            journalnotat = journalnotatListe,
+            clinicalNotes = clinicalNotes,
             diagnoses = diagnosisList,
         )
 

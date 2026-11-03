@@ -73,42 +73,42 @@ class ConsultationRepositoryOrgScopeTest : ConsultationRepositoryTestBase() {
     }
 
     @Test
-    fun `journalnotater recorded at one org are invisible at another`() = runTest {
+    fun `clinical notes recorded at one org are invisible at another`() = runTest {
         ensureOrg(OTHER_ORG_NUMBER)
         val patientId = createPatient()
         val consultationId = startConsultationAt(patientId, DEFAULT_ORG_NUMBER)
-        val id = JournalnotatId(Uuid.generateV4())
-        consultationRepository.opprettJournalnotat(
+        val id = ClinicalNoteId(Uuid.generateV4())
+        consultationRepository.createClinicalNote(
             id,
-            OpprettJournalnotatRequest(patientId, consultationId, "notat"),
+            CreateClinicalNoteRequest(patientId, consultationId, "notat"),
             DEFAULT_ORG_NUMBER,
         )
 
         assertEquals(
             "notat",
-            consultationRepository.findJournalnotat(id, DEFAULT_ORG_NUMBER)?.journalnotat,
+            consultationRepository.findClinicalNote(id, DEFAULT_ORG_NUMBER)?.clinicalNote,
         )
-        assertNull(consultationRepository.findJournalnotat(id, OTHER_ORG_NUMBER))
+        assertNull(consultationRepository.findClinicalNote(id, OTHER_ORG_NUMBER))
         assertTrue(
-            consultationRepository.listJournalnotat(patientId, null, OTHER_ORG_NUMBER).isEmpty()
+            consultationRepository.listClinicalNotes(patientId, null, OTHER_ORG_NUMBER).isEmpty()
         )
     }
 
     @Test
-    fun `a journalnotat cannot be written to a consultation at another org`() = runTest {
+    fun `a clinical note cannot be written to a consultation at another org`() = runTest {
         ensureOrg(OTHER_ORG_NUMBER)
         val patientId = createPatient()
         val consultationId = startConsultationAt(patientId, DEFAULT_ORG_NUMBER)
 
         val result = runCatching {
-            consultationRepository.opprettJournalnotat(
-                JournalnotatId(Uuid.generateV4()),
-                OpprettJournalnotatRequest(patientId, consultationId, "notat"),
+            consultationRepository.createClinicalNote(
+                ClinicalNoteId(Uuid.generateV4()),
+                CreateClinicalNoteRequest(patientId, consultationId, "notat"),
                 OTHER_ORG_NUMBER,
             )
         }
 
         assertTrue(result.isFailure)
-        assertTrue(consultationRepository.listJournalnotat(patientId, null, null).isEmpty())
+        assertTrue(consultationRepository.listClinicalNotes(patientId, null, null).isEmpty())
     }
 }

@@ -68,14 +68,14 @@ export const CreatePatientSchema = z.object({
 
 export type CreatePatientRequest = z.infer<typeof CreatePatientSchema>;
 
-export const JournalnotatEntrySchema = z.object({
+export const ClinicalNoteEntrySchema = z.object({
     id: z.string(),
     consultationId: z.string(),
     patientId: z.string(),
-    journalnotat: z.string().nullable(),
+    clinicalNote: z.string().nullable(),
 });
 
-export type JournalnotatEntry = z.infer<typeof JournalnotatEntrySchema>;
+export type ClinicalNoteEntry = z.infer<typeof ClinicalNoteEntrySchema>;
 
 export const DiagnosisSchema = z.object({
     code: z.string(),
@@ -87,7 +87,7 @@ export const ConsultationSchema = z.object({
     id: z.string(),
     patientId: z.string(),
     hpr: z.array(z.string()),
-    journalnotat: z.array(JournalnotatEntrySchema),
+    clinicalNotes: z.array(ClinicalNoteEntrySchema),
     diagnoses: z.array(DiagnosisSchema),
     startedAt: z.string(),
     endedAt: z.string().nullable(),

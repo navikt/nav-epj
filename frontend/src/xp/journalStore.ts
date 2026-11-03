@@ -80,7 +80,7 @@ export const diagnosisKey = (d: { code: string; system: string }) =>
   `${d.system}:${d.code}`;
 
 export function noteOf(consultation: Consultation) {
-  return consultation.journalnotat.at(-1)?.journalnotat ?? "";
+  return consultation.clinicalNotes.at(-1)?.clinicalNote ?? "";
 }
 
 export function ongoingOf(consultations: Consultation[]) {
@@ -115,22 +115,22 @@ function applySaved(
 ): Consultation[] {
   return consultations.map((k) => {
     if (k.id !== id) return k;
-    const existing = k.journalnotat.at(-1);
-    const journalnotat =
+    const existing = k.clinicalNotes.at(-1);
+    const clinicalNotes =
       draft.notat.trim() === ""
-        ? k.journalnotat
+        ? k.clinicalNotes
         : [
             {
               id: existing?.id ?? `${id}:note`,
               consultationId: id,
               patientId: k.patientId,
-              journalnotat: draft.notat,
+              clinicalNote: draft.notat,
             },
           ];
     return {
       ...k,
       diagnoses: draft.diagnoses.map((d) => ({ ...d })),
-      journalnotat,
+      clinicalNotes,
       status: finalize ? "FINISHED" : k.status,
       endedAt: finalize
         ? new Date().toISOString()
@@ -344,7 +344,7 @@ export const useJournalStore = create<JournalState>((set, get) => {
             code: d.code,
             system: d.system,
           })),
-          journalNotat: draft.notat.trim() === "" ? null : draft.notat,
+          clinicalNote: draft.notat.trim() === "" ? null : draft.notat,
           finalize,
         });
       } catch {

@@ -53,7 +53,7 @@ export type DiagnosisKey = { code: string; system: string };
 export type SaveConsultationRequest = {
   consultationId: string;
   diagnoses: DiagnosisKey[];
-  journalNotat: string | null;
+  clinicalNote: string | null;
   finalize: boolean;
 };
 

@@ -93,7 +93,7 @@ describe("StatusBar", () => {
           id: "k1",
           patientId: "p1",
           hpr: [],
-          journalnotat: [],
+          clinicalNotes: [],
           diagnoses: [],
           startedAt: new Date(Date.now() - 12 * 60_000).toISOString(),
           endedAt: null,

@@ -43,7 +43,7 @@ class ConditionServiceTest {
             patientId = patientId,
             clinicId = ClinicId(Uuid.generateV4()),
             hpr = emptyList(),
-            journalnotat = emptyList(),
+            clinicalNotes = emptyList(),
             diagnoses = diagnoses,
             startedAt = LocalDateTime.now().minusHours(1),
             endedAt = null,

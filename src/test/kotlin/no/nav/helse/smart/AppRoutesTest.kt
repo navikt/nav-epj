@@ -183,7 +183,7 @@ class AppRoutesTest : WithValkey() {
             patientId = patientId,
             clinicId = ClinicId(kotlin.uuid.Uuid.generateV4()),
             hpr = listOf(hpr),
-            journalnotat = emptyList(),
+            clinicalNotes = emptyList(),
             diagnoses = emptyList(),
             startedAt = LocalDateTime.now().minusHours(1),
             endedAt = null,

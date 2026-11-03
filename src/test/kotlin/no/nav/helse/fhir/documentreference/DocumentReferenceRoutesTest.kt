@@ -28,9 +28,9 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.ConsultationBelongsToOtherPatientException
 import no.nav.helse.core.utils.ConsultationNotFoundException
-import no.nav.helse.core.utils.DuplikatJournalnotatException
+import no.nav.helse.core.utils.DuplicateClinicalNoteException
 import no.nav.helse.epj.consultation.ConsultationId
-import no.nav.helse.epj.consultation.OpprettJournalnotatRequest
+import no.nav.helse.epj.consultation.CreateClinicalNoteRequest
 import no.nav.helse.epj.patient.PatientId
 import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
@@ -371,7 +371,7 @@ class DocumentReferenceRoutesTest {
                 encounterId.toString(),
             )
         coEvery {
-            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>(), ORG)
+            documentReferenceService.createDocumentReference(any<CreateClinicalNoteRequest>(), ORG)
         } returns persisted
 
         testApp(scopes = createScope(), boundPatient = patientId.toString()) {
@@ -397,7 +397,7 @@ class DocumentReferenceRoutesTest {
             assertEquals(false, body.contains("client-chosen-id"))
         }
         coVerify(exactly = 1) {
-            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>(), ORG)
+            documentReferenceService.createDocumentReference(any<CreateClinicalNoteRequest>(), ORG)
         }
     }
 
@@ -415,7 +415,7 @@ class DocumentReferenceRoutesTest {
             assertEquals(HttpStatusCode.Forbidden, response.status)
         }
         coVerify(exactly = 0) {
-            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>(), ORG)
+            documentReferenceService.createDocumentReference(any<CreateClinicalNoteRequest>(), ORG)
         }
     }
 
@@ -434,7 +434,7 @@ class DocumentReferenceRoutesTest {
             assertEquals(HttpStatusCode.NotFound, response.status)
         }
         coVerify(exactly = 0) {
-            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>(), ORG)
+            documentReferenceService.createDocumentReference(any<CreateClinicalNoteRequest>(), ORG)
         }
     }
 
@@ -443,7 +443,7 @@ class DocumentReferenceRoutesTest {
         val patientId = Uuid.generateV4()
         val encounterId = Uuid.generateV4()
         coEvery {
-            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>(), ORG)
+            documentReferenceService.createDocumentReference(any<CreateClinicalNoteRequest>(), ORG)
         } throws
             ConsultationBelongsToOtherPatientException(
                 ConsultationId(encounterId),
@@ -468,7 +468,7 @@ class DocumentReferenceRoutesTest {
         val patientId = Uuid.generateV4()
         val encounterId = Uuid.generateV4()
         coEvery {
-            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>(), ORG)
+            documentReferenceService.createDocumentReference(any<CreateClinicalNoteRequest>(), ORG)
         } throws ConsultationNotFoundException(ConsultationId(encounterId))
 
         testApp(scopes = createScope(), boundPatient = patientId.toString()) {
@@ -486,8 +486,8 @@ class DocumentReferenceRoutesTest {
     fun `POST DocumentReference surfaces a duplicate id collision explicitly instead of a fallback success`() {
         val patientId = Uuid.generateV4()
         coEvery {
-            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>(), ORG)
-        } throws DuplikatJournalnotatException()
+            documentReferenceService.createDocumentReference(any<CreateClinicalNoteRequest>(), ORG)
+        } throws DuplicateClinicalNoteException()
 
         testApp(scopes = createScope(), boundPatient = patientId.toString()) {
             val response =
@@ -529,7 +529,7 @@ class DocumentReferenceRoutesTest {
             assertEquals(true, body.contains("\"issue\""))
         }
         coVerify(exactly = 0) {
-            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>(), ORG)
+            documentReferenceService.createDocumentReference(any<CreateClinicalNoteRequest>(), ORG)
         }
     }
 
@@ -549,7 +549,7 @@ class DocumentReferenceRoutesTest {
             assertEquals(true, body.contains("\"OperationOutcome\""))
         }
         coVerify(exactly = 0) {
-            documentReferenceService.createDocumentReference(any<OpprettJournalnotatRequest>(), ORG)
+            documentReferenceService.createDocumentReference(any<CreateClinicalNoteRequest>(), ORG)
         }
     }
 

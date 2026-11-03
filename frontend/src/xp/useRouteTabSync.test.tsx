@@ -157,8 +157,8 @@ describe("useRouteTabSync journal routes", () => {
       reasonForVisit: null,
       hpr: ["9144889"],
       diagnoses: [],
-      journalnotat: [{
-        id: "n1", consultationId: "k1", patientId: "p1", journalnotat: "Fra SMART",
+      clinicalNotes: [{
+        id: "n1", consultationId: "k1", patientId: "p1", clinicalNote: "Fra SMART",
       }],
     }])));
     act(() => store().setCurrent("journal"));

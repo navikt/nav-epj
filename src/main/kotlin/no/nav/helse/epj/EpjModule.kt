@@ -10,12 +10,12 @@ import kotlin.uuid.Uuid
 import no.nav.helse.epj.clinic.ClinicId
 import no.nav.helse.epj.clinic.ClinicService
 import no.nav.helse.epj.clinic.clinicRoutes
+import no.nav.helse.epj.consultation.ClinicalNoteId
 import no.nav.helse.epj.consultation.ConsultationId
 import no.nav.helse.epj.consultation.ConsultationService
-import no.nav.helse.epj.consultation.JournalnotatId
+import no.nav.helse.epj.consultation.routes.clinicalNoteRoutes
 import no.nav.helse.epj.consultation.routes.consultationRoutes
 import no.nav.helse.epj.consultation.routes.diagnosisRoutes
-import no.nav.helse.epj.consultation.routes.journalnotatRoutes
 import no.nav.helse.epj.maaling.MaalingService
 import no.nav.helse.epj.maaling.maalingRoutes
 import no.nav.helse.epj.patient.ActivePatientService
@@ -59,7 +59,7 @@ fun Application.configureEpjModule() {
             consultationRoutes(consultationService, activePatientService, sessionOrgResolver)
             clinicRoutes(clinicService, sessionOrgResolver)
             diagnosisRoutes(consultationService, sessionOrgResolver)
-            journalnotatRoutes(consultationService, sessionOrgResolver)
+            clinicalNoteRoutes(consultationService, sessionOrgResolver)
             maalingRoutes(maalingService, sessionOrgResolver)
         }
     }
@@ -67,8 +67,8 @@ fun Application.configureEpjModule() {
 
 fun ApplicationCall.patientId(): PatientId = PatientId(uuidParameter("patientId"))
 
-fun ApplicationCall.journalnotatId(): JournalnotatId =
-    JournalnotatId(uuidParameter("journalnotatId"))
+fun ApplicationCall.clinicalNoteId(): ClinicalNoteId =
+    ClinicalNoteId(uuidParameter("clinicalNoteId"))
 
 fun ApplicationCall.practitionerHpr(): PractitionerHpr = PractitionerHpr(stringParameter("hpr"))
 

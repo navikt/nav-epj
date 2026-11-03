@@ -14,7 +14,7 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.SerializationException
 import no.nav.helse.core.utils.ConsultationBelongsToOtherPatientException
 import no.nav.helse.core.utils.ConsultationNotFoundException
-import no.nav.helse.core.utils.DuplikatJournalnotatException
+import no.nav.helse.core.utils.DuplicateClinicalNoteException
 import no.nav.helse.core.utils.logger
 import no.nav.helse.fhir.documentReferenceId
 import no.nav.helse.fhir.encounterReferenceId
@@ -110,7 +110,7 @@ fun Route.documentReferenceRoutes(
 
             val request =
                 try {
-                    documentReference.toOpprettJournalnotatRequest()
+                    documentReference.toCreateClinicalNoteRequest()
                 } catch (exception: InvalidDocumentReferenceException) {
                     return@post call.respondOperationOutcome(
                         fhirjson,
@@ -149,7 +149,7 @@ fun Route.documentReferenceRoutes(
                         OperationOutcome.IssueType.Invalid,
                         exception.message ?: "Encounter tilhører en annen pasient",
                     )
-                } catch (exception: DuplikatJournalnotatException) {
+                } catch (exception: DuplicateClinicalNoteException) {
                     return@post call.respondOperationOutcome(
                         fhirjson,
                         fhirContentType,

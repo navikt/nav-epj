@@ -23,7 +23,7 @@ function consultation(overrides: Record<string, unknown> = {}) {
     id: "k1",
     patientId: "p1",
     hpr: ["9144889"],
-    journalnotat: [],
+    clinicalNotes: [],
     diagnoses: [],
     startedAt: "2026-09-30T09:00:00",
     endedAt: null,
@@ -77,8 +77,8 @@ describe("journalStore", () => {
         body: [
           consultation({
             diagnoses: [diag],
-            journalnotat: [
-              { id: "n1", consultationId: "k1", patientId: "p1", journalnotat: "Hei" },
+            clinicalNotes: [
+              { id: "n1", consultationId: "k1", patientId: "p1", clinicalNote: "Hei" },
             ],
           }),
           consultation({ id: "k0", status: "FINISHED", startedAt: "2026-09-01T09:00:00" }),
@@ -270,14 +270,14 @@ describe("journalStore", () => {
       await journal().open("p1");
     });
 
-    const note = { id: "n1", consultationId: "k1", patientId: "p1", journalnotat: "Ekstern" };
+    const note = { id: "n1", consultationId: "k1", patientId: "p1", clinicalNote: "Ekstern" };
     const consultationCalls = () =>
       calls.filter((c) => c.key === "GET /api/patients/p1/consultations").length;
 
     it("turns an external note into the draft on a clean refresh without claiming again", async () => {
       journal().setSubTab("previous");
       const claims = calls.filter((c) => c.key === "PUT /api/active-patient").length;
-      serverConsultation = consultation({ diagnoses: [diag], journalnotat: [note] });
+      serverConsultation = consultation({ diagnoses: [diag], clinicalNotes: [note] });
       await journal().refresh();
       expect(journal().draft.notat).toBe("Ekstern");
       expect(isDirty(journal())).toBe(false);
@@ -294,7 +294,7 @@ describe("journalStore", () => {
     });
 
     it("keeps edits made while a refresh is pending", async () => {
-      serverConsultation = consultation({ journalnotat: [note] });
+      serverConsultation = consultation({ clinicalNotes: [note] });
       const pending = journal().refresh();
       journal().setNotat("mitt");
       await pending;
@@ -303,7 +303,7 @@ describe("journalStore", () => {
     });
 
     it("ignores a refresh response that arrives after the journal switched patient", async () => {
-      serverConsultation = consultation({ journalnotat: [note] });
+      serverConsultation = consultation({ clinicalNotes: [note] });
       const pending = journal().refresh();
       journal().clear();
       await pending;
@@ -328,7 +328,7 @@ describe("journalStore", () => {
       expect(journal().status).toBe("ready");
       expect(journal().consultations).toHaveLength(1);
       fetchMock.mockImplementation(ok);
-      serverConsultation = consultation({ journalnotat: [note] });
+      serverConsultation = consultation({ clinicalNotes: [note] });
       await journal().refresh();
       expect(journal().refreshFailed).toBe(false);
       expect(journal().draft.notat).toBe("Ekstern");
@@ -359,14 +359,14 @@ describe("journalStore", () => {
       expect(isDirty(journal())).toBe(false);
     });
 
-    it("saves with journalNotat null when the note is blank", async () => {
+    it("saves with clinicalNote null when the note is blank", async () => {
       journal().setNotat("   ");
       expect(await journal().save()).toBe(true);
       const patch = calls.find((c) => c.key.startsWith("PATCH"))!;
       expect(patch.body).toEqual({
         consultationId: "k1",
         diagnoses: [{ code: "A02", system: "ICPC2" }],
-        journalNotat: null,
+        clinicalNote: null,
         finalize: false,
       });
     });
@@ -375,13 +375,13 @@ describe("journalStore", () => {
       journal().setNotat("Pasienten er frisk");
       serverConsultation = consultation({
         diagnoses: [diag],
-        journalnotat: [
-          { id: "n1", consultationId: "k1", patientId: "p1", journalnotat: "Pasienten er frisk" },
+        clinicalNotes: [
+          { id: "n1", consultationId: "k1", patientId: "p1", clinicalNote: "Pasienten er frisk" },
         ],
       });
       expect(await journal().save()).toBe(true);
       expect(calls.find((c) => c.key.startsWith("PATCH"))!.body).toMatchObject({
-        journalNotat: "Pasienten er frisk",
+        clinicalNote: "Pasienten er frisk",
       });
       expect(journal().saveStatus).toBe("saved");
       expect(journal().savedAt).toBeInstanceOf(Date);
@@ -436,7 +436,7 @@ describe("journalStore", () => {
       journal().setNotat("lokalt");
       expect(await journal().save({ finalize: true })).toBe(true);
       expect(journal().consultations[0]).toMatchObject({ status: "FINISHED" });
-      expect(journal().consultations[0].journalnotat.at(-1)?.journalnotat).toBe("lokalt");
+      expect(journal().consultations[0].clinicalNotes.at(-1)?.clinicalNote).toBe("lokalt");
     });
 
     it("discards the draft back to the baseline", () => {

@@ -49,7 +49,7 @@ class EncounterServiceTest {
             patientId = patientId,
             clinicId = clinicId,
             hpr = hpr,
-            journalnotat = emptyList(),
+            clinicalNotes = emptyList(),
             diagnoses = diagnoses,
             startedAt = startedAt,
             endedAt = endedAt,
