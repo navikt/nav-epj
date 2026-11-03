@@ -121,7 +121,7 @@ export function LaunchErrorDialog({ dialog, onClose }: Props) {
       case "UNKNOWN_APP":
         void useAppsStore.getState().load();
         if (useJournalStore.getState().patientId) {
-          useJournalStore.getState().setSubTab("apper");
+          useJournalStore.getState().setSubTab("apps");
           openJournalTab();
         }
         break;

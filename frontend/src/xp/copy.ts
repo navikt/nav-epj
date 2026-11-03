@@ -167,7 +167,7 @@ export const copy = {
   "s4.tab.consultationDirty": "Konsultasjon •",
   "s4.tab.previous": (n: number) => `Tidligere konsultasjoner (${n})`,
   "s4.tab.measurements": "Målinger",
-  "s4.tab.apper": (n: number) => `Apper (${n})`,
+  "s4.tab.apps": (n: number) => `Apper (${n})`,
   "s4.none.title": "Ingen pågående konsultasjon",
   "s4.none.body": (name: string) => `Start en konsultasjon for å sette diagnoser, skrive journalnotat og starte apper for ${name}.`,
   "s4.start": "Start konsultasjon",
