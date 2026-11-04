@@ -9,24 +9,6 @@ spec:
   valkey:
     - instance: nav-epj
       access: readwrite
-  image: {{image}}
-  gcp:
-    sqlInstances:
-      - type: POSTGRES_17
-        name: nav-epj-db-instance
-        cascadingDelete: false
-        tier: db-f1-micro
-        databases:
-          - name: nav-epj
-            envVarPrefix: DB
-        diskAutoresize: true
-        highAvailability: false
-        diskType: SSD
-        insights:
-          enabled: true
-        flags:
-          - name: cloudsql.logical_decoding
-            value: "on"
 
   port: 8080
   replicas:
@@ -53,9 +35,9 @@ spec:
     http:
       path: /internal/shutdown
   observability:
-    logging:
-      destinations:
-        - id: loki
+    autoInstrumentation:
+      enabled: true
+      runtime: java
   ingresses:
     - 'https://epj.ekstern.dev.nav.no'
     - 'https://epj.dev-gcp.nav.cloud.nais.io'
@@ -73,7 +55,6 @@ spec:
   accessPolicy:
     inbound:
       rules:
-        - application: syk-inn
         - application: syk-inn
         - application: zara
     outbound:
