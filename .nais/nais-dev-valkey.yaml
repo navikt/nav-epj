@@ -1,11 +1,9 @@
-apiVersion: aiven.io/v1alpha1
-kind: Valkey
-metadata:
-  labels:
-    app: nav-epj
-    team: helseopplysninger
-  name: valkey-helseopplysninger-nav-epj
-  namespace: helseopplysninger
+version: v1
+type: Valkey
+name: valkey-helseopplysninger-nav-epj
 spec:
-  plan: startup-4
-  project: nav-dev
+  memory: 1GB
+  persistence:
+    disabled: true
+  tier: SingleNode
+  version: "9.1"
