@@ -1,0 +1,27 @@
+name: Deploy Nais resources
+on:
+  push:
+    paths:
+      - .github/workflows/deploy-nais-resources.yml
+      - .nais/nais-dev-valkey.yaml
+      - .nais/nais-dev-postgres.yaml
+    branches:
+      - main
+
+permissions:
+  id-token: write
+
+jobs:
+  deploy-nais-resources:
+    name: Deploy Valkey and Postgres to dev
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: nais/setup@v1
+        with:
+          team: helseopplysninger
+          environment: dev-gcp
+      - name: Apply postgres
+        run: nais apply .nais/nais-dev-postgres.yaml
+      - name: Apply valkey
+        run: nais apply .nais/nais-dev-valkey.yaml
