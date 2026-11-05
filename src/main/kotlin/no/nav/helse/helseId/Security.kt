@@ -1,17 +1,19 @@
 package no.nav.helse.helseId
 
-import com.auth0.jwk.JwkProviderBuilder
 import com.auth0.jwt.JWT
+import com.nimbusds.jose.jwk.source.JWKSourceBuilder
+import com.nimbusds.jose.proc.SecurityContext
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata
+import io.ktor.http.auth.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
+import io.ktor.server.response.*
 import java.net.URI
 import no.nav.helse.core.utils.logger
 
-fun Application.configureHelseId() {
-    val log = logger()
+private val log = logger()
 
+fun Application.configureHelseId() {
     val localStub = environment.config.propertyOrNull("auth.localStub")?.getString().toBoolean()
     if (localStub) {
         log.error(
@@ -23,43 +25,67 @@ fun Application.configureHelseId() {
     val wellKnownUrl = environment.config.property("auth.helseId.wellKnownUrl").getString()
 
     val metadata = OIDCProviderMetadata.parse(URI(wellKnownUrl).toURL().readText())
-    val jwkProvider = JwkProviderBuilder(metadata.jwkSetURI.toURL()).build()
+    val verifier =
+        HelseIdTokenVerifier(
+            issuer = metadata.issuer.value,
+            jwkSource =
+                JWKSourceBuilder.create<SecurityContext>(metadata.jwkSetURI.toURL())
+                    .retrying(true)
+                    .build(),
+        )
 
-    authentication {
-        jwt("wonderwall-helseid") {
-            realm = "nav-epj"
-            verifier(jwkProvider, metadata.issuer.value)
-            validate { credential ->
-                val idToken = request.headers["X-Wonderwall-Id-Token"]
-                if (idToken == null) {
-                    log.warn("Missing X-Wonderwall-Id-Token header")
-                    return@validate null
+    authentication { helseId(verifier) }
+}
+
+internal fun AuthenticationConfig.helseId(verifier: HelseIdTokenVerifier) {
+    provider("wonderwall-helseid") {
+        authenticate { ctx ->
+            val principal = ctx.helseIdPrincipal(verifier)
+            if (principal != null) {
+                ctx.principal(principal)
+            } else {
+                ctx.challenge("wonderwall-helseid", AuthenticationFailedCause.InvalidCredentials) {
+                    challenge,
+                    call ->
+                    call.respond(UnauthorizedResponse())
+                    challenge.complete()
                 }
-
-                val decodedIdToken = JWT.decode(idToken)
-                val hpr = decodedIdToken.getClaim("helseid://claims/hpr/hpr_number").asString()
-                if (hpr == null) {
-                    log.warn(
-                        "Missing hpr_number claim in id_token, available claims: {}",
-                        decodedIdToken.claims.keys,
-                    )
-                    return@validate null
-                }
-
-                HelseIdPrincipal(
-                    user = User(name = decodedIdToken.getClaim("name").asString(), hpr = hpr),
-                    debug =
-                        DebugInfo(
-                            idToken = idToken,
-                            accessToken =
-                                request.headers["Authorization"]?.replace("Bearer ", "")
-                                    ?: "missing",
-                        ),
-                    idToken = decodedIdToken.toIdTokenClaims(),
-                )
             }
         }
     }
+}
+
+private suspend fun AuthenticationContext.helseIdPrincipal(
+    verifier: HelseIdTokenVerifier
+): HelseIdPrincipal? {
+    val accessToken = (call.request.parseAuthorizationHeader() as? HttpAuthHeader.Single)?.blob
+    if (accessToken == null) {
+        log.debug("Missing bearer access token")
+        return null
+    }
+    verifier.verify(accessToken) ?: return null
+
+    val idToken = call.request.headers["X-Wonderwall-Id-Token"]
+    if (idToken == null) {
+        log.warn("Missing X-Wonderwall-Id-Token header")
+        return null
+    }
+
+    val decodedIdToken = JWT.decode(idToken)
+    val hpr = decodedIdToken.getClaim("helseid://claims/hpr/hpr_number").asString()
+    if (hpr == null) {
+        log.warn(
+            "Missing hpr_number claim in id_token, available claims: {}",
+            decodedIdToken.claims.keys,
+        )
+        return null
+    }
+
+    return HelseIdPrincipal(
+        user = User(name = decodedIdToken.getClaim("name").asString(), hpr = hpr),
+        debug = DebugInfo(idToken = idToken, accessToken = accessToken),
+        idToken = decodedIdToken.toIdTokenClaims(),
+    )
 }
 
 private fun Application.configureLocalDevelopmentSecurity() {

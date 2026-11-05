@@ -34,6 +34,53 @@ class SecurityTest {
         block()
     }
 
+    private fun helseIdApp(block: suspend ApplicationTestBuilder.() -> Unit) = testApplication {
+        application {
+            authentication { helseId(HelseIdTestTokens.verifier()) }
+            routing {
+                authenticate("wonderwall-helseid") {
+                    get("/whoami") {
+                        call.respondText(call.principal<HelseIdPrincipal>()?.user?.hpr ?: "none")
+                    }
+                }
+            }
+        }
+        block()
+    }
+
+    @Test
+    fun `authenticates a verified access token and reads hpr from the id token`() = helseIdApp {
+        val response =
+            client.get("/whoami") {
+                bearerAuth(HelseIdTestTokens.accessToken())
+                header("X-Wonderwall-Id-Token", HelseIdTestTokens.idToken(hpr = "565501872"))
+            }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals("565501872", response.bodyAsText())
+    }
+
+    @Test
+    fun `responds 401 without a bearer token`() = helseIdApp {
+        val response =
+            client.get("/whoami") {
+                header("X-Wonderwall-Id-Token", HelseIdTestTokens.idToken(hpr = "565501872"))
+            }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+    }
+
+    @Test
+    fun `responds 401 when the access token fails verification`() = helseIdApp {
+        val response =
+            client.get("/whoami") {
+                bearerAuth(HelseIdTestTokens.accessToken(iss = "https://evil.example"))
+                header("X-Wonderwall-Id-Token", HelseIdTestTokens.idToken(hpr = "565501872"))
+            }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+    }
+
     @Test
     fun `authenticates as the stub principal when auth localStub is true`() =
         testApp(mapOf("auth.localStub" to "true")) {
