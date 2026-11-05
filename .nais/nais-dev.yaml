@@ -9,6 +9,7 @@ spec:
   valkey:
     - instance: nav-epj
       access: readwrite
+  image: {{image}}
 
   port: 8080
   replicas:
