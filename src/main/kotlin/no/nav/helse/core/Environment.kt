@@ -16,6 +16,7 @@ data class PostgresConfig(
     val username: String,
     val password: String,
     val seedTestdata: Boolean = false,
+    val migrationUrl: String = url,
 )
 
 data class EhrConfig(val baseUrl: String)
@@ -40,6 +41,9 @@ fun initEnvironment(config: ApplicationConfig): Environment {
         postgres =
             PostgresConfig(
                 url = config.property("database.url").getString(),
+                migrationUrl =
+                    config.propertyOrNull("database.migrationUrl")?.getString()
+                        ?: config.property("database.url").getString(),
                 username = config.propertyOrNull("database.user")?.getString().orEmpty(),
                 password = config.propertyOrNull("database.password")?.getString().orEmpty(),
                 seedTestdata =

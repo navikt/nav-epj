@@ -24,7 +24,7 @@ fun Application.configureDatabases() {
 
 fun getFlyway(postgresConfig: PostgresConfig): Flyway =
     Flyway.configure()
-        .dataSource(postgresConfig.url, postgresConfig.username, postgresConfig.password)
+        .dataSource(postgresConfig.migrationUrl, postgresConfig.username, postgresConfig.password)
         .locations(*flywayLocations(postgresConfig))
         .ignoreMigrationPatterns(*ignoredMigrationPatterns(postgresConfig))
         .cleanDisabled(false)
