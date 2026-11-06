@@ -10,6 +10,7 @@ import kotlinx.coroutines.test.runTest
 import no.nav.helse.core.utils.ConsultationStatus
 import no.nav.helse.ehr.consultation.ConsultationRepository
 import no.nav.helse.ehr.measurement.MeasurementRepository
+import no.nav.helse.ehr.measurement.MeasurementStatus
 import no.nav.helse.ehr.patient.PatientId
 import no.nav.helse.ehr.patient.PatientRepository
 import no.nav.helse.utils.WithPostgresql
@@ -27,6 +28,7 @@ class HackathonClinicalSeedTest : WithPostgresql() {
 
     private val orgWithGunnar = "312000032"
     private val orgWithBjarne = "312000016"
+    private val eventOrgs = listOf("312000016", "312000024", "312000032", "312000040")
 
     private fun execute(vararg statements: String) =
         DriverManager.getConnection(
@@ -306,4 +308,93 @@ class HackathonClinicalSeedTest : WithPostgresql() {
         assertTrue(hba1c.first() < hba1c.last())
         assertTrue(hba1c.last() > java.math.BigDecimal("8.5"))
     }
+
+    private data class CardPatient(
+        val org: String,
+        val personident: String,
+        val codes: List<String>,
+    )
+
+    private val cardUnits =
+        mapOf(
+            "62238-1" to "mL/min/{1.73_m2}",
+            "14682-9" to "umol/L",
+            "69737-5" to "{score}",
+            "44261-6" to "{score}",
+            "8480-6" to "mm[Hg]",
+            "8462-4" to "mm[Hg]",
+            "29463-7" to "kg",
+            "4548-4" to "%",
+        )
+
+    private val cardPatients =
+        listOf(
+            CardPatient("312000016", "09894810030", listOf("62238-1", "14682-9")),
+            CardPatient("312000024", "12924510194", listOf("62238-1", "14682-9")),
+            CardPatient(
+                "312000032",
+                "23895710156",
+                listOf("62238-1", "8480-6", "4548-4", "29463-7"),
+            ),
+            CardPatient(
+                "312000040",
+                "16834910156",
+                listOf("62238-1", "14682-9", "8480-6", "8462-4"),
+            ),
+            CardPatient("312000016", "70837710381", listOf("69737-5")),
+            CardPatient("312000024", "65866910027", listOf("44261-6")),
+            CardPatient("312000032", "66820350082", listOf("44261-6")),
+            CardPatient("312000016", "20856210112", listOf("8480-6", "8462-4", "29463-7")),
+            CardPatient("312000024", "04845310039", listOf("4548-4", "62238-1")),
+        )
+
+    @Test
+    fun `problem card patients have three final readings of each card code at their org`() =
+        runTest {
+            cardPatients.forEach { card ->
+                val readings =
+                    measurementRepository.listByPatientId(patientId(card.personident), card.org)
+                card.codes.forEach { code ->
+                    val series = readings.filter { it.loincCode == code }
+                    val label = "${card.personident} at ${card.org}, $code"
+                    assertTrue(series.size >= 3, "$label has ${series.size} readings")
+                    assertTrue(series.all { it.status == MeasurementStatus.FINAL }, label)
+                    assertTrue(series.all { it.unitCode == cardUnits.getValue(code) }, label)
+                }
+            }
+        }
+
+    @Test
+    fun `problem card patients are visible only at their own org`() = runTest {
+        cardPatients.forEach { card ->
+            val otherOrg = eventOrgs.first { it != card.org }
+            assertTrue(
+                measurementRepository
+                    .listByPatientId(patientId(card.personident), otherOrg)
+                    .isEmpty(),
+                "${card.personident} leaks to $otherOrg",
+            )
+        }
+    }
+
+    @Test
+    fun `hilde nes has phq9 readings only before 2026`() = runTest {
+        val phq9 =
+            measurementRepository.listByPatientId(patientId("65866910027"), "312000024").filter {
+                it.loincCode == "44261-6"
+            }
+        assertTrue(phq9.isNotEmpty())
+        assertTrue(phq9.all { it.effectiveAt.year < 2026 }, phq9.map { it.effectiveAt }.toString())
+    }
+
+    @Test
+    fun `consultation prep patients Else Strand and Helge Bratt have an ongoing consultation`() =
+        runTest {
+            assertNotNull(
+                consultationRepository.findActiveByPatientId(patientId("04845310039"), "312000024")
+            )
+            assertNotNull(
+                consultationRepository.findActiveByPatientId(patientId("16834910156"), "312000040")
+            )
+        }
 }
