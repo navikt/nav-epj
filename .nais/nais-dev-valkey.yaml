@@ -1,6 +1,6 @@
 version: v1
 type: Valkey
-name: valkey-helseopplysninger-nav-epj
+name: nav-epj
 spec:
   memory: 1GB
   persistence:
