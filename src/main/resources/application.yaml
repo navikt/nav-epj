@@ -6,9 +6,7 @@ ktor:
     port: 8080
 
 database:
-  url: ${DB_JDBC_URL}
-  user: ${DB_USERNAME}
-  password: ${DB_PASSWORD}
+  url: ${PGJDBCURL}
   seedTestdata: true
 
 ehr:

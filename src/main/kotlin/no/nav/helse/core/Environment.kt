@@ -40,8 +40,8 @@ fun initEnvironment(config: ApplicationConfig): Environment {
         postgres =
             PostgresConfig(
                 url = config.property("database.url").getString(),
-                username = config.property("database.user").getString(),
-                password = config.property("database.password").getString(),
+                username = config.propertyOrNull("database.user")?.getString().orEmpty(),
+                password = config.propertyOrNull("database.password")?.getString().orEmpty(),
                 seedTestdata =
                     config.propertyOrNull("database.seedTestdata")?.getString().toBoolean(),
             ),

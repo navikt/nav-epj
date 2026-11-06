@@ -9,6 +9,9 @@ spec:
   valkey:
     - instance: nav-epj
       access: readwrite
+  uses:
+    postgres:
+      - name: nav-epj-db-instance
   image: {{image}}
 
   port: 8080
