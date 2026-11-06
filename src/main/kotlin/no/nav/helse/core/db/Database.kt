@@ -12,6 +12,8 @@ fun Application.configureDatabases() {
 
     val flyway = getFlyway(env.postgres)
 
+    flyway.repair()
+
     // flyway.clean()
     flyway.migrate()
 
