@@ -365,15 +365,18 @@ class HackathonClinicalSeedTest : WithPostgresql() {
         }
 
     @Test
-    fun `problem card patients are visible only at their own org`() = runTest {
+    fun `problem card patients are visible at none of the other event orgs`() = runTest {
         cardPatients.forEach { card ->
-            val otherOrg = eventOrgs.first { it != card.org }
-            assertTrue(
-                measurementRepository
-                    .listByPatientId(patientId(card.personident), otherOrg)
-                    .isEmpty(),
-                "${card.personident} leaks to $otherOrg",
-            )
+            eventOrgs
+                .filter { it != card.org }
+                .forEach { otherOrg ->
+                    assertTrue(
+                        measurementRepository
+                            .listByPatientId(patientId(card.personident), otherOrg)
+                            .isEmpty(),
+                        "${card.personident} leaks to $otherOrg",
+                    )
+                }
         }
     }
 
