@@ -13,6 +13,8 @@ spec:
     postgres:
       - name: nav-epj-db-instance
   image: {{image}}
+  gcp:
+    sqlInstances: []
 
   port: 8080
   replicas:
