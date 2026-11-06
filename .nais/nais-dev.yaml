@@ -13,6 +13,23 @@ spec:
     postgres:
       - name: nav-epj-db-instance
   image: {{image}}
+  gcp:
+    sqlInstances:
+      - type: POSTGRES_17
+        name: nav-epj-db-instance
+        cascadingDelete: true
+        tier: db-f1-micro
+        databases:
+          - name: nav-epj
+            envVarPrefix: DB
+        diskAutoresize: true
+        highAvailability: false
+        diskType: SSD
+        insights:
+          enabled: true
+        flags:
+          - name: cloudsql.logical_decoding
+            value: "on"
 
   port: 8080
   replicas:
