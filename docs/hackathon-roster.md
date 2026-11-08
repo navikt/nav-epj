@@ -6,7 +6,7 @@ these organisations after login. Everyone at an organisation sees all of its pat
 clinical data recorded there. Seeded clinical data is attributed to the list HPR in the heading.
 Every patient has 3 to 10 consultations over at least two years (2023 to 2026, none dated after
 2026-10-20 except planned ones), a diagnosis on every completed consultation and a journal note on
-most. 231 consultations, 534 diagnoses, 175 journal notes and 1034 measurements in total. Series
+most. The first diagnosis of a consultation is its hoveddiagnose (ICPC-2). 231 consultations, 267 diagnoses, 175 journal notes and 1034 measurements in total. Series
 below are listed oldest to newest. Consultations are active, planned or cancelled only where
 stated.
 
@@ -17,7 +17,7 @@ Solbakken).
 
 | Name | Personident | Type | Scenario |
 | --- | --- | --- | --- |
-| BJARNE BERGE | 20856210112 | FNR | Hypertension (ICPC-2 K86, ICD-10 I10). 8 consultations 2024 to 2026, the last one active. Systolic pressure 165 to 138 mm Hg and weight 97.6 to 91.8 kg over 7 readings |
+| BJARNE BERGE | 20856210112 | FNR | Hypertension (ICPC-2 K86). 8 consultations 2024 to 2026, the last one active. Systolic pressure 165 to 138 mm Hg and weight 97.6 to 91.8 kg over 7 readings |
 | INGRID BERGE | 03916410017 | FNR | Type 2 diabetes (T90, E11.9). 8 consultations 2024 to 2026. HbA1c 7.5, peaking at 8.6 in 2025, then 7.1 % over 8 readings; weight 85.6 to 79.6 kg |
 | TORE LUND | 28815510331 | FNR | Asthma (R96, J45.9). 8 consultations 2023 to 2026, one cancelled. FEV1 3.07 to 2.67 L over 6 readings |
 | MARIT ENGEN | 55878910264 | DNR | Hypothyroidism (T86, E03.9). 7 consultations 2023 to 2026. TSH 10.0 to 3.0 mIU/L on levothyroxine over 7 readings |
