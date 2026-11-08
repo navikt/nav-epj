@@ -17,8 +17,6 @@ import no.nav.helse.ehr.clinic.ClinicId
 import no.nav.helse.ehr.patient.PatientId
 import no.nav.helse.ehr.practitioner.PractitionerHpr
 import no.nav.helse.utils.DEFAULT_ORG_NUMBER
-import no.nav.tsm.diagnoser.Diagnose
-import no.nav.tsm.diagnoser.DiagnoseType
 import org.junit.Test
 
 class ConsultationServiceTest {
@@ -243,19 +241,6 @@ class ConsultationServiceTest {
         coVerify(exactly = 1) {
             consultationRepository.cancel(consultationId, patientId, DEFAULT_ORG_NUMBER)
         }
-    }
-
-    @OptIn(ExperimentalUuidApi::class)
-    @Test
-    fun `getDiagnoses by consultationId returns diagnoses resolved from the katalog`() = runTest {
-        val consultationId = ConsultationId(Uuid.generateV4())
-        val diagnosis = Diagnose(system = DiagnoseType.ICPC2, code = "A01", text = "Diagnose")
-        coEvery { consultationRepository.listDiagnoses(consultationId, DEFAULT_ORG_NUMBER) } returns
-            listOf(diagnosis)
-
-        val result = consultationService.getDiagnoses(consultationId, DEFAULT_ORG_NUMBER)
-
-        assertEquals(listOf(diagnosis), result)
     }
 
     @OptIn(ExperimentalUuidApi::class)

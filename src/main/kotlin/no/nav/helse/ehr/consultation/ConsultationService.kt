@@ -9,7 +9,6 @@ import no.nav.helse.core.utils.ConsultationStatus
 import no.nav.helse.core.utils.logger
 import no.nav.helse.ehr.patient.PatientId
 import no.nav.helse.ehr.practitioner.PractitionerHpr
-import no.nav.tsm.diagnoser.Diagnose
 
 class ConsultationService(private val consultationRepository: ConsultationRepository) {
     val log = logger()
@@ -33,14 +32,6 @@ class ConsultationService(private val consultationRepository: ConsultationReposi
     suspend fun getConsultation(consultationId: ConsultationId, orgNumber: String?): Consultation {
         return consultationRepository.findByConsultationId(consultationId, orgNumber)
             ?: throw ConsultationNotFoundException(consultationId)
-    }
-
-    suspend fun getDiagnoses(patientId: PatientId, orgNumber: String?): List<Diagnose> {
-        return consultationRepository.listDiagnoses(patientId, orgNumber)
-    }
-
-    suspend fun getDiagnoses(consultationId: ConsultationId, orgNumber: String?): List<Diagnose> {
-        return consultationRepository.listDiagnoses(consultationId, orgNumber)
     }
 
     suspend fun getClinicalNote(clinicalNoteId: ClinicalNoteId, orgNumber: String?): ClinicalNote? {

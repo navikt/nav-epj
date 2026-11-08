@@ -135,7 +135,9 @@ class ConsultationRepositoryDiagnosisTest : ConsultationRepositoryTestBase() {
             assertEquals(1, withoutPeriod)
             assertEquals(0, withPeriod)
             val savedDiagnoses =
-                consultationRepository.listDiagnoses(consultationId, DEFAULT_ORG_NUMBER)
+                consultationRepository
+                    .findByConsultationId(consultationId, DEFAULT_ORG_NUMBER)!!
+                    .diagnoses
             assertEquals(1, savedDiagnoses.size)
             assertEquals("A00.0", savedDiagnoses.single().code)
         }
@@ -176,54 +178,16 @@ class ConsultationRepositoryDiagnosisTest : ConsultationRepositoryTestBase() {
         assertEquals(1, firstInsert)
         assertEquals(1, secondInsert)
 
-        val savedDiagnoses = consultationRepository.listDiagnoses(patientId, DEFAULT_ORG_NUMBER)
+        val savedDiagnoses =
+            consultationRepository.listByPatientId(patientId, DEFAULT_ORG_NUMBER).flatMap {
+                it.diagnoses
+            }
 
         assertEquals(2, savedDiagnoses.size)
     }
 
     @Test
-    fun `listDiagnoses by patientId only includes diagnoses for consultations owned by that patient`() =
-        runTest {
-            val hpr = PractitionerHpr("123")
-            val patientA = createPatient(hpr = hpr)
-            val patientB = createPatient(hpr = hpr)
-            val consultationA =
-                consultationRepository.insert(
-                    CreateConsultation(
-                        patientA,
-                        listOf(hpr),
-                        LocalDateTime.now(),
-                        ConsultationStatus.IN_PROGRESS,
-                        orgNumber = DEFAULT_ORG_NUMBER,
-                    )
-                )
-            val consultationB =
-                consultationRepository.insert(
-                    CreateConsultation(
-                        patientB,
-                        listOf(hpr),
-                        LocalDateTime.now(),
-                        ConsultationStatus.IN_PROGRESS,
-                        orgNumber = DEFAULT_ORG_NUMBER,
-                    )
-                )
-            consultationRepository.updateDiagnosis(
-                CreateDiagnosisRequest(code = "A01", system = DiagnoseType.ICPC2),
-                consultationA.value,
-            )
-            consultationRepository.updateDiagnosis(
-                CreateDiagnosisRequest(code = "A02", system = DiagnoseType.ICPC2),
-                consultationB.value,
-            )
-
-            val diagnosesForA = consultationRepository.listDiagnoses(patientA, DEFAULT_ORG_NUMBER)
-
-            assertEquals(1, diagnosesForA.size)
-            assertEquals("A01", diagnosesForA.single().code)
-        }
-
-    @Test
-    fun `listDiagnoses resolves official catalogue text for both patient and consultation lookups`() =
+    fun `consultation lookups resolve official catalogue text for both patient and consultation reads`() =
         runTest {
             val hpr = PractitionerHpr("123")
             val patientId = createPatient(hpr = hpr)
@@ -243,9 +207,13 @@ class ConsultationRepositoryDiagnosisTest : ConsultationRepositoryTestBase() {
 
             val expectedText = Diagnose.from(DiagnoseType.ICPC2, "A01")!!.text
             val diagnosesByPatient =
-                consultationRepository.listDiagnoses(patientId, DEFAULT_ORG_NUMBER)
+                consultationRepository.listByPatientId(patientId, DEFAULT_ORG_NUMBER).flatMap {
+                    it.diagnoses
+                }
             val diagnosesByConsultation =
-                consultationRepository.listDiagnoses(consultationId, DEFAULT_ORG_NUMBER)
+                consultationRepository
+                    .findByConsultationId(consultationId, DEFAULT_ORG_NUMBER)!!
+                    .diagnoses
 
             assertEquals(expectedText, diagnosesByPatient.single().text)
             assertEquals(expectedText, diagnosesByConsultation.single().text)

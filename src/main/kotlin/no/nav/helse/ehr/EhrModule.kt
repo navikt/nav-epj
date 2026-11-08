@@ -15,7 +15,6 @@ import no.nav.helse.ehr.consultation.ConsultationId
 import no.nav.helse.ehr.consultation.ConsultationService
 import no.nav.helse.ehr.consultation.routes.clinicalNoteRoutes
 import no.nav.helse.ehr.consultation.routes.consultationRoutes
-import no.nav.helse.ehr.consultation.routes.diagnosisRoutes
 import no.nav.helse.ehr.measurement.MeasurementService
 import no.nav.helse.ehr.measurement.measurementRoutes
 import no.nav.helse.ehr.patient.ActivePatientService
@@ -58,7 +57,6 @@ fun Application.configureEhrModule() {
             practitionerRoutes(practitionerService)
             consultationRoutes(consultationService, activePatientService, sessionOrgResolver)
             clinicRoutes(clinicService, sessionOrgResolver)
-            diagnosisRoutes(consultationService, sessionOrgResolver)
             clinicalNoteRoutes(consultationService, sessionOrgResolver)
             measurementRoutes(measurementService, sessionOrgResolver)
         }

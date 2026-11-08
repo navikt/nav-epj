@@ -82,33 +82,6 @@ class ConsultationRepository {
         }
     }
 
-    suspend fun listDiagnoses(id: PatientId, orgNumber: String?): List<Diagnose> = dbQuery {
-        val consultationIds =
-            ConsultationTable.select(ConsultationTable.id)
-                .where {
-                    (ConsultationTable.patientId eq id.value) and consultationAtOrg(orgNumber)
-                }
-                .map { it[ConsultationTable.id] }
-
-        if (consultationIds.isEmpty()) {
-            return@dbQuery emptyList()
-        }
-
-        ConsultationDiagnosisCodeTable.selectAll()
-            .where { ConsultationDiagnosisCodeTable.consultationId inList consultationIds }
-            .map { it.toDiagnosis() }
-    }
-
-    suspend fun listDiagnoses(id: ConsultationId, orgNumber: String?): List<Diagnose> = dbQuery {
-        ConsultationDiagnosisCodeTable.selectAll()
-            .where {
-                (ConsultationDiagnosisCodeTable.consultationId eq id.value) and
-                    (ConsultationDiagnosisCodeTable.consultationId inSubQuery
-                        consultationIdsAtOrg(orgNumber))
-            }
-            .map { it.toDiagnosis() }
-    }
-
     suspend fun insert(createConsultation: CreateConsultation) = dbQuery {
         val clinicId =
             ClinicTable.select(ClinicTable.id)
