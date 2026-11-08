@@ -147,24 +147,24 @@ class HackathonClinicalSeedTest : WithPostgresql() {
     }
 
     private fun applySeed() {
-        val sql =
-            checkNotNull(javaClass.classLoader.getResource("db/testdata/R__hackathon_testdata.sql"))
-                .readText()
-        DriverManager.getConnection(
-                config.postgres.url,
-                config.postgres.username,
-                config.postgres.password,
-            )
-            .use { connection ->
-                connection.autoCommit = false
-                try {
-                    connection.createStatement().use { it.execute(sql) }
-                    connection.commit()
-                } catch (e: Exception) {
-                    connection.rollback()
-                    throw e
+        listOf("db/testdata/R__testdata.sql", "db/testdata/R__hackathon_testdata.sql").forEach {
+            val sql = checkNotNull(javaClass.classLoader.getResource(it)).readText()
+            DriverManager.getConnection(
+                    config.postgres.url,
+                    config.postgres.username,
+                    config.postgres.password,
+                )
+                .use { connection ->
+                    connection.autoCommit = false
+                    try {
+                        connection.createStatement().use { statement -> statement.execute(sql) }
+                        connection.commit()
+                    } catch (e: Exception) {
+                        connection.rollback()
+                        throw e
+                    }
                 }
-            }
+        }
     }
 
     private fun count(query: String): Int =
@@ -284,6 +284,27 @@ class HackathonClinicalSeedTest : WithPostgresql() {
         applySeed()
 
         assertEquals(listOf("1 ICPC2 T90", "2 ICPC2 K86", "3 ICPC2 U99"), ranked(pt1))
+    }
+
+    @Test
+    fun `legacy invalid A09 diagnosis is removed so the consultation can be read`() = runTest {
+        val saa = "md5('hackathon-konsultasjon-SAa')::uuid"
+        execute(
+            "DELETE FROM consultation_diagnosis_code WHERE consultation_id = $saa",
+            "INSERT INTO consultation_diagnosis_code VALUES " +
+                "($saa, 'ICPC2', 'D73', 1), ($saa, 'ICD10', 'A09', 2)",
+        )
+
+        applySeed()
+
+        assertEquals(listOf("1 ICPC2 D73"), ranked(saa))
+        val diagnoses =
+            consultationRepository
+                .listByPatientId(patientId("49819110351"), "312000040")
+                .flatMap { it.diagnoses }
+                .map { it.code }
+        assertTrue("D73" in diagnoses)
+        assertTrue(diagnoses.none { it.startsWith("A09") })
     }
 
     @Test

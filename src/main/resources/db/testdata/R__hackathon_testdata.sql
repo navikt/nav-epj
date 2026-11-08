@@ -383,6 +383,7 @@ FROM plan p
                     ('TMb', 'G43.9'),
                     ('TMc', 'N30.0'),
                     ('SAa', 'A09.9'),
+                    ('SAa', 'A09'),
                     ('SAb', 'J06.9'),
                     ('BOa', 'M17.9')) AS t (prefix, diagnosis_code)
               ON t.prefix = p.prefix
