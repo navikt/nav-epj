@@ -9,6 +9,7 @@ import com.google.fhir.model.r4.Encounter
 import com.google.fhir.model.r4.Enumeration
 import com.google.fhir.model.r4.FhirDateTime
 import com.google.fhir.model.r4.Period
+import com.google.fhir.model.r4.PositiveInt
 import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.Uri
 import kotlinx.datetime.UtcOffset
@@ -100,7 +101,7 @@ class EncounterService(val consultationService: ConsultationService) {
                     )
                 },
             diagnosis =
-                this.diagnoses.map { diagnosis ->
+                this.diagnoses.mapIndexed { index, diagnosis ->
                     Encounter.Diagnosis(
                         condition =
                             Reference(
@@ -108,7 +109,8 @@ class EncounterService(val consultationService: ConsultationService) {
                                     com.google.fhir.model.r4.String(
                                         value = "Condition/${conditionFhirId(this.id, diagnosis)}"
                                     )
-                            )
+                            ),
+                        rank = PositiveInt(value = index + 1),
                     )
                 },
             period =

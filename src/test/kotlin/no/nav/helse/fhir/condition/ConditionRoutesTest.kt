@@ -127,6 +127,10 @@ class ConditionRoutesTest {
                 conditions.single().encounter?.reference?.value,
             )
             assertEquals("A01", conditions.single().code?.coding?.single()?.code?.value)
+            assertEquals(
+                "encounter-diagnosis",
+                conditions.single().category.single().coding.single().code?.value,
+            )
         }
     }
 

@@ -17,6 +17,10 @@ import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.patient.PatientInputId
 import no.nav.tsm.diagnoser.Diagnose
 
+private const val CONDITION_CATEGORY_SYSTEM =
+    "http://terminology.hl7.org/CodeSystem/condition-category"
+private const val ENCOUNTER_DIAGNOSIS_CATEGORY = "encounter-diagnosis"
+
 class ConditionService(val consultationService: ConsultationService) {
 
     suspend fun getConditionsByPatientId(patientId: PatientInputId, orgNumber: String?): Bundle {
@@ -73,6 +77,18 @@ class ConditionService(val consultationService: ConsultationService) {
             encounter =
                 Reference(
                     reference = com.google.fhir.model.r4.String(value = "Encounter/${id.value}")
+                ),
+            category =
+                listOf(
+                    CodeableConcept(
+                        coding =
+                            listOf(
+                                Coding(
+                                    system = Uri(value = CONDITION_CATEGORY_SYSTEM),
+                                    code = Code(value = ENCOUNTER_DIAGNOSIS_CATEGORY),
+                                )
+                            )
+                    )
                 ),
             code =
                 CodeableConcept(

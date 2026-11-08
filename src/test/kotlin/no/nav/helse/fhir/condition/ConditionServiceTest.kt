@@ -94,6 +94,43 @@ class ConditionServiceTest {
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
+    fun `Conditions keep the consultation diagnosis order and carry the encounter-diagnosis category`() =
+        runTest {
+            val patientId = PatientId(Uuid.generateV4())
+            val consultationId = ConsultationId(Uuid.generateV4())
+            val diagnoses =
+                listOf(
+                    Diagnose(system = DiagnoseType.ICD10, code = "Z99", text = "Diagnose Z99"),
+                    Diagnose(system = DiagnoseType.ICPC2, code = "A01", text = "Diagnose A01"),
+                    Diagnose(system = DiagnoseType.ICD10, code = "A00", text = "Diagnose A00"),
+                )
+            coEvery { consultationService.getConsultations(patientId, DEFAULT_ORG_NUMBER) } returns
+                listOf(
+                    consultation(id = consultationId, patientId = patientId, diagnoses = diagnoses)
+                )
+
+            val conditions =
+                conditionService
+                    .getConditionsByPatientId(PatientInputId(patientId.value), DEFAULT_ORG_NUMBER)
+                    .entry
+                    .map { it.resource as Condition }
+
+            assertEquals(
+                listOf("Z99", "A01", "A00"),
+                conditions.map { it.code?.coding?.single()?.code?.value },
+            )
+            conditions.forEach { condition ->
+                val category = condition.category.single().coding.single()
+                assertEquals(
+                    "http://terminology.hl7.org/CodeSystem/condition-category",
+                    category.system?.value,
+                )
+                assertEquals("encounter-diagnosis", category.code?.value)
+            }
+        }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
     fun `getConditionsByPatientId returns an empty bundle when the patient has no consultations`() =
         runTest {
             val patientId = PatientId(Uuid.generateV4())

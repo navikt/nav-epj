@@ -19,6 +19,7 @@ import no.nav.helse.ehr.consultation.ConsultationId
 import no.nav.helse.ehr.consultation.ConsultationService
 import no.nav.helse.ehr.patient.PatientId
 import no.nav.helse.ehr.practitioner.PractitionerHpr
+import no.nav.helse.fhir.condition.conditionFhirId
 import no.nav.helse.fhir.patient.PatientInputId
 import no.nav.helse.utils.DEFAULT_ORG_NUMBER
 import no.nav.tsm.diagnoser.Diagnose
@@ -142,6 +143,33 @@ class EncounterServiceTest {
             val systems = encounter.reasonCode.map { it.coding.single().system?.value }
             assertEquals(listOf("urn:oid:${ICPC2.OID}", "urn:oid:${ICD10.OID}"), systems)
         }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `getEncounterById ranks diagnoses from one in the stored order`() = runTest {
+        val consultationId = ConsultationId(Uuid.generateV4())
+        val diagnoses =
+            listOf(
+                Diagnose(system = DiagnoseType.ICD10, code = "Z99", text = "Diagnose Z99"),
+                Diagnose(system = DiagnoseType.ICPC2, code = "A01", text = "Diagnose A01"),
+                Diagnose(system = DiagnoseType.ICPC2, code = "B02", text = "Diagnose B02"),
+            )
+        coEvery { consultationService.getConsultation(consultationId, DEFAULT_ORG_NUMBER) } returns
+            consultation(id = consultationId, diagnoses = diagnoses)
+
+        val encounter =
+            encounterService.getEncounterById(EncounterId(consultationId.value), DEFAULT_ORG_NUMBER)
+
+        assertEquals(listOf(1, 2, 3), encounter.diagnosis.map { it.rank?.value })
+        assertEquals(
+            diagnoses.map { conditionFhirId(consultationId, it) },
+            encounter.diagnosis.map { it.condition.reference?.value?.removePrefix("Condition/") },
+        )
+        assertEquals(
+            listOf("Z99", "A01", "B02"),
+            encounter.reasonCode.map { it.coding.single().code?.value },
+        )
+    }
 
     @OptIn(ExperimentalUuidApi::class)
     @Test
