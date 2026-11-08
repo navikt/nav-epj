@@ -10,7 +10,7 @@ import { Progress } from "./Progress";
 import { TextArea } from "./TextArea";
 import { copy } from "./copy";
 import { useCurrentUser } from "./currentUser";
-import { diagnosisKey, isDirty, useJournalStore } from "./journalStore";
+import { diagnosisKey, isDirty, lacksMainDiagnosis, useJournalStore } from "./journalStore";
 import { formatDateTime, formatTime, minutesSince } from "./patientInfo";
 import { useShell } from "./shellContext";
 import { useNow } from "./useNow";
@@ -35,13 +35,25 @@ export function OngoingConsultation({ patient, consultation }: Props) {
   const savedAt = useJournalStore((s) => s.savedAt);
   const dirty = isDirty({ draft, baseline });
   const saving = saveStatus === "saving";
+  const missingMain = lacksMainDiagnosis(draft);
   const minutes = minutesSince(consultation.startedAt, now);
-  const savedKeys = useMemo(
-    () => new Set(baseline.diagnoses.map(diagnosisKey)),
-    [baseline.diagnoses],
+  const savedMainKeys = useMemo(
+    () => new Set(baseline.mainDiagnosis ? [diagnosisKey(baseline.mainDiagnosis)] : []),
+    [baseline.mainDiagnosis],
   );
-  const { addDiagnosis, removeDiagnosis, setClinicalNote, save, cancel } =
-    useJournalStore.getState();
+  const savedSecondaryKeys = useMemo(
+    () => new Set(baseline.secondaryDiagnoses.map(diagnosisKey)),
+    [baseline.secondaryDiagnoses],
+  );
+  const {
+    setMainDiagnosis,
+    removeMainDiagnosis,
+    addSecondaryDiagnosis,
+    removeSecondaryDiagnosis,
+    setClinicalNote,
+    save,
+    cancel,
+  } = useJournalStore.getState();
 
   async function confirmFinish() {
     setFinishing(false);
@@ -63,13 +75,34 @@ export function OngoingConsultation({ patient, consultation }: Props) {
             <Badge tone="info">{copy["s4.ongoing.badge"](minutes)}</Badge>
           </div>
           <DiagnosisCombobox
-            selected={draft.diagnoses}
-            savedKeys={savedKeys}
+            label={copy["s4.diag.main.label"]}
+            chipsLabel={copy["s4.diag.main.chips"]}
+            noneText={copy["s4.diag.main.none"]}
+            selected={draft.mainDiagnosis ? [draft.mainDiagnosis] : []}
+            savedKeys={savedMainKeys}
             disabled={saving}
-            onAdd={addDiagnosis}
-            onRemove={removeDiagnosis}
+            onAdd={setMainDiagnosis}
+            onRemove={removeMainDiagnosis}
           />
-          <TextArea
+          <DiagnosisCombobox
+            multiple
+            label={copy["s4.diag.secondary.label"]}
+            chipsLabel={copy["s4.diag.secondary.chips"]}
+            noneText={copy["s4.diag.secondary.none"]}
+            excludedKey={
+              draft.mainDiagnosis ? diagnosisKey(draft.mainDiagnosis) : undefined
+            }
+            selected={draft.secondaryDiagnoses}
+            savedKeys={savedSecondaryKeys}
+            disabled={saving}
+            onAdd={addSecondaryDiagnosis}
+            onRemove={removeSecondaryDiagnosis}
+          />
+          {missingMain && (
+            <Note tone="error" role="alert">
+              {copy["s4.diag.mainRequired"]}
+            </Note>
+          )}          <TextArea
             label={copy["s4.note.label"]}
             rows={6}
             value={draft.clinicalNote}
@@ -79,15 +112,15 @@ export function OngoingConsultation({ patient, consultation }: Props) {
           <div className="xp-form-actions">
             <Button
               isDefault
-              aria-disabled={saving}
+              aria-disabled={saving || missingMain}
               onClick={() => void save()}
             >
               {saving ? copy["s4.saving"] : copy["s4.save"]}
             </Button>
             <Button
-              aria-disabled={saving}
+              aria-disabled={saving || missingMain}
               onClick={() => {
-                if (!saving) setFinishing(true);
+                if (!saving && !missingMain) setFinishing(true);
               }}
             >
               {copy["s4.finish"]}

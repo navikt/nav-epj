@@ -8,6 +8,9 @@ import type { Consultation } from "../utils/mapping/ehr";
 
 type Props = { consultations: Consultation[] };
 
+const diagnosisCell = (d: Consultation["diagnoses"][number]) =>
+  `${d.code} (${systemLabel(d.system)})`;
+
 export function PreviousConsultations({ consultations }: Props) {
   const headingId = useId();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -36,12 +39,17 @@ export function PreviousConsultations({ consultations }: Props) {
                 <span className="h">{copy["s4.previous.col.status"]}</span>
               </th>
               <th scope="col">
-                <span className="h">{copy["s4.previous.col.diag"]}</span>
+                <span className="h">{copy["s4.previous.col.main"]}</span>
+              </th>
+              <th scope="col">
+                <span className="h">{copy["s4.previous.col.secondary"]}</span>
               </th>
             </tr>
           </thead>
           <tbody>
-            {consultations.map((k) => (
+            {consultations.map((k) => {
+              const [main, ...secondaries] = k.diagnoses;
+              return (
               <tr key={k.id} aria-selected={k.id === selectedId}>
                 <td>
                   <button
@@ -58,15 +66,15 @@ export function PreviousConsultations({ consultations }: Props) {
                     ? copy["s4.previous.cancelled"]
                     : copy["s4.previous.done"]}
                 </td>
+                <td>{main ? diagnosisCell(main) : copy["s4.empty.value"]}</td>
                 <td>
-                  {k.diagnoses.length === 0
+                  {secondaries.length === 0
                     ? copy["s4.empty.value"]
-                    : k.diagnoses
-                        .map((d) => `${d.code} (${systemLabel(d.system)})`)
-                        .join(", ")}
+                    : secondaries.map(diagnosisCell).join(", ")}
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>

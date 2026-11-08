@@ -20,6 +20,7 @@ export function ConsultationSummary({
   children,
 }: Props) {
   const note = noteOf(consultation);
+  const [main, ...secondaries] = consultation.diagnoses;
   return (
     <Card heading={heading} headingId={headingId}>
       {children}
@@ -32,13 +33,23 @@ export function ConsultationSummary({
             <dd>{formatDateTime(consultation.endedAt)}</dd>
           </>
         )}
-        <dt>{copy["s4.done.diag"]}</dt>
+        <dt>{copy["s4.done.main"]}</dt>
         <dd>
-          {consultation.diagnoses.length === 0 ? (
-            copy["s4.diag.none"]
+          {main ? (
+            <>
+              <code>{main.code}</code> {main.text} · {systemLabel(main.system)}
+            </>
+          ) : (
+            copy["s4.empty.value"]
+          )}
+        </dd>
+        <dt>{copy["s4.done.secondary"]}</dt>
+        <dd>
+          {secondaries.length === 0 ? (
+            copy["s4.empty.value"]
           ) : (
             <ul>
-              {consultation.diagnoses.map((d) => (
+              {secondaries.map((d) => (
                 <li key={`${d.system}:${d.code}`}>
                   <code>{d.code}</code> {d.text} · {systemLabel(d.system)}
                 </li>

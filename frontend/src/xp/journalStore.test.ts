@@ -2,7 +2,7 @@ import { act } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useActivePatientStore } from "./activePatientStore";
 import { useBalloonStore } from "./balloonStore";
-import { isDirty, ongoingOf, useJournalStore } from "./journalStore";
+import { isDirty, lacksMainDiagnosis, ongoingOf, useJournalStore } from "./journalStore";
 import { usePatientsStore } from "./patientsStore";
 import { useWorkspaceStore } from "./workspaceStore";
 
@@ -17,6 +17,8 @@ const patient = {
 };
 
 const diag = { code: "A02", system: "ICPC2", text: "Frysninger" };
+const a01 = { code: "A01", system: "ICPC2", text: "Smerte" };
+const b02 = { code: "B02", system: "ICPC2", text: "Lymfeknuter" };
 
 function consultation(overrides: Record<string, unknown> = {}) {
   return {
@@ -88,7 +90,11 @@ describe("journalStore", () => {
     await journal().open("p1");
     expect(journal().status).toBe("ready");
     expect(journal().patient?.givenName).toBe("Matematisk");
-    expect(journal().draft).toEqual({ diagnoses: [diag], clinicalNote: "Hei" });
+    expect(journal().draft).toEqual({
+      mainDiagnosis: diag,
+      secondaryDiagnoses: [],
+      clinicalNote: "Hei",
+    });
     expect(journal().draftConsultationId).toBe("k1");
     expect(isDirty(journal())).toBe(false);
     expect(ongoingOf(journal().consultations)?.id).toBe("k1");
@@ -343,20 +349,75 @@ describe("journalStore", () => {
       expect(tab()?.unsaved).toBe(false);
     });
 
-    it("adds each diagnosis once and removes by code and system", () => {
-      const a01 = { code: "A01", system: "ICPC2", text: "Smerte" };
-      journal().addDiagnosis(a01);
-      journal().addDiagnosis(a01);
-      expect(journal().draft.diagnoses).toHaveLength(2);
-      journal().removeDiagnosis("A02", "ICPC2");
-      expect(journal().draft.diagnoses).toEqual([a01]);
+    it("derives the main diagnosis from the first stored diagnosis and keeps the order of the rest", async () => {
+      serverConsultation = consultation({ diagnoses: [b02, diag, a01] });
+      journal().clear();
+      await journal().open("p1");
+      expect(journal().draft.mainDiagnosis).toEqual(b02);
+      expect(journal().draft.secondaryDiagnoses).toEqual([diag, a01]);
+      expect(isDirty(journal())).toBe(false);
+    });
+
+    it("adds each secondary diagnosis once and never next to the same main diagnosis", () => {
+      journal().addSecondaryDiagnosis(a01);
+      journal().addSecondaryDiagnosis(a01);
+      journal().addSecondaryDiagnosis(diag);
+      expect(journal().draft.mainDiagnosis).toEqual(diag);
+      expect(journal().draft.secondaryDiagnoses).toEqual([a01]);
+      journal().removeSecondaryDiagnosis("A01", "ICPC2");
+      expect(journal().draft.secondaryDiagnoses).toEqual([]);
+    });
+
+    it("moves a secondary diagnosis to main and keeps the other secondaries", () => {
+      journal().addSecondaryDiagnosis(a01);
+      journal().addSecondaryDiagnosis(b02);
+      journal().setMainDiagnosis(a01);
+      expect(journal().draft.mainDiagnosis).toEqual(a01);
+      expect(journal().draft.secondaryDiagnoses).toEqual([b02]);
+      journal().setMainDiagnosis(a01);
+      expect(journal().draft.secondaryDiagnoses).toEqual([b02]);
+    });
+
+    it("is dirty when only the role or the order of diagnoses changes", async () => {
+      serverConsultation = consultation({ diagnoses: [diag, a01, b02] });
+      journal().clear();
+      await journal().open("p1");
+      journal().removeSecondaryDiagnosis("A01", "ICPC2");
+      journal().addSecondaryDiagnosis(a01);
+      expect(journal().draft.secondaryDiagnoses).toEqual([b02, a01]);
+      expect(isDirty(journal())).toBe(true);
+      journal().discardDraft();
+      expect(isDirty(journal())).toBe(false);
+      journal().setMainDiagnosis(a01);
+      journal().addSecondaryDiagnosis(diag);
+      expect(journal().draft.secondaryDiagnoses).toEqual([b02, diag]);
       expect(isDirty(journal())).toBe(true);
     });
 
-    it("ignores diagnosis order when comparing to the baseline", () => {
-      journal().removeDiagnosis("A02", "ICPC2");
-      journal().addDiagnosis(diag);
-      expect(isDirty(journal())).toBe(false);
+    it("saves the main diagnosis first and then the secondary ones in order", async () => {
+      journal().addSecondaryDiagnosis(b02);
+      journal().addSecondaryDiagnosis(a01);
+      journal().setMainDiagnosis(a01);
+      expect(await journal().save()).toBe(true);
+      expect(calls.find((c) => c.key.startsWith("PATCH"))!.body).toMatchObject({
+        diagnoses: [
+          { code: "A01", system: "ICPC2" },
+          { code: "B02", system: "ICPC2" },
+        ],
+      });
+    });
+
+    it("keeps secondaries when the main is removed but blocks save and finish without a request", async () => {
+      journal().addSecondaryDiagnosis(a01);
+      journal().removeMainDiagnosis();
+      expect(journal().draft.mainDiagnosis).toBeNull();
+      expect(journal().draft.secondaryDiagnoses).toEqual([a01]);
+      const requests = calls.length;
+      expect(await journal().save()).toBe(false);
+      expect(await journal().save({ finalize: true })).toBe(false);
+      expect(calls).toHaveLength(requests);
+      expect(journal().saveStatus).toBe("idle");
+      expect(lacksMainDiagnosis(journal().draft)).toBe(true);
     });
 
     it("saves with clinicalNote null when the note is blank", async () => {
@@ -389,14 +450,15 @@ describe("journalStore", () => {
       expect(useBalloonStore.getState().balloon?.title).toBe("Konsultasjon lagret");
     });
 
-    it("sends fewer diagnoses when a chip was removed", async () => {
-      journal().removeDiagnosis("A02", "ICPC2");
+    it("sends no diagnoses when the only chip was removed", async () => {
+      journal().removeMainDiagnosis();
       serverConsultation = consultation({ diagnoses: [] });
       await journal().save();
       expect(calls.find((c) => c.key.startsWith("PATCH"))!.body).toMatchObject({
         diagnoses: [],
       });
-      expect(journal().draft.diagnoses).toEqual([]);
+      expect(journal().draft.mainDiagnosis).toBeNull();
+      expect(journal().draft.secondaryDiagnoses).toEqual([]);
     });
 
     it("keeps the draft and flags the tab when saving fails", async () => {
@@ -441,9 +503,13 @@ describe("journalStore", () => {
 
     it("discards the draft back to the baseline", () => {
       journal().setClinicalNote("skisse");
-      journal().removeDiagnosis("A02", "ICPC2");
+      journal().removeMainDiagnosis();
       journal().discardDraft();
-      expect(journal().draft).toEqual({ diagnoses: [diag], clinicalNote: "" });
+      expect(journal().draft).toEqual({
+        mainDiagnosis: diag,
+        secondaryDiagnoses: [],
+        clinicalNote: "",
+      });
       expect(isDirty(journal())).toBe(false);
     });
 

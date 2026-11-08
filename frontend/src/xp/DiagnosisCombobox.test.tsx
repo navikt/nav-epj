@@ -12,17 +12,26 @@ function Harness({
   initial = [],
   saved = new Set<string>(),
   onRemoved,
+  multiple = true,
+  excludedKey,
 }: {
   initial?: DiagnosisItem[];
   saved?: Set<string>;
   onRemoved?: (code: string) => void;
+  multiple?: boolean;
+  excludedKey?: string;
 }) {
   const [selected, setSelected] = useState(initial);
   return (
     <DiagnosisCombobox
+      label="Bidiagnoser (ICPC-2 eller ICD-10)"
+      chipsLabel="Valgte bidiagnoser"
+      noneText="Ingen bidiagnoser valgt."
+      multiple={multiple}
+      excludedKey={excludedKey}
       selected={selected}
       savedKeys={saved}
-      onAdd={(d) => setSelected((s) => [...s, d])}
+      onAdd={(d) => setSelected((s) => (multiple ? [...s, d] : [d]))}
       onRemove={(code, system) => {
         onRemoved?.(code);
         setSelected((s) => s.filter((d) => diagnosisKey(d) !== `${system}:${code}`));
@@ -38,12 +47,12 @@ const toggle = () =>
 describe("DiagnosisCombobox", () => {
   it("exposes a labelled combobox with a description and a toggle button", async () => {
     const { container } = render(<Harness />);
-    expect(input()).toHaveAccessibleName("Diagnoser (ICPC-2 eller ICD-10)");
+    expect(input()).toHaveAccessibleName("Bidiagnoser (ICPC-2 eller ICD-10)");
     expect(input()).toHaveAccessibleDescription("Pil ned åpner listen. Enter velger.");
     expect(input()).toHaveAttribute("aria-expanded", "false");
     expect(toggle()).toHaveAccessibleName("Vis diagnoseliste");
     expect(toggle()).toHaveAttribute("aria-expanded", "false");
-    expect(screen.getByText("Ingen diagnoser valgt.")).toBeInTheDocument();
+    expect(screen.getByText("Ingen bidiagnoser valgt.")).toBeInTheDocument();
     await expectNoSeriousViolations(container);
   });
 
@@ -70,14 +79,14 @@ describe("DiagnosisCombobox", () => {
     expect(input()).toHaveAttribute("aria-expanded", "true");
     expect(screen.getAllByRole("option")).toHaveLength(5);
     await user.keyboard("{ArrowDown}{Enter}");
-    const chips = screen.getByRole("list", { name: "Valgte diagnoser" });
+    const chips = screen.getByRole("list", { name: "Valgte bidiagnoser" });
     expect(chips.querySelectorAll("li")).toHaveLength(1);
   });
 
   it("names the listbox, marks it multiselectable and passes axe while open", async () => {
     const { container } = render(<Harness />);
     await userEvent.click(toggle());
-    const list = screen.getByRole("listbox", { name: "Diagnoser (ICPC-2 eller ICD-10)" });
+    const list = screen.getByRole("listbox", { name: "Bidiagnoser (ICPC-2 eller ICD-10)" });
     expect(list).toHaveAttribute("aria-multiselectable", "true");
     await expectNoSeriousViolations(container);
   });
@@ -152,11 +161,42 @@ describe("DiagnosisCombobox", () => {
 
   it("can be disabled", () => {
     const { rerender } = render(
-      <DiagnosisCombobox selected={[a02]} savedKeys={new Set()} disabled onAdd={() => {}} onRemove={() => {}} />,
+      <DiagnosisCombobox
+        label="Bidiagnoser (ICPC-2 eller ICD-10)"
+        chipsLabel="Valgte bidiagnoser"
+        noneText="Ingen bidiagnoser valgt."
+        multiple
+        selected={[a02]}
+        savedKeys={new Set()}
+        disabled
+        onAdd={() => {}}
+        onRemove={() => {}}
+      />,
     );
     expect(input()).toBeDisabled();
     expect(toggle()).toBeDisabled();
     expect(screen.getByRole("button", { name: "Fjern A02 Frysninger" })).toBeDisabled();
     rerender(<div />);
+  });
+
+  it("in single mode replaces the selection, closes the list and is not multiselectable", async () => {
+    render(<Harness multiple={false} initial={[a02]} />);
+    const user = userEvent.setup();
+    await user.click(toggle());
+    expect(screen.getByRole("listbox")).not.toHaveAttribute("aria-multiselectable");
+    await user.click(screen.getByRole("option", { name: /A03/ }));
+    expect(input()).toHaveAttribute("aria-expanded", "false");
+    const chips = screen.getByRole("list", { name: "Valgte bidiagnoser" });
+    expect(chips.querySelectorAll("li")).toHaveLength(1);
+    expect(chips).toHaveTextContent("A03");
+    expect(chips).not.toHaveTextContent("A02");
+  });
+
+  it("leaves out the excluded diagnosis from the options", async () => {
+    render(<Harness excludedKey={diagnosisKey(a02)} />);
+    await userEvent.click(toggle());
+    const options = screen.getAllByRole("option");
+    expect(options).toHaveLength(4);
+    expect(screen.queryByRole("option", { name: /A02/ })).toBeNull();
   });
 });

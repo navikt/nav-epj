@@ -21,7 +21,11 @@ export type JournalSubTab = (typeof JOURNAL_SUB_TABS)[number];
 export type LoadStatus = "idle" | "loading" | "ready" | "error";
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
 
-type Draft = { diagnoses: DiagnosisItem[]; clinicalNote: string };
+type Draft = {
+  mainDiagnosis: DiagnosisItem | null;
+  secondaryDiagnoses: DiagnosisItem[];
+  clinicalNote: string;
+};
 
 type JournalState = {
   patientId: string | null;
@@ -44,8 +48,10 @@ type JournalState = {
   refresh: () => Promise<void>;
   setSubTab: (subTab: JournalSubTab) => void;
   setClinicalNote: (clinicalNote: string) => void;
-  addDiagnosis: (diagnosis: DiagnosisItem) => void;
-  removeDiagnosis: (code: string, system: string) => void;
+  setMainDiagnosis: (diagnosis: DiagnosisItem) => void;
+  removeMainDiagnosis: () => void;
+  addSecondaryDiagnosis: (diagnosis: DiagnosisItem) => void;
+  removeSecondaryDiagnosis: (code: string, system: string) => void;
   start: () => Promise<void>;
   save: (options?: { finalize?: boolean }) => Promise<boolean>;
   cancel: () => Promise<boolean>;
@@ -53,7 +59,11 @@ type JournalState = {
   clear: () => void;
 };
 
-const emptyDraft = (): Draft => ({ diagnoses: [], clinicalNote: "" });
+const emptyDraft = (): Draft => ({
+  mainDiagnosis: null,
+  secondaryDiagnoses: [],
+  clinicalNote: "",
+});
 
 function initialState() {
   return {
@@ -89,18 +99,39 @@ export function ongoingOf(consultations: Consultation[]) {
 
 function draftOf(consultation: Consultation | null): Draft {
   if (!consultation) return emptyDraft();
+  const [main, ...secondaries] = consultation.diagnoses;
   return {
-    diagnoses: consultation.diagnoses.map((d) => ({ ...d })),
+    mainDiagnosis: main ? { ...main } : null,
+    secondaryDiagnoses: secondaries.map((d) => ({ ...d })),
     clinicalNote: noteOf(consultation),
   };
 }
 
+export function diagnosesOf(draft: Draft): DiagnosisItem[] {
+  return draft.mainDiagnosis
+    ? [draft.mainDiagnosis, ...draft.secondaryDiagnoses]
+    : [];
+}
+
+export function lacksMainDiagnosis(draft: Draft) {
+  return draft.mainDiagnosis === null && draft.secondaryDiagnoses.length > 0;
+}
+
 function sameDraft(a: Draft, b: Draft) {
-  if (a.clinicalNote !== b.clinicalNote || a.diagnoses.length !== b.diagnoses.length) {
-    return false;
-  }
-  const keys = new Set(b.diagnoses.map(diagnosisKey));
-  return a.diagnoses.every((d) => keys.has(diagnosisKey(d)));
+  const aKeys = diagnosisKeysOf(a);
+  const bKeys = diagnosisKeysOf(b);
+  return (
+    a.clinicalNote === b.clinicalNote &&
+    aKeys.length === bKeys.length &&
+    aKeys.every((key, index) => key === bKeys[index])
+  );
+}
+
+function diagnosisKeysOf(draft: Draft) {
+  return [
+    draft.mainDiagnosis ? diagnosisKey(draft.mainDiagnosis) : null,
+    ...draft.secondaryDiagnoses.map(diagnosisKey),
+  ];
 }
 
 export function isDirty(state: Pick<JournalState, "draft" | "baseline">) {
@@ -129,7 +160,7 @@ function applySaved(
           ];
     return {
       ...k,
-      diagnoses: draft.diagnoses.map((d) => ({ ...d })),
+      diagnoses: diagnosesOf(draft).map((d) => ({ ...d })),
       clinicalNotes,
       status: finalize ? "FINISHED" : k.status,
       endedAt: finalize
@@ -284,21 +315,54 @@ export const useJournalStore = create<JournalState>((set, get) => {
         saveStatus: get().saveStatus === "saved" ? "idle" : get().saveStatus,
       }),
 
-    addDiagnosis: (diagnosis) => {
+    setMainDiagnosis: (diagnosis) => {
       const { draft } = get();
-      if (draft.diagnoses.some((d) => diagnosisKey(d) === diagnosisKey(diagnosis))) {
+      const key = diagnosisKey(diagnosis);
+      if (draft.mainDiagnosis && diagnosisKey(draft.mainDiagnosis) === key) {
         return;
       }
-      commit({ draft: { ...draft, diagnoses: [...draft.diagnoses, diagnosis] } });
-    },
-
-    removeDiagnosis: (code, system) => {
-      const { draft } = get();
       commit({
         draft: {
           ...draft,
-          diagnoses: draft.diagnoses.filter(
-            (d) => diagnosisKey(d) !== diagnosisKey({ code, system }),
+          mainDiagnosis: diagnosis,
+          secondaryDiagnoses: draft.secondaryDiagnoses.filter(
+            (d) => diagnosisKey(d) !== key,
+          ),
+        },
+      });
+    },
+
+    removeMainDiagnosis: () => {
+      const { draft } = get();
+      if (!draft.mainDiagnosis) return;
+      commit({ draft: { ...draft, mainDiagnosis: null } });
+    },
+
+    addSecondaryDiagnosis: (diagnosis) => {
+      const { draft } = get();
+      const key = diagnosisKey(diagnosis);
+      if (
+        (draft.mainDiagnosis && diagnosisKey(draft.mainDiagnosis) === key) ||
+        draft.secondaryDiagnoses.some((d) => diagnosisKey(d) === key)
+      ) {
+        return;
+      }
+      commit({
+        draft: {
+          ...draft,
+          secondaryDiagnoses: [...draft.secondaryDiagnoses, diagnosis],
+        },
+      });
+    },
+
+    removeSecondaryDiagnosis: (code, system) => {
+      const { draft } = get();
+      const key = diagnosisKey({ code, system });
+      commit({
+        draft: {
+          ...draft,
+          secondaryDiagnoses: draft.secondaryDiagnoses.filter(
+            (d) => diagnosisKey(d) !== key,
           ),
         },
       });
@@ -335,12 +399,13 @@ export const useJournalStore = create<JournalState>((set, get) => {
       const { patientId, patient, draft, draftConsultationId } = get();
       if (!patientId || !patient || !draftConsultationId) return false;
       if (get().saveStatus === "saving") return false;
+      if (lacksMainDiagnosis(draft)) return false;
       const isCurrent = session.capture();
       commit({ saveStatus: "saving" });
       try {
         await saveConsultation(patientId, {
           consultationId: draftConsultationId,
-          diagnoses: draft.diagnoses.map((d) => ({
+          diagnoses: diagnosesOf(draft).map((d) => ({
             code: d.code,
             system: d.system,
           })),

@@ -15,6 +15,11 @@ import { systemLabel } from "./diagnosisSystem";
 import { diagnosisKey, type DiagnosisItem } from "./journalStore";
 
 type Props = {
+  label: string;
+  chipsLabel: string;
+  noneText: string;
+  multiple?: boolean;
+  excludedKey?: string;
   selected: DiagnosisItem[];
   savedKeys: ReadonlySet<string>;
   disabled?: boolean;
@@ -29,6 +34,11 @@ const catalogue = ehrDiagnoses.map((d) => ({
 }));
 
 export function DiagnosisCombobox({
+  label,
+  chipsLabel,
+  noneText,
+  multiple = false,
+  excludedKey,
   selected,
   savedKeys,
   disabled,
@@ -41,23 +51,30 @@ export function DiagnosisCombobox({
   const comboRef = useRef<HTMLDivElement>(null);
 
   const options = useMemo(
-    () => catalogue.map(({ key, label }) => ({ value: key, label })),
-    [],
+    () =>
+      catalogue
+        .filter(({ key }) => key !== excludedKey)
+        .map(({ key, label }) => ({ value: key, label })),
+    [excludedKey],
   );
   const selectedOptions = useMemo(
     () =>
-      selected.map((d) => ({
-        value: diagnosisKey(d),
-        label: `${d.code} ${d.text}`,
-      })),
-    [selected],
+      multiple
+        ? selected.map((d) => ({
+            value: diagnosisKey(d),
+            label: `${d.code} ${d.text}`,
+          }))
+        : [],
+    [multiple, selected],
   );
 
   function onToggleSelected(value: string, isSelected: boolean) {
     const entry = catalogue.find((c) => c.key === value);
     if (!entry) return;
-    if (isSelected) onAdd(entry.item);
-    else onRemove(entry.item.code, entry.item.system);
+    if (isSelected) {
+      onAdd(entry.item);
+      if (!multiple) setOpen(false);
+    } else onRemove(entry.item.code, entry.item.system);
   }
 
   function onKeyDownCapture(event: KeyboardEvent<HTMLDivElement>) {
@@ -77,8 +94,8 @@ export function DiagnosisCombobox({
       const list = container.querySelector(
         `#${CSS.escape(`${inputId}-filtered-options`)} [role="listbox"]`,
       );
-      list?.setAttribute("aria-label", copy["s4.diag.label"]);
-      list?.setAttribute("aria-multiselectable", "true");
+      list?.setAttribute("aria-label", label);
+      if (multiple) list?.setAttribute("aria-multiselectable", "true");
       list
         ?.querySelectorAll("svg:not([aria-hidden])")
         .forEach((svg) => svg.setAttribute("aria-hidden", "true"));
@@ -87,7 +104,7 @@ export function DiagnosisCombobox({
     const observer = new MutationObserver(patch);
     observer.observe(container, { childList: true, subtree: true });
     return () => observer.disconnect();
-  }, [inputId]);
+  }, [inputId, label, multiple]);
 
   function onBlur(event: FocusEvent<HTMLDivElement>) {
     if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
@@ -96,7 +113,7 @@ export function DiagnosisCombobox({
   return (
     <div className="xp-field xp-diag">
       <span className="xp-label" aria-hidden="true">
-        {copy["s4.diag.label"]}
+        {label}
       </span>
       <span className="xp-hint" aria-hidden="true">
         {copy["s4.diag.hint"]}
@@ -117,10 +134,10 @@ export function DiagnosisCombobox({
           >
             <UNSAFE_Combobox
               id={inputId}
-              label={copy["s4.diag.label"]}
+              label={label}
               description={copy["s4.diag.hint"]}
               hideLabel
-              isMultiSelect
+              isMultiSelect={multiple}
               isListOpen={open && !disabled}
               disabled={disabled}
               options={options}
@@ -154,10 +171,10 @@ export function DiagnosisCombobox({
       </div>
       {selected.length === 0 ? (
         <p id={chipsId} className="xp-hint">
-          {copy["s4.diag.none"]}
+          {noneText}
         </p>
       ) : (
-        <ul id={chipsId} className="xp-chips" aria-label={copy["s4.diag.chips"]}>
+        <ul id={chipsId} className="xp-chips" aria-label={chipsLabel}>
           {selected.map((d) => (
             <li
               key={diagnosisKey(d)}

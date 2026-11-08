@@ -16,6 +16,7 @@ const patient = {
 };
 
 const diag = { code: "A02", system: "ICPC2", text: "Frysninger" };
+const a01 = { code: "A01", system: "ICPC2", text: "Smerte" };
 
 function consultation(overrides: Record<string, unknown> = {}) {
   return {
@@ -169,15 +170,33 @@ describe("JournalView", () => {
     );
   });
 
-  it("preloads saved diagnoses and note and passes axe", async () => {
+  it("preloads the main and secondary diagnoses and the note and passes axe", async () => {
     const { container } = await openJournal([
-      consultation({ diagnoses: [diag], clinicalNotes: [savedNote] }),
+      consultation({ diagnoses: [diag, a01], clinicalNotes: [savedNote] }),
     ]);
     expect(await screen.findByLabelText("Journalnotat")).toHaveValue("Hei");
-    const chips = screen.getByRole("list", { name: "Valgte diagnoser" });
-    expect(within(chips).getByText("· lagret")).toBeInTheDocument();
+    const main = screen.getByRole("list", { name: "Valgt hoveddiagnose" });
+    expect(within(main).getByText("Frysninger")).toBeInTheDocument();
+    expect(within(main).getByText("· lagret")).toBeInTheDocument();
+    const secondary = screen.getByRole("list", { name: "Valgte bidiagnoser" });
+    expect(within(secondary).getByText("Smerte")).toBeInTheDocument();
+    expect(within(secondary).getByText("· lagret")).toBeInTheDocument();
     expect(screen.getByText(/^◐ Pågående · \d+ min$/)).toBeInTheDocument();
     await expectNoSeriousViolations(container);
+  });
+
+  it("blocks Lagre and Fullfør konsultasjon without a request when only bidiagnoser remain", async () => {
+    const { calls } = await openJournal([
+      consultation({ diagnoses: [diag, a01], clinicalNotes: [savedNote] }),
+    ]);
+    await userEvent.click(await screen.findByRole("button", { name: "Fjern A02 Frysninger" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("Velg en hoveddiagnose");
+    expect(screen.getByRole("list", { name: "Valgte bidiagnoser" })).toHaveTextContent("Smerte");
+    expect(screen.getByText("Ingen hoveddiagnose valgt.")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Lagre" }));
+    await userEvent.click(screen.getByRole("button", { name: "Fullfør konsultasjon" }));
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(calls.some((c) => c.key.startsWith("PATCH"))).toBe(false);
   });
 
   it("marks unsaved changes in the status and the sub-tab, and Lagre sends null for a blank note", async () => {
@@ -330,18 +349,34 @@ describe("JournalView", () => {
         status: "FINISHED",
         startedAt: "2026-09-01T09:00:00",
         endedAt: "2026-09-01T09:30:00",
-        diagnoses: [diag],
+        diagnoses: [diag, a01],
         clinicalNotes: [{ ...savedNote, id: "n0", consultationId: "k0", clinicalNote: "Gammelt notat" }],
       }),
     ]);
     await userEvent.click(await screen.findByRole("tab", { name: "Tidligere konsultasjoner (1)" }));
     const table = screen.getByRole("table", { name: "Tidligere konsultasjoner (1)" });
+    const row = within(table).getByRole("button", { name: "01.09.2026 09:00" }).closest("tr")!;
+    const cells = within(row).getAllByRole("cell");
+    expect(cells[2]).toHaveTextContent("A02 (ICPC-2)");
+    expect(cells[3]).toHaveTextContent("A01 (ICPC-2)");
+    expect(within(table).getAllByRole("columnheader").map((h) => h.textContent)).toEqual([
+      "Dato",
+      "Status",
+      "Hoveddiagnose",
+      "Bidiagnoser",
+    ]);
     expect(within(table).queryByText("◐ Pågående")).not.toBeInTheDocument();
     expect(within(table).getByText("✔ Fullført")).toBeInTheDocument();
     expect(screen.getByText("Velg en konsultasjon for å se diagnoser og journalnotater.")).toBeInTheDocument();
     await userEvent.click(within(table).getByRole("button", { name: "01.09.2026 09:00" }));
     expect(screen.getByRole("heading", { name: "Konsultasjon 01.09.2026 09:00 (skrivebeskyttet)" })).toBeInTheDocument();
     expect(screen.getByText("Gammelt notat")).toBeInTheDocument();
+    expect(screen.getByText("Hoveddiagnose", { selector: "dt" }).nextElementSibling).toHaveTextContent(
+      "A02 Frysninger · ICPC-2",
+    );
+    expect(screen.getByText("Bidiagnoser", { selector: "dt" }).nextElementSibling).toHaveTextContent(
+      "A01 Smerte · ICPC-2",
+    );
     expect(screen.getByText("01.09.2026 09:30")).toBeInTheDocument();
   });
 
