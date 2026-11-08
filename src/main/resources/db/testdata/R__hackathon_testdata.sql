@@ -917,4 +917,3 @@ FROM (SELECT key, loinc_code, loinc_display, value, unit_code, unit_display
              ('RS3', '4548-4', 'Hemoglobin A1c/Hemoglobin.total in Blood', '7.5', '%', '%'))
            AS legacy_measurement (key, loinc_code, loinc_display, value, unit_code, unit_display)) AS v
          JOIN inserted c ON c.id = md5('hackathon-konsultasjon-' || v.key)::uuid;
-

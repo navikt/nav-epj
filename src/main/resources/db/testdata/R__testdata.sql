@@ -394,4 +394,3 @@ UPDATE consultation
 SET ended_at = started_at
 WHERE status = 'CANCELLED'
   AND ended_at IS NULL;
-
