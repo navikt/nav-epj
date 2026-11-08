@@ -14,6 +14,7 @@ import no.nav.helse.ehr.measurement.MeasurementStatus
 import no.nav.helse.ehr.patient.PatientId
 import no.nav.helse.ehr.patient.PatientRepository
 import no.nav.helse.utils.WithPostgresql
+import no.nav.tsm.diagnoser.DiagnoseType
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -90,9 +91,10 @@ class HackathonClinicalSeedTest : WithPostgresql() {
         assertEquals(10, consultations.size)
         assertEquals(1, consultations.count { it.status == ConsultationStatus.PLANNED })
         assertEquals(
-            setOf("K86", "I10", "T90", "E11.9"),
+            setOf("K86", "T90"),
             consultations.flatMap { it.diagnoses }.map { it.code }.toSet(),
         )
+        assertTrue(consultations.flatMap { it.diagnoses }.all { it.system == DiagnoseType.ICPC2 })
         assertTrue(consultations.all { it.hpr == listOf("900000103") })
 
         val hba1c =
@@ -144,11 +146,26 @@ class HackathonClinicalSeedTest : WithPostgresql() {
         )
     }
 
-    private fun applySeed() =
-        execute(
+    private fun applySeed() {
+        val sql =
             checkNotNull(javaClass.classLoader.getResource("db/testdata/R__hackathon_testdata.sql"))
                 .readText()
-        )
+        DriverManager.getConnection(
+                config.postgres.url,
+                config.postgres.username,
+                config.postgres.password,
+            )
+            .use { connection ->
+                connection.autoCommit = false
+                try {
+                    connection.createStatement().use { it.execute(sql) }
+                    connection.commit()
+                } catch (e: Exception) {
+                    connection.rollback()
+                    throw e
+                }
+            }
+    }
 
     private fun count(query: String): Int =
         DriverManager.getConnection(
@@ -170,7 +187,7 @@ class HackathonClinicalSeedTest : WithPostgresql() {
         val bb1 = "md5('hackathon-konsultasjon-BB1')::uuid"
         execute(
             "DELETE FROM consultation_diagnosis_code WHERE consultation_id = $bb1 " +
-                "AND diagnosis_code = 'I10'",
+                "AND diagnosis_code = 'K86'",
             "DELETE FROM measurement WHERE consultation_id = $bb1 AND loinc_code = '29463-7'",
             "DELETE FROM clinical_note WHERE consultation_id = md5('hackathon-konsultasjon-BB3')::uuid",
         )
@@ -183,7 +200,7 @@ class HackathonClinicalSeedTest : WithPostgresql() {
             0,
             count(
                 "SELECT count(*) FROM consultation_diagnosis_code WHERE consultation_id = $bb1 " +
-                    "AND diagnosis_code = 'I10'"
+                    "AND diagnosis_code = 'K86'"
             ),
         )
         assertEquals(
@@ -192,6 +209,81 @@ class HackathonClinicalSeedTest : WithPostgresql() {
                 "SELECT count(*) FROM measurement WHERE consultation_id = $bb1 AND loinc_code = '29463-7'"
             ),
         )
+    }
+
+    private fun ranked(consultationId: String): List<String> =
+        DriverManager.getConnection(
+                config.postgres.url,
+                config.postgres.username,
+                config.postgres.password,
+            )
+            .use { connection ->
+                connection.createStatement().use { statement ->
+                    statement
+                        .executeQuery(
+                            "SELECT rank || ' ' || diagnosis_system || ' ' || diagnosis_code " +
+                                "FROM consultation_diagnosis_code " +
+                                "WHERE consultation_id = $consultationId ORDER BY rank"
+                        )
+                        .use { rs ->
+                            generateSequence { if (rs.next()) rs.getString(1) else null }.toList()
+                        }
+                }
+            }
+
+    @Test
+    fun `seeded multi diagnosis consultations rank the main diagnosis before secondary ones`() {
+        assertEquals(
+            listOf("1 ICPC2 T90", "2 ICPC2 K86", "3 ICPC2 U99"),
+            ranked("md5('hackathon-konsultasjon-PT1')::uuid"),
+        )
+        assertEquals(
+            listOf("1 ICPC2 K86", "2 ICPC2 U99"),
+            ranked("md5('hackathon-konsultasjon-SM1')::uuid"),
+        )
+        assertEquals(
+            0,
+            count(
+                "SELECT count(*) FROM consultation_diagnosis_code WHERE diagnosis_system = 'ICD10'"
+            ),
+        )
+    }
+
+    @Test
+    fun `legacy twin layout on seeded consultations is rewritten without touching other conditions`() {
+        val pt1 = "md5('hackathon-konsultasjon-PT1')::uuid"
+        val bb1 = "md5('hackathon-konsultasjon-BB1')::uuid"
+        val userConsultation = "'66666666-6666-6666-6666-666666666666'"
+        execute(
+            "DELETE FROM consultation_diagnosis_code WHERE consultation_id IN ($pt1, $bb1)",
+            "INSERT INTO consultation_diagnosis_code VALUES " +
+                "($pt1, 'ICPC2', 'K86', 1), ($pt1, 'ICPC2', 'T90', 2), ($pt1, 'ICPC2', 'U99', 3), " +
+                "($pt1, 'ICD10', 'E11.9', 4), ($pt1, 'ICD10', 'I10', 5), ($pt1, 'ICD10', 'N18.3', 6), " +
+                "($pt1, 'ICD10', 'J06.9', 7), " +
+                "($bb1, 'ICPC2', 'K86', 1), ($bb1, 'ICD10', 'I10', 2)",
+            "INSERT INTO consultation (id, patient_id, clinic_id, started_at, status) " +
+                "SELECT $userConsultation, patient_id, clinic_id, now(), 'FINISHED' " +
+                "FROM consultation WHERE id = $pt1",
+            "INSERT INTO consultation_diagnosis_code VALUES " +
+                "($userConsultation, 'ICD10', 'I10', 1), ($userConsultation, 'ICPC2', 'T90', 2)",
+        )
+
+        applySeed()
+
+        assertEquals(
+            listOf("1 ICPC2 T90", "2 ICPC2 K86", "3 ICPC2 U99", "4 ICD10 J06.9"),
+            ranked(pt1),
+        )
+        assertEquals(listOf("1 ICPC2 K86"), ranked(bb1))
+        assertEquals(listOf("1 ICD10 I10", "2 ICPC2 T90"), ranked(userConsultation))
+
+        execute(
+            "DELETE FROM consultation_diagnosis_code WHERE consultation_id = $pt1 " +
+                "AND diagnosis_code = 'J06.9'"
+        )
+        applySeed()
+
+        assertEquals(listOf("1 ICPC2 T90", "2 ICPC2 K86", "3 ICPC2 U99"), ranked(pt1))
     }
 
     @Test

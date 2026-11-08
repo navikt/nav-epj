@@ -64,6 +64,7 @@ WHERE fl.hpr IN ('565501872', '900000001')
   AND fl.clinic_id NOT IN (SELECT id FROM clinic WHERE org_number IN ('311111116', '311111124'))
   AND NOT EXISTS (SELECT 1 FROM fastlegeliste_patient flp WHERE flp.fastlegeliste_id = fl.id);
 
+CREATE TEMP TABLE plan ON COMMIT DROP AS
 WITH stories (prefix, personident, first_date, offsets, start_time, duration_minutes, reason_for_visit) AS (
     VALUES ('FR', '14838510036', '2023-03-07', '{0,170,340,510,680,850,1020,1200}', '09:00', 30, 'Overvekt og forhøyet blodsukker, kontroll'),
            ('TF', '02867910193', '2023-02-14', '{0,120,240,360,480,600,720,840,960,1080}', '10:00', 30, 'Høyt blodtrykk, kontroll'),
@@ -100,51 +101,91 @@ FROM stories s
          CROSS JOIN LATERAL unnest(s.offsets::int[]) WITH ORDINALITY AS o (day_offset, seq)
 UNION ALL
 SELECT key, prefix, seq, personident, visit_date::date, start_time, duration_minutes, status, reason_for_visit
-FROM single_visits),
-     plan AS (
+FROM single_visits)
 SELECT d.key, d.prefix, d.seq, d.personident,
        v.business_day + d.start_time::time AS started_at,
        CASE WHEN d.status IN ('PLANNED', 'IN_PROGRESS') THEN NULL
             ELSE v.business_day + d.start_time::time + make_interval(mins => d.duration_minutes) END AS ended_at,
        d.status, d.reason_for_visit
 FROM schedule d
-         CROSS JOIN LATERAL (SELECT d.visit_day + CASE extract(isodow FROM d.visit_day) WHEN 6 THEN 2 WHEN 7 THEN 1 ELSE 0 END AS business_day) v),
-     diagnosis_codes (prefix, diagnosis_system, diagnosis_code) AS (
-    VALUES ('FR', 'ICPC2', 'T82'),
-           ('FR', 'ICD10', 'E66.9'),
-           ('TF', 'ICPC2', 'K86'),
-           ('TF', 'ICD10', 'I10'),
-           ('GV', 'ICPC2', 'T86'),
-           ('GV', 'ICD10', 'E03.9'),
-           ('LF', 'ICPC2', 'R96'),
-           ('LF', 'ICD10', 'J45.9'),
-           ('SE', 'ICPC2', 'P76'),
-           ('SE', 'ICD10', 'F32.1'),
-           ('RL', 'ICPC2', 'T90'),
-           ('RL', 'ICD10', 'E11.9'),
-           ('RL', 'ICPC2', 'K86'),
-           ('RL', 'ICD10', 'I10'),
-           ('MVa', 'ICPC2', 'W11'),
-           ('MVa', 'ICD10', 'Z30.0'),
-           ('MVb', 'ICPC2', 'U71'),
-           ('MVb', 'ICD10', 'N30.0'),
-           ('MVc', 'ICPC2', 'N89'),
-           ('MVc', 'ICD10', 'G43.9'),
-           ('MVd', 'ICPC2', 'R72'),
-           ('MVd', 'ICD10', 'J02.0'),
-           ('MVe', 'ICPC2', 'N89'),
-           ('MVe', 'ICD10', 'G43.9'),
-           ('APa', 'ICPC2', 'D73'),
-           ('APa', 'ICD10', 'A09.9'),
-           ('APb', 'ICPC2', 'R74'),
-           ('APb', 'ICD10', 'J06.9'),
-           ('APc', 'ICPC2', 'R72'),
-           ('APc', 'ICD10', 'J02.0'),
-           ('APd', 'ICPC2', 'A98'),
-           ('APd', 'ICD10', 'Z00.0'),
-           ('APe', 'ICPC2', 'L84'),
-           ('APe', 'ICD10', 'M54.5')),
-     note_templates (prefix, texts) AS (
+         CROSS JOIN LATERAL (SELECT d.visit_day + CASE extract(isodow FROM d.visit_day) WHEN 6 THEN 2 WHEN 7 THEN 1 ELSE 0 END AS business_day) v;
+
+CREATE TEMP TABLE diagnosis_codes ON COMMIT DROP AS
+SELECT v.prefix, v.rank::smallint AS rank, v.diagnosis_system, v.diagnosis_code
+FROM (VALUES ('FR', 1, 'ICPC2', 'T82'),
+           ('TF', 1, 'ICPC2', 'K86'),
+           ('GV', 1, 'ICPC2', 'T86'),
+           ('LF', 1, 'ICPC2', 'R96'),
+           ('SE', 1, 'ICPC2', 'P76'),
+           ('RL', 1, 'ICPC2', 'T90'),
+           ('RL', 2, 'ICPC2', 'K86'),
+           ('MVa', 1, 'ICPC2', 'W11'),
+           ('MVb', 1, 'ICPC2', 'U71'),
+           ('MVc', 1, 'ICPC2', 'N89'),
+           ('MVd', 1, 'ICPC2', 'R72'),
+           ('MVe', 1, 'ICPC2', 'N89'),
+           ('APa', 1, 'ICPC2', 'D73'),
+           ('APb', 1, 'ICPC2', 'R74'),
+           ('APc', 1, 'ICPC2', 'R72'),
+           ('APd', 1, 'ICPC2', 'A98'),
+           ('APe', 1, 'ICPC2', 'L84')) AS v (prefix, rank, diagnosis_system, diagnosis_code);
+
+CREATE TEMP TABLE legacy_diagnosis_twin ON COMMIT DROP AS
+SELECT d.consultation_id, d.diagnosis_code
+FROM plan p
+         JOIN (VALUES ('FR', 'E66.9'),
+                    ('TF', 'I10'),
+                    ('GV', 'E03.9'),
+                    ('LF', 'J45.9'),
+                    ('SE', 'F32.1'),
+                    ('RL', 'E11.9'),
+                    ('RL', 'I10'),
+                    ('MVa', 'Z30.0'),
+                    ('MVb', 'N30.0'),
+                    ('MVc', 'G43.9'),
+                    ('MVd', 'J02.0'),
+                    ('MVe', 'G43.9'),
+                    ('APa', 'A09.9'),
+                    ('APb', 'J06.9'),
+                    ('APc', 'J02.0'),
+                    ('APd', 'Z00.0'),
+                    ('APe', 'M54.5'),
+                    ('APa', 'A09')) AS t (prefix, diagnosis_code)
+              ON t.prefix = p.prefix
+         JOIN consultation_diagnosis_code d
+              ON d.consultation_id = md5('testdata-konsultasjon-' || p.key)::uuid
+                  AND d.diagnosis_system = 'ICD10'
+                  AND d.diagnosis_code = t.diagnosis_code;
+
+DELETE
+FROM consultation_diagnosis_code d
+    USING legacy_diagnosis_twin l
+WHERE d.consultation_id = l.consultation_id
+  AND d.diagnosis_system = 'ICD10'
+  AND d.diagnosis_code = l.diagnosis_code;
+
+UPDATE consultation_diagnosis_code
+SET rank = rank + 1000
+WHERE consultation_id IN (SELECT consultation_id FROM legacy_diagnosis_twin);
+
+UPDATE consultation_diagnosis_code d
+SET rank = ranked.new_rank
+FROM (SELECT d2.consultation_id,
+             d2.diagnosis_system,
+             d2.diagnosis_code,
+             row_number() OVER (PARTITION BY d2.consultation_id ORDER BY s.rank NULLS LAST, d2.rank) AS new_rank
+      FROM consultation_diagnosis_code d2
+               JOIN plan p ON md5('testdata-konsultasjon-' || p.key)::uuid = d2.consultation_id
+               LEFT JOIN diagnosis_codes s
+                         ON s.prefix = p.prefix
+                             AND s.diagnosis_system = d2.diagnosis_system
+                             AND s.diagnosis_code = d2.diagnosis_code
+      WHERE d2.consultation_id IN (SELECT consultation_id FROM legacy_diagnosis_twin)) ranked
+WHERE d.consultation_id = ranked.consultation_id
+  AND d.diagnosis_system = ranked.diagnosis_system
+  AND d.diagnosis_code = ranked.diagnosis_code;
+
+WITH note_templates (prefix, texts) AS (
     VALUES ('FR', ARRAY['Overvekt og høy livsstilsrisiko. HbA1c i øvre normalområde, kostholdsråd og tilbud om gruppekurs.',
                         'Vekten stiger. HbA1c litt høyere, avtalt mål for aktivitet.',
                         'HbA1c i prediabetesområdet. Fokus på kosthold og daglig gange.',
@@ -318,8 +359,7 @@ RETURNING consultation_id),
      diagnoses AS (
 INSERT INTO consultation_diagnosis_code (consultation_id, diagnosis_system, diagnosis_code, rank)
 SELECT c.id, d.diagnosis_system, d.diagnosis_code,
-       row_number() OVER (PARTITION BY c.id
-                          ORDER BY (d.diagnosis_system = 'ICPC2') DESC, d.diagnosis_system, d.diagnosis_code)
+       d.rank
 FROM inserted c
          JOIN plan p ON md5('testdata-konsultasjon-' || p.key)::uuid = c.id
          JOIN diagnosis_codes d ON d.prefix = p.prefix
@@ -350,22 +390,8 @@ SELECT md5('testdata-maaling-' || m.key || m.loinc_code)::uuid,
 FROM measurements m
          JOIN inserted c ON c.id = md5('testdata-konsultasjon-' || m.key)::uuid;
 
-DELETE
-FROM consultation_diagnosis_code d
-WHERE d.diagnosis_system = 'ICD10'
-  AND d.diagnosis_code = 'A09'
-  AND EXISTS (SELECT 1
-              FROM consultation_diagnosis_code n
-              WHERE n.consultation_id = d.consultation_id
-                AND n.diagnosis_system = 'ICD10'
-                AND n.diagnosis_code = 'A09.9');
-
-UPDATE consultation_diagnosis_code
-SET diagnosis_code = 'A09.9'
-WHERE diagnosis_system = 'ICD10'
-  AND diagnosis_code = 'A09';
-
 UPDATE consultation
 SET ended_at = started_at
 WHERE status = 'CANCELLED'
   AND ended_at IS NULL;
+

@@ -1,65 +1,17 @@
 package no.nav.helse.core.db
 
-import java.sql.Connection
-import java.sql.DriverManager
 import java.time.LocalDate
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import no.nav.helse.ehr.patient.PersonidentType
 import no.nav.helse.ehr.patient.PersonidentValidator
-import no.nav.helse.utils.WithPostgresql
 import no.nav.tsm.diagnoser.Diagnose
-import org.junit.After
-import org.junit.Before
 import org.junit.Test
 
-class TestdataSeedTest : WithPostgresql() {
-
-    private val seedConfig = config.postgres.copy(seedTestdata = true)
-
-    private fun <T> withConnection(block: (Connection) -> T): T =
-        DriverManager.getConnection(
-                config.postgres.url,
-                config.postgres.username,
-                config.postgres.password,
-            )
-            .use(block)
-
-    private fun queryStrings(sql: String): List<List<String?>> = withConnection { connection ->
-        connection.createStatement().use { statement ->
-            statement.executeQuery(sql).use { rs ->
-                buildList {
-                    while (rs.next()) {
-                        add((1..rs.metaData.columnCount).map { rs.getString(it) })
-                    }
-                }
-            }
-        }
-    }
+class TestdataSeedTest : SeededPostgresqlTest() {
 
     private fun count(table: String) = queryStrings("SELECT count(*) FROM $table").single().single()
-
-    private fun applySeedAgain() {
-        listOf("db/testdata/R__testdata.sql", "db/testdata/R__hackathon_testdata.sql").forEach {
-            val sql = checkNotNull(javaClass.classLoader.getResource(it)).readText()
-            withConnection { connection ->
-                connection.createStatement().use { statement -> statement.execute(sql) }
-            }
-        }
-    }
-
-    @Before
-    fun migrateWithSeed() {
-        getFlyway(seedConfig).clean()
-        getFlyway(seedConfig).migrate()
-    }
-
-    @After
-    fun restoreSchemaWithoutSeed() {
-        getFlyway(config.postgres).clean()
-        getFlyway(config.postgres).migrate()
-    }
 
     @Test
     fun `every seeded diagnosis code exists in the diagnosis library`() {
@@ -72,58 +24,6 @@ class TestdataSeedTest : WithPostgresql() {
         codes.forEach { (system, code) ->
             assertTrue(Diagnose.from(system!!, code!!) != null, "$system $code")
         }
-    }
-
-    @Test
-    fun `legacy A09 diagnosis rows are rewritten to A09-9 when the seed is applied again`() {
-        val ids =
-            queryStrings(
-                    "SELECT consultation_id FROM consultation_diagnosis_code " +
-                        "WHERE diagnosis_system = 'ICD10' AND diagnosis_code = 'A09.9'"
-                )
-                .map { it.single() }
-        assertTrue(ids.size >= 2)
-        val (rewritten, duplicated) = ids
-        withConnection { connection ->
-            connection.createStatement().use {
-                it.execute(
-                    "UPDATE consultation_diagnosis_code SET diagnosis_code = 'A09' " +
-                        "WHERE consultation_id = '$rewritten' AND diagnosis_code = 'A09.9'"
-                )
-                it.execute(
-                    "INSERT INTO consultation_diagnosis_code " +
-                        "(consultation_id, diagnosis_system, diagnosis_code, rank) " +
-                        "SELECT '$duplicated', 'ICD10', 'A09', max(rank) + 1 " +
-                        "FROM consultation_diagnosis_code WHERE consultation_id = '$duplicated'"
-                )
-            }
-        }
-
-        applySeedAgain()
-
-        assertEquals(
-            0,
-            queryStrings(
-                    "SELECT count(*) FROM consultation_diagnosis_code WHERE diagnosis_code = 'A09'"
-                )
-                .single()
-                .single()!!
-                .toInt(),
-        )
-        assertEquals(
-            listOf(listOf("A09.9")),
-            queryStrings(
-                "SELECT diagnosis_code FROM consultation_diagnosis_code " +
-                    "WHERE consultation_id = '$rewritten' AND diagnosis_code LIKE 'A09%'"
-            ),
-        )
-        assertEquals(
-            listOf(listOf("A09.9")),
-            queryStrings(
-                "SELECT diagnosis_code FROM consultation_diagnosis_code " +
-                    "WHERE consultation_id = '$duplicated' AND diagnosis_code LIKE 'A09%'"
-            ),
-        )
     }
 
     @Test
@@ -329,8 +229,8 @@ class TestdataSeedTest : WithPostgresql() {
 
     @Test
     fun `everyday test patients get clinical histories at their list office`() {
-        assertEquals(listOf("40", "76", "193", "38"), clinicalCounts("311111116"))
-        assertEquals(listOf("33", "82", "213", "30"), clinicalCounts("311111124"))
+        assertEquals(listOf("40", "38", "193", "38"), clinicalCounts("311111116"))
+        assertEquals(listOf("33", "41", "213", "30"), clinicalCounts("311111124"))
     }
 
     @Test
@@ -432,7 +332,7 @@ class TestdataSeedTest : WithPostgresql() {
             connection.createStatement().use {
                 it.execute(
                     "DELETE FROM consultation_diagnosis_code WHERE consultation_id = $rl1ConsultationId " +
-                        "AND diagnosis_code = 'I10'"
+                        "AND diagnosis_code = 'K86'"
                 )
                 it.execute(
                     "DELETE FROM measurement WHERE consultation_id = $rl1ConsultationId AND loinc_code = '29463-7'"
@@ -456,7 +356,7 @@ class TestdataSeedTest : WithPostgresql() {
             "0",
             queryStrings(
                     "SELECT count(*) FROM consultation_diagnosis_code WHERE consultation_id = $rl1ConsultationId " +
-                        "AND diagnosis_code = 'I10'"
+                        "AND diagnosis_code = 'K86'"
                 )
                 .single()
                 .single(),
