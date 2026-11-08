@@ -15,6 +15,7 @@ import no.nav.helse.core.utils.ConsultationBelongsToOtherPatientException
 import no.nav.helse.core.utils.ConsultationNotFoundException
 import no.nav.helse.core.utils.ConsultationStatus
 import no.nav.helse.core.utils.DuplicateClinicalNoteException
+import no.nav.helse.core.utils.DuplicateDiagnosisException
 import no.nav.helse.core.utils.InvalidDiagnosisException
 import no.nav.helse.core.utils.logger
 import no.nav.helse.ehr.clinic.ClinicId
@@ -27,6 +28,7 @@ import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.inSubQuery
+import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
@@ -68,6 +70,7 @@ class ConsultationRepository {
         val diagnosesByConsultationId =
             ConsultationDiagnosisCodeTable.selectAll()
                 .where { ConsultationDiagnosisCodeTable.consultationId inList consultationIds }
+                .orderBy(ConsultationDiagnosisCodeTable.rank)
                 .groupBy(
                     keySelector = { it[ConsultationDiagnosisCodeTable.consultationId] },
                     valueTransform = { it.toDiagnosis() },
@@ -177,6 +180,7 @@ class ConsultationRepository {
                         consultationAtOrg(orgNumber)
                 }
                 .limit(1)
+                .forUpdate()
                 .any()
 
         if (!consultationPatient) {
@@ -191,18 +195,10 @@ class ConsultationRepository {
         var updatedRows = 0
 
         updatedRows +=
-            removeDiagnosesNotIn(
+            replaceDiagnoses(
                 diagnoses = updateConsultation.diagnoses,
                 consultationId = updateConsultation.consultationId.value,
             )
-
-        updateConsultation.diagnoses.forEach { diagnosis ->
-            updatedRows +=
-                updateDiagnosis(
-                    diagnosis = diagnosis,
-                    consultationId = updateConsultation.consultationId.value,
-                )
-        }
 
         logger.info("Oppdaterert diagnosetabell med rows: {}", updatedRows)
 
@@ -311,56 +307,36 @@ class ConsultationRepository {
             .insertedCount
     }
 
-    suspend fun updateDiagnosis(diagnosis: CreateDiagnosisRequest, consultationId: Uuid): Int =
-        dbQuery {
-            val resolvedDiagnosis =
-                Diagnose.from(diagnosis.system, diagnosis.code)
-                    ?: throw InvalidDiagnosisException(diagnosis.code, diagnosis.system.toString())
-
-            ConsultationDiagnosisCodeTable.insertIgnore {
-                    it[ConsultationDiagnosisCodeTable.consultationId] = consultationId
-                    it[diagnosisCode] = resolvedDiagnosis.code
-                    it[diagnosisSystem] = resolvedDiagnosis.system.toString()
-                }
-                .insertedCount
-        }
-
-    private fun removeDiagnosesNotIn(
+    private fun replaceDiagnoses(
         diagnoses: List<CreateDiagnosisRequest>,
         consultationId: Uuid,
     ): Int {
-        val desiredKeys =
-            diagnoses
-                .map { diagnosis ->
-                    Diagnose.from(diagnosis.system, diagnosis.code)
-                        ?: throw InvalidDiagnosisException(
-                            diagnosis.code,
-                            diagnosis.system.toString(),
-                        )
-                }
-                .map { it.system.toString() to it.code }
-                .toSet()
+        val resolved = diagnoses.map { diagnosis ->
+            Diagnose.from(diagnosis.system, diagnosis.code)
+                ?: throw InvalidDiagnosisException(diagnosis.code, diagnosis.system.toString())
+        }
 
-        val existingKeys =
-            ConsultationDiagnosisCodeTable.select(
-                    ConsultationDiagnosisCodeTable.diagnosisSystem,
-                    ConsultationDiagnosisCodeTable.diagnosisCode,
-                )
-                .where { ConsultationDiagnosisCodeTable.consultationId eq consultationId }
-                .map {
-                    it[ConsultationDiagnosisCodeTable.diagnosisSystem] to
-                        it[ConsultationDiagnosisCodeTable.diagnosisCode]
-                }
+        val duplicate =
+            resolved.groupBy { it.system to it.code }.values.firstOrNull { it.size > 1 }?.first()
+        if (duplicate != null) {
+            throw DuplicateDiagnosisException(duplicate.code, duplicate.system.toString())
+        }
 
-        return existingKeys
-            .filterNot { it in desiredKeys }
-            .sumOf { (system, code) ->
-                ConsultationDiagnosisCodeTable.deleteWhere {
-                    (ConsultationDiagnosisCodeTable.consultationId eq consultationId) and
-                        (ConsultationDiagnosisCodeTable.diagnosisSystem eq system) and
-                        (ConsultationDiagnosisCodeTable.diagnosisCode eq code)
+        val deletedRows = ConsultationDiagnosisCodeTable.deleteWhere {
+            ConsultationDiagnosisCodeTable.consultationId eq consultationId
+        }
+
+        val insertedRows =
+            ConsultationDiagnosisCodeTable.batchInsert(resolved.withIndex()) { (index, diagnosis) ->
+                    this[ConsultationDiagnosisCodeTable.consultationId] = consultationId
+                    this[ConsultationDiagnosisCodeTable.diagnosisSystem] =
+                        diagnosis.system.toString()
+                    this[ConsultationDiagnosisCodeTable.diagnosisCode] = diagnosis.code
+                    this[ConsultationDiagnosisCodeTable.rank] = (index + 1).toShort()
                 }
-            }
+                .size
+
+        return deletedRows + insertedRows
     }
 
     private fun toEhrConsultation(consultation: ResultRow): Consultation {
@@ -382,6 +358,7 @@ class ConsultationRepository {
                     (ConsultationDiagnosisCodeTable.consultationId eq
                         consultation[ConsultationTable.id])
                 }
+                .orderBy(ConsultationDiagnosisCodeTable.rank)
                 .map { it.toDiagnosis() }
 
         return consultation.toConsultationWithHprAndClinicalNotes(

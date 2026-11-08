@@ -91,7 +91,10 @@ class TestdataSeedTest : WithPostgresql() {
                         "WHERE consultation_id = '$rewritten' AND diagnosis_code = 'A09.9'"
                 )
                 it.execute(
-                    "INSERT INTO consultation_diagnosis_code VALUES ('$duplicated', 'ICD10', 'A09')"
+                    "INSERT INTO consultation_diagnosis_code " +
+                        "(consultation_id, diagnosis_system, diagnosis_code, rank) " +
+                        "SELECT '$duplicated', 'ICD10', 'A09', max(rank) + 1 " +
+                        "FROM consultation_diagnosis_code WHERE consultation_id = '$duplicated'"
                 )
             }
         }

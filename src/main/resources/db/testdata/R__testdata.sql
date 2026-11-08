@@ -316,8 +316,10 @@ FROM inserted i
          JOIN fastlegeliste fl ON fl.id = flp.fastlegeliste_id
 RETURNING consultation_id),
      diagnoses AS (
-INSERT INTO consultation_diagnosis_code (consultation_id, diagnosis_system, diagnosis_code)
-SELECT c.id, d.diagnosis_system, d.diagnosis_code
+INSERT INTO consultation_diagnosis_code (consultation_id, diagnosis_system, diagnosis_code, rank)
+SELECT c.id, d.diagnosis_system, d.diagnosis_code,
+       row_number() OVER (PARTITION BY c.id
+                          ORDER BY (d.diagnosis_system = 'ICPC2') DESC, d.diagnosis_system, d.diagnosis_code)
 FROM inserted c
          JOIN plan p ON md5('testdata-konsultasjon-' || p.key)::uuid = c.id
          JOIN diagnosis_codes d ON d.prefix = p.prefix

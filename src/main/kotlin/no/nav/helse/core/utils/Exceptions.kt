@@ -34,6 +34,9 @@ class ConsultationNotFoundForPatientException(patientId: PatientId) :
 class InvalidDiagnosisException(code: String, system: String) :
     RuntimeException("Fant ikke diagnosekode=$code i kodeverk=$system")
 
+class DuplicateDiagnosisException(code: String, system: String) :
+    RuntimeException("Diagnosekode=$code i kodeverk=$system er oppgitt flere ganger")
+
 class InvalidPersonidentException(message: String, cause: Throwable? = null) :
     RuntimeException(message, cause)
 

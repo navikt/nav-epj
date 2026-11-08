@@ -19,6 +19,7 @@ import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.ConsultationNotFoundException
 import no.nav.helse.core.utils.ConsultationNotFoundForPatientException
 import no.nav.helse.core.utils.ConsultationStatus
+import no.nav.helse.core.utils.DuplicateDiagnosisException
 import no.nav.helse.ehr.clinic.Clinic
 import no.nav.helse.ehr.clinic.ClinicId
 import no.nav.helse.ehr.consultation.routes.consultationRoutes
@@ -236,5 +237,25 @@ class ConsultationRoutesTest {
             post("/api/patients/${patientId.value}/consultations/${consultationId.value}/cancel")
 
         assertEquals(HttpStatusCode.NotFound, response.status)
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Test
+    fun `PATCH consultation with a repeated diagnosis returns 400`() = testApp {
+        val patientId = PatientId(Uuid.generateV4())
+        val consultationId = ConsultationId(Uuid.generateV4())
+        coEvery {
+            consultationService.updateConsultation(any(), patientId, DEFAULT_ORG_NUMBER)
+        } throws DuplicateDiagnosisException("A01", "ICPC2")
+
+        val response =
+            patch("/api/patients/${patientId.value}/consultations") {
+                contentType(ContentType.Application.Json)
+                setBody(
+                    """{"consultationId":"${consultationId.value}","diagnoses":[{"code":"A01","system":"ICPC2"},{"code":"A01","system":"ICPC2"}],"clinicalNote":null,"finalize":false}"""
+                )
+            }
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
     }
 }

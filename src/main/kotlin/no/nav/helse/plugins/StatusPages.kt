@@ -14,6 +14,7 @@ import no.nav.helse.core.utils.ActiveConsultationNotFoundException
 import no.nav.helse.core.utils.ClinicNotFoundException
 import no.nav.helse.core.utils.ConsultationNotFoundException
 import no.nav.helse.core.utils.ConsultationNotFoundForPatientException
+import no.nav.helse.core.utils.DuplicateDiagnosisException
 import no.nav.helse.core.utils.DuplicatePatientException
 import no.nav.helse.core.utils.InvalidDiagnosisException
 import no.nav.helse.core.utils.InvalidPersonidentException
@@ -70,6 +71,12 @@ fun Application.configureStatusPages() {
             )
         }
         exception<InvalidDiagnosisException> { call, cause ->
+            call.respondText(
+                text = "Ugyldig diagnose: ${cause.message}",
+                status = HttpStatusCode.BadRequest,
+            )
+        }
+        exception<DuplicateDiagnosisException> { call, cause ->
             call.respondText(
                 text = "Ugyldig diagnose: ${cause.message}",
                 status = HttpStatusCode.BadRequest,

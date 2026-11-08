@@ -71,6 +71,7 @@ object ConsultationDiagnosisCodeTable : Table("consultation_diagnosis_code") {
     val consultationId = reference("consultation_id", refColumn = ConsultationTable.id)
     val diagnosisSystem = text("diagnosis_system")
     val diagnosisCode = text("diagnosis_code")
+    val rank = short("rank")
 
     override val primaryKey = PrimaryKey(consultationId, diagnosisSystem, diagnosisCode)
 }
