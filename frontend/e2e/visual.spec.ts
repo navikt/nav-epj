@@ -35,7 +35,7 @@ test("wide desktop", async ({ page }) => {
   await page.waitForLoadState("networkidle");
   await shot(page, "04-journal-konsultasjon");
 
-  await page.getByRole("combobox").click();
+  await page.getByRole("combobox", { name: /^Hoveddiagnose/ }).click();
   await page.getByRole("option").first().waitFor();
   await shot(page, "05-journal-combobox-open");
   await page.keyboard.press("Escape");
