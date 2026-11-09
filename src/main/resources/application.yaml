@@ -89,6 +89,20 @@ smart:
         - online_access
         - patient/*.cruds
         - user/*.cruds
+    - clientId: "hackathon-2027-123"
+      tokenEndpointAuthMethod: "private_key_jwt"
+      grantTypes: [ "client_credentials" ]
+      jwkSet: |
+        {"keys":[{"kty":"RSA","n":"4pVxFRRxEljJ7j1rEk9n6BUsIyMvLihw22-cd7ClA3Ysl8_MTavs3NvCS7_p12YgsNMl8Xz4SxdMB5ou_AI2SABwGq7mI6ukzV4B5QuugmbtH-MWfRDlSE3PiFAO74FBjHnFPX-mTrPbTMWkcNPz9hGqMKZ3JvtJ2sx9ruuSwvcEF9fTkBJvj98BCrfGafMXKCCqLlYKJYe4aZdu0sAWGxWaNFNJiiifGaNFBXMD_BgxTZvpPB6Qlm_EIVbs5bfDiWnRMncyW4-3Ohxpm2XWtG6Bj8sIxciyo3uLfyYYNMAhT4ncDXfVxnoh_7wVl7CGQriJxr-7tXsDtCM_uy9tK9MXgApXB-Z2u9EbBetKwR1ELMaTJgwFFYHh_otdGkd5NnFDzT3dwNjRpmjLfkijtL9L20783g8McKIDUSn_XwJ6v7pZrLRxxVHNJbq9UrIgHsuqWf9uC-UIQ8pb3uMmlR4uPui0EeIB5X4CH0T-QbDfXJ63BYEHjsZtzKKhjnvb","e":"AQAB","alg":"RS384","use":"sig","kid":"c1XPBZNiRZ01rGvm6waqJ_J3rwJVy-AJxPjYUSA7U9g"}]}
+      scopes:
+        - system/Patient.rs
+        - system/Encounter.rs
+        - system/Condition.s
+        - system/Observation.crs
+        - system/Practitioner.r
+        - system/PractitionerRole.s
+        - system/Organization.r
+        - system/DocumentReference.crs
 
 valkey:
   host: ${VALKEY_HOST_NAV_EPJ}
