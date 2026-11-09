@@ -103,6 +103,29 @@ smart:
         - system/PractitionerRole.s
         - system/Organization.r
         - system/DocumentReference.crs
+    - clientId: "forer-legeerklaering-poc"
+      name: "Legeerklæring førerrett"
+      description: "Helseattest førerett (IS-2569) i Altinn, forhåndsutfylt fra EPJ."
+      launchMode: "tab"
+      redirectUris: [ "https://ttd.apps.tt02.altinn.no/ttd/forer-legeerklaering/smart/callback" ]
+      launchUris: [ "https://ttd.apps.tt02.altinn.no/ttd/forer-legeerklaering/smart/launch" ]
+      tokenEndpointAuthMethod: "client_secret_basic"
+      clientSecret: ${FORER_LEGEERKLAERING_CLIENT_SECRET}
+      scopes:
+        - openid
+        - profile
+        - fhirUser
+        - launch
+        - launch/patient
+        - launch/encounter
+        - offline_access
+        - patient/Patient.rs
+        - patient/Encounter.rs
+        - patient/Condition.rs
+        - patient/DocumentReference.c
+        - user/Practitioner.rs
+        - user/PractitionerRole.rs
+        - user/Organization.rs
 
 valkey:
   host: ${VALKEY_HOST_NAV_EPJ}
