@@ -2,7 +2,6 @@ package no.nav.helse.plugins
 
 import io.ktor.server.application.*
 import io.ktor.server.plugins.di.*
-import java.net.URI
 import no.nav.helse.core.Environment
 import no.nav.helse.smart.security.LaunchMode
 import no.nav.helse.smart.security.SmartClient
@@ -38,12 +37,6 @@ internal fun frameSources(clients: List<SmartClient>): List<String> =
 
 internal fun contentSecurityPolicy(frameSources: List<String>): String =
     "frame-src ${(listOf("'self'") + frameSources).joinToString(" ")}; frame-ancestors 'self'"
-
-private fun originOf(uri: String): String =
-    URI(uri).let {
-        val host = requireNotNull(it.host) { "No host in SMART client uri $uri" }
-        "${it.scheme}://$host${if (it.port == -1) "" else ":${it.port}"}"
-    }
 
 fun Application.configureSecurityHeaders() {
     val env: Environment by dependencies

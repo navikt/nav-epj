@@ -64,7 +64,7 @@ private val clients =
 
 private val ENV_PLACEHOLDER = Regex("""\$\{[A-Z0-9_]+}""")
 
-private fun shippedConfig(resource: String): ApplicationConfig {
+internal fun shippedConfig(resource: String): ApplicationConfig {
     val text =
         requireNotNull(SecurityHeadersTest::class.java.classLoader.getResource(resource)) {
                 "missing $resource"
