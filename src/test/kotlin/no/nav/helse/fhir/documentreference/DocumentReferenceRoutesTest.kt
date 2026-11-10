@@ -99,6 +99,7 @@ class DocumentReferenceRoutesTest {
         scopes: Set<SmartScope> =
             setOf(documentReferenceScope(setOf(Interaction.READ, Interaction.SEARCH))),
         boundPatient: String? = null,
+        orgNumber: String? = ORG,
         block: suspend io.ktor.client.HttpClient.() -> Unit,
     ) = testApplication {
         application {
@@ -112,7 +113,7 @@ class DocumentReferenceRoutesTest {
                                 scopes = scopes,
                                 patient = boundPatient,
                                 encounter = null,
-                                orgNumber = ORG,
+                                orgNumber = orgNumber,
                             )
                         )
                     }
@@ -398,6 +399,38 @@ class DocumentReferenceRoutesTest {
         }
         coVerify(exactly = 1) {
             documentReferenceService.createDocumentReference(any<CreateClinicalNoteRequest>(), ORG)
+        }
+    }
+
+    @Test
+    fun `POST DocumentReference with a system token creates the note without a clinic from the token`() {
+        val patientId = Uuid.generateV4()
+        val encounterId = Uuid.generateV4()
+        val generatedId = DocumentReferenceId(Uuid.generateV4())
+        coEvery {
+            documentReferenceService.createDocumentReference(any<CreateClinicalNoteRequest>(), null)
+        } returns
+            sampleDocumentReference(
+                generatedId.value.toString(),
+                patientId.toString(),
+                encounterId.toString(),
+            )
+
+        testApp(
+            scopes = setOf(documentReferenceScope(setOf(Interaction.CREATE), ScopeContext.SYSTEM)),
+            boundPatient = null,
+            orgNumber = null,
+        ) {
+            val response =
+                post("/fhir/DocumentReference") {
+                    contentType(fhirContentType)
+                    setBody(validCreateBody(patientId = patientId, encounterId = encounterId))
+                }
+
+            assertEquals(HttpStatusCode.Created, response.status)
+        }
+        coVerify(exactly = 1) {
+            documentReferenceService.createDocumentReference(any<CreateClinicalNoteRequest>(), null)
         }
     }
 

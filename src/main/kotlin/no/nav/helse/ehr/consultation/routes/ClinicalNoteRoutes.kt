@@ -30,6 +30,23 @@ fun Route.clinicalNoteRoutes(
                 log.info("journalnotat: $clinicalNote")
                 call.respond(clinicalNote)
             }
+            // The document a SMART app attached to the note, such as a PDF written back on submit
+            get("/{clinicalNoteId}/attachment") {
+                val id = call.clinicalNoteId()
+                val orgNumber = sessionOrgResolver.requireOrgNumber(loggedInUser().hpr)
+                val attachment =
+                    consultationService.getClinicalNoteAttachment(id, orgNumber)
+                        ?: return@get call.respond(HttpStatusCode.NotFound)
+                call.response.header(
+                    HttpHeaders.ContentDisposition,
+                    ContentDisposition.Inline.withParameter(
+                            ContentDisposition.Parameters.FileName,
+                            attachment.title,
+                        )
+                        .toString(),
+                )
+                call.respondBytes(attachment.data, ContentType.Application.Pdf)
+            }
             post {
                 val request = call.receive<ClinicalNote>()
                 val orgNumber = sessionOrgResolver.requireOrgNumber(loggedInUser().hpr)

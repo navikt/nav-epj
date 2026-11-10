@@ -28,6 +28,7 @@ import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.inSubQuery
+import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -258,8 +259,13 @@ class ConsultationRepository {
         clinicalNote: String,
     ): Int = dbQuery {
         val existingId =
+            // The clinician's own note. Notes with a document attached came from a SMART app and
+            // are never edited here.
             ClinicalNoteTable.select(ClinicalNoteTable.id)
-                .where { ClinicalNoteTable.consultationId eq consultationId.value }
+                .where {
+                    (ClinicalNoteTable.consultationId eq consultationId.value) and
+                        ClinicalNoteTable.attachmentData.isNull()
+                }
                 .limit(1)
                 .singleOrNull()
                 ?.get(ClinicalNoteTable.id)
@@ -404,7 +410,7 @@ class ConsultationRepository {
     suspend fun createClinicalNote(
         id: ClinicalNoteId,
         request: CreateClinicalNoteRequest,
-        orgNumber: String,
+        orgNumber: String?,
     ): ClinicalNote = dbQuery {
         val consultationPatientId =
             ConsultationTable.select(ConsultationTable.patientId)
@@ -429,6 +435,8 @@ class ConsultationRepository {
                     it[ClinicalNoteTable.consultationId] = request.consultationId.value
                     it[ClinicalNoteTable.patientId] = request.patientId.value
                     it[ClinicalNoteTable.clinicalNote] = request.clinicalNote
+                    it[ClinicalNoteTable.attachmentTitle] = request.attachment?.title
+                    it[ClinicalNoteTable.attachmentData] = request.attachment?.data
                 }
                 .insertedCount
 
@@ -441,7 +449,32 @@ class ConsultationRepository {
             consultationId = request.consultationId,
             patientId = request.patientId,
             clinicalNote = request.clinicalNote,
+            attachmentTitle = request.attachment?.title,
+            hasAttachment = request.attachment != null,
         )
+    }
+
+    suspend fun findClinicalNoteAttachment(
+        clinicalNoteId: ClinicalNoteId,
+        orgNumber: String?,
+    ): ClinicalNoteAttachment? = dbQuery {
+        ClinicalNoteTable.select(
+                ClinicalNoteTable.attachmentTitle,
+                ClinicalNoteTable.attachmentData,
+            )
+            .where {
+                (ClinicalNoteTable.id eq clinicalNoteId.value) and
+                    (ClinicalNoteTable.consultationId inSubQuery consultationIdsAtOrg(orgNumber))
+            }
+            .singleOrNull()
+            ?.let { row ->
+                row[ClinicalNoteTable.attachmentData]?.let { data ->
+                    ClinicalNoteAttachment(
+                        row[ClinicalNoteTable.attachmentTitle] ?: "dokument.pdf",
+                        data,
+                    )
+                }
+            }
     }
 
     fun ResultRow.toClinicalNote(): ClinicalNote =
@@ -450,6 +483,8 @@ class ConsultationRepository {
             consultationId = ConsultationId(this[ClinicalNoteTable.consultationId]),
             patientId = PatientId(this[ClinicalNoteTable.patientId]),
             clinicalNote = this[ClinicalNoteTable.clinicalNote],
+            attachmentTitle = this[ClinicalNoteTable.attachmentTitle],
+            hasAttachment = this[ClinicalNoteTable.attachmentData] != null,
         )
 
     fun ResultRow.toConsultationWithHprAndClinicalNotes(

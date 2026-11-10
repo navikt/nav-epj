@@ -31,12 +31,19 @@ data class ClinicalNote(
     val consultationId: ConsultationId,
     val patientId: PatientId,
     val clinicalNote: String?,
+    /** Title of the document attached through FHIR, or null for a note without one. */
+    val attachmentTitle: String? = null,
+    val hasAttachment: Boolean = false,
 )
+
+/** A document attached to a clinical note through FHIR. Only PDF is supported. */
+class ClinicalNoteAttachment(val title: String, val data: ByteArray)
 
 data class CreateClinicalNoteRequest(
     val patientId: PatientId,
     val consultationId: ConsultationId,
     val clinicalNote: String,
+    val attachment: ClinicalNoteAttachment? = null,
 )
 
 data class CreateConsultation(

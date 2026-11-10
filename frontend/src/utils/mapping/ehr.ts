@@ -73,6 +73,8 @@ export const ClinicalNoteEntrySchema = z.object({
     consultationId: z.string(),
     patientId: z.string(),
     clinicalNote: z.string().nullable(),
+    attachmentTitle: z.string().nullable().optional(),
+    hasAttachment: z.boolean().optional(),
 });
 
 export type ClinicalNoteEntry = z.infer<typeof ClinicalNoteEntrySchema>;

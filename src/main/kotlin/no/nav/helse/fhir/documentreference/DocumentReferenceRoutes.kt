@@ -129,9 +129,11 @@ fun Route.documentReferenceRoutes(
 
             val created =
                 try {
+                    // A clinician token is limited to its clinic. A system token (SMART Backend
+                    // Services) has no clinic, and the consultation decides where the note goes.
                     documentReferenceService.createDocumentReference(
                         request,
-                        principal.requireClinicalOrgNumber(),
+                        principal.clinicalOrgNumber(),
                     )
                 } catch (exception: ConsultationNotFoundException) {
                     return@post call.respondOperationOutcome(
