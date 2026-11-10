@@ -3,6 +3,7 @@ import { Badge } from "./Badge";
 import { Button } from "./Button";
 import { CancelDialog } from "./CancelDialog";
 import { Card } from "./Card";
+import { ConsultationDocuments } from "./ConsultationDocuments";
 import { DiagnosisCombobox } from "./DiagnosisCombobox";
 import { FinishDialog } from "./FinishDialog";
 import { Note } from "./Note";
@@ -102,13 +103,15 @@ export function OngoingConsultation({ patient, consultation }: Props) {
             <Note tone="error" role="alert">
               {copy["s4.diag.mainRequired"]}
             </Note>
-          )}          <TextArea
+          )}
+          <TextArea
             label={copy["s4.note.label"]}
             rows={6}
             value={draft.clinicalNote}
             readOnly={saving}
             onChange={(event) => setClinicalNote(event.target.value)}
           />
+          <ConsultationDocuments consultation={consultation} />
           <div className="xp-form-actions">
             <Button
               isDefault

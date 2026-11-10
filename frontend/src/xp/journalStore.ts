@@ -89,8 +89,17 @@ function initialState() {
 export const diagnosisKey = (d: { code: string; system: string }) =>
   `${d.system}:${d.code}`;
 
+/** The clinician's own note. Notes with a document came from a SMART app and are listed apart. */
+function ownNotes(consultation: Consultation) {
+  return consultation.clinicalNotes.filter((note) => !note.hasAttachment);
+}
+
 export function noteOf(consultation: Consultation) {
-  return consultation.clinicalNotes.at(-1)?.clinicalNote ?? "";
+  return ownNotes(consultation).at(-1)?.clinicalNote ?? "";
+}
+
+export function documentsOf(consultation: Consultation) {
+  return consultation.clinicalNotes.filter((note) => note.hasAttachment);
 }
 
 export function ongoingOf(consultations: Consultation[]) {
@@ -146,7 +155,7 @@ function applySaved(
 ): Consultation[] {
   return consultations.map((k) => {
     if (k.id !== id) return k;
-    const existing = k.clinicalNotes.at(-1);
+    const existing = ownNotes(k).at(-1);
     const clinicalNotes =
       draft.clinicalNote.trim() === ""
         ? k.clinicalNotes
@@ -157,6 +166,7 @@ function applySaved(
               patientId: k.patientId,
               clinicalNote: draft.clinicalNote,
             },
+            ...documentsOf(k),
           ];
     return {
       ...k,

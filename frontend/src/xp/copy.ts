@@ -188,6 +188,8 @@ export const copy = {
   "s4.diag.remove": (code: string, description: string) => `Fjern ${code} ${description}`,
   "s4.diag.saved": "· lagret",
   "s4.note.label": "Journalnotat",
+  "s4.documents.label": "Dokumenter fra apper",
+  "s4.documents.open": (title: string) => `Åpne ${title} (PDF, ny fane)`,
   "s4.save": "Lagre",
   "s4.saving": "Lagrer …",
   "s4.saving.aria": "Lagrer konsultasjon",

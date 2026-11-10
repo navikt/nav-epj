@@ -14,10 +14,12 @@ import com.google.fhir.model.r4.String
 import com.google.fhir.model.r4.Uri
 import com.google.fhir.model.r4.terminologies.CommonLanguages
 import com.google.fhir.model.r4.terminologies.DocumentReferenceStatus
+import java.util.Base64
 import kotlin.text.substringAfter
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.logger
 import no.nav.helse.ehr.consultation.ClinicalNote
+import no.nav.helse.ehr.consultation.ClinicalNoteAttachment
 import no.nav.helse.ehr.consultation.ClinicalNoteId
 import no.nav.helse.ehr.consultation.ConsultationId
 import no.nav.helse.ehr.consultation.ConsultationService
@@ -31,6 +33,10 @@ private const val CLINICAL_NOTE_TYPE_SYSTEM = "urn:oid:2.16.578.1.12.4.1.1.9602"
 private const val CLINICAL_NOTE_TYPE_CODE = "J01-2"
 private const val CLINICAL_NOTE_TYPE_DISPLAY = "Sykmeldinger og trygdesaker"
 private const val CLINICAL_NOTE_CONTENT_TYPE = "application/pdf"
+private const val MAX_ATTACHMENT_MEGABYTES = 10
+private const val MAX_ATTACHMENT_BYTES = MAX_ATTACHMENT_MEGABYTES * 1_000_000
+private const val DEFAULT_ATTACHMENT_TITLE = "dokument.pdf"
+private val PDF_SIGNATURE = "%PDF-".toByteArray()
 
 /**
  * Raised when an incoming DocumentReference does not fit the narrow journal-note shape backed by
@@ -46,13 +52,22 @@ class DocumentReferenceService(val consultationService: ConsultationService) {
 
     val log = logger()
 
+    /** [orgNumber] is null for a system token, which is not tied to one clinic. */
     suspend fun createDocumentReference(
         request: CreateClinicalNoteRequest,
-        orgNumber: kotlin.String,
+        orgNumber: kotlin.String?,
     ): DocumentReference {
         val clinicalNote = consultationService.createClinicalNote(request, orgNumber)
-        return clinicalNote.toDocumentReference(authors(clinicalNote.consultationId, orgNumber))
+        return clinicalNote.toDocumentReference(
+            authors(clinicalNote.consultationId, orgNumber),
+            request.attachment,
+        )
     }
+
+    private suspend fun ClinicalNote.attachment(
+        orgNumber: kotlin.String?
+    ): ClinicalNoteAttachment? =
+        if (hasAttachment) consultationService.getClinicalNoteAttachment(id, orgNumber) else null
 
     private suspend fun authors(
         consultationId: ConsultationId,
@@ -84,7 +99,8 @@ class DocumentReferenceService(val consultationService: ConsultationService) {
                 clinicalNotes.map { clinicalNote ->
                     val documentReference =
                         clinicalNote.toDocumentReference(
-                            hprByConsultation[clinicalNote.consultationId].orEmpty()
+                            hprByConsultation[clinicalNote.consultationId].orEmpty(),
+                            clinicalNote.attachment(orgNumber),
                         )
                     Bundle.Entry(
                         fullUrl = Uri(value = "DocumentReference/${documentReference.id}"),
@@ -149,10 +165,20 @@ class DocumentReferenceService(val consultationService: ConsultationService) {
                 ClinicalNoteId(documentReferenceId.value),
                 orgNumber,
             ) ?: return null
-        return clinicalNote.toDocumentReference(authors(clinicalNote.consultationId, orgNumber))
+        return clinicalNote.toDocumentReference(
+            authors(clinicalNote.consultationId, orgNumber),
+            clinicalNote.attachment(orgNumber),
+        )
     }
 
-    fun ClinicalNote.toDocumentReference(hpr: List<PractitionerHpr>): DocumentReference {
+    /**
+     * A note with a stored document returns it with its title. A note without one keeps the
+     * placeholder attachment it has always had, so existing clients see no change.
+     */
+    fun ClinicalNote.toDocumentReference(
+        hpr: List<PractitionerHpr>,
+        attachment: ClinicalNoteAttachment? = null,
+    ): DocumentReference {
         return DocumentReference(
             id = this.id.value.toString(),
             description = String(value = this.clinicalNote),
@@ -172,10 +198,17 @@ class DocumentReferenceService(val consultationService: ConsultationService) {
                     DocumentReference.Content(
                         attachment =
                             Attachment(
-                                title = String(value = "tittel generert av Nav"),
+                                title =
+                                    String(value = attachment?.title ?: "tittel generert av Nav"),
                                 language = Enumeration(value = CommonLanguages.No_No),
                                 contentType = Code(value = CLINICAL_NOTE_CONTENT_TYPE),
-                                data = Base64Binary(value = "base64 PDF"),
+                                data =
+                                    Base64Binary(
+                                        value =
+                                            attachment?.let {
+                                                Base64.getEncoder().encodeToString(it.data)
+                                            } ?: "base64 PDF"
+                                    ),
                             )
                     )
                 ),
@@ -265,11 +298,9 @@ fun DocumentReference.toCreateClinicalNoteRequest(): CreateClinicalNoteRequest {
     }
     val unsupportedAttachmentFields = buildList {
         if (attachment.language != null) add("language")
-        if (attachment.data != null) add("data")
         if (attachment.url != null) add("url")
         if (attachment.size != null) add("size")
         if (attachment.hash != null) add("hash")
-        if (attachment.title != null) add("title")
         if (attachment.creation != null) add("creation")
         if (attachment.extension.isNotEmpty()) add("extension")
     }
@@ -280,6 +311,8 @@ fun DocumentReference.toCreateClinicalNoteRequest(): CreateClinicalNoteRequest {
                 "støttes ikke",
         )
     }
+
+    val documentAttachment = attachment.toClinicalNoteAttachment()
 
     val patientId = parseReferenceId(this.subject?.reference?.value, "Patient", "subject")
 
@@ -326,8 +359,52 @@ fun DocumentReference.toCreateClinicalNoteRequest(): CreateClinicalNoteRequest {
         patientId = PatientId(patientId),
         consultationId = ConsultationId(consultationId),
         clinicalNote = clinicalNote,
+        attachment = documentAttachment,
     )
 }
+
+/**
+ * The PDF a client sends in `attachment.data`, or null for a note without a document. The data must
+ * be base64 and start like a PDF, and `title` is only accepted together with data.
+ */
+private fun Attachment.toClinicalNoteAttachment(): ClinicalNoteAttachment? {
+    val base64 = this.data?.value
+    if (base64 == null) {
+        if (this.title != null) {
+            invalid(
+                OperationOutcome.IssueType.Invalid,
+                "DocumentReference.content.attachment.title krever attachment.data",
+            )
+        }
+        return null
+    }
+    val bytes =
+        try {
+            Base64.getDecoder().decode(base64)
+        } catch (exception: IllegalArgumentException) {
+            invalid(
+                OperationOutcome.IssueType.Value,
+                "DocumentReference.content.attachment.data er ikke gyldig base64: ${exception.message}",
+            )
+        }
+    if (bytes.size > MAX_ATTACHMENT_BYTES) {
+        invalid(
+            OperationOutcome.IssueType.Too_Long,
+            "DocumentReference.content.attachment.data er større enn $MAX_ATTACHMENT_MEGABYTES MB",
+        )
+    }
+    if (!bytes.startsWith(PDF_SIGNATURE)) {
+        invalid(
+            OperationOutcome.IssueType.Value,
+            "DocumentReference.content.attachment.data må være en PDF",
+        )
+    }
+    val title = this.title?.value?.takeIf { it.isNotBlank() } ?: DEFAULT_ATTACHMENT_TITLE
+    return ClinicalNoteAttachment(title, bytes)
+}
+
+private fun ByteArray.startsWith(prefix: ByteArray): Boolean =
+    size >= prefix.size && prefix.indices.all { this[it] == prefix[it] }
 
 private fun parseReferenceId(
     reference: kotlin.String?,

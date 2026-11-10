@@ -61,6 +61,8 @@ object ClinicalNoteTable : Table("clinical_note") {
     val consultationId = reference("consultation_id", refColumn = ConsultationTable.id)
     val patientId = reference("patient_id", refColumn = PatientTable.id)
     val clinicalNote = text("clinical_note").nullable()
+    val attachmentTitle = text("attachment_title").nullable()
+    val attachmentData = binary("attachment_data").nullable()
 
     init {
         index(isUnique = true, id)

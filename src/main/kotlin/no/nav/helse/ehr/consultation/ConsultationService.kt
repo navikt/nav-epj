@@ -38,6 +38,12 @@ class ConsultationService(private val consultationRepository: ConsultationReposi
         return consultationRepository.findClinicalNote(clinicalNoteId, orgNumber)
     }
 
+    suspend fun getClinicalNoteAttachment(
+        clinicalNoteId: ClinicalNoteId,
+        orgNumber: String?,
+    ): ClinicalNoteAttachment? =
+        consultationRepository.findClinicalNoteAttachment(clinicalNoteId, orgNumber)
+
     suspend fun insertClinicalNote(clinicalNote: ClinicalNote, orgNumber: String): Boolean {
         val insertedRows = consultationRepository.insertClinicalNote(clinicalNote, orgNumber)
 
@@ -53,9 +59,10 @@ class ConsultationService(private val consultationRepository: ConsultationReposi
     }
 
     @OptIn(ExperimentalUuidApi::class)
+    /** [orgNumber] is null for a system token, which is not tied to one clinic. */
     suspend fun createClinicalNote(
         request: CreateClinicalNoteRequest,
-        orgNumber: String,
+        orgNumber: String?,
     ): ClinicalNote {
         val id = ClinicalNoteId(Uuid.generateV4())
         return consultationRepository.createClinicalNote(id, request, orgNumber)

@@ -16,6 +16,8 @@ import com.google.fhir.model.r4.Reference
 import com.google.fhir.model.r4.String as FhirString
 import com.google.fhir.model.r4.Uri
 import com.google.fhir.model.r4.terminologies.DocumentReferenceStatus
+import java.util.Base64
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.uuid.ExperimentalUuidApi
@@ -430,15 +432,36 @@ class DocumentReferenceCreateValidationTest {
         assertEquals(OperationOutcome.IssueType.Value, exception.issueType)
     }
 
+    private fun pdfAttachment(bytes: ByteArray, title: String? = null) =
+        Attachment(
+            contentType = Code(value = "application/pdf"),
+            data = Base64Binary(value = Base64.getEncoder().encodeToString(bytes)),
+            title = title?.let { FhirString(value = it) },
+        )
+
     @Test
-    fun `toCreateClinicalNoteRequest rejects client-supplied attachment data instead of discarding it silently`() {
+    fun `toCreateClinicalNoteRequest rejects attachment data that is not a PDF`() {
+        val documentReference =
+            validDocumentReference(
+                content = validContent(pdfAttachment("quite real content".toByteArray()))
+            )
+
+        val exception =
+            assertFailsWith<InvalidDocumentReferenceException> {
+                documentReference.toCreateClinicalNoteRequest()
+            }
+        assertEquals(OperationOutcome.IssueType.Value, exception.issueType)
+    }
+
+    @Test
+    fun `toCreateClinicalNoteRequest rejects attachment data that is not base64`() {
         val documentReference =
             validDocumentReference(
                 content =
                     validContent(
                         Attachment(
                             contentType = Code(value = "application/pdf"),
-                            data = Base64Binary(value = "cXVpdGUgcmVhbCBjb250ZW50"),
+                            data = Base64Binary(value = "not base64!"),
                         )
                     )
             )
@@ -447,7 +470,32 @@ class DocumentReferenceCreateValidationTest {
             assertFailsWith<InvalidDocumentReferenceException> {
                 documentReference.toCreateClinicalNoteRequest()
             }
-        assertEquals(OperationOutcome.IssueType.Not_Supported, exception.issueType)
+        assertEquals(OperationOutcome.IssueType.Value, exception.issueType)
+    }
+
+    @Test
+    fun `toCreateClinicalNoteRequest keeps an attached PDF and its title`() {
+        val pdf = "%PDF-1.7 legeerklaering".toByteArray()
+        val documentReference =
+            validDocumentReference(
+                content = validContent(pdfAttachment(pdf, title = "Legeerklæring.pdf"))
+            )
+
+        val attachment = documentReference.toCreateClinicalNoteRequest().attachment
+
+        assertEquals("Legeerklæring.pdf", attachment?.title)
+        assertContentEquals(pdf, attachment?.data)
+    }
+
+    @Test
+    fun `toCreateClinicalNoteRequest gives an attached PDF without a title a default title`() {
+        val documentReference =
+            validDocumentReference(content = validContent(pdfAttachment("%PDF-1.7".toByteArray())))
+
+        assertEquals(
+            "dokument.pdf",
+            documentReference.toCreateClinicalNoteRequest().attachment?.title,
+        )
     }
 
     @Test

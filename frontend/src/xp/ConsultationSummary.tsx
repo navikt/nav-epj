@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Card } from "./Card";
+import { ConsultationDocuments } from "./ConsultationDocuments";
 import { copy } from "./copy";
 import { systemLabel } from "./diagnosisSystem";
 import { noteOf } from "./journalStore";
@@ -66,6 +67,7 @@ export function ConsultationSummary({
           )}
         </dd>
       </dl>
+      <ConsultationDocuments consultation={consultation} />
     </Card>
   );
 }
