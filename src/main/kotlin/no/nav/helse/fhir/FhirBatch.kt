@@ -15,9 +15,6 @@ import io.ktor.server.routing.*
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.logger
-import no.nav.helse.fhir.security.InsufficientScopeException
-import no.nav.helse.fhir.security.OrganizationContextMissingException
-import no.nav.helse.fhir.security.PatientMismatchException
 import no.nav.helse.smart.security.SmartPrincipal
 
 const val MAX_BATCH_ENTRIES = 10
@@ -136,41 +133,23 @@ class FhirBatchProcessor(handlers: List<FhirResourceHandler>) {
             ?: invalidResource(OperationOutcome.IssueType.Required, "Oppføringen mangler resource")
 
     private fun Exception.toFailure(): FhirRequestException =
-        when (this) {
-            is FhirRequestException -> this
-            is InsufficientScopeException ->
-                FhirRequestException(
-                    HttpStatusCode.Forbidden,
-                    OperationOutcome.IssueType.Forbidden,
-                    message.orEmpty(),
-                )
-            is OrganizationContextMissingException ->
-                FhirRequestException(
-                    HttpStatusCode.Forbidden,
-                    OperationOutcome.IssueType.Forbidden,
-                    message.orEmpty(),
-                )
-            is PatientMismatchException ->
-                FhirRequestException(
-                    HttpStatusCode.NotFound,
-                    OperationOutcome.IssueType.Not_Found,
-                    "Not found",
-                )
-            is BadRequestException ->
-                FhirRequestException(
-                    HttpStatusCode.BadRequest,
-                    OperationOutcome.IssueType.Invalid,
-                    message ?: "Ugyldig forespørsel",
-                )
-            else -> {
-                log.error("Uventet feil i batch-oppføring", this)
-                FhirRequestException(
-                    HttpStatusCode.InternalServerError,
-                    OperationOutcome.IssueType.Exception,
-                    "En uventet feil oppstod",
-                )
+        toFhirFailure()
+            ?: when (this) {
+                is BadRequestException ->
+                    FhirRequestException(
+                        HttpStatusCode.BadRequest,
+                        OperationOutcome.IssueType.Invalid,
+                        message ?: "Ugyldig forespørsel",
+                    )
+                else -> {
+                    log.error("Uventet feil i batch-oppføring", this)
+                    FhirRequestException(
+                        HttpStatusCode.InternalServerError,
+                        OperationOutcome.IssueType.Exception,
+                        "En uventet feil oppstod",
+                    )
+                }
             }
-        }
 
     private fun responseEntry(result: FhirResult) =
         Bundle.Entry(

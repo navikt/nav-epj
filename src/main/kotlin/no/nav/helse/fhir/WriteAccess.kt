@@ -10,6 +10,7 @@ import no.nav.helse.core.utils.ConsultationBelongsToOtherPatientException
 import no.nav.helse.core.utils.ConsultationNotFoundException
 import no.nav.helse.core.utils.DuplicateClinicalNoteException
 import no.nav.helse.fhir.security.InsufficientScopeException
+import no.nav.helse.fhir.security.OrganizationContextMissingException
 import no.nav.helse.fhir.security.PatientMismatchException
 import no.nav.helse.fhir.security.hasScope
 import no.nav.helse.fhir.security.permitsPatient
@@ -82,29 +83,60 @@ suspend fun <T> SmartPrincipal.translatingWriteFailures(
         val interaction = if (exception.creating) Interaction.CREATE else Interaction.UPDATE
         if (hasScope(resourceType, interaction)) throw PatientMismatchException(resourceType)
         throw InsufficientScopeException(resourceType, interaction)
-    } catch (exception: ConsultationNotFoundException) {
-        fhirFailure(
-            HttpStatusCode.BadRequest,
-            OperationOutcome.IssueType.Not_Found,
-            exception.message ?: "Fant ikke encounter",
-        )
-    } catch (exception: ConsultationBelongsToOtherPatientException) {
-        invalidResource(
-            OperationOutcome.IssueType.Invalid,
-            exception.message ?: "Encounter tilhører en annen pasient",
-        )
-    } catch (exception: AuthorNotOnConsultationException) {
-        invalidResource(OperationOutcome.IssueType.Invalid, exception.message.orEmpty())
-    } catch (exception: DuplicateClinicalNoteException) {
-        fhirFailure(
-            HttpStatusCode.Conflict,
-            OperationOutcome.IssueType.Duplicate,
-            exception.message.orEmpty(),
-        )
-    } catch (exception: ClinicalDocumentConflictException) {
-        fhirFailure(
-            HttpStatusCode.Conflict,
-            OperationOutcome.IssueType.Conflict,
-            exception.message.orEmpty(),
-        )
+    } catch (exception: Exception) {
+        throw exception.toDomainFailure() ?: exception
+    }
+
+fun Exception.toDomainFailure(): FhirRequestException? =
+    when (this) {
+        is ConsultationNotFoundException ->
+            FhirRequestException(
+                HttpStatusCode.BadRequest,
+                OperationOutcome.IssueType.Not_Found,
+                message ?: "Fant ikke encounter",
+            )
+        is ConsultationBelongsToOtherPatientException ->
+            FhirRequestException(
+                HttpStatusCode.BadRequest,
+                OperationOutcome.IssueType.Invalid,
+                message ?: "Encounter tilhører en annen pasient",
+            )
+        is AuthorNotOnConsultationException ->
+            FhirRequestException(
+                HttpStatusCode.BadRequest,
+                OperationOutcome.IssueType.Invalid,
+                message.orEmpty(),
+            )
+        is DuplicateClinicalNoteException ->
+            FhirRequestException(
+                HttpStatusCode.Conflict,
+                OperationOutcome.IssueType.Duplicate,
+                message.orEmpty(),
+            )
+        is ClinicalDocumentConflictException ->
+            FhirRequestException(
+                HttpStatusCode.Conflict,
+                OperationOutcome.IssueType.Conflict,
+                message.orEmpty(),
+            )
+        else -> null
+    }
+
+fun Exception.toFhirFailure(): FhirRequestException? =
+    when (this) {
+        is FhirRequestException -> this
+        is InsufficientScopeException,
+        is OrganizationContextMissingException ->
+            FhirRequestException(
+                HttpStatusCode.Forbidden,
+                OperationOutcome.IssueType.Forbidden,
+                message.orEmpty(),
+            )
+        is PatientMismatchException ->
+            FhirRequestException(
+                HttpStatusCode.NotFound,
+                OperationOutcome.IssueType.Not_Found,
+                "Not found",
+            )
+        else -> toDomainFailure()
     }
