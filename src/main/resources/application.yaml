@@ -72,24 +72,6 @@ smart:
         - patient/DocumentReference.cruds
         - patient/Binary.cruds
         - patient/QuestionnaireResponse.cruds
-    - clientId: "hackathon-public"
-      name: "Hackathon starter"
-      description: "Delt klient for hackathon-apper som kjører på localhost:3100."
-      launchMode: "tab"
-      redirectUris: [ "http://localhost:3100/callback" ]
-      launchUris: [ "http://localhost:3100/launch" ]
-      tokenEndpointAuthMethod: "none"
-      scopes:
-        - openid
-        - fhirUser
-        - profile
-        - launch
-        - launch/patient
-        - launch/encounter
-        - offline_access
-        - online_access
-        - patient/*.cruds
-        - user/*.cruds
     - clientId: "forer-legeerklaering-poc"
       name: "Legeerklæring førerrett"
       description: "Helseattest førerett (IS-2569) i Altinn, forhåndsutfylt fra EPJ."
