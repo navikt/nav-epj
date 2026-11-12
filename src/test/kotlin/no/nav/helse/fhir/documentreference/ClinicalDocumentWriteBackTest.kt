@@ -13,6 +13,7 @@ import io.ktor.server.plugins.di.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
 import io.ktor.utils.io.*
+import java.time.Instant
 import java.util.Base64
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -20,6 +21,8 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import no.nav.helse.core.db.ClinicalNoteAttachmentTable
+import no.nav.helse.core.db.dbQuery
 import no.nav.helse.ehr.consultation.ClinicalNoteId
 import no.nav.helse.ehr.consultation.ClinicalNoteSource
 import no.nav.helse.fhir.FHIR_BASE
@@ -448,17 +451,16 @@ class ClinicalDocumentWriteBackTest : FhirWriteBackTestSupport() {
             assertEquals(HttpStatusCode.BadRequest, liveMetadataOnly.status)
             assertTrue(storedAttachment(id).second != null)
 
-            kotlinx.coroutines.runBlocking {
-                no.nav.helse.core.db.dbQuery {
-                    no.nav.helse.core.db.ClinicalNoteAttachmentTable.update({
-                        no.nav.helse.core.db.ClinicalNoteAttachmentTable.clinicalNoteId eq id
-                    }) {
-                        it[createdAt] = java.time.Instant.now().minusSeconds(15L * 24 * 3600)
-                    }
+            dbQuery {
+                ClinicalNoteAttachmentTable.update({
+                    ClinicalNoteAttachmentTable.clinicalNoteId eq id
+                }) {
+                    it[createdAt] = Instant.now().minusSeconds(15L * 24 * 3600)
                 }
             }
             val expired = get("/fhir/DocumentReference/$id").bodyAsText()
-            val before = storedAttachment(id).first
+            assertNull((decodeWire(expired) as DocumentReference).content.single().attachment.data)
+            val before = storedAttachment(id)
 
             val updated =
                 putJson(
@@ -473,11 +475,11 @@ class ClinicalDocumentWriteBackTest : FhirWriteBackTestSupport() {
 
             assertEquals(HttpStatusCode.OK, updated.status)
             assertEquals(HttpStatusCode.BadRequest, mismatching.status)
-            assertEquals(before, storedAttachment(id).first)
+            val after = storedAttachment(id)
+            assertEquals(before.first, after.first)
+            assertContentEquals(before.second, after.second)
             val note =
-                kotlinx.coroutines.runBlocking {
-                    consultationRepository.findClinicalNote(ClinicalNoteId(id), DEFAULT_ORG_NUMBER)
-                }
+                consultationRepository.findClinicalNote(ClinicalNoteId(id), DEFAULT_ORG_NUMBER)
             assertEquals("Endret", note?.clinicalNote)
             assertEquals(true, note?.attachmentExpired)
             assertEquals("Sykmelding æøå.pdf", note?.attachmentTitle)
@@ -489,9 +491,7 @@ class ClinicalDocumentWriteBackTest : FhirWriteBackTestSupport() {
                 )
             assertEquals(HttpStatusCode.OK, cleared.status)
             val afterClear =
-                kotlinx.coroutines.runBlocking {
-                    consultationRepository.findClinicalNote(ClinicalNoteId(id), DEFAULT_ORG_NUMBER)
-                }
+                consultationRepository.findClinicalNote(ClinicalNoteId(id), DEFAULT_ORG_NUMBER)
             assertEquals(false, afterClear?.hasAttachment)
         }
     }
@@ -515,16 +515,12 @@ class ClinicalDocumentWriteBackTest : FhirWriteBackTestSupport() {
     private fun withoutData(body: String) =
         body.replace(Regex("\"data\"\\s*:\\s*\"[^\"]*\"\\s*,"), "")
 
-    private fun storedAttachment(id: Uuid): Pair<java.time.Instant, ByteArray?> =
-        kotlinx.coroutines.runBlocking {
-            no.nav.helse.core.db.dbQuery {
-                no.nav.helse.core.db.ClinicalNoteAttachmentTable.selectAll()
-                    .where { no.nav.helse.core.db.ClinicalNoteAttachmentTable.clinicalNoteId eq id }
-                    .single()
-                    .let {
-                        it[no.nav.helse.core.db.ClinicalNoteAttachmentTable.createdAt] to
-                            it[no.nav.helse.core.db.ClinicalNoteAttachmentTable.data]
-                    }
+    private suspend fun storedAttachment(id: Uuid): Pair<Instant, ByteArray?> = dbQuery {
+        ClinicalNoteAttachmentTable.selectAll()
+            .where { ClinicalNoteAttachmentTable.clinicalNoteId eq id }
+            .single()
+            .let {
+                it[ClinicalNoteAttachmentTable.createdAt] to it[ClinicalNoteAttachmentTable.data]
             }
-        }
+    }
 }
