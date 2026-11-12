@@ -106,16 +106,10 @@ flow.
 Read [this guide](./docs/smart-client-authentication-guide.md) for instructions and code examples on
 how to make your SMART on FHIR application work with nav-epj.
 
-### SMART on FHIR Hackathon track
+### FHIR write-back
 
-Read [the track contract matrix](./docs/smart-hackathon-contract.md) for the mapping between the
-published hackathon track and this repository's endpoints, cohort data, and acceptance tests.
-The hackathon roster has 32 patients in four organisations, and launch data is scoped to the session
-organisation ([docs/hackathon-roster.md](./docs/hackathon-roster.md)).
-
-Participant starters live in [navikt/smart-on-fhir-templates](https://github.com/navikt/smart-on-fhir-templates):
-standalone local apps for public, client-secret, private-key-jwt and Backend Services flows,
-with Bronze/Silver/Gold exercises and visible reference solutions.
+See [FHIR write-back](./docs/fhir-write-back.md) for document, structured-response and measurement
+writes, supported request shapes, PDF retention and client registration.
 
 ### Finding new available dependencies
 ``` bash
