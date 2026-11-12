@@ -65,6 +65,8 @@ class ClinicalDocument(
 
 class NewAttachment(val title: String?, val language: String?, val data: ByteArray)
 
+class RetainedAttachment(val title: String?, val language: String?)
+
 class ClinicalDocumentWrite(
     val patientId: PatientId,
     val consultationId: ConsultationId,
@@ -75,6 +77,7 @@ class ClinicalDocumentWrite(
     val relatedQuestionnaireResponseId: Uuid?,
     val authorHprs: List<String>,
     val attachment: NewAttachment?,
+    val retainedAttachment: RetainedAttachment? = null,
 )
 
 data class ClinicalDocumentWriteResult(val id: ClinicalNoteId, val created: Boolean)

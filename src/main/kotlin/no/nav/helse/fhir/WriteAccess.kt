@@ -3,6 +3,7 @@ package no.nav.helse.fhir
 import com.google.fhir.model.r4.OperationOutcome
 import io.ktor.http.*
 import kotlin.uuid.Uuid
+import no.nav.helse.core.utils.AttachmentNotRetainedException
 import no.nav.helse.core.utils.AuthorNotOnConsultationException
 import no.nav.helse.core.utils.ClinicalDocumentConflictException
 import no.nav.helse.core.utils.ClinicalDocumentWriteNotAllowedException
@@ -100,6 +101,12 @@ fun Exception.toDomainFailure(): FhirRequestException? =
                 HttpStatusCode.BadRequest,
                 OperationOutcome.IssueType.Invalid,
                 message ?: "Encounter tilhører en annen pasient",
+            )
+        is AttachmentNotRetainedException ->
+            FhirRequestException(
+                HttpStatusCode.BadRequest,
+                OperationOutcome.IssueType.Invalid,
+                message.orEmpty(),
             )
         is AuthorNotOnConsultationException ->
             FhirRequestException(

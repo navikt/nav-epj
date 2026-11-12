@@ -75,6 +75,11 @@ DocumentReference note and any QuestionnaireResponse remain. Reads and searches
 omit expired `attachment.data`; the journal shows the expired state instead of
 a download link. The download endpoint returns `404` for expired PDFs.
 Subsequent PDF writes clear expired bytes in the same database transaction.
+A PUT can send an expired attachment back as read, with `title` and `language` but no
+`data`. This keeps the expired attachment as is and does not renew the retention period.
+The fields must match the stored attachment, and the same shape is rejected with `400`
+for a live attachment or a new document. An attachment with only `contentType` removes
+the stored attachment.
 There is no scheduled cleanup while the application is idle.
 
 The journal's delete action removes the selected app document, its attachment

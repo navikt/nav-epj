@@ -30,6 +30,9 @@ import no.nav.helse.smart.security.Interaction
 import no.nav.helse.utils.DEFAULT_ORG_NUMBER
 import no.nav.helse.utils.OTHER_ORG_NUMBER
 import no.nav.helse.utils.ensureOrg
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
 import org.junit.Test
 
 class ClinicalDocumentWriteBackTest : FhirWriteBackTestSupport() {
@@ -429,4 +432,99 @@ class ClinicalDocumentWriteBackTest : FhirWriteBackTestSupport() {
             assertNull(note?.attachmentTitle)
         }
     }
+
+    @Test
+    fun `an expired attachment round-trips as metadata only without renewing or clearing it`() {
+        val (patientId, consultationId) = runBlockingFixture()
+        val id = Uuid.generateV4()
+        testApp {
+            putJson(
+                "/fhir/DocumentReference/$id",
+                documentReference(id.toString(), patientId, consultationId),
+            )
+            val live = get("/fhir/DocumentReference/$id").bodyAsText()
+
+            val liveMetadataOnly = putJson("/fhir/DocumentReference/$id", withoutData(live))
+            assertEquals(HttpStatusCode.BadRequest, liveMetadataOnly.status)
+            assertTrue(storedAttachment(id).second != null)
+
+            kotlinx.coroutines.runBlocking {
+                no.nav.helse.core.db.dbQuery {
+                    no.nav.helse.core.db.ClinicalNoteAttachmentTable.update({
+                        no.nav.helse.core.db.ClinicalNoteAttachmentTable.clinicalNoteId eq id
+                    }) {
+                        it[createdAt] = java.time.Instant.now().minusSeconds(15L * 24 * 3600)
+                    }
+                }
+            }
+            val expired = get("/fhir/DocumentReference/$id").bodyAsText()
+            val before = storedAttachment(id).first
+
+            val updated =
+                putJson(
+                    "/fhir/DocumentReference/$id",
+                    withoutData(expired).replace("Sykmelding sendt til Nav", "Endret"),
+                )
+            val mismatching =
+                putJson(
+                    "/fhir/DocumentReference/$id",
+                    withoutData(expired).replace("Sykmelding æøå.pdf", "annen.pdf"),
+                )
+
+            assertEquals(HttpStatusCode.OK, updated.status)
+            assertEquals(HttpStatusCode.BadRequest, mismatching.status)
+            assertEquals(before, storedAttachment(id).first)
+            val note =
+                kotlinx.coroutines.runBlocking {
+                    consultationRepository.findClinicalNote(ClinicalNoteId(id), DEFAULT_ORG_NUMBER)
+                }
+            assertEquals("Endret", note?.clinicalNote)
+            assertEquals(true, note?.attachmentExpired)
+            assertEquals("Sykmelding æøå.pdf", note?.attachmentTitle)
+
+            val cleared =
+                putJson(
+                    "/fhir/DocumentReference/$id",
+                    documentReference(id.toString(), patientId, consultationId, data = null),
+                )
+            assertEquals(HttpStatusCode.OK, cleared.status)
+            val afterClear =
+                kotlinx.coroutines.runBlocking {
+                    consultationRepository.findClinicalNote(ClinicalNoteId(id), DEFAULT_ORG_NUMBER)
+                }
+            assertEquals(false, afterClear?.hasAttachment)
+        }
+    }
+
+    @Test
+    fun `a metadata only attachment cannot create a document`() {
+        val (patientId, consultationId) = runBlockingFixture()
+        val id = Uuid.generateV4()
+        testApp {
+            val body =
+                documentReference(id.toString(), patientId, consultationId)
+                    .replace(Regex(",\"data\":\"[^\"]*\""), "")
+
+            assertEquals(
+                HttpStatusCode.BadRequest,
+                putJson("/fhir/DocumentReference/$id", body).status,
+            )
+        }
+    }
+
+    private fun withoutData(body: String) =
+        body.replace(Regex("\"data\"\\s*:\\s*\"[^\"]*\"\\s*,"), "")
+
+    private fun storedAttachment(id: Uuid): Pair<java.time.Instant, ByteArray?> =
+        kotlinx.coroutines.runBlocking {
+            no.nav.helse.core.db.dbQuery {
+                no.nav.helse.core.db.ClinicalNoteAttachmentTable.selectAll()
+                    .where { no.nav.helse.core.db.ClinicalNoteAttachmentTable.clinicalNoteId eq id }
+                    .single()
+                    .let {
+                        it[no.nav.helse.core.db.ClinicalNoteAttachmentTable.createdAt] to
+                            it[no.nav.helse.core.db.ClinicalNoteAttachmentTable.data]
+                    }
+            }
+        }
 }
