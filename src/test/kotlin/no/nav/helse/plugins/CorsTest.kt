@@ -19,6 +19,8 @@ import no.nav.helse.utils.simpleTestEnvironment
 import org.junit.Test
 
 class CorsTest {
+    private val tabClientOrigin = "https://ttd.apps.tt02.altinn.no"
+
     private fun testApp(
         clients: List<SmartClient> = loadSmartClients(shippedConfig("application.yaml")),
         block: suspend HttpClient.() -> Unit,
@@ -61,15 +63,12 @@ class CorsTest {
         }
 
     @Test
-    fun `shipped hackathon tab client can preflight FHIR writes and token exchange`() = testApp {
+    fun `shipped Altinn tab client can preflight FHIR writes and token exchange`() = testApp {
         listOf("/fhir/Observation", "/oidc/token").forEach { path ->
-            val response = preflight("http://localhost:3100", path)
+            val response = preflight(tabClientOrigin, path)
 
             assertEquals(HttpStatusCode.OK, response.status)
-            assertEquals(
-                "http://localhost:3100",
-                response.headers[HttpHeaders.AccessControlAllowOrigin],
-            )
+            assertEquals(tabClientOrigin, response.headers[HttpHeaders.AccessControlAllowOrigin])
             assertTrue(response.headers[HttpHeaders.AccessControlAllowMethods]!!.contains("POST"))
             val headers = response.headers[HttpHeaders.AccessControlAllowHeaders]!!.lowercase()
             assertTrue(headers.contains("authorization"))
@@ -137,10 +136,10 @@ class CorsTest {
     @Test
     fun `registered origins still need a bearer token for FHIR writes`() = testApp {
         val unauthenticated =
-            post("/fhir/Observation") { header(HttpHeaders.Origin, "http://localhost:3100") }
+            post("/fhir/Observation") { header(HttpHeaders.Origin, tabClientOrigin) }
         val authenticated =
             post("/fhir/Observation") {
-                header(HttpHeaders.Origin, "http://localhost:3100")
+                header(HttpHeaders.Origin, tabClientOrigin)
                 bearerAuth("test-token")
                 contentType(ContentType.parse("application/fhir+json"))
                 setBody("{}")
@@ -149,10 +148,7 @@ class CorsTest {
         assertEquals(HttpStatusCode.Unauthorized, unauthenticated.status)
         assertEquals(HttpStatusCode.Created, authenticated.status)
         listOf(unauthenticated, authenticated).forEach { response ->
-            assertEquals(
-                "http://localhost:3100",
-                response.headers[HttpHeaders.AccessControlAllowOrigin],
-            )
+            assertEquals(tabClientOrigin, response.headers[HttpHeaders.AccessControlAllowOrigin])
             assertNull(response.headers[HttpHeaders.AccessControlAllowCredentials])
         }
     }
