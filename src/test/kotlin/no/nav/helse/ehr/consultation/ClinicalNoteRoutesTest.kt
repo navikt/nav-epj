@@ -129,7 +129,7 @@ class ClinicalNoteRoutesTest : ConsultationRepositoryTestBase() {
             assertEquals(ContentType.Application.Pdf, response.contentType()?.withoutParameters())
             assertEquals(
                 "inline; filename=\"Sykmelding bl__.pdf\"; " +
-                    "filename*=UTF-8''Sykmelding%20bl%C3%A5%22.pdf",
+                    "filename*=utf-8''Sykmelding%20bl%C3%A5%22.pdf",
                 response.headers[HttpHeaders.ContentDisposition],
             )
             assertContentEquals(pdf, response.bodyAsBytes())
