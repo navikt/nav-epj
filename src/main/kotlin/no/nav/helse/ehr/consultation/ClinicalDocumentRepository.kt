@@ -229,7 +229,11 @@ class ClinicalDocumentRepository {
 
     private fun requireExpiredAttachment(id: ClinicalNoteId, retained: RetainedAttachment) {
         val stored =
-            ClinicalNoteAttachmentTable.selectAll()
+            ClinicalNoteAttachmentTable.select(
+                    ClinicalNoteAttachmentTable.title,
+                    ClinicalNoteAttachmentTable.language,
+                    ClinicalNoteAttachmentTable.createdAt,
+                )
                 .where { ClinicalNoteAttachmentTable.clinicalNoteId eq id.value }
                 .singleOrNull()
         val expired =
