@@ -35,16 +35,20 @@ private fun SmartPrincipal.matchingScopes(
             interaction in it.interactions
     }
 
+fun SmartPrincipal.hasScope(resourceType: String, interaction: Interaction): Boolean =
+    matchingScopes(resourceType, interaction).isNotEmpty()
+
+fun SmartPrincipal.requireScope(resourceType: String, interaction: Interaction): SmartPrincipal {
+    if (!hasScope(resourceType, interaction)) {
+        throw InsufficientScopeException(resourceType, interaction)
+    }
+    return this
+}
+
 fun ApplicationCall.requireFhirScope(
     resourceType: String,
     interaction: Interaction,
-): SmartPrincipal {
-    val principal = principal<SmartPrincipal>()!!
-    if (principal.matchingScopes(resourceType, interaction).isEmpty()) {
-        throw InsufficientScopeException(resourceType, interaction)
-    }
-    return principal
-}
+): SmartPrincipal = principal<SmartPrincipal>()!!.requireScope(resourceType, interaction)
 
 fun ApplicationCall.requireSystemScopeIfSystemContext(
     resourceType: String,

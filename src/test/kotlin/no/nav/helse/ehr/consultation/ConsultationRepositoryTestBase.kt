@@ -18,6 +18,7 @@ abstract class ConsultationRepositoryTestBase : WithPostgresql() {
     }
 
     protected val consultationRepository = ConsultationRepository()
+    protected val clinicalDocumentRepository = ClinicalDocumentRepository()
     protected val patientRepository = PatientRepository()
 
     @OptIn(ExperimentalUuidApi::class)
@@ -36,14 +37,48 @@ abstract class ConsultationRepositoryTestBase : WithPostgresql() {
         return patientId
     }
 
-    protected suspend fun createConsultation(patientId: PatientId): ConsultationId =
+    @OptIn(ExperimentalUuidApi::class)
+    protected suspend fun writeFhirNote(
+        patientId: PatientId,
+        consultationId: ConsultationId,
+        text: String?,
+        id: ClinicalNoteId = ClinicalNoteId(Uuid.generateV4()),
+        attachment: NewAttachment? = null,
+        relatedQuestionnaireResponseId: Uuid? = null,
+        orgNumber: String? = DEFAULT_ORG_NUMBER,
+    ): ClinicalNoteId {
+        clinicalDocumentRepository.write(
+            id,
+            ClinicalDocumentWrite(
+                patientId = patientId,
+                consultationId = consultationId,
+                description = text,
+                typeText = null,
+                periodStart = null,
+                periodEnd = null,
+                relatedQuestionnaireResponseId = relatedQuestionnaireResponseId,
+                authorHprs = emptyList(),
+                attachment = attachment,
+            ),
+            orgNumber,
+            allowCreate = true,
+            allowUpdate = true,
+        )
+        return id
+    }
+
+    protected suspend fun createConsultation(
+        patientId: PatientId,
+        orgNumber: String = DEFAULT_ORG_NUMBER,
+        hprs: List<String> = listOf("123"),
+    ): ConsultationId =
         consultationRepository.insert(
             CreateConsultation(
                 patientId,
-                listOf(PractitionerHpr("123")),
+                hprs.map { PractitionerHpr(it) },
                 LocalDateTime.now(),
                 ConsultationStatus.IN_PROGRESS,
-                orgNumber = DEFAULT_ORG_NUMBER,
+                orgNumber = orgNumber,
             )
         )
 }

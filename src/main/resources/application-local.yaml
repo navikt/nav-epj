@@ -42,7 +42,8 @@ smart:
         - patient/Condition.rs
         - patient/Observation.rs
         - patient/Observation.write
-        - patient/DocumentReference.crs
+        - patient/DocumentReference.cruds
+        - patient/QuestionnaireResponse.cruds
     - clientId: "NAV_SMART_on_FHIR_validator"
       name: "Validator"
       description: "Tester SMART on FHIR-oppstart og FHIR-API-et mot nav-epj."

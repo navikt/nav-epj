@@ -10,6 +10,7 @@ export type MessageBoxButton = {
   label: string;
   onClick: () => void;
   isDefault?: boolean;
+  disabled?: boolean;
 };
 
 type Props = {
@@ -73,6 +74,7 @@ export function MessageBox({
           <Button
             key={button.label}
             isDefault={button.isDefault}
+            aria-disabled={button.disabled || undefined}
             onClick={button.onClick}
           >
             {button.label}

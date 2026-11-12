@@ -1,12 +1,16 @@
 package no.nav.helse.core.db
 
 import no.nav.helse.core.utils.ConsultationStatus
+import no.nav.helse.ehr.consultation.ClinicalNoteSource
 import no.nav.helse.ehr.measurement.MeasurementStatus
 import no.nav.helse.ehr.patient.AdministrativeGender
 import no.nav.helse.ehr.patient.PersonidentType
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
 import org.jetbrains.exposed.v1.javatime.date
 import org.jetbrains.exposed.v1.javatime.datetime
+import org.jetbrains.exposed.v1.javatime.timestamp
+import org.jetbrains.exposed.v1.json.jsonb
 
 object PatientTable : Table("patient") {
     val id = uuid("id")
@@ -61,12 +65,40 @@ object ClinicalNoteTable : Table("clinical_note") {
     val consultationId = reference("consultation_id", refColumn = ConsultationTable.id)
     val patientId = reference("patient_id", refColumn = PatientTable.id)
     val clinicalNote = text("clinical_note").nullable()
-    val attachmentTitle = text("attachment_title").nullable()
-    val attachmentData = binary("attachment_data").nullable()
+    val origin = enumerationByName<ClinicalNoteSource>("source", length = 10)
+    val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp)
+    val typeText = text("type_text").nullable()
+    val periodStart = date("period_start").nullable()
+    val periodEnd = date("period_end").nullable()
+    val relatedQuestionnaireResponseId = uuid("related_questionnaire_response_id").nullable()
+    val authorHprs = array<String>("author_hprs").default(emptyList())
 
     init {
         index(isUnique = true, id)
     }
+}
+
+object ClinicalNoteAttachmentTable : Table("clinical_note_attachment") {
+    val clinicalNoteId = reference("clinical_note_id", refColumn = ClinicalNoteTable.id)
+    val title = text("title").nullable()
+    val language = text("language").nullable()
+    val contentType = text("content_type")
+    val sizeBytes = integer("size_bytes")
+    val data = binary("data").nullable()
+    val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp)
+
+    override val primaryKey = PrimaryKey(clinicalNoteId)
+}
+
+object QuestionnaireResponseTable : Table("questionnaire_response") {
+    val id = uuid("id")
+    val patientId = reference("patient_id", refColumn = PatientTable.id)
+    val consultationId = reference("consultation_id", refColumn = ConsultationTable.id)
+    val resource = jsonb<String>("resource", { it }, { it })
+    val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp)
+    val updatedAt = timestamp("updated_at").defaultExpression(CurrentTimestamp)
+
+    override val primaryKey = PrimaryKey(id)
 }
 
 object ConsultationDiagnosisCodeTable : Table("consultation_diagnosis_code") {

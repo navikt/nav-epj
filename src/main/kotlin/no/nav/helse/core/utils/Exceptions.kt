@@ -53,3 +53,15 @@ class ConsultationBelongsToOtherPatientException(
     RuntimeException(
         "Konsultasjon med id=${consultationId.value} tilhører ikke pasient med id=${patientId.value}"
     )
+
+class ClinicalDocumentConflictException :
+    RuntimeException("Id-en er i bruk av et annet dokument eller et journalnotat")
+
+class ClinicalDocumentWriteNotAllowedException(val creating: Boolean) :
+    RuntimeException(
+        if (creating) "Tokenet kan ikke opprette dokumentet"
+        else "Tokenet kan ikke endre dokumentet"
+    )
+
+class AuthorNotOnConsultationException(hpr: String) :
+    RuntimeException("Helsepersonell med HPR=$hpr deltar ikke i konsultasjonen")

@@ -169,10 +169,98 @@ respectively. Non-FHIR responses are unchanged.
 | `BRONZE-LAUNCH-01` | Bronze launch and display | Full launch flow (`GET /fhir/launch` → `GET /oidc/authorize` → `POST /oidc/token` → `GET /fhir/Patient/{id}` → `GET /fhir/Encounter?patient=`) succeeds for every patient on the session organisation's lists (8 per organisation, 32 across the four) that has an ongoing consultation (4 in the seed, one per organisation; start one for any other patient) through the `public/` reference using `hackathon-public` and `openid fhirUser launch patient/Patient.r patient/Encounter.s`. App verifies the ID token and displays patient name, calculated age and active encounter without care-team reads. Clinician, roles and organisation are optional: when explicitly enabled with suitable scopes, those reads and display must also succeed. Missing optional permissions or serviceProvider must not block the default chart. |
 | `SILVER-CLINICAL-01` | Clinical mini-app | `GET /fhir/Condition?subject={id}&encounter={id}` and `GET /fhir/Condition?subject={id}` return `200 OK` searchset Bundles. Condition resources always reference their patient and source encounter. `GET /fhir/Observation?subject={id}&code={loinc}` returns `200 OK` Bundle with ordered numeric values and UCUM units; app displays trends across 3+ readings. |
 | `SILVER-SCOPE-01` | Scope enforcement | Token endpoint grants requested subset of scopes. In-scope `GET /fhir/*` returns `200 OK`. Out-of-scope request returns `403 Forbidden` with an `OperationOutcome`. |
-| `GOLD-WRITEBACK-01` | Resource write-back | `POST /fhir/Observation` and `POST /fhir/DocumentReference` return `201 Created` with a Location identifying the resource and a server-assigned ID. Created resources persist. Measurements appear in the EPJ's Målinger tab; DocumentReference descriptions appear in the journal editor on return, without overwriting unsaved edits. A subject that differs from the launched patient returns `404 Not Found` for both create routes, with nothing persisted. Missing create scope returns `403 Forbidden`. The documented Observation shape (see [Write-back shapes](https://github.com/navikt/smart-on-fhir-templates/blob/main/public/EXERCISES.md#write-back-shapes)) needs `patient/Observation.c`, exactly one LOINC coding with code and display, a `valueQuantity` with UCUM system, code, unit and value (at most 8 integer and 4 decimal digits), an `effectiveDateTime` in UTC with a `Z` suffix, a `status`, a `subject` of `Patient/{uuid}` and an `encounter` of `Encounter/{uuid}` at the session organisation belonging to that patient. Components, notes and interpretations are rejected. IDs are server-generated, so a repeated POST creates a second record. The API does not check the encounter's status: the ongoing-consultation requirement comes from the SMART launch. |
+| `GOLD-WRITEBACK-01` | Resource write-back | `POST /fhir/Observation` and `POST /fhir/DocumentReference` return `201 Created` with a Location identifying the resource and a server-assigned ID. Created resources persist. Measurements appear in the EPJ's Målinger tab; app-written DocumentReferences appear under «Dokumenter fra apper», separate from the clinician's journal note, without overwriting unsaved edits. A subject that differs from the launched patient returns `404 Not Found` for both create routes, with nothing persisted. Missing create scope returns `403 Forbidden`. The documented Observation shape (see [Write-back shapes](https://github.com/navikt/smart-on-fhir-templates/blob/main/public/EXERCISES.md#write-back-shapes)) needs `patient/Observation.c`, exactly one LOINC coding with code and display, a `valueQuantity` with UCUM system, code, unit and value (at most 8 integer and 4 decimal digits), an `effectiveDateTime` in UTC with a `Z` suffix, a `status`, a `subject` of `Patient/{uuid}` and an `encounter` of `Encounter/{uuid}` at the session organisation belonging to that patient. Components, notes and interpretations are rejected. IDs are server-generated, so a repeated POST creates a second record. The API does not check the encounter's status: the ongoing-consultation requirement comes from the SMART launch. |
 | `GOLD-ASYMMETRIC-01` | Asymmetric client auth (unit tests) | `POST /oidc/token` with `private_key_jwt` assertion signed by client key registered via inline JWK Set returns `200 OK` and access token. Assertion with invalid signature, expired timestamp, replayed `jti`, or wrong audience returns `401 Unauthorized` with `error=invalid_client`. |
 | `GOLD-BACKEND-01` | Backend services (unit tests) | A client registered only for `client_credentials`, authenticated with `private_key_jwt` and pre-authorized system scopes, receives `200 OK` from `POST /oidc/token` with a patient-less token, `expires_in <= 300`, and no refresh token. Requested scopes must be a subset of the registration. System scopes authorize only their advertised FHIR interactions without launch context; searches still require supported criteria. A system token without `system/Organization.r` cannot read an Organization, and non-system scopes cannot be registered for a backend client. |
 | `GOLD-BREAKIT-01` | Public-client negative tests | Adversarial attacks fail with expected HTTP status and OAuth/FHIR error code: tampered/missing state returns `302` with `error=invalid_request` or `400 Bad Request`; replayed authorization code returns `400 Bad Request` with `error=invalid_grant`; expired token returns `401 Unauthorized`; out-of-scope resource access returns `403 Forbidden` with `OperationOutcome`. Client-assertion audience and key checks belong to `GOLD-ASYMMETRIC-01`. |
+
+## PDF and structured write-back
+
+The write-back model follows
+[syk-inn ADR01](https://github.com/navikt/syk-inn/blob/main/docs/adr/ADR01%20-%20FHIR%20resources%20for%20writing%20data%20back%20to%20EHR.md):
+a standalone DocumentReference carries the PDF, and `context.related` can refer
+to a standalone QuestionnaireResponse. The two resource types may use the same
+UUID. Neither resource is embedded in the other.
+
+| Interaction | DocumentReference | QuestionnaireResponse |
+|---|---|---|
+| Read | `GET /fhir/DocumentReference/{id}` | `GET /fhir/QuestionnaireResponse/{id}` |
+| Search | `GET /fhir/DocumentReference?patient={id}&encounter={id}` | `GET /fhir/QuestionnaireResponse?patient={id}&encounter={id}` |
+| Create with server-assigned ID | `POST /fhir/DocumentReference` | `POST /fhir/QuestionnaireResponse` |
+| Create or replace with client-assigned ID | `PUT /fhir/DocumentReference/{id}` | `PUT /fhir/QuestionnaireResponse/{id}` |
+| Delete | `DELETE /fhir/DocumentReference/{id}` | `DELETE /fhir/QuestionnaireResponse/{id}` |
+
+Search requires a patient (`patient` or `subject`); `encounter` is optional.
+DocumentReference also supports the `related=QuestionnaireResponse/{id}` filter
+alongside the patient criterion. PUT requires the body ID to match the URL.
+New resources return `201 Created` with a `Location`; replacements return `200 OK`.
+Create and update require their respective SMART `c` and `u` permissions.
+Delete requires `d`; read and search require `r` and `s`. A client registration may
+allow more scopes than an app requests, but the token carries only the requested ones.
+
+Both resource types require a subject of `Patient/{uuid}` and a consultation
+reference of `Encounter/{uuid}` belonging to that patient at the token's
+organisation. System tokens with the relevant system scopes are not restricted
+to one organisation. Existing resource IDs cannot be moved to another patient
+or consultation, and FHIR writes cannot replace the clinician's own note.
+
+DocumentReference supports `status=current`, one `type.coding` using
+`urn:oid:2.16.578.1.12.4.1.1.9602|J01-2`, an optional `type.text` and description,
+and one `content.attachment` with `contentType=application/pdf`. The attachment
+can include a title, language and base64 PDF data. The context carries one
+encounter, an optional period and at most one related
+`QuestionnaireResponse/{uuid}` reference. Supplied authors must belong to the
+consultation. Unsupported fields are rejected, except client `meta`, which is ignored.
+Reads and searches return PDF data inline while it is available. Notes without a PDF
+omit `attachment.data`.
+
+QuestionnaireResponse retains its structured items and answers as FHIR JSON.
+The `questionnaire` field identifies the form definition; it does not embed it.
+A Practitioner author reference is checked against the consultation; other
+FHIR author references are retained without resolving them.
+A failed or missing QuestionnaireResponse does not prevent saving its
+DocumentReference.
+
+### Independent batch writes
+
+`POST /fhir` (also `/fhir/`) accepts a Bundle with `type=batch` for DocumentReference and
+QuestionnaireResponse GET, POST, PUT and DELETE entries. Each entry uses a
+relative resource URL and undergoes the same scope, patient and organisation
+checks as a direct request. The response is a `batch-response` Bundle with a
+status for each entry. Failed entries also carry an OperationOutcome.
+
+Entries succeed or fail independently. In particular, an invalid
+QuestionnaireResponse must not roll back a valid PDF write. Transaction Bundles
+are not supported.
+
+### Limits, retention and deletion
+
+PDFs are limited to **2,000,000 decoded bytes (2 MB)**. Direct writes and batch
+requests have a **3,500,000-byte** HTTP body limit, enforced before JSON and
+base64 decoding, including requests without a Content-Length. Stored
+QuestionnaireResponse JSON is limited to **1,000,000 bytes**, and a batch accepts
+at most **10 entries**. Oversized bodies and resources return `413`. Titles and
+`type.text` accept up to 255 characters without control characters.
+A `%PDF-` signature check rejects obvious non-PDF content; it is not complete
+PDF validation or malware scanning.
+
+Only PDF bytes expire after **14 days**. Attachment metadata, the
+DocumentReference note and any QuestionnaireResponse remain. Reads and searches
+omit expired `attachment.data`; the journal shows the expired state instead of
+a download link. The download endpoint returns `404` for expired PDFs.
+Subsequent PDF writes clear expired bytes in the same database transaction.
+There is no scheduled cleanup while the application is idle.
+
+The journal's delete action removes the selected app document, its attachment
+and its linked QuestionnaireResponse at the same patient and consultation.
+It requires confirmation and leaves the clinician's note alone. FHIR DELETE
+removes only the requested resource; it does not cascade to its related resource.
+
+Attachments use the existing Postgres database, not an object-storage service.
+Separating bytes from journal metadata avoids loading PDFs when opening the
+journal. Expired bytes free space for Postgres to reuse, but they do not shrink the
+provisioned disk or its fixed cost, so the 14-day window is not a hard storage
+quota.
 
 ## Registering other clients
 

@@ -2,7 +2,7 @@ import { act } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useActivePatientStore } from "./activePatientStore";
 import { useBalloonStore } from "./balloonStore";
-import { isDirty, lacksMainDiagnosis, ongoingOf, useJournalStore } from "./journalStore";
+import { documentsOf, isDirty, lacksMainDiagnosis, ongoingOf, useJournalStore } from "./journalStore";
 import { usePatientsStore } from "./patientsStore";
 import { useWorkspaceStore } from "./workspaceStore";
 
@@ -272,11 +272,20 @@ describe("journalStore", () => {
         "GET /api/patient/p1": () => ({ body: patient }),
         "GET /api/patients/p1/consultations": () => ({ body: [serverConsultation] }),
         "PATCH /api/patients/p1/consultations": () => ({ body: {} }),
+        "DELETE /api/clinical-notes/d1": () => ({}),
       });
       await journal().open("p1");
     });
 
     const note = { id: "n1", consultationId: "k1", patientId: "p1", clinicalNote: "Ekstern" };
+    const appNote = {
+      id: "d1",
+      consultationId: "k1",
+      patientId: "p1",
+      clinicalNote: "Fra app",
+      source: "FHIR",
+    };
+    const sibling = { ...appNote, id: "d2", clinicalNote: "Søsken", hasAttachment: true };
     const consultationCalls = () =>
       calls.filter((c) => c.key === "GET /api/patients/p1/consultations").length;
 
@@ -338,6 +347,73 @@ describe("journalStore", () => {
       await journal().refresh();
       expect(journal().refreshFailed).toBe(false);
       expect(journal().draft.clinicalNote).toBe("Ekstern");
+    });
+
+    it("keeps app documents out of the draft and the draft out of the documents", async () => {
+      serverConsultation = consultation({ clinicalNotes: [appNote, note] });
+      await journal().refresh();
+      expect(journal().draft.clinicalNote).toBe("Ekstern");
+      expect(documentsOf(journal().consultations[0]).map((d) => d.id)).toEqual(["d1"]);
+    });
+
+    it("treats a text-only app note as a document, not as the clinician's note", async () => {
+      serverConsultation = consultation({ clinicalNotes: [appNote] });
+      await journal().refresh();
+      expect(journal().draft.clinicalNote).toBe("");
+      expect(documentsOf(journal().consultations[0])[0]).toMatchObject({
+        hasAttachment: false,
+        attachmentExpired: false,
+      });
+    });
+
+    it("keeps app documents when the reload after saving fails", async () => {
+      serverConsultation = consultation({ clinicalNotes: [appNote, sibling] });
+      await journal().refresh();
+      stub({
+        "PATCH /api/patients/p1/consultations": () => ({ body: {} }),
+        "GET /api/patients/p1/consultations": () => ({ ok: false }),
+      });
+      journal().setClinicalNote("lokalt");
+      expect(await journal().save()).toBe(true);
+      const [saved] = journal().consultations;
+      expect(documentsOf(saved).map((d) => d.id)).toEqual(["d1", "d2"]);
+      expect(saved.clinicalNotes.at(-1)).toMatchObject({ source: "EHR", clinicalNote: "lokalt" });
+      expect(journal().draft.clinicalNote).toBe("lokalt");
+    });
+
+    it("deletes a document without touching the draft or sibling documents", async () => {
+      serverConsultation = consultation({ clinicalNotes: [appNote, sibling] });
+      await journal().refresh();
+      journal().setClinicalNote("mitt utkast");
+      expect(await journal().deleteDocument("d1")).toBe(true);
+      expect(calls.some((c) => c.key === "DELETE /api/clinical-notes/d1")).toBe(true);
+      expect(documentsOf(journal().consultations[0]).map((d) => d.id)).toEqual(["d2"]);
+      expect(journal().draft.clinicalNote).toBe("mitt utkast");
+      expect(isDirty(journal())).toBe(true);
+    });
+
+    it("keeps the document when deleting fails", async () => {
+      serverConsultation = consultation({ clinicalNotes: [appNote] });
+      await journal().refresh();
+      vi.mocked(fetch).mockImplementationOnce(async () => ({ ok: false, status: 500 }) as Response);
+      expect(await journal().deleteDocument("d1")).toBe(false);
+      expect(documentsOf(journal().consultations[0])).toHaveLength(1);
+    });
+
+    it("never deletes the clinician's own note from state", async () => {
+      serverConsultation = consultation({ clinicalNotes: [{ ...note, id: "d1" }] });
+      await journal().refresh();
+      await journal().deleteDocument("d1");
+      expect(journal().consultations[0].clinicalNotes).toHaveLength(1);
+    });
+
+    it("ignores a delete response that arrives after the journal switched patient", async () => {
+      serverConsultation = consultation({ clinicalNotes: [appNote] });
+      await journal().refresh();
+      const pending = journal().deleteDocument("d1");
+      journal().clear();
+      await pending;
+      expect(journal().consultations).toEqual([]);
     });
 
     it("marks the tab unsaved when the draft differs and clears it when it matches again", () => {

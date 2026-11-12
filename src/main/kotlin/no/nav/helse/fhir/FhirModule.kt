@@ -12,9 +12,8 @@ import no.nav.helse.core.Environment
 import no.nav.helse.fhir.capabilitystatement.capabilityStatementRoutes
 import no.nav.helse.fhir.condition.ConditionService
 import no.nav.helse.fhir.condition.conditionRoutes
-import no.nav.helse.fhir.documentreference.DocumentReferenceId
+import no.nav.helse.fhir.documentreference.DocumentReferenceHandler
 import no.nav.helse.fhir.documentreference.DocumentReferenceService
-import no.nav.helse.fhir.documentreference.documentReferenceRoutes
 import no.nav.helse.fhir.encounter.EncounterId
 import no.nav.helse.fhir.encounter.EncounterService
 import no.nav.helse.fhir.encounter.encounterRoutes
@@ -32,6 +31,8 @@ import no.nav.helse.fhir.practitioner.PractitionerService
 import no.nav.helse.fhir.practitioner.pracitionerRoutes
 import no.nav.helse.fhir.practitionerrole.PractitionerRoleService
 import no.nav.helse.fhir.practitionerrole.practitionerRoleRoutes
+import no.nav.helse.fhir.questionnaireresponse.QuestionnaireResponseHandler
+import no.nav.helse.fhir.questionnaireresponse.QuestionnaireResponseService
 
 fun Application.configureFhirModule() {
     routing { fhirRoutes() }
@@ -46,9 +47,16 @@ fun Route.fhirRoutes() {
     val practitionerService: PractitionerService by application.dependencies
     val practitionerRoleService: PractitionerRoleService by application.dependencies
     val documentReferenceService: DocumentReferenceService by application.dependencies
+    val questionnaireResponseService: QuestionnaireResponseService by application.dependencies
     val environment: Environment by application.dependencies
     val fhirJson = FhirR4Json()
     val fhirContentType = ContentType("application", "fhir+json")
+
+    val codec = FhirCodec(fhirJson)
+    val documentReferenceHandler =
+        DocumentReferenceHandler(documentReferenceService, environment.smart.fhirServerUrl)
+    val questionnaireResponseHandler =
+        QuestionnaireResponseHandler(questionnaireResponseService, environment.smart.fhirServerUrl)
 
     capabilityStatementRoutes(fhirJson, fhirContentType)
     authenticate("smart-access-token") {
@@ -64,19 +72,17 @@ fun Route.fhirRoutes() {
         patientRoutes(patientService, fhirJson, fhirContentType)
         pracitionerRoutes(practitionerService, fhirJson, fhirContentType)
         practitionerRoleRoutes(practitionerRoleService, fhirJson, fhirContentType)
-        documentReferenceRoutes(
-            documentReferenceService,
-            fhirJson,
+        fhirResourceRoutes(documentReferenceHandler, codec, fhirContentType)
+        fhirResourceRoutes(questionnaireResponseHandler, codec, fhirContentType)
+        fhirBatchRoutes(
+            FhirBatchProcessor(listOf(documentReferenceHandler, questionnaireResponseHandler)),
+            codec,
             fhirContentType,
-            environment.smart.fhirServerUrl,
         )
     }
 }
 
 fun ApplicationCall.encounterId(): EncounterId = EncounterId(uuidParameter("encounter"))
-
-fun ApplicationCall.documentReferenceId(): DocumentReferenceId =
-    DocumentReferenceId(uuidParameter("documentreferenceId"))
 
 fun ApplicationCall.observationId(): ObservationId = ObservationId(uuidParameter("observation"))
 
@@ -99,9 +105,11 @@ private fun ApplicationCall.uuidParameter(name: String): Uuid {
 }
 
 fun ApplicationCall.patientReferenceInputId(): PatientInputId =
-    PatientInputId(uuidReferenceParameter("subject"))
+    PatientInputId(parameters.uuidReferenceParameter("subject"))
 
-fun ApplicationCall.encounterReferenceId(): EncounterId =
+fun ApplicationCall.encounterReferenceId(): EncounterId = parameters.encounterReferenceId()
+
+fun Parameters.encounterReferenceId(): EncounterId =
     EncounterId(uuidReferenceParameter("encounter"))
 
 private fun ApplicationCall.stringParameter(name: String): String {
@@ -115,8 +123,8 @@ private fun ApplicationCall.stringParameter(name: String): String {
  * `ResourceType/id` (search.html #reference), not a bare id, so any such prefix must be stripped
  * before parsing the UUID.
  */
-private fun ApplicationCall.uuidReferenceParameter(name: String): Uuid {
-    val value = parameters[name] ?: throw BadRequestException("Mangler parameteren '$name'")
+private fun Parameters.uuidReferenceParameter(name: String): Uuid {
+    val value = this[name] ?: throw BadRequestException("Mangler parameteren '$name'")
     return parseUuidReference(value, name)
 }
 
@@ -136,9 +144,12 @@ private fun parseUuidReference(value: String, name: String): Uuid {
  * given together only if they agree on the same patient; disagreement is rejected explicitly rather
  * than silently preferring one of them.
  */
-fun ApplicationCall.patientOrSubjectReferenceInputId(): PatientInputId {
-    val subjectId = parameters["subject"]?.let { parseUuidReference(it, "subject") }
-    val patientId = parameters["patient"]?.let { parseUuidReference(it, "patient") }
+fun ApplicationCall.patientOrSubjectReferenceInputId(): PatientInputId =
+    parameters.patientOrSubjectReferenceInputId()
+
+fun Parameters.patientOrSubjectReferenceInputId(): PatientInputId {
+    val subjectId = this["subject"]?.let { parseUuidReference(it, "subject") }
+    val patientId = this["patient"]?.let { parseUuidReference(it, "patient") }
     if (subjectId == null && patientId == null) {
         throw BadRequestException("Mangler parameteren 'subject' eller 'patient'")
     }

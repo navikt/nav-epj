@@ -154,6 +154,16 @@ export async function cancelConsultation(
   );
 }
 
+export async function deleteClinicalNote(noteId: string): Promise<void> {
+  try {
+    await request(`/api/clinical-notes/${encodeURIComponent(noteId)}`, {
+      method: "DELETE",
+    });
+  } catch (error) {
+    if (!(error instanceof ApiError && error.status === 404)) throw error;
+  }
+}
+
 export async function fetchApps(): Promise<App[]> {
   const response = await request("/api/apps");
   return AppSchema.array().parse(await response.json());

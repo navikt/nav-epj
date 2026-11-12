@@ -1,9 +1,7 @@
 package no.nav.helse.plugins
 
-import com.google.fhir.model.r4.Enumeration
 import com.google.fhir.model.r4.FhirR4Json
 import com.google.fhir.model.r4.OperationOutcome
-import com.google.fhir.model.r4.String as FhirString
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
@@ -24,6 +22,8 @@ import no.nav.helse.core.utils.PractitionerForPatientNotFoundException
 import no.nav.helse.core.utils.PractitionerNotFoundException
 import no.nav.helse.core.utils.SessionOrgRequiredException
 import no.nav.helse.core.utils.logger
+import no.nav.helse.fhir.FhirRequestException
+import no.nav.helse.fhir.operationOutcome
 import no.nav.helse.fhir.security.InsufficientScopeException
 import no.nav.helse.fhir.security.OrganizationContextMissingException
 import no.nav.helse.fhir.security.PatientMismatchException
@@ -113,6 +113,15 @@ fun Application.configureStatusPages() {
                 text = "Not found",
             )
         }
+        exception<FhirRequestException> { call, cause ->
+            call.respondText(
+                fhirR4Json.encodeToString(
+                    operationOutcome(cause.issueType, cause.message.orEmpty())
+                ),
+                fhirContentType,
+                cause.status,
+            )
+        }
         exception<BadRequestException> { call, cause ->
             call.respondText(
                 text = cause.message ?: "Ugyldig forespørsel",
@@ -157,16 +166,6 @@ private suspend fun ApplicationCall.respondAuthorizationFailure(
     text: String,
 ) {
     if (!isFhirPath()) return respondText(text = text, status = status)
-    val outcome =
-        OperationOutcome(
-            issue =
-                listOf(
-                    OperationOutcome.Issue(
-                        severity = Enumeration(value = OperationOutcome.IssueSeverity.Error),
-                        code = Enumeration(value = issueType),
-                        diagnostics = FhirString(value = text),
-                    )
-                )
-        )
+    val outcome = operationOutcome(issueType, text)
     respondText(fhirR4Json.encodeToString(outcome), fhirContentType, status)
 }
