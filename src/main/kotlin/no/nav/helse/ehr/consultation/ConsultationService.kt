@@ -1,8 +1,6 @@
 package no.nav.helse.ehr.consultation
 
 import java.time.LocalDateTime
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.ConsultationNotFoundException
 import no.nav.helse.core.utils.ConsultationNotFoundForPatientException
 import no.nav.helse.core.utils.ConsultationStatus
@@ -10,7 +8,10 @@ import no.nav.helse.core.utils.logger
 import no.nav.helse.ehr.patient.PatientId
 import no.nav.helse.ehr.practitioner.PractitionerHpr
 
-class ConsultationService(private val consultationRepository: ConsultationRepository) {
+class ConsultationService(
+    private val consultationRepository: ConsultationRepository,
+    private val clinicalDocumentRepository: ClinicalDocumentRepository,
+) {
     val log = logger()
 
     suspend fun getConsultations(patientId: PatientId, orgNumber: String?): List<Consultation> {
@@ -42,30 +43,21 @@ class ConsultationService(private val consultationRepository: ConsultationReposi
         clinicalNoteId: ClinicalNoteId,
         orgNumber: String?,
     ): ClinicalNoteAttachment? =
-        consultationRepository.findClinicalNoteAttachment(clinicalNoteId, orgNumber)
+        clinicalDocumentRepository.findAttachment(clinicalNoteId, orgNumber)
+
+    suspend fun deleteClinicalNote(
+        clinicalNoteId: ClinicalNoteId,
+        orgNumber: String,
+    ): ClinicalNoteDeleteResult =
+        clinicalDocumentRepository.deleteFhirDocumentWithQuestionnaireResponse(
+            clinicalNoteId,
+            orgNumber,
+        )
 
     suspend fun insertClinicalNote(clinicalNote: ClinicalNote, orgNumber: String): Boolean {
         val insertedRows = consultationRepository.insertClinicalNote(clinicalNote, orgNumber)
 
         return insertedRows == 1
-    }
-
-    suspend fun getClinicalNotes(
-        patientId: PatientId,
-        consultationId: ConsultationId?,
-        orgNumber: String?,
-    ): List<ClinicalNote> {
-        return consultationRepository.listClinicalNotes(patientId, consultationId, orgNumber)
-    }
-
-    @OptIn(ExperimentalUuidApi::class)
-    /** [orgNumber] is null for a system token, which is not tied to one clinic. */
-    suspend fun createClinicalNote(
-        request: CreateClinicalNoteRequest,
-        orgNumber: String?,
-    ): ClinicalNote {
-        val id = ClinicalNoteId(Uuid.generateV4())
-        return consultationRepository.createClinicalNote(id, request, orgNumber)
     }
 
     suspend fun createConsultation(request: CreateConsultation): Consultation {

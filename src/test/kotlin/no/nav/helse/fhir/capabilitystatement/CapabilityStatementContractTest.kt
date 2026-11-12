@@ -33,6 +33,7 @@ import no.nav.helse.fhir.organization.OrganizationService
 import no.nav.helse.fhir.patient.PatientService
 import no.nav.helse.fhir.practitioner.PractitionerService
 import no.nav.helse.fhir.practitionerrole.PractitionerRoleService
+import no.nav.helse.fhir.questionnaireresponse.QuestionnaireResponseService
 import no.nav.helse.plugins.configureStatusPages
 import no.nav.helse.smart.security.Interaction
 import no.nav.helse.smart.security.ScopeContext
@@ -54,14 +55,15 @@ class CapabilityStatementContractTest {
     private val practitionerService = mockk<PractitionerService>()
     private val practitionerRoleService = mockk<PractitionerRoleService>()
     private val documentReferenceService = mockk<DocumentReferenceService>()
+    private val questionnaireResponseService = mockk<QuestionnaireResponseService>()
 
     private val emptySearchset = Bundle(type = Enumeration(value = Bundle.BundleType.Searchset))
 
     private val unadvertisedRoutes =
         setOf(
             Endpoint(HttpMethod.Get, "/fhir/metadata"),
-            Endpoint(HttpMethod.Put, "/fhir/DocumentReference/{}"),
-            Endpoint(HttpMethod.Put, "/fhir/QuestionnaireResponse/{}"),
+            Endpoint(HttpMethod.Post, "/fhir"),
+            Endpoint(HttpMethod.Post, "/fhir/"),
         )
 
     private val patientId = Uuid.generateV4()
@@ -72,6 +74,7 @@ class CapabilityStatementContractTest {
             "subject" to "Patient/$patientId",
             "encounter" to "Encounter/${Uuid.generateV4()}",
             "practitioner" to "Practitioner/123456",
+            "related" to "QuestionnaireResponse/${Uuid.generateV4()}",
             "code" to "8310-5",
             "identifier" to "urn:oid:2.16.578.1.12.4.1.4.1|15068500017",
         )
@@ -79,7 +82,11 @@ class CapabilityStatementContractTest {
     private val patientCompartmentParams = setOf("patient", "subject")
 
     private val resourcesRequiringPatientCompartment =
-        setOf(ResourceType.Observation, ResourceType.DocumentReference)
+        setOf(
+            ResourceType.Observation,
+            ResourceType.DocumentReference,
+            ResourceType.QuestionnaireResponse,
+        )
 
     private val expectedMetadata =
         mapOf(
@@ -100,7 +107,15 @@ class CapabilityStatementContractTest {
             "PractitionerRole" to (listOf("search-type") to listOf("practitioner:reference")),
             "Organization" to (listOf("read") to emptyList()),
             "DocumentReference" to
-                (listOf("read", "search-type", "create") to
+                (listOf("read", "search-type", "create", "update", "delete") to
+                    listOf(
+                        "patient:reference",
+                        "subject:reference",
+                        "encounter:reference",
+                        "related:reference",
+                    )),
+            "QuestionnaireResponse" to
+                (listOf("read", "search-type", "create", "update", "delete") to
                     listOf("patient:reference", "subject:reference", "encounter:reference")),
         )
 
@@ -117,6 +132,7 @@ class CapabilityStatementContractTest {
                 provide<PractitionerService> { practitionerService }
                 provide<PractitionerRoleService> { practitionerRoleService }
                 provide<DocumentReferenceService> { documentReferenceService }
+                provide<QuestionnaireResponseService> { questionnaireResponseService }
                 provide<Environment> { simpleTestEnvironment }
             }
             authentication {
@@ -156,6 +172,7 @@ class CapabilityStatementContractTest {
                 is HttpMethodRouteSelector -> method = selector.method
                 is PathSegmentConstantRouteSelector -> segments.addFirst(selector.value)
                 is PathSegmentParameterRouteSelector -> segments.addFirst("{}")
+                is TrailingSlashRouteSelector -> segments.addFirst("")
                 is AuthenticationRouteSelector,
                 is RootRouteSelector -> Unit
                 else -> error("Unexpected route selector $selector in $this")
@@ -175,6 +192,9 @@ class CapabilityStatementContractTest {
                         TypeRestfulInteraction.Search_Type ->
                             Endpoint(HttpMethod.Get, "/fhir/$type")
                         TypeRestfulInteraction.Create -> Endpoint(HttpMethod.Post, "/fhir/$type")
+                        TypeRestfulInteraction.Update -> Endpoint(HttpMethod.Put, "/fhir/$type/{}")
+                        TypeRestfulInteraction.Delete ->
+                            Endpoint(HttpMethod.Delete, "/fhir/$type/{}")
                         else -> error("No route mapping for $interaction on $type")
                     }
                 }
@@ -206,8 +226,15 @@ class CapabilityStatementContractTest {
         coEvery { practitionerRoleService.getPractitionerRolesByPractitioner(any()) } returns
             emptySearchset
         coEvery {
-            documentReferenceService.searchDocumentReferences(any(), any(), DEFAULT_ORG_NUMBER)
+            documentReferenceService.searchDocumentReferences(
+                any(),
+                any(),
+                any(),
+                DEFAULT_ORG_NUMBER,
+            )
         } returns emptySearchset
+        coEvery { questionnaireResponseService.search(any(), any(), DEFAULT_ORG_NUMBER) } returns
+            emptySearchset
 
         testApp {
             declaredFhirCapabilities.forEach { resource ->
@@ -267,6 +294,7 @@ class CapabilityStatementContractTest {
             val rest = statement.rest.single()
             assertEquals("server", rest.mode.value?.getCode())
             assertNull(rest.security)
+            assertEquals(listOf("batch"), rest.interaction.map { it.code.value!!.getCode() })
 
             val advertised =
                 rest.resource.associate { resource ->

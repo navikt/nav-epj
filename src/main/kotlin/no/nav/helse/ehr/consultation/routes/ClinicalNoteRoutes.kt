@@ -7,6 +7,7 @@ import io.ktor.server.routing.*
 import no.nav.helse.core.utils.logger
 import no.nav.helse.ehr.clinicalNoteId
 import no.nav.helse.ehr.consultation.ClinicalNote
+import no.nav.helse.ehr.consultation.ClinicalNoteDeleteResult
 import no.nav.helse.ehr.consultation.ConsultationService
 import no.nav.helse.ehr.sessionorg.SessionOrgResolver
 import no.nav.helse.ehr.sessionorg.requireOrgNumber
@@ -30,7 +31,6 @@ fun Route.clinicalNoteRoutes(
                 log.info("journalnotat: $clinicalNote")
                 call.respond(clinicalNote)
             }
-            // The document a SMART app attached to the note, such as a PDF written back on submit
             get("/{clinicalNoteId}/attachment") {
                 val id = call.clinicalNoteId()
                 val orgNumber = sessionOrgResolver.requireOrgNumber(loggedInUser().hpr)
@@ -39,13 +39,22 @@ fun Route.clinicalNoteRoutes(
                         ?: return@get call.respond(HttpStatusCode.NotFound)
                 call.response.header(
                     HttpHeaders.ContentDisposition,
-                    ContentDisposition.Inline.withParameter(
-                            ContentDisposition.Parameters.FileName,
-                            attachment.title,
-                        )
-                        .toString(),
+                    inlinePdfContentDisposition(attachment.title),
                 )
                 call.respondBytes(attachment.data, ContentType.Application.Pdf)
+            }
+            delete("/{clinicalNoteId}") {
+                val id = call.clinicalNoteId()
+                val orgNumber = sessionOrgResolver.requireOrgNumber(loggedInUser().hpr)
+                when (consultationService.deleteClinicalNote(id, orgNumber)) {
+                    ClinicalNoteDeleteResult.DELETED -> call.respond(HttpStatusCode.NoContent)
+                    ClinicalNoteDeleteResult.NOT_FOUND -> call.respond(HttpStatusCode.NotFound)
+                    ClinicalNoteDeleteResult.PROTECTED ->
+                        call.respond(
+                            HttpStatusCode.Conflict,
+                            "Journalnotater skrevet i journalsystemet kan ikke slettes",
+                        )
+                }
             }
             post {
                 val request = call.receive<ClinicalNote>()
@@ -54,8 +63,8 @@ fun Route.clinicalNoteRoutes(
                     call.respond(HttpStatusCode.Created)
                 } else {
                     call.respond(
-                        HttpStatusCode.InternalServerError,
-                        "Kunne ikke opprette journalnotat",
+                        HttpStatusCode.Conflict,
+                        "Journalnotatet kan ikke endres fordi det er skrevet av en annen app",
                     )
                 }
             }

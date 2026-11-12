@@ -6,6 +6,7 @@ import io.ktor.server.application.*
 import io.ktor.server.plugins.di.*
 import no.nav.helse.ehr.clinic.ClinicRepository
 import no.nav.helse.ehr.clinic.ClinicService
+import no.nav.helse.ehr.consultation.ClinicalDocumentRepository
 import no.nav.helse.ehr.consultation.ConsultationRepository
 import no.nav.helse.ehr.consultation.ConsultationService
 import no.nav.helse.ehr.measurement.MeasurementRepository
@@ -27,6 +28,8 @@ import no.nav.helse.fhir.organization.OrganizationService
 import no.nav.helse.fhir.patient.PatientService
 import no.nav.helse.fhir.practitioner.PractitionerService
 import no.nav.helse.fhir.practitionerrole.PractitionerRoleService
+import no.nav.helse.fhir.questionnaireresponse.QuestionnaireResponseRepository
+import no.nav.helse.fhir.questionnaireresponse.QuestionnaireResponseService
 import no.nav.helse.smart.security.ClientAssertionVerifier
 import no.nav.helse.smart.security.ClientJwksSetProvider
 import no.nav.helse.smart.security.RemoteClientJwksSetProvider
@@ -51,6 +54,8 @@ fun Application.configureDependencies() {
         provide(PractitionerRepository::class)
         provide(FastlegelisteRepository::class)
         provide(ConsultationRepository::class)
+        provide(ClinicalDocumentRepository::class)
+        provide(QuestionnaireResponseRepository::class)
         provide(ClinicRepository::class)
         provide(MeasurementRepository::class)
 
@@ -72,5 +77,6 @@ fun Application.configureDependencies() {
         provide(PatientService::class)
         provide(PractitionerService::class)
         provide(PractitionerRoleService::class)
+        provide(QuestionnaireResponseService::class)
     }
 }

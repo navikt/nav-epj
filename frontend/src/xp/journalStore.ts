@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import {
   cancelConsultation,
+  deleteClinicalNote,
   fetchConsultations,
   fetchPatient,
   saveConsultation,
@@ -54,6 +55,7 @@ type JournalState = {
   removeSecondaryDiagnosis: (code: string, system: string) => void;
   start: () => Promise<void>;
   save: (options?: { finalize?: boolean }) => Promise<boolean>;
+  deleteDocument: (noteId: string) => Promise<boolean>;
   cancel: () => Promise<boolean>;
   discardDraft: () => void;
   clear: () => void;
@@ -89,9 +91,8 @@ function initialState() {
 export const diagnosisKey = (d: { code: string; system: string }) =>
   `${d.system}:${d.code}`;
 
-/** The clinician's own note. Notes with a document came from a SMART app and are listed apart. */
 function ownNotes(consultation: Consultation) {
-  return consultation.clinicalNotes.filter((note) => !note.hasAttachment);
+  return consultation.clinicalNotes.filter((note) => note.source === "EHR");
 }
 
 export function noteOf(consultation: Consultation) {
@@ -99,7 +100,7 @@ export function noteOf(consultation: Consultation) {
 }
 
 export function documentsOf(consultation: Consultation) {
-  return consultation.clinicalNotes.filter((note) => note.hasAttachment);
+  return consultation.clinicalNotes.filter((note) => note.source === "FHIR");
 }
 
 export function ongoingOf(consultations: Consultation[]) {
@@ -160,13 +161,17 @@ function applySaved(
       draft.clinicalNote.trim() === ""
         ? k.clinicalNotes
         : [
+            ...documentsOf(k),
             {
               id: existing?.id ?? `${id}:note`,
               consultationId: id,
               patientId: k.patientId,
               clinicalNote: draft.clinicalNote,
+              source: "EHR" as const,
+              attachmentTitle: null,
+              hasAttachment: false,
+              attachmentExpired: false,
             },
-            ...documentsOf(k),
           ];
     return {
       ...k,
@@ -459,6 +464,26 @@ export const useJournalStore = create<JournalState>((set, get) => {
               body: copy["s4.saved.body"](name),
             },
       );
+      return true;
+    },
+
+    deleteDocument: async (noteId) => {
+      if (!get().patientId) return false;
+      const isCurrent = session.capture();
+      try {
+        await deleteClinicalNote(noteId);
+      } catch {
+        return false;
+      }
+      if (!isCurrent()) return true;
+      commit({
+        consultations: get().consultations.map((k) => ({
+          ...k,
+          clinicalNotes: k.clinicalNotes.filter(
+            (note) => note.id !== noteId || note.source !== "FHIR",
+          ),
+        })),
+      });
       return true;
     },
 

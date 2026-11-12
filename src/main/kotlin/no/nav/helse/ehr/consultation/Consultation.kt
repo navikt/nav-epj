@@ -1,5 +1,6 @@
 package no.nav.helse.ehr.consultation
 
+import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.uuid.Uuid
 import no.nav.helse.core.utils.ConsultationStatus
@@ -26,25 +27,63 @@ data class Consultation(
     val reasonForVisit: String?,
 )
 
+enum class ClinicalNoteSource {
+    EHR,
+    FHIR,
+}
+
 data class ClinicalNote(
     val id: ClinicalNoteId,
     val consultationId: ConsultationId,
     val patientId: PatientId,
     val clinicalNote: String?,
-    /** Title of the document attached through FHIR, or null for a note without one. */
+    val source: ClinicalNoteSource = ClinicalNoteSource.EHR,
     val attachmentTitle: String? = null,
     val hasAttachment: Boolean = false,
+    val attachmentExpired: Boolean = false,
 )
 
-/** A document attached to a clinical note through FHIR. Only PDF is supported. */
-class ClinicalNoteAttachment(val title: String, val data: ByteArray)
+class ClinicalNoteAttachment(val title: String?, val data: ByteArray)
 
-data class CreateClinicalNoteRequest(
+class StoredAttachment(
+    val title: String?,
+    val language: String?,
+    val contentType: String,
+    val expired: Boolean,
+    val data: ByteArray?,
+)
+
+class ClinicalDocument(
+    val note: ClinicalNote,
+    val typeText: String?,
+    val periodStart: LocalDate?,
+    val periodEnd: LocalDate?,
+    val relatedQuestionnaireResponseId: Uuid?,
+    val authorHprs: List<String>,
+    val attachment: StoredAttachment?,
+)
+
+class NewAttachment(val title: String?, val language: String?, val data: ByteArray)
+
+class ClinicalDocumentWrite(
     val patientId: PatientId,
     val consultationId: ConsultationId,
-    val clinicalNote: String,
-    val attachment: ClinicalNoteAttachment? = null,
+    val description: String?,
+    val typeText: String?,
+    val periodStart: LocalDate?,
+    val periodEnd: LocalDate?,
+    val relatedQuestionnaireResponseId: Uuid?,
+    val authorHprs: List<String>,
+    val attachment: NewAttachment?,
 )
+
+data class ClinicalDocumentWriteResult(val id: ClinicalNoteId, val created: Boolean)
+
+enum class ClinicalNoteDeleteResult {
+    DELETED,
+    NOT_FOUND,
+    PROTECTED,
+}
 
 data class CreateConsultation(
     val patientId: PatientId,

@@ -14,7 +14,6 @@ import no.nav.helse.core.utils.ClinicNotFoundException
 import no.nav.helse.core.utils.ConsultationBelongsToOtherPatientException
 import no.nav.helse.core.utils.ConsultationNotFoundException
 import no.nav.helse.core.utils.ConsultationStatus
-import no.nav.helse.core.utils.DuplicateClinicalNoteException
 import no.nav.helse.core.utils.DuplicateDiagnosisException
 import no.nav.helse.core.utils.InvalidDiagnosisException
 import no.nav.helse.core.utils.logger
@@ -28,11 +27,9 @@ import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.inSubQuery
-import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
-import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.insertReturning
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -60,13 +57,16 @@ class ConsultationRepository {
                     valueTransform = { it[ConsultationPractitioner.hpr] },
                 )
 
+        val cutoff = attachmentCutoff()
         val clinicalNotesByConsultationId =
-            ClinicalNoteTable.selectAll()
+            clinicalNoteMetadataQuery()
                 .where { ClinicalNoteTable.consultationId inList consultationIds }
-                .groupBy(
-                    keySelector = { it[ClinicalNoteTable.consultationId] },
-                    valueTransform = { it.toClinicalNote() },
+                .orderBy(
+                    ClinicalNoteTable.createdAt to SortOrder.ASC,
+                    ClinicalNoteTable.id to SortOrder.ASC,
                 )
+                .map { it[ClinicalNoteTable.consultationId] to it.toClinicalNote(cutoff) }
+                .groupBy({ it.first }, { it.second })
 
         val diagnosesByConsultationId =
             ConsultationDiagnosisCodeTable.selectAll()
@@ -259,13 +259,15 @@ class ConsultationRepository {
         clinicalNote: String,
     ): Int = dbQuery {
         val existingId =
-            // The clinician's own note. Notes with a document attached came from a SMART app and
-            // are never edited here.
             ClinicalNoteTable.select(ClinicalNoteTable.id)
                 .where {
                     (ClinicalNoteTable.consultationId eq consultationId.value) and
-                        ClinicalNoteTable.attachmentData.isNull()
+                        (ClinicalNoteTable.origin eq ClinicalNoteSource.EHR)
                 }
+                .orderBy(
+                    ClinicalNoteTable.createdAt to SortOrder.ASC,
+                    ClinicalNoteTable.id to SortOrder.ASC,
+                )
                 .limit(1)
                 .singleOrNull()
                 ?.get(ClinicalNoteTable.id)
@@ -279,6 +281,7 @@ class ConsultationRepository {
                     it[ClinicalNoteTable.consultationId] = consultationId.value
                     it[ClinicalNoteTable.patientId] = patientId.value
                     it[ClinicalNoteTable.clinicalNote] = clinicalNote
+                    it[origin] = ClinicalNoteSource.EHR
                 }
                 .insertedCount
         }
@@ -302,13 +305,17 @@ class ConsultationRepository {
         }
 
         ClinicalNoteTable.upsert(
-                onUpdateExclude = listOf(ClinicalNoteTable.id),
-                where = { ClinicalNoteTable.consultationId eq clinicalNote.consultationId.value },
+                onUpdateExclude = listOf(ClinicalNoteTable.id, ClinicalNoteTable.origin),
+                where = {
+                    (ClinicalNoteTable.consultationId eq clinicalNote.consultationId.value) and
+                        (ClinicalNoteTable.origin eq ClinicalNoteSource.EHR)
+                },
             ) {
                 it[ClinicalNoteTable.id] = clinicalNote.id.value
                 it[ClinicalNoteTable.consultationId] = clinicalNote.consultationId.value
                 it[ClinicalNoteTable.patientId] = clinicalNote.patientId.value
                 it[ClinicalNoteTable.clinicalNote] = clinicalNote.clinicalNote
+                it[origin] = ClinicalNoteSource.EHR
             }
             .insertedCount
     }
@@ -354,9 +361,13 @@ class ConsultationRepository {
                 .map { it[ConsultationPractitioner.hpr] }
 
         val clinicalNotes =
-            ClinicalNoteTable.selectAll()
-                .where { (ClinicalNoteTable.consultationId eq consultation[ConsultationTable.id]) }
-                .map { it.toClinicalNote() }
+            clinicalNoteMetadataQuery()
+                .where { ClinicalNoteTable.consultationId eq consultation[ConsultationTable.id] }
+                .orderBy(
+                    ClinicalNoteTable.createdAt to SortOrder.ASC,
+                    ClinicalNoteTable.id to SortOrder.ASC,
+                )
+                .map { it.toClinicalNote(attachmentCutoff()) }
 
         val diagnosisList =
             ConsultationDiagnosisCodeTable.selectAll()
@@ -378,114 +389,14 @@ class ConsultationRepository {
         clinicalNoteId: ClinicalNoteId,
         orgNumber: String?,
     ): ClinicalNote? = dbQuery {
-        ClinicalNoteTable.selectAll()
+        clinicalNoteMetadataQuery()
             .where {
                 (ClinicalNoteTable.id eq clinicalNoteId.value) and
                     (ClinicalNoteTable.consultationId inSubQuery consultationIdsAtOrg(orgNumber))
             }
             .singleOrNull()
-            ?.toClinicalNote()
+            ?.toClinicalNote(attachmentCutoff())
     }
-
-    suspend fun listClinicalNotes(
-        patientId: PatientId,
-        consultationId: ConsultationId?,
-        orgNumber: String?,
-    ): List<ClinicalNote> = dbQuery {
-        ClinicalNoteTable.selectAll()
-            .where {
-                val atOrg =
-                    ClinicalNoteTable.consultationId inSubQuery consultationIdsAtOrg(orgNumber)
-                if (consultationId != null) {
-                    (ClinicalNoteTable.patientId eq patientId.value) and
-                        (ClinicalNoteTable.consultationId eq consultationId.value) and
-                        atOrg
-                } else {
-                    (ClinicalNoteTable.patientId eq patientId.value) and atOrg
-                }
-            }
-            .map { it.toClinicalNote() }
-    }
-
-    suspend fun createClinicalNote(
-        id: ClinicalNoteId,
-        request: CreateClinicalNoteRequest,
-        orgNumber: String?,
-    ): ClinicalNote = dbQuery {
-        val consultationPatientId =
-            ConsultationTable.select(ConsultationTable.patientId)
-                .where {
-                    (ConsultationTable.id eq request.consultationId.value) and
-                        consultationAtOrg(orgNumber)
-                }
-                .singleOrNull()
-                ?.get(ConsultationTable.patientId)
-                ?: throw ConsultationNotFoundException(request.consultationId)
-
-        if (consultationPatientId != request.patientId.value) {
-            throw ConsultationBelongsToOtherPatientException(
-                request.consultationId,
-                request.patientId,
-            )
-        }
-
-        val insertedCount =
-            ClinicalNoteTable.insertIgnore {
-                    it[ClinicalNoteTable.id] = id.value
-                    it[ClinicalNoteTable.consultationId] = request.consultationId.value
-                    it[ClinicalNoteTable.patientId] = request.patientId.value
-                    it[ClinicalNoteTable.clinicalNote] = request.clinicalNote
-                    it[ClinicalNoteTable.attachmentTitle] = request.attachment?.title
-                    it[ClinicalNoteTable.attachmentData] = request.attachment?.data
-                }
-                .insertedCount
-
-        if (insertedCount == 0) {
-            throw DuplicateClinicalNoteException()
-        }
-
-        ClinicalNote(
-            id = id,
-            consultationId = request.consultationId,
-            patientId = request.patientId,
-            clinicalNote = request.clinicalNote,
-            attachmentTitle = request.attachment?.title,
-            hasAttachment = request.attachment != null,
-        )
-    }
-
-    suspend fun findClinicalNoteAttachment(
-        clinicalNoteId: ClinicalNoteId,
-        orgNumber: String?,
-    ): ClinicalNoteAttachment? = dbQuery {
-        ClinicalNoteTable.select(
-                ClinicalNoteTable.attachmentTitle,
-                ClinicalNoteTable.attachmentData,
-            )
-            .where {
-                (ClinicalNoteTable.id eq clinicalNoteId.value) and
-                    (ClinicalNoteTable.consultationId inSubQuery consultationIdsAtOrg(orgNumber))
-            }
-            .singleOrNull()
-            ?.let { row ->
-                row[ClinicalNoteTable.attachmentData]?.let { data ->
-                    ClinicalNoteAttachment(
-                        row[ClinicalNoteTable.attachmentTitle] ?: "dokument.pdf",
-                        data,
-                    )
-                }
-            }
-    }
-
-    fun ResultRow.toClinicalNote(): ClinicalNote =
-        ClinicalNote(
-            id = ClinicalNoteId(this[ClinicalNoteTable.id]),
-            consultationId = ConsultationId(this[ClinicalNoteTable.consultationId]),
-            patientId = PatientId(this[ClinicalNoteTable.patientId]),
-            clinicalNote = this[ClinicalNoteTable.clinicalNote],
-            attachmentTitle = this[ClinicalNoteTable.attachmentTitle],
-            hasAttachment = this[ClinicalNoteTable.attachmentData] != null,
-        )
 
     fun ResultRow.toConsultationWithHprAndClinicalNotes(
         hprList: List<String>,

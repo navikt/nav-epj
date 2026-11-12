@@ -22,7 +22,8 @@ import org.junit.Test
 class ConsultationServiceTest {
 
     private val consultationRepository = mockk<ConsultationRepository>()
-    private val consultationService = ConsultationService(consultationRepository)
+    private val consultationService =
+        ConsultationService(consultationRepository, mockk<ClinicalDocumentRepository>())
 
     @OptIn(ExperimentalUuidApi::class)
     private fun consultation(
@@ -279,66 +280,4 @@ class ConsultationServiceTest {
             consultationService.insertClinicalNote(clinicalNote, DEFAULT_ORG_NUMBER),
         )
     }
-
-    @OptIn(ExperimentalUuidApi::class)
-    @Test
-    fun `createClinicalNote assigns a server-generated id and delegates to the repository`() =
-        runTest {
-            val request =
-                CreateClinicalNoteRequest(
-                    patientId = PatientId(Uuid.generateV4()),
-                    consultationId = ConsultationId(Uuid.generateV4()),
-                    clinicalNote = "notat",
-                )
-            val slot = mutableListOf<ClinicalNoteId>()
-            coEvery {
-                consultationRepository.createClinicalNote(
-                    capture(slot),
-                    request,
-                    DEFAULT_ORG_NUMBER,
-                )
-            } answers
-                {
-                    ClinicalNote(
-                        id = slot.single(),
-                        consultationId = request.consultationId,
-                        patientId = request.patientId,
-                        clinicalNote = request.clinicalNote,
-                    )
-                }
-
-            val result = consultationService.createClinicalNote(request, DEFAULT_ORG_NUMBER)
-
-            assertEquals(slot.single(), result.id)
-            assertEquals(request.patientId, result.patientId)
-            assertEquals(request.consultationId, result.consultationId)
-            assertEquals(request.clinicalNote, result.clinicalNote)
-        }
-
-    @OptIn(ExperimentalUuidApi::class)
-    @Test
-    fun `getClinicalNotes delegates to the repository with the given patient and encounter filter`() =
-        runTest {
-            val patientId = PatientId(Uuid.generateV4())
-            val consultationId = ConsultationId(Uuid.generateV4())
-            val clinicalNote =
-                ClinicalNote(
-                    id = ClinicalNoteId(Uuid.generateV4()),
-                    consultationId = consultationId,
-                    patientId = patientId,
-                    clinicalNote = "notat",
-                )
-            coEvery {
-                consultationRepository.listClinicalNotes(
-                    patientId,
-                    consultationId,
-                    DEFAULT_ORG_NUMBER,
-                )
-            } returns listOf(clinicalNote)
-
-            val result =
-                consultationService.getClinicalNotes(patientId, consultationId, DEFAULT_ORG_NUMBER)
-
-            assertEquals(listOf(clinicalNote), result)
-        }
 }

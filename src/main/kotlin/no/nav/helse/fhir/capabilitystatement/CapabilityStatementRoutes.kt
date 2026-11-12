@@ -30,6 +30,15 @@ private fun capabilityStatement(resources: List<DeclaredResource>) =
                 CapabilityStatement.Rest(
                     mode = Enumeration(value = CapabilityStatement.RestfulCapabilityMode.Server),
                     resource = resources.map { it.toCapabilityResource() },
+                    interaction =
+                        listOf(
+                            CapabilityStatement.Rest.Interaction(
+                                code =
+                                    Enumeration(
+                                        value = CapabilityStatement.SystemRestfulInteraction.Batch
+                                    )
+                            )
+                        ),
                 )
             ),
     )

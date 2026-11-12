@@ -1,4 +1,4 @@
-import { createHash, randomBytes, randomInt } from "node:crypto";
+import { createHash, randomBytes, randomInt, randomUUID } from "node:crypto";
 import { expect, request as playwrightRequest, test } from "@playwright/test";
 import type { APIRequestContext } from "@playwright/test";
 
@@ -12,11 +12,12 @@ const WRITE_SCOPE = "launch openid fhirUser patient/Observation.rs patient/Obser
 const READ_SCOPE = "launch patient/Observation.rs";
 const DOC_WRITE_SCOPE = "launch patient/DocumentReference.rs patient/DocumentReference.c";
 const DOC_READ_SCOPE = "launch patient/DocumentReference.rs";
+const PDF_SCOPE = "launch patient/DocumentReference.cruds patient/QuestionnaireResponse.cruds";
 const FHIR_JSON = "application/fhir+json";
 
 type Patient = { id: string; givenName: string; familyName: string };
 type Consultation = { id: string };
-type ClinicalNote = { id: string; clinicalNote: string };
+type ClinicalNote = { id: string; clinicalNote: string | null; source?: string };
 type ConsultationWithNotes = Consultation & { clinicalNotes: ClinicalNote[] };
 type Measurement = { id: string; value: number; unitCode: string; unitDisplay: string };
 type Token = { access_token: string; patient?: string; encounter?: string; scope: string; token_type: string };
@@ -81,6 +82,66 @@ function documentReference(patientId: string, encounterId: string, description: 
     content: [{ attachment: { contentType: "application/pdf" } }],
     subject: { reference: `Patient/${patientId}` },
     context: { encounter: [{ reference: `Encounter/${encounterId}` }] },
+  };
+}
+
+function buildPdf(text: string): Buffer {
+  const stream = `BT /F1 18 Tf 72 720 Td (${text}) Tj ET`;
+  const objects = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
+    `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+  ];
+  let body = "%PDF-1.4\n";
+  const offsets = objects.map((object, index) => {
+    const offset = body.length;
+    body += `${index + 1} 0 obj\n${object}\nendobj\n`;
+    return offset;
+  });
+  const xref = body.length;
+  body += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  body += offsets.map((offset) => `${String(offset).padStart(10, "0")} 00000 n \n`).join("");
+  body += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+  return Buffer.from(body, "latin1");
+}
+
+function questionnaireResponse(patientId: string, encounterId: string, id: string) {
+  return {
+    resourceType: "QuestionnaireResponse",
+    id,
+    status: "completed",
+    questionnaire: "http://example.org/Questionnaire/sykmelding",
+    authored: new Date().toISOString(),
+    subject: { reference: `Patient/${patientId}` },
+    encounter: { reference: `Encounter/${encounterId}` },
+  };
+}
+
+function pdfDocumentReference(patientId: string, encounterId: string, id: string, relatedId: string, title: string) {
+  const today = new Date().toISOString().slice(0, 10);
+  return {
+    resourceType: "DocumentReference",
+    id,
+    status: "current",
+    type: { coding: [{ system: "urn:oid:2.16.578.1.12.4.1.1.9602", code: "J01-2" }] },
+    subject: { reference: `Patient/${patientId}` },
+    context: {
+      encounter: [{ reference: `Encounter/${encounterId}` }],
+      related: [{ reference: `QuestionnaireResponse/${relatedId}` }],
+      period: { start: today, end: today },
+    },
+    content: [
+      {
+        attachment: {
+          contentType: "application/pdf",
+          language: "NO-nb",
+          title,
+          data: buildPdf("E2E sykmelding").toString("base64"),
+        },
+      },
+    ],
   };
 }
 
@@ -243,7 +304,7 @@ test.describe("FHIR write-back against the real backend", () => {
       }
     }
     console.log(
-      `E2E test data left in the database (no delete API): patients ${JSON.stringify(created.patients.map((p) => p.id))}, konsultasjoner ${JSON.stringify(created.consultations)}. ${restoration}.`,
+      `E2E test data left in the database (no patient or measurement delete API; app documents can be deleted through DELETE /api/clinical-notes/{id}): patients ${JSON.stringify(created.patients.map((p) => p.id))}, konsultasjoner ${JSON.stringify(created.consultations)}. ${restoration}.`,
     );
     await api.dispose();
     if (problems.length > 0) throw new Error(`E2E cleanup problems: ${problems.join("; ")}`);
@@ -415,7 +476,7 @@ test.describe("FHIR write-back against the real backend", () => {
 
     const stored = await clinicalNotes(target.id);
     expect(stored).toHaveLength(1);
-    expect(stored[0]).toMatchObject({ id: createdBody.id, clinicalNote: text });
+    expect(stored[0]).toMatchObject({ id: createdBody.id, clinicalNote: text, source: "FHIR" });
 
     const draft = "ulagret utkast";
     await editor.fill(draft);
@@ -430,7 +491,8 @@ test.describe("FHIR write-back against the real backend", () => {
     await editor.fill("");
     await page.getByRole("tab", { name: "Start" }).click();
     await page.getByRole("tab", { name: /^Journal/ }).click();
-    await expect(page.getByRole("textbox", { name: "Journalnotat" })).toHaveValue(text);
+    await expect(page.getByRole("textbox", { name: "Journalnotat" })).toHaveValue("");
+    await expect(page.getByRole("region", { name: "Dokumenter fra apper" })).toContainText(text);
 
     const countsBefore = [(await clinicalNotes(target.id)).length, (await clinicalNotes(other.id)).length];
     const readOnly = await api.post("/fhir/DocumentReference", {
@@ -458,5 +520,73 @@ test.describe("FHIR write-back against the real backend", () => {
     expect([(await clinicalNotes(target.id)).length, (await clinicalNotes(other.id)).length]).toEqual(countsBefore);
     expect(countsBefore).toEqual([1, 0]);
     expect(await clinicalNotes(target.id)).toEqual(stored);
+  });
+
+  test("writes a PDF with its questionnaire response and deletes both from the journal", async ({ page }) => {
+    const target = await createPatient("Pdftest");
+    const consultation = await startConsultation(target);
+    const writeToken = await smartToken(target.id, PDF_SCOPE);
+    expect(writeToken.encounter).toBe(consultation.id);
+
+    const responseId = randomUUID();
+    const documentId = randomUUID();
+    const title = `sykmelding-${randomBytes(3).toString("hex")}.pdf`;
+
+    const qr = await api.put(`/fhir/QuestionnaireResponse/${responseId}`, {
+      headers: fhirHeaders(writeToken),
+      data: questionnaireResponse(target.id, consultation.id, responseId),
+    });
+    expect(qr.status(), await qr.text()).toBe(201);
+
+    const pdf = await api.put(`/fhir/DocumentReference/${documentId}`, {
+      headers: fhirHeaders(writeToken),
+      data: pdfDocumentReference(target.id, consultation.id, documentId, responseId, title),
+    });
+    expect(pdf.status(), await pdf.text()).toBe(201);
+
+    const siblingText = `E2E søsterdokument ${randomBytes(4).toString("hex")}`;
+    const sibling = await api.post("/fhir/DocumentReference", {
+      headers: fhirHeaders(writeToken),
+      data: documentReference(target.id, consultation.id, siblingText),
+    });
+    expect(sibling.status(), await sibling.text()).toBe(201);
+
+    await page.goto(`/patients/${target.id}`);
+    const editor = page.getByRole("textbox", { name: "Journalnotat" });
+    await expect(editor).toHaveValue("");
+    const documents = page.getByRole("region", { name: "Dokumenter fra apper" });
+    const link = documents.getByRole("link", { name: `Åpne ${title} (PDF, ny fane)` });
+    await expect(link).toHaveAttribute("href", `/api/clinical-notes/${documentId}/attachment`);
+    await expect(documents).toContainText(siblingText);
+
+    const download = await api.get(`/api/clinical-notes/${documentId}/attachment`);
+    expect(download.status()).toBe(200);
+    expect(download.headers()["content-type"]).toContain("application/pdf");
+    expect(Buffer.from(await download.body()).subarray(0, 5).toString()).toBe("%PDF-");
+
+    const draft = "ulagret utkast";
+    await editor.fill(draft);
+
+    await documents.getByRole("button", { name: `Slett ${title}` }).click();
+    const dialog = page.getByRole("alertdialog");
+    await expect(dialog).toContainText("QuestionnaireResponse");
+    await dialog.getByRole("button", { name: "Avbryt" }).click();
+    await expect(dialog).toBeHidden();
+    await expect(link).toBeVisible();
+
+    await documents.getByRole("button", { name: `Slett ${title}` }).click();
+    await page.getByRole("alertdialog").getByRole("button", { name: "Slett", exact: true }).click();
+    await expect(page.getByRole("alertdialog")).toBeHidden();
+
+    await expect(link).toHaveCount(0);
+    await expect(documents).toContainText(siblingText);
+    await expect(editor).toHaveValue(draft);
+
+    const remaining = await clinicalNotes(target.id);
+    expect(remaining.map((n) => n.clinicalNote)).toEqual([siblingText]);
+    const gone = await api.get(`/fhir/QuestionnaireResponse/${responseId}`, { headers: fhirHeaders(writeToken) });
+    expect(gone.status()).toBe(404);
+    const goneDocument = await api.get(`/fhir/DocumentReference/${documentId}`, { headers: fhirHeaders(writeToken) });
+    expect(goneDocument.status()).toBe(404);
   });
 });
