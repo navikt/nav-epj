@@ -7,6 +7,7 @@ import no.nav.helse.core.db.ClinicalNoteTable
 import no.nav.helse.core.db.QuestionnaireResponseTable
 import no.nav.helse.core.db.consultationIdsAtOrg
 import no.nav.helse.core.db.dbQuery
+import no.nav.helse.core.utils.AttachmentNotRetainedException
 import no.nav.helse.core.utils.ClinicalDocumentConflictException
 import no.nav.helse.core.utils.ClinicalDocumentWriteNotAllowedException
 import no.nav.helse.core.utils.DuplicateClinicalNoteException
@@ -47,6 +48,7 @@ class ClinicalDocumentRepository {
     ): ClinicalDocumentWriteResult = dbQuery {
         var existing = lockNote(id.value)
         if (existing == null) {
+            if (write.retainedAttachment != null) throw AttachmentNotRetainedException()
             if (!allowCreate) throw ClinicalDocumentWriteNotAllowedException(creating = true)
             requireConsultationForWrite(
                 write.consultationId,
@@ -82,7 +84,11 @@ class ClinicalDocumentRepository {
             it[relatedQuestionnaireResponseId] = write.relatedQuestionnaireResponseId
             it[authorHprs] = write.authorHprs
         }
-        replaceAttachment(id, write.attachment)
+        if (write.retainedAttachment != null) {
+            requireExpiredAttachment(id, write.retainedAttachment)
+        } else {
+            replaceAttachment(id, write.attachment)
+        }
         ClinicalDocumentWriteResult(id, created = false)
     }
 
@@ -220,6 +226,25 @@ class ClinicalDocumentRepository {
                 it[authorHprs] = write.authorHprs
             }
             .insertedCount
+
+    private fun requireExpiredAttachment(id: ClinicalNoteId, retained: RetainedAttachment) {
+        val stored =
+            ClinicalNoteAttachmentTable.selectAll()
+                .where { ClinicalNoteAttachmentTable.clinicalNoteId eq id.value }
+                .singleOrNull()
+        val expired =
+            stored != null &&
+                !stored[ClinicalNoteAttachmentTable.createdAt].isAfter(attachmentCutoff())
+        if (
+            !expired ||
+                (retained.title != null &&
+                    retained.title != stored[ClinicalNoteAttachmentTable.title]) ||
+                (retained.language != null &&
+                    retained.language != stored[ClinicalNoteAttachmentTable.language])
+        ) {
+            throw AttachmentNotRetainedException()
+        }
+    }
 
     private fun replaceAttachment(id: ClinicalNoteId, attachment: NewAttachment?) {
         ClinicalNoteAttachmentTable.deleteWhere { clinicalNoteId eq id.value }

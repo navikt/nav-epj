@@ -26,6 +26,7 @@ import no.nav.helse.ehr.consultation.ClinicalDocumentWrite
 import no.nav.helse.ehr.consultation.ConsultationId
 import no.nav.helse.ehr.consultation.NewAttachment
 import no.nav.helse.ehr.consultation.PDF_CONTENT_TYPE
+import no.nav.helse.ehr.consultation.RetainedAttachment
 import no.nav.helse.ehr.patient.PatientId
 import no.nav.helse.fhir.fhirFailure
 import no.nav.helse.fhir.invalidResource
@@ -116,6 +117,7 @@ fun DocumentReference.toClinicalDocumentWrite(): ClinicalDocumentWrite {
         relatedQuestionnaireResponseId = context.relatedQuestionnaireResponseId(),
         authorHprs = author.map { parsePractitionerHpr(it.reference?.value, OWNER) }.distinct(),
         attachment = content.attachment.toNewAttachment(),
+        retainedAttachment = content.attachment.toRetainedAttachment(),
     )
 }
 
@@ -262,15 +264,7 @@ private fun Attachment.toNewAttachment(): NewAttachment? {
     rejectFields("$OWNER.content.attachment", unsupported)
 
     val base64 = data?.value
-    if (base64 == null) {
-        if (title != null || language != null) {
-            invalidResource(
-                OperationOutcome.IssueType.Invalid,
-                "$OWNER.content.attachment.title og language krever attachment.data",
-            )
-        }
-        return null
-    }
+    if (base64 == null) return null
     if (base64.length > MAX_ATTACHMENT_BASE64_CHARS) attachmentTooLarge()
     val bytes =
         try {
@@ -294,6 +288,16 @@ private fun Attachment.toNewAttachment(): NewAttachment? {
         data = bytes,
     )
 }
+
+private fun Attachment.toRetainedAttachment(): RetainedAttachment? =
+    if (data == null && (title != null || language != null)) {
+        RetainedAttachment(
+            title = title?.value.validatedText("content.attachment.title"),
+            language = language?.value?.getCode(),
+        )
+    } else {
+        null
+    }
 
 private fun attachmentTooLarge(): Nothing =
     fhirFailure(

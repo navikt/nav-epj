@@ -57,6 +57,9 @@ class ConsultationBelongsToOtherPatientException(
 class ClinicalDocumentConflictException :
     RuntimeException("Id-en er i bruk av et annet dokument eller et journalnotat")
 
+class AttachmentNotRetainedException :
+    RuntimeException("Vedlegget finnes ikke som utløpt vedlegg med samme tittel og språk")
+
 class ClinicalDocumentWriteNotAllowedException(val creating: Boolean) :
     RuntimeException(
         if (creating) "Tokenet kan ikke opprette dokumentet"

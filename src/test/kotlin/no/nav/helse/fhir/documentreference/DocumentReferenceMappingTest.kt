@@ -108,11 +108,13 @@ class DocumentReferenceMappingTest {
     }
 
     @Test
-    fun `title and language without data are rejected`() {
-        assertRejected(
-            HttpStatusCode.BadRequest,
-            documentReference(attachment = "\"contentType\":\"application/pdf\",\"title\":\"a\""),
-        )
+    fun `title and language without data are a retained attachment, not a new one`() {
+        val write =
+            documentReference(attachment = "\"contentType\":\"application/pdf\",\"title\":\"a\"")
+                .toClinicalDocumentWrite()
+
+        assertNull(write.attachment)
+        assertEquals("a", write.retainedAttachment?.title)
     }
 
     @Test
@@ -120,7 +122,7 @@ class DocumentReferenceMappingTest {
         assertNull(
             documentReference(attachment = "\"contentType\":\"application/pdf\"")
                 .toClinicalDocumentWrite()
-                .attachment
+                .let { it.attachment ?: it.retainedAttachment }
         )
     }
 
