@@ -94,7 +94,7 @@ fun ApplicationCall.patientInputId(): PatientInputId = PatientInputId(uuidParame
 fun ApplicationCall.practitionerId(): PractitionerId =
     PractitionerId(stringParameter("practitionerId"))
 
-private fun ApplicationCall.uuidParameter(name: String): Uuid {
+fun ApplicationCall.uuidParameter(name: String): Uuid {
     val value = parameters[name] ?: throw BadRequestException("Mangler parameteren '$name'")
 
     return try {
