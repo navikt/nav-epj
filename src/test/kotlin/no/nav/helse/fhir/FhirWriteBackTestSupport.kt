@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalUuidApi::class)
 
-package no.nav.helse.fhir.documentreference
+package no.nav.helse.fhir
 
 import com.google.fhir.model.r4.FhirR4Json
 import io.ktor.client.HttpClient
@@ -23,8 +23,8 @@ import no.nav.helse.ehr.consultation.ConsultationRepositoryTestBase
 import no.nav.helse.ehr.consultation.ConsultationService
 import no.nav.helse.ehr.patient.PatientId
 import no.nav.helse.fhir.condition.ConditionService
+import no.nav.helse.fhir.documentreference.DocumentReferenceService
 import no.nav.helse.fhir.encounter.EncounterService
-import no.nav.helse.fhir.fhirRoutes
 import no.nav.helse.fhir.observation.ObservationService
 import no.nav.helse.fhir.organization.OrganizationService
 import no.nav.helse.fhir.patient.PatientService

@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalUuidApi::class)
 
-package no.nav.helse.fhir.documentreference
+package no.nav.helse.fhir
 
 import com.google.fhir.model.r4.Bundle
 import com.google.fhir.model.r4.OperationOutcome
