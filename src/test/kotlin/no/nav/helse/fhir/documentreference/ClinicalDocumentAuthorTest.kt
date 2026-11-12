@@ -16,6 +16,7 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.ehr.consultation.ClinicalNote
 import no.nav.helse.ehr.consultation.ClinicalNoteId
+import no.nav.helse.fhir.FhirWriteBackTestSupport
 import no.nav.helse.utils.DEFAULT_ORG_NUMBER
 import org.junit.Test
 

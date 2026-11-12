@@ -13,6 +13,7 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.runBlocking
 import no.nav.helse.ehr.consultation.ClinicalNoteId
+import no.nav.helse.fhir.FhirWriteBackTestSupport
 import no.nav.helse.smart.security.Interaction
 import no.nav.helse.smart.security.ScopeContext
 import no.nav.helse.utils.DEFAULT_ORG_NUMBER
