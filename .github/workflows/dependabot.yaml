@@ -14,3 +14,23 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: navikt/tsm-workflows/actions/gradle/test@main
+
+  frontend:
+    runs-on: ubuntu-latest
+    if: github.ref_name != 'main' && !startsWith(github.ref_name, 'dev')
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - run: corepack enable
+      - run: yarn --immutable
+        env:
+          NPM_AUTH_TOKEN: ${{ secrets.READER_TOKEN }}
+      - run: yarn typecheck
+      - run: yarn lint
+      - run: yarn test --run
+      - run: yarn build
