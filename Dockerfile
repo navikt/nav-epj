@@ -1,4 +1,4 @@
-FROM gcr.io/distroless/java25-debian13@sha256:aea9b7c0ab3605df2a08bb71e865c9ddb5dcd00c25625605acb5d30bda1c1486
+FROM gcr.io/distroless/java25-debian13@sha256:ed234e7af410c54dea28376730b472611c93c67c62869506cdaa7321ddb67c37
 
 WORKDIR /app
 
